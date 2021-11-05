@@ -4,28 +4,15 @@ library(tidyr)
 library(dplyr)
 library(rfUtilities)
 library(ElemStatLearn)
+library(densityClust)
 
 ### Script
 ## merge data
 options(scipen = 999)
 options(digits = 10)
-path <- "E:/code/CTC_HU/renamed_rawdata/renamed_pos"
-setwd(path)
-files <- list.files(path = path)
-file_names <- stringr::str_remove(string = files, pattern = ".txt")
-file_list <- lapply(files, function(x) read.table(x, col.names = c("mz", "intensity")))
 
-nn <- sapply(file_list, nrow) # each sample's row number
-nonEmpty <- nn != 0L # if there's any empty sample; return logic vector
-samples <- rep(file_names, nn)
-mass <- unname(unlist((lapply(file_list[nonEmpty], function(x) x$mz)), recursive = FALSE, use.names = FALSE))
-intensities <- unlist(lapply(file_list[nonEmpty], function(x) x$intensity), recursive = FALSE, use.names = FALSE)
-s <- sort.int(mass, index.return = TRUE)
-mass <- s$x
-intensities <- intensities[s$ix]
-samples <- samples[s$ix]
+ms_data <- read_data(path = "data")
 
-msdata <- data.frame(mz = mass, sample = samples, intensity = intensities)
 
 
 # withIDdata <- mergeData("E:/code/CTC_HU/renamed_rawdata/HB")
@@ -41,12 +28,8 @@ msdata <- data.frame(mz = mass, sample = samples, intensity = intensities)
 #msdata <- noiseRemove2(msdata, estimatedNoise = 300, SNRlimit = 10)
 
 # initialize a new data frame
-sample_num <- length(files)
-# AlignedMS <- as.data.frame(t(data.frame(rep(0,sample_num+1))))
-# colnames(AlignedMS) <- c("aligned", file_names)
-
-# create bins first
-bin <- binning(msdata$mz, tolerance = 2000, times = 4) #two type of conditions can be chosen; tolerance & times belong to different conditions
+sample_num <- length(unique(ms_data$sample))
+bin <- binning(msdata$mz, tolerance = 2000, times = 4, sample_num) #two type of conditions can be chosen; tolerance & times belong to different conditions
 bin_df <- data.frame(left = bin$left, right = bin$right)
 bin_df <- arrange(bin_df, bin_df$left)
 bin_split <- split(bin_df, 1:nrow(bin_df))

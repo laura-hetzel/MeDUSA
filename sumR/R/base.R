@@ -1,14 +1,14 @@
-#' ppm_calc calculated the parts per million error between two different masses
-#'
-#' @examples
-#' ppm_calc(mass1, mass2)
-#'
-#' @export
-ppm_calc <- function (mass1, mass2) {
-  ppm_error <- ((mass1 - mass2)/mass1) * 1e6
-  return(ppm_error)
+read_msdata <- function(path = "data") {
+  files <- list.files(path = "data", full.names = T)
+  file_names <- stringr::str_remove(string = files, pattern = ".txt")
+  file_list <- lapply(setNames(files, file_names), function(x){
+    read.table(x, col.names = c("mz", "intensity"))
+  })
+  nn <- sapply(file_list, nrow) # each sample's row number
+  nonEmpty <- nn != 0L # if there's any empty sample; return logic vector
+  ms_data <- dplyr::bind_rows(file_list[nonEmpty], .id = "sample")
+  ms_data[order(ms_data$mz), ]
 }
-
 
 #' align_check makes sure that all the m/z values are aligned/binned correctly
 #'
@@ -20,14 +20,13 @@ ppm_calc <- function (mass1, mass2) {
 #' 2- boxplot of the ppm erro values with xcoords zoomed in to -20,0 (default)
 #' 3- table of summary stats of ppm error values
 #'
-#' @import ppm_calc
 #' @examples
 #'
 #'
 #' @export
 align_check <- function(data_frame_fn, xcoords = c(-20, 0)) {
   odd_ind_fn <- seq(3, length(data_frame_fn$mz), 2)
-  even_ind_fn <- seq(2, length(data_frame_fn$mz),2)
+  even_ind_fn <- seq(2, length(data_frame_fn$mz), 2)
   ppm_err_fn <- ppm_calc(data_frame_fn$mz[even_ind_fn], data_frame_fn$mz[odd_ind_fn]) %>%
     as_tibble_col( column_name = "ppm_error")
   ppm_err_plot_fn <- ggplot(ppm_err_fn, aes(x = ppm_error)) +
@@ -44,7 +43,7 @@ align_check <- function(data_frame_fn, xcoords = c(-20, 0)) {
   return(ppm_err_list)
 }
 
-condition <- function (mass, intensities, samples, tolerance) {
+condition <- function(mass, samples, tolerance) {
   if (anyDuplicated(samples)) {
     return(NA)
   }
@@ -55,31 +54,32 @@ condition <- function (mass, intensities, samples, tolerance) {
   meanMass
 }
 
-ppm_calc <- function (mass1, mass2) {
-  #' ppm_calc calculated the parts per million error between two different masses
-  #'
-  #' @examples
-  #' ppm_calc(mass1, mass2)
-  #'
-  #' @export
-  ppm_error <- ((mass1 - mass2)/mass1) * 1e6
-  return(ppm_error)
+#' ppm_calc calculated the parts per million error between two different masses
+#'
+#' @examples
+#' ppm_calc(mass1, mass2)
+#'
+#' @export
+ppm_calc <- function(mass1, mass2) {
+  ((mass1 - mass2)/mass1) * 1e6
 }
 
 
 # Background removal_1 ----------------------------------------------------
 
-blank_subtraction <- function(dataframe, filter_type = "median", blank_thresh = 1, nsamples_thresh = 1, blank_regx = "blank", filtered_df = FALSE){
+blank_subtraction <- function(dataframe, filter_type = "median",
+                              blank_thresh = 1, nsamples_thresh = 1,
+                              blank_regx = "blank", filtered_df = FALSE){
   blanks <- select(dataframe, contains(blank_regx)) #creates a dataframe with only blanks
   samples <- select(dataframe, !contains(blank_regx)) #creates a dataframe without blanks
 
   blanks$threshold <- apply(blanks, 1, filter_type) * blank_thresh #adds column with median/max/etc. of each row
   #times a specified threshold percentage
 
-  index <- vector() #creates a vector for the for loop
-
-  for(i in 1:nrow(samples)){
-    samples$index[i] <- if_else(sum(samples[i, 1:ncol(samples)] <= blanks$threshold[i])/ncol(samples)*100 >= nsamples_thresh, "blank_fail", "blank_pass")
+  for (i in 1:nrow(samples)) {
+    below_thresh <- sum(samples[i, 1:ncol(samples)] <= blanks$threshold[i])
+    boundary <- below_thresh / ncol(samples) * 100 >= nsamples_thresh
+    samples$index[i] <- if_else(boundary, "blank_fail", "blank_pass")
   } #calculates for each row how many data points don't exceed the initial threshold
   #if that amount meets or exceeds a certain threshold percentage of the total
   #amount of samples it will be marked as failed, if it remains below the threshold
@@ -91,16 +91,19 @@ blank_subtraction <- function(dataframe, filter_type = "median", blank_thresh = 
   print_pass <- print(nrow(filter(samples, index == "blank_pass"))) #prints the number of passed values
   print_fail <- print(nrow(filter(samples, index == "blank_fail"))) #prints the number of failed values
 
-  if(filtered_df == TRUE){
-    filtered_list <- list("filtered_df" = filtered_samples, "n_passed" = print_pass, "n_failed" = print_fail)
+  if (filtered_df == TRUE) {
+    #makes the function return a list with a dataframe containing m/z rows that
+    #passed the threshold, the number of passed values and the number of failed values
+    filtered_list <- list("filtered_df" = filtered_samples,
+                          "n_passed" = print_pass,
+                          "n_failed" = print_fail)
     return(filtered_list)
-  } #makes the function return a list with a dataframe containing m/z rows that
-  #passed the threshold, the number of passed values and the number of failed values
-
-  if(filtered_df == FALSE){
-    unfiltered_list <- list("unfiltered_df" = samples, "n_passed" = print_pass, "n_failed" = print_fail)
-    return(unfiltered_list)
-  } #makes the function return a list with a dataframe containing m/z rows that
+  }
+  #makes the function return a list with a dataframe containing m/z rows that
   #both passed and failed to pass the threshold, the number of passed values
   #and the number of failed values
+  unfiltered_list <- list("unfiltered_df" = samples,
+                          "n_passed" = print_pass,
+                          "n_failed" = print_fail)
+  return(unfiltered_list)
 }
