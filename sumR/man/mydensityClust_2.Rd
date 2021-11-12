@@ -2,7 +2,7 @@
 % Please edit documentation in R/clustering.R
 \name{mydensityClust_2}
 \alias{mydensityClust_2}
-\title{Title}
+\title{Mydensity clust 2}
 \usage{
 mydensityClust_2(data, mzMin, mzMax, dc)
 }

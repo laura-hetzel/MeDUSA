@@ -1,4 +1,69 @@
-#' Title
+#' Binning function
+#'
+#' @param mass 
+#' @param tolerance 
+#' @param times 
+#' @param sample_num 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+binning <- function(mass, tolerance, times, sample_num) {
+  n <- length(mass)
+  d <- diff(mass)
+  nBoundaries <- max(20L, floor(3L * log2(n))) #ensure there's enough bins
+  boundary <- list(left = double(nBoundaries), right = double(nBoundaries))
+  currentBoundary <- 1L
+  boundary$left[currentBoundary] <- 1L
+  boundary$right[currentBoundary] <- n
+  
+  q <- list(left = double(n), right = double(n))
+  currentQ <- 1L
+  
+  while (currentBoundary > 0L) {
+    left <- boundary$left[currentBoundary]
+    right <- boundary$right[currentBoundary]
+    currentBoundary <- currentBoundary - 1L
+    gaps <- d[left:(right - 1L)]
+    gapIdx <- which.max(gaps) + left - 1L # find the largest gap
+    
+    #condition for the ending point of the left
+    #two type of condition can be chosen here: based on tolerance/sample_number
+    #the line below needs to be modify if you want to choose another condition
+    #refer to condition_ppm() function when you need to modify
+    if (condition_num(mass = mass[left:gapIdx],
+                      times, sample_num)) {
+      currentBoundary <- currentBoundary + 1L
+      boundary$left[currentBoundary] <- left
+      boundary$right[currentBoundary] <- gapIdx
+    }
+    else {
+      #mass[left:gapIdx] <- l
+      q$left[currentQ] <- mass[left]
+      q$right[currentQ] <- mass[gapIdx]
+      currentQ <- currentQ + 1L
+    }
+    #condition for the ending point of the right
+    if (condition_num(mass = mass[(gapIdx + 1L):right], times, sample_num)) {
+      currentBoundary <- currentBoundary + 1L
+      boundary$left[currentBoundary] <- gapIdx + 1L
+      boundary$right[currentBoundary] <- right
+    }
+    else {
+      #mass[(gapIdx + 1L):right] <- r
+      q$left[currentQ] <- mass[gapIdx]
+      q$right[currentQ] <- mass[right]
+      currentQ <- currentQ + 1L
+    }
+  }
+  
+  q$left <- q$left[1:currentQ - 1L]
+  q$right <- q$right[1:currentQ - 1L]
+  return(q)
+}
+
+#' Binning function
 #'
 #' @param mass 
 #' @param intensities 
@@ -91,8 +156,6 @@ binPeaks <- function(l, tolerance = 0.002) {
   l
 }
 
-
-
 #' Binning condition
 #'
 #' @param mass 
@@ -130,70 +193,4 @@ condition_num <- function(mass, times, sample_num) {
     return(TRUE)
   }
   return(FALSE)
-}
-
-
-#' Binning function
-#'
-#' @param mass 
-#' @param tolerance 
-#' @param times 
-#' @param sample_num 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-binning <- function(mass, tolerance, times, sample_num) {
-  n <- length(mass)
-  d <- diff(mass)
-  nBoundaries <- max(20L, floor(3L * log2(n))) #ensure there's enough bins
-  boundary <- list(left = double(nBoundaries), right = double(nBoundaries))
-  currentBoundary <- 1L
-  boundary$left[currentBoundary] <- 1L
-  boundary$right[currentBoundary] <- n
-
-  q <- list(left = double(n), right = double(n))
-  currentQ <- 1L
-
-  while (currentBoundary > 0L) {
-    left <- boundary$left[currentBoundary]
-    right <- boundary$right[currentBoundary]
-    currentBoundary <- currentBoundary - 1L
-    gaps <- d[left:(right - 1L)]
-    gapIdx <- which.max(gaps) + left - 1L # find the largest gap
-
-    #condition for the ending point of the left
-    #two type of condition can be chosen here: based on tolerance/sample_number
-    #the line below needs to be modify if you want to choose another condition
-    #refer to condition_ppm() function when you need to modify
-    if (condition_num(mass = mass[left:gapIdx],
-                      times, sample_num)) {
-      currentBoundary <- currentBoundary + 1L
-      boundary$left[currentBoundary] <- left
-      boundary$right[currentBoundary] <- gapIdx
-    }
-    else {
-      #mass[left:gapIdx] <- l
-      q$left[currentQ] <- mass[left]
-      q$right[currentQ] <- mass[gapIdx]
-      currentQ <- currentQ + 1L
-    }
-    #condition for the ending point of the right
-    if (condition_num(mass = mass[(gapIdx + 1L):right], times, sample_num)) {
-      currentBoundary <- currentBoundary + 1L
-      boundary$left[currentBoundary] <- gapIdx + 1L
-      boundary$right[currentBoundary] <- right
-    }
-    else {
-      #mass[(gapIdx + 1L):right] <- r
-      q$left[currentQ] <- mass[gapIdx]
-      q$right[currentQ] <- mass[right]
-      currentQ <- currentQ + 1L
-    }
-  }
-
-  q$left <- q$left[1:currentQ - 1L]
-  q$right <- q$right[1:currentQ - 1L]
-  return(q)
 }

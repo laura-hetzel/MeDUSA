@@ -2,7 +2,7 @@
 % Please edit documentation in R/binning.R
 \name{binning_2}
 \alias{binning_2}
-\title{Title}
+\title{Binning function}
 \usage{
 binning_2(mass, intensities, samples, tolerance)
 }
@@ -19,5 +19,5 @@ binning_2(mass, intensities, samples, tolerance)
 
 }
 \description{
-Title
+Binning function
 }

@@ -1,4 +1,4 @@
-#' Read ms data
+#' Read MS data
 #'
 #' @param path 
 #'

@@ -246,7 +246,7 @@ cluster_align <- function(bin_element){
   return(aligned_data)
 }
 
-#' Title
+#' Mydensity clust 2
 #' 
 #' @description this is the function adapted from the densityClust() function of the
 #' densityClust package. It returns the rho&delta decision graph and the clusters

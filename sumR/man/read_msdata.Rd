@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{read_msdata}
 \alias{read_msdata}
-\title{Read ms data}
+\title{Read MS data}
 \usage{
 read_msdata(path = "data")
 }
@@ -13,5 +13,5 @@ read_msdata(path = "data")
 
 }
 \description{
-Read ms data
+Read MS data
 }
