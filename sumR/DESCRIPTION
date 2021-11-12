@@ -2,10 +2,13 @@ Package: sumR
 Type: Package
 Title: What the Package Does (Title Case)
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
+Authors@R: 
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
+Depends: magrittr
+Imports: stringr, dplyr, tibble, ggplot2, stats, usedist, densityClust, tidyr, 
+         superheat
+RoxygenNote: 7.1.2

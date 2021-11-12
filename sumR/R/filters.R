@@ -1,20 +1,19 @@
-#'BG_filter is used to conduct background removal (done by amar)
+#'BG filter 
 #'
-#'BG_filter is a function used to filter a dataframe of m/z values and intensities.
-#'This function allows the user to remove m/z peaks of measured samples, if they correspond to the same m/z of a blank within
-#'a specified range (for example within 150% of the blank intensity).
+#' @author amar
 #'
-#'@param dataframe
-#'@param mz_column
+#' @description it is used to conduct background removal).
+#' It filters a dataframe of m/z values and intensities.
+#' This function allows the user to remove m/z peaks of measured samples, 
+#' if they correspond to the same m/z of a blank within a specified range 
+#' (for example within 150% of the blank intensity).
 #'
+#' @param dataframe
+#' @param mz_column
 #'
-#'@importFrom
+#' @examples
 #'
-#'
-#'@examples
-#'
-#'
-#'@export
+#' @export
 BG_filter <- function(dataframe, limit=2.5, blank_regex ="blank",
                      mz_regex="mz", sample_regex="^d|^ec|qc") {
   blank_cols <- grep(blank_regex, names(dataframe), ignore.case = TRUE)
@@ -30,7 +29,7 @@ BG_filter <- function(dataframe, limit=2.5, blank_regex ="blank",
   sample_df <- dataframe[, sample_cols]
   below_limit <- (sample_df / dataframe$background) <= limit
   sample_df[below_limit] <- 0
-  sample_df
+  return(sample_df)
   #dataframe[sample_cols][sweep(dataframe[sample_cols], 1, dataframe$background, `/`) <= limit] <- 0
   #result <- dataframe[, -blank_cols]
   #return(result)
@@ -39,9 +38,9 @@ BG_filter <- function(dataframe, limit=2.5, blank_regex ="blank",
 
 
 
-#' MD_filter for data filtering based on Mass Defect
+#' MD filter 
 #'
-#'
+#' @description filters data based on Mass Defect
 #'
 #' @importFrom dplyr mutate select
 #'
@@ -55,8 +54,8 @@ BG_filter <- function(dataframe, limit=2.5, blank_regex ="blank",
 #' MD_filter(master_df_pos, master_df_pos$mz)
 #'
 #' @export
-
-# Use Only this for now ---------------------------------------------------
+#' @importFrom dplyr filter
+#' @import ggplot2
 MD_filter <- function(dataframe, mz_col, a = 0.00112, b = 0.01953){
   #SOlves problem of customizable lin. eq as well: In case HMDB updates data
   #In-function MD calculation

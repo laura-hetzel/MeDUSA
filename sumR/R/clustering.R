@@ -1,5 +1,15 @@
-#' @import usedist
-#' @import densityClust
+#' Mydensity clust 1
+#' 
+#' @param data 
+#'
+#' @param mzMin 
+#' @param mzMax 
+#' @param dc 
+#'
+#' @importFrom usedist dist_make
+#' @importFrom densityClust densityClust
+#' @importFrom dplyr filter
+#' @importFrom stats as.dist
 mydensityClust_1 <- function(data, mzMin, mzMax, dc) {
   ## this is the function adapted from the densityClust() function of the
   ## densityClust package. It returns the rho&delta decision graph and the clusters
@@ -9,10 +19,10 @@ mydensityClust_1 <- function(data, mzMin, mzMax, dc) {
   # pre-processing for densityClust()
 
   # subset mz for testing
-  tmz <- dplyr::filter(data, mz >= mzMin & mz <= mzMax) %>% pull(mz)
+  tmz <- filter(data, mz >= mzMin & mz <= mzMax) %>% pull(mz)
 
   # calculate the distance (in ppm) between each mz and put them in a data frame
-  dist_matrix <- as.dist(abs(usedist::dist_make(as.matrix(tmz), ppm_calc)), diag = TRUE)
+  dist_matrix <- as.dist(abs(dist_make(as.matrix(tmz), ppm_calc)), diag = TRUE)
 
   # distMatrix <- matrix(data = NA, nrow = length(tmz), ncol = length(tmz))
   # for (i in 1:length(tmz)){
@@ -23,10 +33,22 @@ mydensityClust_1 <- function(data, mzMin, mzMax, dc) {
   # distMatrix <- as.dist(distMatrix,diag=TRUE)
   #
   # dc(cutoff distance): a radium within which the density will be calculated
-  densityClust::densityClust(dist = dist_matrix,
-                             dc = dc, gaussian = FALSE)
+  densityClust(dist = dist_matrix, dc = dc, gaussian = FALSE)
 }
 
+#' Title
+#'
+#' @param data 
+#' @param mzClust 
+#' @param mzMin 
+#' @param mzMax 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' @importFrom dplyr mutate
+#' @importFrom dplyr filter
 getclusteredData <- function(data, mzClust, mzMin, mzMax){
   ## this is a function that takes the results of the densityClust() function
   ## from densityClust package, outputs the data with rho & delta
@@ -52,6 +74,15 @@ getclusteredData <- function(data, mzClust, mzMin, mzMax){
   return(df)
 }
 
+#' Title
+#'
+#' @param data 
+#'
+#' @return
+#' @export
+#' @importFrom stats aggregate
+#'
+#' @examples
 clusterAssign <- function(data){
   ## this is a function takes the dataset as input, and assign clusters based
   ## on the delta
@@ -71,6 +102,17 @@ clusterAssign <- function(data){
   return(data)
 }
 
+#' Title
+#'
+#' @param bin_element 
+#'
+#' @return
+#' @export
+#' @importFrom tidyr pivot_wider
+#' @importFrom dplyr group_by
+#' @importFrom dplyr summarize
+#'
+#' @examples
 cluster_align <- function(bin_element){
   ## find clusters
   # rho: the minimum number of peaks within a cluster
@@ -185,8 +227,8 @@ cluster_align <- function(bin_element){
                          cluster = rep(0, sample_num),
                          aligned = rep(0, sample_num))
   ttmpData <- rbind(nulldata, clusteredData)
-  ttmpData <- ttmpData %>% tidyr::pivot_wider(names_from = sample,
-                                              values_from = intensity)
+  ttmpData <- ttmpData %>% pivot_wider(names_from = sample, 
+                                       values_from = intensity)
   ttmpData[is.na(ttmpData)] <- 0
 
   # remove the null data
@@ -199,19 +241,30 @@ cluster_align <- function(bin_element){
   # tsfData <- tmpData %>% group_by(aligned) %>% dplyr::summarize(across(.fns = max))
 
   # merge the rows with same alignedmz
-  aligned_data <- tmpData %>% group_by(aligned) %>% dplyr::summarize(across(.fns = max))
+  aligned_data <- tmpData %>% group_by(aligned) %>% summarize(across(.fns = max))
 
-  aligned_data
+  return(aligned_data)
 }
 
-
-## this is the function adapted from the densityClust() function of the
-## densityClust package. It returns the rho&delta decision graph and the clusters
-## it finds. The default rho = 0.8, delta = 0.05. These should be tuned based on
-## the decision graph for each data set.
-
-## need to cluster in intervals, otherwise the data amount is too large to calculate/store
-
+#' Title
+#' 
+#' @description this is the function adapted from the densityClust() function of the
+#' densityClust package. It returns the rho&delta decision graph and the clusters
+#' it finds. The default rho = 0.8, delta = 0.05. These should be tuned based on
+#' the decision graph for each data set.
+#' 
+#' need to cluster in intervals, otherwise the data amount is too large to calculate/store
+#'
+#' @param data 
+#' @param mzMin 
+#' @param mzMax 
+#' @param dc 
+#'
+#' @return
+#' @export
+#' @importFrom stats as.dist
+#'
+#' @examples
 mydensityClust_2 <- function(data, mzMin, mzMax, dc) {
 
   # pre-processing for densityClust()
@@ -241,5 +294,3 @@ mydensityClust_2 <- function(data, mzMin, mzMax, dc) {
 
   return(tmzClust)
 }
-
-

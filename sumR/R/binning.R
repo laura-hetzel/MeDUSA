@@ -1,3 +1,14 @@
+#' Title
+#'
+#' @param mass 
+#' @param intensities 
+#' @param samples 
+#' @param tolerance 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 binning_2 <- function(mass, intensities, samples, tolerance) {
   n <- length(mass)
   d <- diff(mass)
@@ -44,11 +55,18 @@ binning_2 <- function(mass, intensities, samples, tolerance) {
       boundary$right <- c(boundary$right, double(nBoundaries - currentBoundary))
     }
   }
-  mass
+  return(mass)
 }
 
-
-##binPeaks function! This needs the two functions above
+#' Bin peaks
+#'
+#' @param l 
+#' @param tolerance 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 binPeaks <- function(l, tolerance = 0.002) {
   nn <- sapply(l, nrow)
   nonEmpty <- nn != 0L
@@ -74,7 +92,16 @@ binPeaks <- function(l, tolerance = 0.002) {
 }
 
 
-#binning condition.
+
+#' Binning condition
+#'
+#' @param mass 
+#' @param tolerance 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 condition_ppm <- function(mass, tolerance) {
   # if the ppm between the first and the last mz of the bin is larger than the threshold ---> continue binning
   l <- length(mass)
@@ -84,6 +111,16 @@ condition_ppm <- function(mass, tolerance) {
   FALSE
 }
 
+#' Title
+#'
+#' @param mass 
+#' @param times 
+#' @param sample_num 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 condition_num <- function(mass, times, sample_num) {
   # if the number of mz in this bin is larger than the threshold ---> continue binning
   # the floor of the times is 1 (ideally the lowest peak number in a bin = the sample number )
@@ -92,10 +129,21 @@ condition_num <- function(mass, times, sample_num) {
   if (l > sample_num * times) {
     return(TRUE)
   }
-  FALSE
+  return(FALSE)
 }
 
-#Binning function.
+
+#' Binning function
+#'
+#' @param mass 
+#' @param tolerance 
+#' @param times 
+#' @param sample_num 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 binning <- function(mass, tolerance, times, sample_num) {
   n <- length(mass)
   d <- diff(mass)

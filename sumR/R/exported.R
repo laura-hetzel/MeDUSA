@@ -1,4 +1,5 @@
-#' iso_hippo
+#' Iso hippo
+#' 
 #' @description iso_hippo is a function that takes 1 argument, and 2 optional ones
 #' Similarly to kopi luwak, iso hippo is a retired, senile, hippopotamus
 #' that grazes on huge chunks of data and poops isotopes and mol.ions
@@ -10,7 +11,10 @@
 #' @param isotope_da is an optional argument, specifying the differences
 #' between mol ions and isotopes in Da
 #' @param iso_tolerance optional argument: tolerance in Da for isotope differences
-#' @importFrom tidyverse
+#' @importFrom tibble tibble
+#' @importFrom dplyr mutate
+#' @importFrom dplyr filter
+#' @importFrom dplyr select
 #'
 #' @examples
 #'
@@ -34,14 +38,21 @@ iso_hippo <- function(df, isotope_da = 1.0034, iso_tolerance = 0.0034) {
 }
 
 
-FUN_text_exporter <- function(rnamed_cnamed_df, file_path,extension) {
-  #takes three arguments,
-  #df: with rownamed mz,colnamed samples
-  #path : desire output path ,should be a string
-  #custom_extension : desired custom extension to files (aside from .txt), string
-  #takes teh df, separates it into mz,int files for each sample (1st loop)
-  #export each file with desired file path,and custom extension (2nd loop)
-  #UNALIGNED ! UNLIMITED POWAAAAAH
+#' Title
+#'
+#' @param rnamed_cnamed_df data.frame with rownamed mz,colnamed samples
+#' @param file_path desire output path, should be a string
+#' @param extension desired custom extension to files (aside from .txt), string
+#' 
+#' @description takes teh df, separates it into mz,int files for each sample (1st loop)
+#' export each file with desired file path,and custom extension (2nd loop)
+#' UNALIGNED ! UNLIMITED POWAAAAAH
+#'
+#' @return
+#' @export
+#'
+#' @examples
+FUN_text_exporter <- function(rnamed_cnamed_df, file_path, extension) {
   all_spectra <- list()
   c_names <- colnames(rnamed_cnamed_df)
   r_names <- row.names(rnamed_cnamed_df)

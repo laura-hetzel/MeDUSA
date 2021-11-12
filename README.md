@@ -1,5 +1,16 @@
 # SUM-R
 
+## Installation
+
+For the installation of the R package you can just write the following in your 
+R environment. If needed devtools will be installed as well.
+
+```r
+# Installation of the development version from GitHub
+if (!requireNamespace("devtools", quietly = TRUE))
+    install.packages("devtools")
+devtools::install_git("https://gitlab.com/alkidu/sum-r.git", branch = "development", subdir = "sumR")
+```
 
 
 ## Getting started

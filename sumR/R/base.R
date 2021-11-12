@@ -1,16 +1,42 @@
+#' Read ms data
+#'
+#' @param path 
+#'
+#' @return
+#' @export
+#' @importFrom stringr str_remove
+#' @importFrom dplyr bind_rows
+#'
+#' @examples
 read_msdata <- function(path = "data") {
   files <- list.files(path = "data", full.names = T)
-  file_names <- stringr::str_remove(string = files, pattern = ".txt")
+  file_names <- str_remove(string = files, pattern = ".txt")
   file_list <- lapply(setNames(files, file_names), function(x){
     read.table(x, col.names = c("mz", "intensity"))
   })
   nn <- sapply(file_list, nrow) # each sample's row number
   nonEmpty <- nn != 0L # if there's any empty sample; return logic vector
-  ms_data <- dplyr::bind_rows(file_list[nonEmpty], .id = "sample")
-  ms_data[order(ms_data$mz), ]
+  ms_data <- bind_rows(file_list[nonEmpty], .id = "sample")
+  
+  return(ms_data[order(ms_data$mz), ])
 }
 
-#' align_check makes sure that all the m/z values are aligned/binned correctly
+#' ppm calculation
+#' 
+#' @description calculates the parts per million error between two different masses
+#'
+#' @examples
+#' ppm_calc(mass1, mass2)
+#'
+#' @export
+ppm_calc <- function(mass1, mass2) {
+  ((mass1 - mass2)/mass1) * 1e6
+}
+
+#' Align check
+#' 
+#' @description align_check makes sure that all the m/z values are 
+#' aligned/binned correctly
 #'
 #' align_check takes 2 arguments (1 optional), a dataframe of peaks with mz column,
 #' and an optinal argument for the coordinates of the plot to be zoomed in on
@@ -24,6 +50,8 @@ read_msdata <- function(path = "data") {
 #'
 #'
 #' @export
+#' @importFrom tibble as_tibble_col
+#' @import ggplot2
 align_check <- function(data_frame_fn, xcoords = c(-20, 0)) {
   odd_ind_fn <- seq(3, length(data_frame_fn$mz), 2)
   even_ind_fn <- seq(2, length(data_frame_fn$mz), 2)
@@ -43,6 +71,16 @@ align_check <- function(data_frame_fn, xcoords = c(-20, 0)) {
   return(ppm_err_list)
 }
 
+#' Title
+#'
+#' @param mass 
+#' @param samples 
+#' @param tolerance 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 condition <- function(mass, samples, tolerance) {
   if (anyDuplicated(samples)) {
     return(NA)
@@ -51,22 +89,24 @@ condition <- function(mass, samples, tolerance) {
   if (any(abs(mass - meanMass)/meanMass > tolerance)) {
     return(NA)
   }
-  meanMass
+  
+  return(meanMass)
 }
 
-#' ppm_calc calculated the parts per million error between two different masses
+#' Background removal
+#'
+#' @param dataframe 
+#' @param filter_type 
+#' @param blank_thresh 
+#' @param nsamples_thresh 
+#' @param blank_regx 
+#' @param filtered_df 
+#'
+#' @return
+#' @export
 #'
 #' @examples
-#' ppm_calc(mass1, mass2)
-#'
-#' @export
-ppm_calc <- function(mass1, mass2) {
-  ((mass1 - mass2)/mass1) * 1e6
-}
-
-
-# Background removal_1 ----------------------------------------------------
-
+#' @importFrom dplyr select
 blank_subtraction <- function(dataframe, filter_type = "median",
                               blank_thresh = 1, nsamples_thresh = 1,
                               blank_regx = "blank", filtered_df = FALSE){
