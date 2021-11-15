@@ -18,8 +18,8 @@ BG_filter(
 \description{
 it is used to conduct background removal).
 It filters a dataframe of m/z values and intensities.
-This function allows the user to remove m/z peaks of measured samples, 
-if they correspond to the same m/z of a blank within a specified range 
+This function allows the user to remove m/z peaks of measured samples,
+if they correspond to the same m/z of a blank within a specified range
 (for example within 150% of the blank intensity).
 }
 \examples{

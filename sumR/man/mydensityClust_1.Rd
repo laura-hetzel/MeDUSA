@@ -4,17 +4,16 @@
 \alias{mydensityClust_1}
 \title{Mydensity clust 1}
 \usage{
-mydensityClust_1(data, mzMin, mzMax, dc)
+mydensityClust_1(data, mz_min, mz_max, dc)
 }
 \arguments{
 \item{data}{}
 
-\item{mzMin}{}
-
-\item{mzMax}{}
-
 \item{dc}{}
 }
 \description{
-Mydensity clust 1
+this is the function adapted from the densityClust() function
+of the densityClust package. It returns the rho&delta decision graph and
+the clusters it finds. mz need to cluster in intervals, otherwise the
+data amount is too large to calculate/store
 }

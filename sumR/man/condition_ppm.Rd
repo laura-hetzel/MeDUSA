@@ -7,8 +7,6 @@
 condition_ppm(mass, tolerance)
 }
 \arguments{
-\item{mass}{}
-
 \item{tolerance}{}
 }
 \value{

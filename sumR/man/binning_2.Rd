@@ -7,12 +7,6 @@
 binning_2(mass, intensities, samples, tolerance)
 }
 \arguments{
-\item{mass}{}
-
-\item{intensities}{}
-
-\item{samples}{}
-
 \item{tolerance}{}
 }
 \value{

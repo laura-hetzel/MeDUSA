@@ -8,6 +8,10 @@ plotPCA(master_df_pos_t, method = c("facto", "stats"))
 }
 \arguments{
 \item{master_df_pos_t}{transposed dataframe}
+
+\item{method}{Which method of calculating the PCA should be used. 
+"facto" uses the FactoMineR and factoextra packages. "stats" uses prcomp from
+the basic stats package and ggpubr.}
 }
 \value{
 

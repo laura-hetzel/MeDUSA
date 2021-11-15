@@ -13,21 +13,21 @@ superheat <- master_df_t %>%
             grid.vline.size = 3,
             membership.rows = classifiers,
             heat.pal = viridis::mako(100),
-            pretty.order.rows = T,
-            pretty.order.cols =T,
-            scale = F, #scales columns
+            pretty.order.rows = TRUE,
+            pretty.order.cols = TRUE,
+            scale = FALSE, #scales columns
             padding = 0.1,
-            legend.width=4)
+            legend.width = 4)
 
 
-## but we plot the points of log2 folchange between two groups and the values of nominal p value but it will be colored
-# by significance according to adjusted p value
-## we can use here the results of wilcox or welch t test
-volcanoPlot(wilcox,wilcox$log2fc_M1_M2,wilcox$p.value, "Volcanoplo P-values M1 (welch t test and mann whiteny u)
+## but we plot the points of log2 folchange between two groups and the values 
+## of nominal p value but it will be colored by significance according to 
+## adjusted p value we can use here the results of wilcox or welch t test
+volcanoPlot(wilcox, wilcox$log2fc_M1_M2, wilcox$p.value, "Volcanoplo P-values M1 (welch t test and mann whiteny u)
             significance of adjusted p values with FDR < 0.1")
 
 
-# Random forest visualization  ------------------------------------------------------------------
+# Random forest visualization  ------------------------------------------------
 ##AUC and roc
 ## if we did a random forest cross validation using 5 models to obtain the final model
 

@@ -7,14 +7,16 @@
 MD_filter(dataframe, mz_col, a = 0.00112, b = 0.01953)
 }
 \arguments{
-\item{dataframe}{is the dataframe on which KM calculations need to be conducted}
+\item{dataframe}{is the dataframe on which KM calculations need to be
+conducted}
 
 \item{mz_col}{is the mass to charge column within the specified dataframe}
 
 \item{a}{is the coefficient of the linear equation used for data filtering}
 
-\item{b}{is the addition value of the linear equation used for data filtering,
-both a and b can be calculated using the linear_equation() function included in this package.}
+\item{b}{is the addition value of the linear equation used for data
+filtering, both a and b can be calculated using the linear_equation()
+function included in this package.}
 }
 \description{
 filters data based on Mass Defect

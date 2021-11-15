@@ -7,8 +7,6 @@
 binPeaks(l, tolerance = 0.002)
 }
 \arguments{
-\item{l}{}
-
 \item{tolerance}{}
 }
 \value{

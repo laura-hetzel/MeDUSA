@@ -7,15 +7,16 @@
 condition_num(mass, times, sample_num)
 }
 \arguments{
-\item{mass}{}
-
-\item{times}{}
-
 \item{sample_num}{}
 }
 \value{
 
 }
 \description{
-Title
+if the number of mz in this bin is larger than the threshold
+---> continue binning
+the floor of the times is 1 (ideally the lowest peak number in a bin =
+the sample number )
+the cell of the times depends on the RAM of your computer and your
+expectation of running speed
 }

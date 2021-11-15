@@ -4,25 +4,20 @@
 \alias{mydensityClust_2}
 \title{Mydensity clust 2}
 \usage{
-mydensityClust_2(data, mzMin, mzMax, dc)
+mydensityClust_2(data, mz_min, mz_max, dc)
 }
 \arguments{
-\item{data}{}
-
-\item{mzMin}{}
-
-\item{mzMax}{}
-
 \item{dc}{}
 }
 \value{
 
 }
 \description{
-this is the function adapted from the densityClust() function of the
-densityClust package. It returns the rho&delta decision graph and the clusters
-it finds. The default rho = 0.8, delta = 0.05. These should be tuned based on
-the decision graph for each data set.
+this is the function adapted from the densityClust() function
+of the densityClust package. It returns the rho&delta decision graph and
+the clusters it finds. The default rho = 0.8, delta = 0.05. These should be
+tuned based on the decision graph for each data set.
 
-need to cluster in intervals, otherwise the data amount is too large to calculate/store
+Cluster needs to be done in intervals, otherwise the data amount is too
+large to calculate/store.
 }

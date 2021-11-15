@@ -7,10 +7,6 @@
 condition(mass, samples, tolerance)
 }
 \arguments{
-\item{mass}{}
-
-\item{samples}{}
-
 \item{tolerance}{}
 }
 \value{

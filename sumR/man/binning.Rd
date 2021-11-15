@@ -7,12 +7,6 @@
 binning(mass, tolerance, times, sample_num)
 }
 \arguments{
-\item{mass}{}
-
-\item{tolerance}{}
-
-\item{times}{}
-
 \item{sample_num}{}
 }
 \value{

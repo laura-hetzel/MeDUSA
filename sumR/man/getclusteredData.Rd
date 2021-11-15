@@ -4,16 +4,10 @@
 \alias{getclusteredData}
 \title{Title}
 \usage{
-getclusteredData(data, mzClust, mzMin, mzMax)
+getclusteredData(data, mzClust, mz_min, mz_max)
 }
 \arguments{
-\item{data}{}
-
-\item{mzClust}{}
-
-\item{mzMin}{}
-
-\item{mzMax}{}
+\item{mz_max}{}
 }
 \value{
 

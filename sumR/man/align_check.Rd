@@ -7,18 +7,15 @@
 align_check(data_frame_fn, xcoords = c(-20, 0))
 }
 \description{
-align_check makes sure that all the m/z values are 
+align_check makes sure that all the m/z values are
 aligned/binned correctly
 
-align_check takes 2 arguments (1 optional), a dataframe of peaks with mz column,
-and an optinal argument for the coordinates of the plot to be zoomed in on
+align_check takes 2 arguments (1 optional), a dataframe of peaks with mz
+column, and an optinal argument for the coordinates of the plot to be zoomed
+in on
 
 align_check outputs a list of three elements:
 1- Dataframe of 1 column containing the ppm error values
 2- boxplot of the ppm erro values with xcoords zoomed in to -20,0 (default)
 3- table of summary stats of ppm error values
-}
-\examples{
-
-
 }

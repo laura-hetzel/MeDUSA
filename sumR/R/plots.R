@@ -32,6 +32,9 @@ volcanoPlot <- function(data, xvalues, yvalues, title){
 #' or stats and ggplot2
 #'
 #' @param master_df_pos_t transposed dataframe
+#' @param method Which method of calculating the PCA should be used. 
+#' "facto" uses the FactoMineR and factoextra packages. "stats" uses prcomp from
+#' the basic stats package and ggpubr.
 #'
 #' @return
 #' @export
