@@ -182,10 +182,10 @@ condition_ppm <- function(mass, tolerance) {
   FALSE
 }
 
-#' Title
+#' Check Binning condition
 #'
-#' @description if the number of mz in this bin is larger than the threshold
-#' ---> continue binning
+#' @description returns TRUE if the number of mz in this bin is larger than
+#' the threshold. And FALSE otherwise.
 #' the floor of the times is 1 (ideally the lowest peak number in a bin =
 #' the sample number )
 #' the cell of the times depends on the RAM of your computer and your

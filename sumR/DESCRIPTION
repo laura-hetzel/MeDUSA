@@ -7,6 +7,7 @@ Authors@R: c(person("Alida", "Kindt", email = "a.s.d.kindt@lacdr.leidenuniv.nl",
              person("Klara", "Blaschitz", role = c("aut")),
              person("Pascal", "Maas", role = c("aut")),
              person("Eman", "Muhammad", role = c("aut")),
+             person("Merys", "Valdez", role = c("aut")),
              person("David", "Rasp", email = "d.rasp@lacdr.leidenuniv.nl", role = c("aut"), comment = c(ORCID = "0000-0003-0164-2163")))
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
