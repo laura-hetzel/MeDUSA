@@ -3,7 +3,7 @@ Type: Package
 Title: What the Package Does (Title Case)
 Version: 0.1.0
 Authors@R: c(person("Alida", "Kindt", email = "a.s.d.kindt@lacdr.leidenuniv.nl", role = c("aut", "cre")),
-             person("Ahmed", "Ali", email = "ali@lacdr.leidenuniv.nl, role = c("aut", "cre")),
+             person("Ahmed", "Ali", email = "ali@lacdr.leidenuniv.nl", role = c("aut")),
              person("Klara", "Blaschitz", role = c("aut")),
              person("Pascal", "Maas", role = c("aut")),
              person("Eman", "Muhammad", role = c("aut")),

@@ -1,6 +1,6 @@
 #' Read MS data
 #'
-#' @param path
+#' @param path path to the file
 #'
 #' @return
 #' @export

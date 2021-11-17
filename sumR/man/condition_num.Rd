@@ -2,7 +2,7 @@
 % Please edit documentation in R/binning.R
 \name{condition_num}
 \alias{condition_num}
-\title{Title}
+\title{Check Binning condition}
 \usage{
 condition_num(mass, times, sample_num)
 }
@@ -13,8 +13,8 @@ condition_num(mass, times, sample_num)
 
 }
 \description{
-if the number of mz in this bin is larger than the threshold
----> continue binning
+returns TRUE if the number of mz in this bin is larger than
+the threshold. And FALSE otherwise.
 the floor of the times is 1 (ideally the lowest peak number in a bin =
 the sample number )
 the cell of the times depends on the RAM of your computer and your

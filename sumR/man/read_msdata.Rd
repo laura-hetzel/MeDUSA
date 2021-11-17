@@ -7,7 +7,7 @@
 read_msdata(path = "data")
 }
 \arguments{
-\item{path}{}
+\item{path}{path to the file}
 }
 \value{
 
