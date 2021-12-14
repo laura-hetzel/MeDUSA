@@ -1,13 +1,9 @@
-#' Read MS data
-#'
+#' @title Read MS data
 #' @param path path to the file
-#'
-#' @return
+#' @return Data.frame with ordered mz values
 #' @export
 #' @importFrom stringr str_remove
 #' @importFrom dplyr bind_rows
-#'
-#' @examples
 read_msdata <- function(path = "data") {
   files <- list.files(path = "data", full.names = T)
   file_names <- str_remove(string = files, pattern = ".txt")
@@ -104,13 +100,11 @@ condition <- function(mass, samples, tolerance) {
 #' @param filtered_df
 #'
 #' @return
-#' @export
+
 #'
 #' @examples
-#' @importFrom dplyr select
-#' @importFrom dplyr contains
-#' @importFrom dplyr if_else
-#' @importFrom dplyr filter
+#' @importFrom dplyr select contains if_else filter
+#' @export
 blank_subtraction <- function(dataframe, filter_type = "median",
                               blank_thresh = 1, nsamples_thresh = 1,
                               blank_regx = "blank", filtered_df = FALSE) {
@@ -139,9 +133,9 @@ blank_subtraction <- function(dataframe, filter_type = "median",
   ## Dataframe that only displays the passed values, filtering out failed values
   filtered_samples <- filter(samples, index == "blank_pass")
   ## Prints the number of passed values
-  print_pass <- print(nrow(filter(samples, index == "blank_pass")))
+  print_pass <- nrow(filter(samples, index == "blank_pass"))
   ## Prints the number of failed values
-  print_fail <- print(nrow(filter(samples, index == "blank_fail")))
+  print_fail <- nrow(filter(samples, index == "blank_fail"))
 
   if (filtered_df == TRUE) {
     ## Makes the function return a list with a dataframe containing m/z
