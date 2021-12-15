@@ -4,3 +4,5 @@
 .Ruserdata
 **/data
 .Rproj.user
+**/sumR/packrat/lib
+**/sumR/packrat/src

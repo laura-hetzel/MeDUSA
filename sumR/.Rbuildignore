@@ -1,3 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
+^sumR\.Rproj$
+^packrat/
+^\.Rprofile$

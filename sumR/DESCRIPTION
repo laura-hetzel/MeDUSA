@@ -18,3 +18,6 @@ Depends: magrittr
 Imports: stringr, dplyr, tibble, ggplot2, stats, usedist, densityClust, tidyr, 
          FactoMineR, factoextra, ggpubr, mixOmics
 RoxygenNote: 7.1.2
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

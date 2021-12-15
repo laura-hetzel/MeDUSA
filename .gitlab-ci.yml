@@ -1,0 +1,33 @@
+# source: https://www.r-bloggers.com/2018/08/gitlab-ci-for-r-package-development/
+
+image: rocker/tidyverse
+
+stages:
+  - setup
+  - check
+  - test
+
+before_script:
+  - apt-get update
+  - apt install -y libcurl4-openssl-dev libssl-dev libxml2-dev libxslt-dev libnetcdf-dev libxt-dev qpdf
+
+cache:
+  key: one-key-to-rule-them-all
+  paths:
+    - sumR/packrat/
+
+setup:
+  stage: setup
+  script:
+    - R -e 'source("ci.R"); ci_setup()'
+
+check:
+  stage: check
+  script:
+    - R -e 'source("ci.R"); ci_check()'
+
+coverage:
+  stage: test
+  script:
+    - R -e 'source("ci.R"); ci_coverage()'
+
