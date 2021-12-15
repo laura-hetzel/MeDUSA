@@ -26,7 +26,6 @@ ci_setup <- function(){
 ci_check <- function(){
   if (length(list.files(path = "R") > 0)) {
     ci_setup()
-    install_if_needed("devtools")
     devtools::check(error_on = "error")
   }
 }
