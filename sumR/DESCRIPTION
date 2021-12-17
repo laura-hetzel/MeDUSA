@@ -1,6 +1,6 @@
 Package: sumR
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Package for analysis of DI-MS data.
 Version: 0.1.0
 Authors@R: c(person("Alida", "Kindt", email = "a.s.d.kindt@lacdr.leidenuniv.nl", role = c("aut", "cre")),
              person("Ahmed", "Ali", email = "ali@lacdr.leidenuniv.nl", role = c("aut")),
@@ -9,8 +9,7 @@ Authors@R: c(person("Alida", "Kindt", email = "a.s.d.kindt@lacdr.leidenuniv.nl",
              person("Eman", "Muhammad", role = c("aut")),
              person("Merys", "Valdez", email = "m.e.valdez@lacdr.leidenuniv.nl", role = c("aut")),
              person("David", "Rasp", email = "d.rasp@lacdr.leidenuniv.nl", role = c("aut"), comment = c(ORCID = "0000-0003-0164-2163")))
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Description: Set of tools to set up a pipeline for the analysis of DI-MS data. 
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
