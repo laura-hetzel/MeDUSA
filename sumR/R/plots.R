@@ -29,13 +29,13 @@ volcanoPlot <- function(data, xvalues, yvalues, title){
 #' Plot PCA
 #' 
 #' @description visualization using either factoMineR and factorextra package
-#' or stats and ggplot2
+#' or stats and ggplot2 .. click next to show the next plot
 #'
-#' @param master_df_pos_t transposed dataframe
+#' @param data transposed dataframe with m/z as columns
 #' @param method Which method of calculating the PCA should be used. 
 #' "facto" uses the FactoMineR and factoextra packages. "stats" uses prcomp from
 #' the basic stats package and ggpubr.
-#'
+#' @param classifiers sample groups as factor
 #' @return
 #' @export
 #' @importFrom FactoMineR PCA
@@ -49,28 +49,27 @@ volcanoPlot <- function(data, xvalues, yvalues, title){
 #' @importFrom ggplot2 geom_vline
 #'
 #' @examples
-plotPCA <- function(master_df_pos_t, method = c("facto", "stats")){
+plotPCA <- function(data, method = c("facto", "stats"),classifiers){
   if(method[1] == "facto"){
-    res_pca <- PCA(master_df_pos_t, graph = FALSE)
-    
+    res_pca <- PCA(data, graph = FALSE)
+
     ## Visualisation of variance explained (plot the variance against the no of dimension)
-    fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 50),main="PCA - scree plot" )
-    
+    print(fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 100),main="PCA - scree plot" ))
+    par(ask=TRUE)
     
     ## Extracting results of variables
     var <- get_pca_var(res_pca)
-    fviz_pca_var(res_pca,col.var = "grey",col.circle = "grey",title="variables-PCA")
+   print(fviz_pca_var(res_pca,col.var = "grey",col.circle = "grey",title="variables-PCA"))
     
     ##Plotting the individuals
-    
-    fviz_pca_ind(res_pca, col.ind = "cos2",
+    par(ask=TRUE)
+    print(fviz_pca_ind(res_pca, col.ind = "cos2",
                  gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
                  repel = TRUE,# Avoid text overlapping (slow if many points)
-                 title="individuals-PCA - names of the sample"
-    )
+                 title="individuals-PCA - names of the sample"))
     
     ## plotting the ellipses
-    
+    par(ask=TRUE)
     fviz_pca_ind(res_pca,
                  geom.ind = "point", # show points only (nbut not "text")
                  col.ind = classifiers, # color by groups
@@ -83,22 +82,22 @@ plotPCA <- function(master_df_pos_t, method = c("facto", "stats")){
     ## different way to plot the PCA
     ## PCA from basic stats
     
-    PCA2 <- prcomp(as.matrix(master_df_pos_t), scale. = F) #PCA model using transposed df
-    fviz_eig(PCA2, addlabels = TRUE, ylim = c(0, 100),main="PCA -scree plot" )
+    PCA2 <- prcomp(as.matrix(data), scale. = F) #PCA model using transposed df
     PCA_scores <- as.data.frame(PCA2$x) %>% dplyr::select(PC1, PC2)
     PCA_scores$Sample <- classifiers ## we add our classifiers here
     
     ##plotting the samples and ellipses using ggplot
+    print(fviz_eig(PCA2, addlabels = TRUE, ylim = c(0, 100),main="PCA -scree plot" ))
+    par(ask=TRUE)
     ggscatter(PCA_scores, x = "PC1", y = "PC2",
               color = "Sample", shape = "Sample", palette = "aaas",
-              mean.point = TRUE, ellipse = TRUE, title = "PCA ", subtitle = "PC1(25.4%) - PC2(11.2%)") + ## add PC 1 and PC 2 percentage from scree plot
+              mean.point = TRUE, ellipse = TRUE, title = "PCA Samples") + 
       geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
       geom_vline(xintercept = 0, linetype = "dashed", color = "black")
     
   }
   
 }
-
 #' Plot PLS-DA
 #'
 #' @param data transposed dataframe with m/z as columns  
