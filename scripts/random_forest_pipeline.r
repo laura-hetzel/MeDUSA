@@ -42,11 +42,27 @@ test<-redvar_removal(sig_data_t,0.75)
 
 
 ## feature selection
-
+#' @title feature selection
+#' @description This function select the desired numbers of most imp features for random forest model
+#' @param data_t the dataframe with m/z as columns and a sample column named samples
+#' @param data the master dataframe
+#' @param subsets how many peaks do u want to be selected or the range of peaks
+#' @param seed global seed for reproducible results
+#' @param method "repeatedcv" the method for feature selection is repeated cross validation
+#' @param repeats numbers of repeats for cross validation
+#' @param class1 sample group 1 name for renaming
+#' @param class2 sample group 2 name for renaming
+#' @importFrom tibble column_to_rownames
+#' @importFrom tibble rownames_to_column
+#' @importFrom caret rfeControl
+#' @importFrom caret rfe
+#' @importFrom dplyr select
+#' @importFrom ggplot2 ggplot
+#' @importFrom dplyr filter_all
 imp_select<-function(data,data_t,subsets,seed,method,repeats,class1,class2){
   
   
-  data_t$samples <- as.factor(ifelse(grepl(data_t$samples, pattern = "X"), "X", "Y"))
+  data_t$samples <- as.factor(ifelse(grepl(data_t$samples, pattern = class1), class1, class2))
   
   control <- rfeControl(functions = rfFuncs,method =method,repeats =repeats)
   # run the RFE algorithm
