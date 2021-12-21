@@ -125,3 +125,30 @@ plotPLSDA <- function(data, classifiers,comp,method){
    plotLoadings(plsda, contrib = 'max', method = method, comp = comp,title="PLS-DA contribution")
 
 }
+
+#' heatmap
+#' @description heatmap plot of m/z intensities of grouped samples
+#' @param data dataframe with m/z as columns
+#' @param classifiers samples group as factor
+#' @param pretty.order.rows logical vector the default is TRUE
+#' @param pretty.order.cols logical vector the default is TRUE
+#' @importFrom superheat superheat
+heatMap<-function(data,classifiers,pretty.order.rows=T,pretty.order.cols =T){
+ superheat <- data %>% superheat(left.label.size = 0.05,
+            left.label.text.size =7,
+            left.label.col = "white",
+            left.label.text.angle = 90, ## the classifiers names angle
+            grid.hline.col = "white",
+            grid.vline.col = "white",
+            grid.hline.size = 5,
+            grid.vline.size = 3,
+            membership.rows = classifiers,
+            heat.pal = viridis::mako(100),
+            pretty.order.rows = pretty.order.rows,
+            pretty.order.cols =pretty.order.cols,
+            scale = F, #scales columns
+            padding = 0.1,
+            legend.width=4,
+            title="heatmap of m/z intensity",title.size=10)
+}
+
