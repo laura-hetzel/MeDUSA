@@ -9,22 +9,7 @@ library(rfUtilities) ## cross validation
 
 #  feature selection for random forest -----------------------------------------------------------
 
-# master_random<-master_df_t
-# 
-# 
-# ## removal of highly correlated peaks
-# ### removing correlated data (redundant features)
-# cor_matrixeat <- cor(master_random)
-# 
-# # find attributes that are highly corrected (ideally >0.75)
-# high_cor_feat <- findCorrelation(cor_matrix_feat, cutoff=0.75)
-# # print indexes of highly correlated attributes
-# print(high_cor_feat)
-# 
-# high_cor_removal<-master_random[,high_cor_feat] ## highly correlated peaks
-# master_random<- master_random %>% dplyr :: select(-colnames(high_cor_removal)) ## removing of high cor peaks
-# 
-# master_random<-rownames_to_column(master_random,"samples")
+
 # 
 ## data should be in transposed form (mz as columns and samples column named =samples )
 redvar_removal <- function (data,cutoff){
@@ -48,35 +33,7 @@ test<-redvar_removal(sig_data_t,0.75)
 
 
 
-# subsets <- c(150:300,500) ##choosing a subsets we need for feature selections .. we can either put the whole range of peaks
-# ## or pre-set a certain number to be selected from like 50,100,150 .. etc or (100:500) or we can mix both
-# ## its a rule of thumb that the feature has to be max three times the sample number
-# ## so if we have like 50 sample our peaks should be around 150
-# 
-# ## control for our feature selection .. is using a random forest algorithm with repeated cross validation 
-# control <- rfeControl(functions = rfFuncs,method ="repeatedcv",repeats =5)
-# # run the RFE algorithm
-# set.seed(1e6)
-# 
-# feature_select <- rfe(master_random %>% dplyr::select(-samples),
-#                           master_random$samples, rfeControl=control,sizes =subsets)
-# ## now we run our feature selection
-# # summarize the results
-# print(feature_select)
-# 
-# # we can see here the number of selected peaks
-# # plot the results
-# ggplot(data = feature_select, metric = "Accuracy") + theme_bw() 
-# ggplot(data = feature_select, metric = "Kappa") + theme_bw()
-# 
-# mz_select<-master_df_pos
-# 
-# ## extracting our selected features and obtaining their scaled intensities to be used in the random forest 
-# mz_select<-mz_select %>% filter_all(any_vars(. %in% predictors(feature_select)))
-# 
-# mz_select<-column_to_rownames(mz_select,"mz")
-# mz_select_t<-as.data.frame(t(mz_select))
-# mz_select_t<-rownames_to_column(mz_select_t,"samples")
+## feature selection
 
 imp_select<-function(data,data_t,subsets,seed,method,repeats,class1,class2){
   
@@ -129,132 +86,6 @@ split<- sample.split(mz_select_t$samples, SplitRatio = 0.8)
 training_set<-subset(mz_select_t, split == TRUE)
 test_set<-subset(mz_select_t, split == FALSE)
 
-# # splitting again for testing - first test
-# set.seed(1e6) 
-# split_f<- sample.split(training_set$samples, SplitRatio = 0.8)
-# 
-# training_set_f<-subset(training_set_f, split_f_1 == TRUE)
-# test_set_f<-subset(training_set_f, split_f_1 == FALSE)
-# 
-# colnames(training_set_f)<-as.character(colnames(training_set_f))
-# 
-# set.seed(1e6) ## the first model
-# model_1<-randomForest(x=training_set_1[-1],y=training_set_1$samples,data=training_set,ntree=500)
-# print(model_1)
-# plot(model_1)
-# predtrain_1 <- predict(model_1,newdata=test_set_1)
-# 
-# 
-# actual_sample_1 <- as.factor(test_set_1$samples)
-# confusionMatrix(data=predtrain_1, reference = actual_sample_1)
-# results_1<-as.data.frame(cbind("actual"=test_set_1$samples,"prediction"=predtrain_1))
-# 
-# 
-# imp_1<-varImp(model_1)
-# imp_1<-rownames_to_column(imp_1,"mz")
-# imp_1<-imp_1[order(-imp_1$Overall),] ## order the imp variables in descending order 
-# 
-# # splitting again for testing - second test .. repeating as the first model and so on
-# set.seed(1e6) 
-# split_2<- sample.split(training_set$samples, SplitRatio = 0.8)
-# training_set_2<-subset(training_set, split_2 == TRUE)
-# test_set_2<-subset(training_set, split_2 == FALSE)
-# 
-# colnames(training_set_2)<-as.character(colnames(training_set_2))
-# set.seed(1e6) 
-# model_2<-randomForest(x=training_set_2[-1],y=training_set_2$samples,data=training_set,ntree=500)
-# print(model_2)
-# plot(model_2)
-# predtrain_2 <- predict(model_2,newdata=test_set_2)
-# 
-# 
-# actual_sample_2 <- as.factor(test_set_2$samples)
-# confusionMatrix(data=predtrain_2, reference = actual_sample_2)
-# results_2<-as.data.frame(cbind("actual"=test_set_2$samples,"prediction"=predtrain_2))
-# 
-# 
-# imp_2<-varImp(model_2)
-# imp_2<-rownames_to_column(imp_2,"mz")
-# imp_2<-imp_2[order(-imp_2$Overall),]
-# 
-# 
-# # splitting again for testing - third test
-# set.seed(1e6) 
-# split_3<- sample.split(training_set$samples, SplitRatio = 0.8)
-# 
-# training_set_3<-subset(training_set, split_3 == TRUE)
-# test_set_3<-subset(training_set, split_3 == FALSE)
-# 
-# colnames(training_set_3)<-as.character(colnames(training_set_3))
-# set.seed(1e6) 
-# model_3<-randomForest(x=training_set_3[-1],y=training_set_3$samples,data=training_set,ntree=500)
-# print(model_3)
-# plot(model_3)
-# predtrain_3 <- predict(model_3,newdata=test_set_3)
-# 
-# 
-# actual_sample_3 <- as.factor(test_set_3$samples)
-# confusionMatrix(data=predtrain_3, reference = actual_sample_3)
-# results_3<-as.data.frame(cbind("actual"=test_set_3$samples,"prediction"=predtrain_3))
-# 
-# imp_3<-varImp(model_3)
-# imp_3<-rownames_to_column(imp_3,"mz")
-# imp_3<-imp_3[order(-imp_3$Overall),]
-# 
-# # splitting again for testing - fourth test
-# set.seed(1e6) 
-# split_4<- sample.split(training_set$samples, SplitRatio = 0.8)
-# 
-# training_set_4<-subset(training_set, split_4 == TRUE)
-# test_set_4<-subset(training_set, split_4 == FALSE)
-# 
-# colnames(training_set_4)<-as.character(colnames(training_set_4))
-# set.seed(1e6) 
-# model_4<-randomForest(x=training_set_4[-1],y=training_set_4$samples,data=training_set,ntree=500)
-# print(model_4)
-# plot(model_4)
-# predtrain_4 <- predict(model_4,newdata=test_set_4)
-# 
-# 
-# actual_sample_4 <- as.factor(test_set_4$samples)
-# confusionMatrix(data=predtrain_4, reference = actual_sample_4)
-# results_4<-as.data.frame(cbind("actual"=test_set_4$samples,"prediction"=predtrain_4))
-# 
-# imp_4<-varImp(model_4)
-# imp_4<-rownames_to_column(imp_4,"mz")
-# imp_4<-imp_4[order(-imp_4$Overall),]
-# 
-# # splitting again for testing - fifth test
-# set.seed(1e6) 
-# split_5<- sample.split(training_set$samples, SplitRatio = 0.8)
-# 
-# training_set_5<-subset(training_set, split_5 == TRUE)
-# test_set_5<-subset(training_set, split_5 == FALSE)
-# colnames(training_set_5)<-as.character(colnames(training_set_5))
-# set.seed(1e6) 
-# 
-# model_5<-randomForest(x=training_set_5[-1],y=training_set_5$samples,data=training_set,ntree=500)
-# print(model_5)
-# plot(model_5)
-# predtrain_5 <- predict(model_5,newdata=test_set_5)
-# 
-# 
-# actual_sample_5 <- as.factor(test_set_5$samples)
-# confusionMatrix(data=predtrain_5, reference = actual_sample_5)
-# results_5<-as.data.frame(cbind("actual"=test_set_5$samples,"prediction"=predtrain_5))
-# 
-# imp_5<-varImp(model_5)
-# imp_5<-rownames_to_column(imp_5,"mz")
-# imp_5<-imp_5[order(-imp_5$Overall),]
-# 
-# ### the top 100 imp var in each model
-# imp_1<-head(imp_1,n=100)
-# imp_2<-head(imp_2,n=100)
-# imp_3<-head(imp_3,n=100)
-# imp_4<-head(imp_4,n=100)
-# imp_5<-head(imp_5,n=100)
-# 
-# imp<-rbind(imp_1,imp_2,imp_3,imp_4,imp_5)
 
 # Cross validation
 # assign samples to different group
@@ -448,14 +279,10 @@ permutation.test <- function(data, model, n,class1,class2,sample_no){
   print(plot)
   return(list(plot,permuted_df))
 }
-test1<-permutation.test(permuted_data, model_f, 1000,"X","Y",50)
+test<-permutation.test(permuted_data, model_f, 1000,"X","Y",50)
 #get all permutations
 
 
-# ## Accuracy : 0.44
-# results_permuted<-as.data.frame(cbind("actual"=permuted_data$samples,"prediction"=permuted_predict))
-# roc_permuted<- roc(results_permuted$actual,results_permuted$prediction )
-# auc_permuted<- auc(roc_permuted)
 
 # AUC and roc ------------------------------------------------------------------
 
