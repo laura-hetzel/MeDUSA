@@ -1,15 +1,15 @@
 #' Volcano plot
 #'
-#' @param data 
-#' @param xvalues 
-#' @param yvalues 
-#' @param title 
+#' @param data dataframe result from statistical tests within the sumR package with significant column (true or false)
+#' @param xvalues log2 folchange between two groups column
+#' @param yvalues nominal p value column
+#' @param title title of the plot
 #'
-#' @return
-#' @export
+#' @return volcano plot
 #' @import ggplot2
-#'
-#' @examples
+#' @importFrom ggsci scale_color_aaas
+#' @importFrom ggpubr theme_pubr 
+#' @importFrom ggpubr labs_pubr
 volcanoPlot <- function(data, xvalues, yvalues, title){
   ggplot(data) +
     geom_point(aes(x=xvalues, y=-log10(yvalues), colour=significant)) + ## color by significant of fdr <0.1
@@ -101,27 +101,28 @@ plotPCA <- function(master_df_pos_t, method = c("facto", "stats")){
 
 #' Plot PLS-DA
 #'
-#' @param master_df_pos_t 
-#' @param classifiers 
-#'
-#' @return
-#' @export
+#' @param data transposed dataframe with m/z as columns  
+#' @param classifiers samples groups as factor 
+#' @param comp integer value indicating the component of interest from the object
+#' @param method method for contribution "median", "mean"
 #' @importFrom mixOmics plsda
 #' @importFrom mixOmics plotIndiv
 #' @importFrom mixOmics auroc
 #' @importFrom mixOmics plotLoadings
 #'
 #' @examples
-plotPLSDA <- function(master_df_pos_t, classifiers){
-  plsda <-  plsda(master_df_pos_t, classifiers)
+
+plotPLSDA <- function(data, classifiers,comp,method){
+  plsda <-  plsda(data, classifiers)
   
   ## plotting the samples classifiers with ellipses
   plotIndiv(plsda, ind.names = FALSE, star = TRUE, ellipse = TRUE, legend = TRUE,title = "PLS-DA samples")
-  
+   par(ask=TRUE)
+
   ## plotting the ROC curve and calculating the auc of the plsda model
-  auc.plsda <- auroc(plsda,roc.comp = 1, title = "PLS-DA ROC Curve ")
-  
-  ## plotting the pls-da contribution to median
-  plotLoadings(plsda, contrib = 'max', method = 'median', comp = 1,title="pls-da contribution by median")
-  
+   auroc(plsda,roc.comp = comp, title = "PLS-DA ROC Curve ")
+ par(ask=TRUE)
+
+   plotLoadings(plsda, contrib = 'max', method = method, comp = comp,title="PLS-DA contribution")
+
 }
