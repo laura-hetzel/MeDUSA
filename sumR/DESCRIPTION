@@ -13,6 +13,7 @@ Description: Set of tools to set up a pipeline for the analysis of DI-MS data.
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
+biocViews:
 Depends: magrittr
 Imports: stringr, dplyr, tibble, ggplot2, stats, usedist, densityClust, tidyr, 
          FactoMineR, factoextra, ggpubr, mixOmics, data.table, plotly, superheat,
