@@ -15,8 +15,10 @@ Encoding: UTF-8
 LazyData: true
 Depends: magrittr
 Imports: stringr, dplyr, tibble, ggplot2, stats, usedist, densityClust, tidyr, 
-         FactoMineR, factoextra, ggpubr, mixOmics, plotly, data.table, superheat
+         FactoMineR, factoextra, ggpubr, mixOmics, data.table
 RoxygenNote: 7.1.2
 Suggests: 
+    plotly,
+    superheat,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
