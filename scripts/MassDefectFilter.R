@@ -35,7 +35,8 @@ mdf_function <- function(dataframe){
 
 
 #' @title
-#' @param
+#' @param dataframe MD_df obtained from the HMDB using 'mdf_function' 
+#' @export
 create_fit_df <- function(MD_df){
   fit <- as.data.frame(apply(MD_df[,1], 1, function(row){
     y <- 0.00112 * row + 0.01953
@@ -46,7 +47,10 @@ create_fit_df <- function(MD_df){
   fit
 }
 
-plot_mono_mass <- function(MD_df, title){
+#' @title
+#' @param dataframe MD_df obtained from the HMDB using 'mdf_function' or filtered_MD_df obtained from the HMDB using 'filter_function'
+#' @export
+plot_m/z_MD <- function(MD_df, title){
   plot(MD_df$MONO_MASS, MD_df$MD, cex.axis = 0.8,
        col = alpha("black", 0.5), pch = 20, cex = 0.8,
        ylim = c(0,1), xlim = c(50,1200), ylab = "MD", xlab = "m/z",
@@ -54,18 +58,20 @@ plot_mono_mass <- function(MD_df, title){
 }
 
 
-filter_function <- function(MD_df){
-  #' Inclusion list creation
-  #' reproduced from the MacMillan salt cluster removal paper
-  #'
-  #' #' inclusion list read in
-  in_list_data <- "hmdb_inclusions_list_pos_McMillan.txt"
-
+inclusion_list_function <- function(file = NULL){
+  # Inclusion list creation
+  # default file from McMillan paper 
+  # no file given must use this one 
+  if (is.null(file)) {
+    in_list_data <- read.table("hmdb_inclusions_list_pos_McMillan.txt",  header = T, check.names = F,
+                               row.names = 1, sep = "\t")
+  } else {
+    in_list_data <- read.table(file,  header = T, check.names = F,
+                               row.names = 1, sep = "\t")
+  }
   #' set mass accuracy (in Daltons) for inclusion list matching
   ma <- 0.01
 
-  hmdb_list <- read.table(in_list_data,  header = T, check.names = F,
-                          row.names = 1, sep = "\t")
 
 
   #find masses in inclusion list in MD_df
