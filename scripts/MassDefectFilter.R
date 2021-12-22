@@ -1,17 +1,35 @@
-#' @title HMDB - loading and plotting
-#' @description This function loads the hmdb xml file directly over HTTP, plots MZ vs. MD and creats the cutoff for the MD filter.
-#' @usage
+#' @title Retrieve HMDB data in a dataframe format
+#' @param file (optional) String location of the HMDB file
+#' @importFrom stats na.omit
 #' @importFrom tidyverse read_delim
 #' @export
-#' @example
-#' @author Amar Poeran & Klara Blaschitz
+get_hmdb_file <- function(file = NULL){
+  if (is.null(file)) {
+    # No file given, must download from HMDB
+    # TODO: Find out how to download from HMDB
+    url <- "https://hmdb.ca/metabolites.csv?action=index&c=hmdb_id&controller=metabolites&d=up&endogenous=1&filter=true&utf8=%E2%9C%93"
+  } else {
+    #' Downloading the data and converting it to a data frame
+    dataframe <- read_delim(file = hmdb_data, delim = ",")            #82.595 rows as should be
+    #removing rows with no Mass data
+    dataframe <- na.omit(dataframe)
+  }
+  dataframe
+}
 
-#' Download required packages
-library(tidyverse)
 
-#' Input by user
-#' download the data to your wd and enter file name here
-hmdb_data <- "end.metabolites.txt"       #downloaded txt file with only endogenous metabolites
+#' @title Mass defect filter function
+#' @param dataframe Dataframe obtained from HMDB using `get_hmdb_file`
+#' @importFrom dplyr mutate
+#' @export
+mdf_function <- function(dataframe){
+  mz_col <- dataframe$MONO_MASS
+  MD <- mz_col %% 1
+  #to add the MD to the new data frame
+  MD_df <- dplyr::mutate(dataframe, MD)
+  MD_df <- MD_df[,7:8]
+  MD_df
+}
 
 #' inclusion list read in
 in_list_data <- "hmdb_inclusions_list_pos_McMillan.txt"
@@ -19,22 +37,6 @@ in_list_data <- "hmdb_inclusions_list_pos_McMillan.txt"
 #' set mass accuracy (in Daltons) for inclusion list matching
 ma <- 0.01
 
-
-#' Downloading the data and converting it to a data frame
-dataframe <- read_delim(file = hmdb_data, delim = ",")            #82.595 rows as should be
-#removing rows with no Mass data
-dataframe <- na.omit(dataframe)                         #82.580, 15 rows removed because Mass was NA
-
-#' Function to calculate Mass Defect for filtering
-mz_col <- dataframe$MONO_MASS
-MD <- function(dataframe, mz_col){
-  MD <- mz_col %% 1
-  #to add the MD to the new data frame
-  MD_df <- dplyr::mutate(dataframe, MD)
-}
-#' Apply the function
-MD_df <- MD(dataframe, mz_col)
-MD_df <- MD_df[,7:8]
 
 #' integrating the cutoff line in the data
 f <- function(x){
