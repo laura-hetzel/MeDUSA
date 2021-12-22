@@ -7,11 +7,10 @@ external.packages:
     devtools
     roxygen2
     remotes
-    ABStools
     digest
-local.repos: 
+local.repos:
 load.external.packages.on.startup: TRUE
-ignored.packages: 
+ignored.packages:
 ignored.directories:
     data
     inst

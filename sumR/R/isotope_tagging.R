@@ -58,7 +58,7 @@ Intensity_ratio_range <- function(mz,by_step){
 #' @param mz Mass
 #' @param Intensity_ratio_vec Intensity ratio vector for carbon
 #' @param by_step "by" in sequence range
-#' @importFrom  select mutate case_when
+#' @importFrom dplyr select mutate case_when
 subset_matrix_filter <- function(df, mz , Intensity_ratio_vec, by_step ){
   seq_vec  <- seq(from = min(mz) , to = max(mz), by  = by_step)
   result <- c()
@@ -85,7 +85,7 @@ subset_matrix_filter <- function(df, mz , Intensity_ratio_vec, by_step ){
 #' @description Gives a graphical representation of the mono-isotopic and isotopic peaks
 #' @usage mass_spec_plot(final_df_vis)
 #' @param final_df_vis dataframe of the mono-isotopic and isotopic peaks pair's with id column
-#' @importFrom  plotply plot_ly highlight_key add_markers add_segments  layout rangeslider ggplotly highlight
+#' @importFrom  plotly plot_ly highlight_key add_markers add_segments  layout rangeslider ggplotly highlight
 mass_spec_plot <- function(final_df_vis){
   d <- highlight_key(final_df_vis, ~id )
 
@@ -113,7 +113,7 @@ mass_spec_plot <- function(final_df_vis){
 #' @param iso_diff_da Mass difference between mol ion and isotope
 #' @param ppm Parts Per Million Tolerance
 #' @param by_step "by" in sequence mz range
-#' @importFrom  data.table as.data.table finstersect
+#' @importFrom  data.table as.data.table fintersect
 #' @importFrom  dplyr tibble filter select mutate
 isotope_tagging <- function(df , iso_diff_da, ppm , by_step ){
 #-----------------------------------------------------------------------------------

@@ -4,19 +4,21 @@
 \alias{plotPCA}
 \title{Plot PCA}
 \usage{
-plotPCA(master_df_pos_t, method = c("facto", "stats"))
+plotPCA(data, method = c("facto", "stats"), classifiers)
 }
 \arguments{
-\item{master_df_pos_t}{transposed dataframe}
+\item{data}{transposed dataframe with m/z as columns}
 
 \item{method}{Which method of calculating the PCA should be used. 
 "facto" uses the FactoMineR and factoextra packages. "stats" uses prcomp from
 the basic stats package and ggpubr.}
+
+\item{classifiers}{sample groups as factor}
 }
 \value{
 
 }
 \description{
 visualization using either factoMineR and factorextra package
-or stats and ggplot2
+or stats and ggplot2 .. click next to show the next plot
 }

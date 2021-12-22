@@ -10,7 +10,7 @@ read_msdata(path = "data")
 \item{path}{path to the file}
 }
 \value{
-
+Data.frame with ordered mz values
 }
 \description{
 Read MS data

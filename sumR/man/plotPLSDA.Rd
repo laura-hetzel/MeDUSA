@@ -4,15 +4,16 @@
 \alias{plotPLSDA}
 \title{Plot PLS-DA}
 \usage{
-plotPLSDA(master_df_pos_t, classifiers)
+plotPLSDA(data, classifiers, comp, method)
 }
 \arguments{
-\item{master_df_pos_t}{}
+\item{data}{transposed dataframe with m/z as columns}
 
-\item{classifiers}{}
-}
-\value{
+\item{classifiers}{samples groups as factor}
 
+\item{comp}{integer value indicating the component of interest from the object}
+
+\item{method}{method for contribution "median", "mean"}
 }
 \description{
 Plot PLS-DA

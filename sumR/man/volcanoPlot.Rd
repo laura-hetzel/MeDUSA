@@ -7,16 +7,16 @@
 volcanoPlot(data, xvalues, yvalues, title)
 }
 \arguments{
-\item{data}{}
+\item{data}{dataframe result from statistical tests within the sumR package with significant column (true or false)}
 
-\item{xvalues}{}
+\item{xvalues}{log2 folchange between two groups column}
 
-\item{yvalues}{}
+\item{yvalues}{nominal p value column}
 
-\item{title}{}
+\item{title}{title of the plot}
 }
 \value{
-
+volcano plot
 }
 \description{
 Volcano plot
