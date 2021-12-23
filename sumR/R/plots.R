@@ -212,3 +212,74 @@ parallel_coord <- function(data, tag = c(TRUE,FALSE),columns,groupColumn,scale,b
   }
   
   }
+
+# random forest visualization ---------------------------------------------
+
+#' Plot random forest cross validation ROC
+#' @description plotting ROC curves for different 5 cross-validation sub models vs ROC curve of the final model
+#' Note : for this plot cross-validation from sumR package needs to be done first
+#' @param model the final model  
+#' @param test_set the final test set with samples column 
+#' @importFrom pROC roc
+#' @importFrom pROC auc
+RF_CV_plots<-function(model,test_set){
+  test_set$samples <- as.factor(test_set$samples)
+  results <- predict(model,newdata=test_set,type="class")
+  results<-as.data.frame(cbind("actual"=test_set$samples,"prediction"=results))
+  rocfinal<- roc(results$actual,results$prediction )
+  aucfinal<- auc(rocfinal)
+  
+  # ROC curve of each fold
+  par(mfrow=c(2,3))
+  plot(roc_all[[1]],col = "Red", main = paste("Fold_1, AUC:", as.character(round(auc_all[[1]], 3))))
+  plot(roc_all[[2]],col = "Red", main = paste("Fold_2, AUC:", as.character(round(auc_all[[2]], 3))))
+  plot(roc_all[[3]],col = "Red", main = paste("Fold_3, AUC:", as.character(round(auc_all[[3]], 3))))
+  plot(roc_all[[4]],col = "Red", main = paste("Fold_4, AUC:", as.character(round(auc_all[[4]], 3))))
+  plot(roc_all[[5]],col = "Red", main = paste("Fold_5, AUC:", as.character(round(auc_all[[5]], 3))))
+  plot(rocfinal,col = "blue", main = paste("final model, AUC:", as.character(round(aucfinal, 3))))  
+  
+}
+
+
+#' random forest plots 
+#' @description random forest plots .. click next to view the next plots
+#' 1. OOB plot 2.important variables plot 3.MDS plot
+#' @param model random forest model   
+#' @param training_set training set that was used for the random forest model with samples column
+#' @importFrom randomForest varImpPlot
+#' @importFrom ggplot2 ggplot
+#' @importFrom ggplot2 geom_label
+#' @importFrom ggplot2 ggtheme
+#' @importFrom ggplot2 ggtitle
+RandomForestPlots<-function(model,training_set){
+  
+  plot(model)
+  par(ask=TRUE)
+  
+  # Plot the important variables
+  varImpPlot(model,col="blue",pch= 2)
+  par(ask=TRUE)
+  
+  
+  # MDS plot
+  distance_matrix <- as.dist(1-model$proximity)
+  
+  mds <- cmdscale(distance_matrix, eig=TRUE, x.ret=TRUE)
+  
+  ## calculate the percentage of variation that each MDS axis accounts for...
+  mds_var <- round(mds$eig/sum(mds$eig)*100, 1)
+  
+  ## now make a fancy looking plot that shows the MDS axes and the variation:
+  mds_values <- mds$points
+  mds_data <- data.frame(Sample=rownames(mds_values),
+                         X=mds_values[,1],
+                         Y=mds_values[,2],
+                         Status=training_set$samples)
+  
+  ggplot(data=mds_data, aes(x=X, y=Y, label=Sample)) + 
+    geom_label(aes(color=Status))+
+    theme_bw() +
+    xlab(paste("MDS1 - ", mds_var[1], "%", sep="")) +
+    ylab(paste("MDS2 - ", mds_var[2], "%", sep="")) +
+    ggtitle("MDS plot using (1 - Random Forest Proximities)") 
+}
