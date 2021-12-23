@@ -17,6 +17,18 @@ get_hmdb_file <- function(file){
   return(dataframe)
 }
 
+#' @title Import experimental data
+#' @param file String location of the experimetal file
+#' @importFrom stats na.omit
+#' @importFrom tidyverse read_delim
+#' @export
+get_data <- function(file){
+  #' Downloading the experimental data and converting it to a data frame
+  ex_data_df <- read_delim("889C0121170_NS_005_NEG_7_cvd_d5_pm.txt", col_names = F)
+  colnames(ex_data_df) <- c("p", "MONO_MASS", "l", "Intesity","e")
+  return(ex_data_df)
+}
+
 #' @title Mass defect calculation function
 #' @param dataframe Data frame obtained from HMDB using `get_hmdb_file`
 #' @importFrom dplyr mutate
@@ -31,7 +43,7 @@ mass_defect_calculation <- function(dataframe){
 
 #' @title Defining Mass Defect filter 
 #' @description  the theoretical maximum Mass Defect of human metabolites is used to calculate this cut off
-#' @param dataframe MD_df obtained from the HMDB using 'mass_defect_function' 
+#' @param dataframe MD_df obtained from the HMDB using `mass_defect_function`
 #' @export
 make_filter_list <- function(MD_df){
   filter_list <- as.data.frame(apply(MD_df[,"MONO_MASS"], 1, function(row){
@@ -59,9 +71,9 @@ get_inclusion_list <- function(file){
 }
 
 #' @title Filtering the data by  mass defect 
-#' @param dataframe MD_df obtained from from the HMDB using 'mass_defect_function'
-#' @param dataframe incl_list obtained from the 'get_inclusion_list'
-#' @param dataframe filter_list obtained from the 'create_fit_df'
+#' @param dataframe MD_df obtained from from the HMDB using `mass_defect_function`
+#' @param dataframe incl_list obtained from the `get_inclusion_list`
+#' @param dataframe filter_list obtained from the `create_fit_df`
 #' @importFrom dplyr filter
 MD_filter <- function(MD_df, filter_list, incl_list){
   #' set mass accuracy (in Daltons) for inclusion list matching
@@ -77,8 +89,8 @@ MD_filter <- function(MD_df, filter_list, incl_list){
 }
 
 #' @title Plotting of the data - m/z vs. MD 
-#' @param dataframe MD_df obtained from the HMDB using 'mass_defect_function' or
-#' @param dataframe filtered_MD_df obtained from the HMDB using 'MD_filter'
+#' @param dataframe MD_df obtained from the HMDB using `mass_defect_function` or
+#' @param dataframe filtered_MD_df obtained from the HMDB using `MD_filter`
 #' @export
 plot_mz_MD <- function(MD_df, title){
   plot(MD_df$MONO_MASS, MD_df$MD, cex.axis = 0.8,
@@ -88,12 +100,27 @@ plot_mz_MD <- function(MD_df, title){
 }
 
 pipeline <- function(file = NULL){
-  dataframe <- get_hmdb_file(file)
-  md_df <- mass_defect_calculation(dataframe)
-  filtered_list <- make_filter_list(md_df)
-  in_list <- get_inclusion_list(md_df)
-  filtered_df <- MD_filter(md_df, filtered_list, in_list)
-  plot_mz_MD(md_df, title = "Raw")
-  plot_mz_MD(filtered_df, title = "Filtered")
+  #import hmdb
+  dataframe_hmdb <- get_hmdb_file(file)
+  #calculate MD HMDB
+  md_df_hmdb <- mass_defect_calculation(dataframe_hmdb)
+  #make filtered list hmdb
+  filtered_list_hmdb <- make_filter_list(md_df_hmdb)
+  #import experimental data
+  ex_data_df <- get_data(file)
+  # calculate MD experimental data 
+  md_df_exp <- mass_defect_calculation(ex_data_df)
+  #make filtered list experimental data
+  filtered_list_exp <- make_filter_list(md_df_exp)
+  # import inclusion list
+  in_list <- get_inclusion_list(file)
+  # filter hmdb
+  filtered_df_hmdb <- MD_filter(md_df_hmdb, filtered_list_hmdb, in_list)
+  # filter experimental data 
+  filtered_df_exp <- MD_filter(md_df_exp, filtered_list_exp, in_list)
+  # plotting
+  plot_mz_MD(md_df_exp, title = "Raw")
+  plot_mz_MD(filtered_df_exp, title = "Filtered")
 }
+
 pipeline()
