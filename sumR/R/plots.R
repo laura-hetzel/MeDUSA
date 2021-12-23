@@ -152,3 +152,63 @@ heatMap<-function(data,classifiers,pretty.order.rows=T,pretty.order.cols =T){
             title="heatmap of m/z intensity",title.size=10)
 }
 
+#' parallel coordinates plot
+#' 
+#' @description parallel coordinates plot with either highlighting a certain value or not
+#'
+#' @param data dataframe
+#' @param tag logical vector TRUE or FALSE if highlighting a certain value is needed or not 
+#' @param columns the columns index for plotting either intensity or median intensity .. etc 
+#' @param groupColumn the column name of the groups or the index of the group column
+#' @param scale character vector specifying the type of scaling "globalminmax","uniminmax","std","robust"
+#' @param boxplot logical vector to add a boxplot to the plot, the default is FALSE
+#' @param highlight if tag=TRUE, add highlighting ifelse statement: 
+#' example : highlight=if_else(data$ppm_difference < 5, "ppm difference less than 5", "ppm difference more than 5")
+#' example : highlight=if_else(data$class1 > data$class2 ,"class1","class2")
+#' @param highlight_color the highlight color, the default is c("maroon","navy")
+#' @importFrom GGally ggparcoord 
+#' @importFrom ggpubr theme_pubr
+#' @importFrom ggplot2 geom_line
+#' @importFrom ggplot2 geom_point
+#' @importFrom ggplot2 scale_color_manual
+#'
+parallel_coord <- function(data, tag = c(TRUE,FALSE),columns,groupColumn,scale,boxplot = FALSE,
+                           highlight=highlight,highlight_color=c("maroon","navy")){
+  if(tag[1] == FALSE){
+    
+    ggparcoord(data,
+               columns = columns, groupColumn = groupColumn,  
+               showPoints = TRUE,                       
+               boxplot = FALSE,                     
+               scale=scale) +              
+      labs(x = "Groups",y= "m/z intensity") +
+      theme_pubr()+
+      theme(panel.grid = element_blank(),panel.grid.major.x=element_line(colour="black"),
+            text = element_text(size=20),  legend.position="right")+
+      geom_line(size=1.5)+
+      geom_point(size=4)+
+      font("xlab", size = 20)+
+      font("ylab", size = 20)+
+      font("legend.title", face = "bold",size=15)+
+      font("legend.text",size=15)
+    
+  }
+  else if(tag[1] == TRUE){
+    
+    ## tagging a certain value to highlight it in the parallel coords
+    tag<-within(data, Highlight<-highlight)
+    
+    ggparcoord(tag[order(tag$Highlight),], columns = columns, groupColumn = "Highlight", 
+               ## we use the extra column we created as groupcolumn to show this highlight
+               showPoints = TRUE,
+               boxplot = FALSE,
+               scale=scale,title="m/z intensity of Groups - Highlight" ) +
+      scale_color_manual(values=highlight_color)+
+      labs(x = "Groups",y= "m/z intensity") +
+      theme(plot.title = element_text(size=20),
+            panel.grid = element_blank())+geom_line(size=1) 
+    
+    
+  }
+  
+  }
