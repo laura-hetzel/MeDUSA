@@ -235,35 +235,33 @@ randomForest_CV<- function (training_set,test_set,class1,class2,k,seed,n){
               "cfmatrix_summary"=cfmatrix_summary))
 }
 ## the final model
-set.seed(1e6) 
-model<-randomForest(x=training_set[-1],y=training_set$samples,data=training_set,ntree=500,mtry=23,
+RF_model<-function(training_set,test_set,mtry,ntree,seed){
+  
+  ## the final model
+  set.seed(seed) 
+  model<-randomForest(x=(training_set %>% dplyr::select(-samples)),y=training_set$samples,data=training_set,ntree=ntree,mtry=mtry,
                       importance = T,proximity = T) #importance=T so we can plot imp var 
-# proximity = T so we can plot proximity plot 
-
-print(model)
-plot(model)
-
-
-## confusion matrix of model
-
-pred_trainingseteat <- predict(model,newdata=training_set)
-
-confusionMatrix(data=pred_trainingseteat, reference = training_set$samples)
-
-
-## prediction of model 
-test_set$samples <- as.factor(test_set$samples)
-
-predtrain <- predict(model,newdata=test_set,type="class")
-
-confusionMatrix(table(data=predtrain, reference = test_set$samples))
-
-
-
-results<-as.data.frame(cbind("actual"=test_set$samples,"prediction"=predtrain))
-
+  # proximity = T so we can plot proximity plot 
+  
+  print(model)
+  plot(model)
+  
+  
+  ## prediction of model 
+  test_set$samples <- as.factor(test_set$samples)
+  
+  prediction <- predict(model,newdata=test_set,type="class")
+  
+  print(confusionMatrix(table(data=prediction, reference = test_set$samples)))
+  
+  results<-as.data.frame(cbind("Actual"=test_set$samples,"Prediction"=predtrain))
+  
+  rocfinal<- roc(results$Actual,results$Prediction )
+  aucfinal<- auc(rocfinal)
+  return(list("results"=results,"rocfinal"=rocfinal,"aucfinal"=aucfinal))
+}
 ## choosing the best mtry  
-mtry_select<-function(training_set,seed,test_set){
+mtry_select<-function(training_set,test_set,seed){
   model_list <- data.frame(mtry=1:(length(training_set)-1)) ## 151 according to number of peaks
   for (i in c(1:(length(training_set)-1))) {
     set.seed(seed)
@@ -327,10 +325,6 @@ test<-permutation.test(permuted_data, model_f, 1000,"X","Y",50)
 
 
 
-
-
-rocinal<- roc(results$actual,results$prediction )
-aucinal<- auc(rocinal)
 
 # ROC curve of each fold
 par(mfrow=c(2,3))
