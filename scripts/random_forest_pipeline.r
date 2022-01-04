@@ -262,16 +262,31 @@ confusionMatrix(table(data=predtrain, reference = test_set$samples))
 
 results<-as.data.frame(cbind("actual"=test_set$samples,"prediction"=predtrain))
 
-## choosing the best mtry that we produce lowest err rate of the model 
-modellist <- data.frame(mtry=1:171) ## 151 according to number of peaks
-for (i in c(1:171)) {
-  set.seed(1e6)
-  fit <- randomForest(x=(training_set %>% dplyr::select(-samples)),
-                      y=training_set$samples,data=training_set,ntree=500,mtry=i,importance = T)
+## choosing the best mtry  
+mtry_select<-function(training_set,seed,test_set){
+  model_list <- data.frame(mtry=1:(length(training_set)-1)) ## 151 according to number of peaks
+  for (i in c(1:(length(training_set)-1))) {
+    set.seed(seed)
+    fit <- randomForest(x=(training_set %>% dplyr::select(-samples)),
+                        y=training_set$samples,data=training_set,ntree=500,mtry=i,importance = T)
+    
+    model_list$err_rate[i]<-fit[["err.rate"]][nrow(fit[["err.rate"]]),1]
+    
+    
+    ## prediction of model 
+    test_set$samples <- as.factor(test_set$samples)
+    prediction <- predict(fit,newdata=test_set,type="class")
+    cf<-confusionMatrix(data=prediction, reference = test_set$samples)
+    
+    model_list$Accuracy[i]<-cf[["overall"]][["Accuracy"]]
+    model_list$Sensitivity[i]<-cf[["byClass"]][["Sensitivity"]]
+    model_list$Specificity[i]<-cf[["byClass"]][["Specificity"]]
+    
+  }
   
-  modellist$err_rate[i]<-fit[["err.rate"]][nrow(fit[["err.rate"]]),1]
+  
+  return(model_list)
 }
-## mtry=23 has the lowest error rate
 
 
 
