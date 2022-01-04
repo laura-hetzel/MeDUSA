@@ -110,12 +110,7 @@ split<- sample.split(mz_select_t$samples, SplitRatio = 0.8)
 training_set<-subset(mz_select_t, split == TRUE)
 test_set<-subset(mz_select_t, split == FALSE)
 
-
-# Cross validation
-randomForest_CV<- function (training_set,test_set,class1,class2,k,seed,n){
-  
-  
-  rf_group <- function(k, data, class1 , class2 , seed){ 
+rf_group <- function(k, data, class1 , class2 , seed){ 
     # k - how many parts will you divide your data into
     rflist <- list()
     set.seed(seed)
@@ -143,6 +138,11 @@ randomForest_CV<- function (training_set,test_set,class1,class2,k,seed,n){
     
     return(rflist)
   }
+  
+  
+# Cross validation
+randomForest_CV<- function (training_set,test_set,class1,class2,k,seed,n){
+  
   
   
   rflist <- rf_group(k = k,data=training_set,class1,class2, seed = seed)  
