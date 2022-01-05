@@ -28,8 +28,12 @@ read_mzml <- function(mzml = NULL){
   if (is.null(mzml)) {
     mzml <- system.file("extdata/20200609_MeOH.mzML", package = "sumR")
   }
-  data <- MSnbase::readMSData(mzml, mode = "onDisk")
-  MSnbase::spectrapply(data, as.data.frame)
+  tryCatch({
+    data <- MSnbase::readMSData(mzml, mode = "onDisk")
+    return(MSnbase::spectrapply(data, as.data.frame))
+  }, error = function(x){
+    stop("Cannot parse the given file, not recognized as a proper .mzML file")
+  })
 }
 
 #' ppm calculation
