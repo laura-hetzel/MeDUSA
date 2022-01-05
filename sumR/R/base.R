@@ -17,6 +17,21 @@ read_msdata <- function(path = "data") {
   return(ms_data[order(ms_data$mz), ])
 }
 
+
+#' @title Read DIMS data from an mzML file
+#' @param mzml Path to a mzml file. If omitted,
+#' the package example will be used
+#' @importFrom MSnbase readMSData spectrapply
+#' @export
+#' @return List of dataframes with mz and intensity (i)
+read_mzml <- function(mzml = NULL){
+  if (is.null(mzml)) {
+    mzml <- system.file("extdata/20200609_MeOH.mzML", package = "sumR")
+  }
+  data <- MSnbase::readMSData(mzml, mode = "onDisk")
+  MSnbase::spectrapply(data, as.data.frame)
+}
+
 #' ppm calculation
 #'
 #' @description calculates the parts per million error between two different
