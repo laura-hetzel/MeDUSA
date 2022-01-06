@@ -36,6 +36,40 @@ read_mzml <- function(mzml = NULL){
   })
 }
 
+#' @title DIMS pipeline
+#' @importFrom xcms MSWParam findChromPeaks groupChromPeaks MzClustParam
+#' @importFrom pbapply pblapply
+#' @importFrom logging loginfo
+#' @export
+dims_pipeline <- function(data){
+  loginfo("Running DIMS pipeline")
+  groups <- seq_len(nrow(data@featureData))
+  per_injection <- split(data, f = groups)
+  loginfo(sprintf("Finding peaks in %s spectra", length(groups)))
+
+  params <- xcms::MSWParam(SNR.method = "data.mean", winSize.noise = 500)
+  data <- do.call(c, pblapply(per_injection, cl = 8, function(inj){
+    dat <-  suppressMessages(xcms::findChromPeaks(inj, param = params))
+    calibration_vec <- get_calibrations(chromPeaks(dat)$mz)
+    prm <- CalibrantMassParam(mz = calibration_vec,
+                              method = "edgeshift", mzabs = 0.0001, mzppm = 5)
+    calibrate(dat, param = prm)
+  }))
+
+  clust_param <- xcms::MzClustParam(sampleGroups = groups)
+  data <- xcms::groupChromPeaks(data, param = clust_param)
+  loginfo("DIMS pipeline complete")
+  data
+}
+
+#' @title get vector of Calibration MZs
+#' @param mzs Vector of experimental measured M/Zs
+#' @return a vector of 'correct' MZ values, used to correct the experimental M/Zs
+get_calibrations <- function(mzs){
+
+  return(mzs)
+}
+
 #' ppm calculation
 #'
 #' @description calculates the parts per million error between two different
