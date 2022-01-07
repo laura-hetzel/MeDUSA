@@ -30,4 +30,3 @@ coverage:
   stage: test
   script:
     - R -e 'source("ci.R"); ci_coverage()'
-
