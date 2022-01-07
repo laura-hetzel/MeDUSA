@@ -21,16 +21,16 @@ read_msdata <- function(path = "data") {
 #' @title Read DIMS data from an mzML file
 #' @param mzml Path to a mzml file. If omitted,
 #' the package example will be used
-#' @importFrom MSnbase readMSData spectrapply
+#' @importFrom MSnbase readMSData
 #' @export
-#' @return List of dataframes with mz and intensity (i)
+#' @return XCMS object with spectra
 read_mzml <- function(mzml = NULL){
   if (is.null(mzml)) {
     mzml <- system.file("extdata/20200609_MeOH.mzML", package = "sumR")
   }
   tryCatch({
     data <- MSnbase::readMSData(mzml, mode = "onDisk")
-    return(MSnbase::spectrapply(data, as.data.frame))
+    return(data)
   }, error = function(x){
     stop("Cannot parse the given file, not recognized as a proper .mzML file")
   })
