@@ -215,14 +215,13 @@ blank_subtraction <- function(dataframe, filter_type = "median",
 
 #' @title Calculate nominal mass from a formula
 #' @param formulas formulas in string format like 'c6h12o6'
-#' @importFrom stringr str_split
+#' @importFrom stringr str_split str_extract_all
 #' @importFrom PeriodicTable mass
-#' @importFrom stats na.omit
 calculate_nominal_mass <- function(formulas){
   sapply(formulas, function(formula){
-    numbers <- na.omit(as.integer(unlist(str_split(formula, "[[:alpha:]]"))))
-    atoms <- unlist(str_split(formula, "[[:digit:]]"))
-    atoms <- toupper(atoms[atoms != ""])
+    numbers <- as.integer(unlist(str_split(formula, "[[:alpha:]]+")))
+    numbers[is.na(numbers)] <- 1
+    atoms <- as.vector(str_extract_all(formula, "[A-Z]", "\\1"))
     sum(PeriodicTable::mass(atoms) * numbers)
   })
 }
