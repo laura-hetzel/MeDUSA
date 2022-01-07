@@ -219,14 +219,17 @@ blank_subtraction <- function(dataframe, filter_type = "median",
 #' @importFrom PeriodicTable mass
 calculate_nominal_mass <- function(formulas){
   sapply(formulas, function(formula){
-    vec <- as.vector(str_extract_all(formula, "([A-Z][[:digit:]]+|[A-Z])",
+    vec <- as.vector(str_extract_all(formula, "([A-Za-z][[:digit:]]+|[A-Z][a-z]{0,1})",
                                      simplify = T))
     sum(sapply(vec, function(comb){
-      atom <- substr(comb, 1, 1)
-      mult <- 1
-      if (nchar(comb) > 1){
-        mult <- as.integer(substr(comb, 2, nchar(comb)))
+      if (!grepl("[[:digit:]]", comb)) {
+        atom <- comb
+        mult <- 1
+      } else {
+        atom <- str_extract(comb, "[[:alpha:]]*")
+        mult <- as.integer(str_extract(comb, "[[:digit:]].*"))
       }
+
       sum(round(PeriodicTable::mass(atom)) * mult)
     }))
   })
