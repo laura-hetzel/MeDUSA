@@ -99,6 +99,13 @@ plot_mz_MD <- function(MD_df, title){
        main = title, cex.lab = 0.8, cex.main = 0.8)
 }
 
+#' @title Export results in a csv file 
+#' @param dataframe filtered_MD_df obtained from `MD_filter`
+result_output <- function(filtered_df){
+  #write filtered_df in csv 
+  write.csv(filtered_df,"Raw_Data.csv")
+}
+
 pipeline <- function(file = NULL){
   #import hmdb
   dataframe_hmdb <- get_hmdb_file(file)
@@ -121,6 +128,8 @@ pipeline <- function(file = NULL){
   # plotting
   plot_mz_MD(md_df_exp, title = "Raw")
   plot_mz_MD(filtered_df_exp, title = "Filtered")
+  #save filtered data in csv file 
+  result_output(filtered_df_exp)
 }
 
 pipeline()
