@@ -62,11 +62,11 @@ get_inclusion_list <- function(file){
   # Inclusion list creation
   # default file from McMillan paper 
   # no file given must use this one 
- # if (is.null(file)) {
+ if (is.null(file)) {
     incl_list <- read_delim("hmdb_inclusions_list_pos_McMillan.txt", delim = "\t")
-  #} else {
-   # incl_list <- read_delim(file, delim = "\t")
-  #}
+  } else {
+    incl_list <- read_delim(file, delim = "\t")
+  }
   return(incl_list)
 }
 
@@ -103,7 +103,7 @@ plot_mz_MD <- function(MD_df, title){
 #' @param dataframe filtered_MD_df obtained from `MD_filter`
 result_output <- function(filtered_df){
   #write filtered_df in csv 
-  write.csv(filtered_df,"Raw_Data.csv")
+  write.csv(filtered_df,"filtered_data.csv")
 }
 
 pipeline <- function(file = NULL){
@@ -133,3 +133,4 @@ pipeline <- function(file = NULL){
 }
 
 pipeline()
+
