@@ -133,6 +133,7 @@ plotPLSDA <- function(data, classifiers,comp,method){
 #' @param pretty.order.rows logical vector the default is TRUE
 #' @param pretty.order.cols logical vector the default is TRUE
 #' @importFrom superheat superheat
+#' @importFrom viridis mako
 heatMap<-function(data,classifiers,pretty.order.rows=T,pretty.order.cols =T){
  superheat <- data %>% superheat(left.label.size = 0.05,
             left.label.text.size =7,

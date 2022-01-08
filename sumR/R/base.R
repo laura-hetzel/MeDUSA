@@ -74,9 +74,6 @@ get_calibrations <- function(mzs){
 #'
 #' @description calculates the parts per million error between two different
 #' masses
-#'
-#' @examples
-#' ppm_calc(mass1, mass2)
 #' @export
 ppm_calc <- function(mass1, mass2) {
   ((mass1 - mass2) / mass1) * 1e6

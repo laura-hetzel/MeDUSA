@@ -21,7 +21,3 @@ function included in this package.}
 \description{
 filters data based on Mass Defect
 }
-\examples{
-MD_filter(master_df_pos, master_df_pos$mz)
-
-}

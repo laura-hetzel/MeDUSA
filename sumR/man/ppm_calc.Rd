@@ -10,6 +10,3 @@ ppm_calc(mass1, mass2)
 calculates the parts per million error between two different
 masses
 }
-\examples{
-ppm_calc(mass1, mass2)
-}
