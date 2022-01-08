@@ -20,7 +20,6 @@ ci_setup <- function(){
                     "remotes", "digest"
                   )
                 ))
-  packrat::restore()
 }
 
 ci_check <- function(){
