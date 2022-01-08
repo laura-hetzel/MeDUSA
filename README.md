@@ -2,7 +2,7 @@
 
 This is the README for the `sumR` package.
 
-## Install Windows
+## Install on Windows
 1. Download and install R and Rstudio Desktop from:
 
 https://cran.r-project.org/bin/windows/base/ and https://www.rstudio.com/products/rstudio/download/
@@ -20,9 +20,7 @@ if (startsWith(.libPaths()[1], "\\")) {
     .libPaths(sort(.libPaths(), decreasing = T))
 }
 
-install.packages(c("remotes", "packrat"))
-
-packrat::init()
+install.packages("remotes")
 ```
 
 6. Request a personal access token in Gitlab. Go to: https://gitlab.com/-/profile/personal_access_tokens and add a Token name. Ensure that 'read_api' scope is selected. Click on 'Create personal access token' to retrieve the token. Copy this code, you will need it in the next step
