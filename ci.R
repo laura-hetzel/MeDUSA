@@ -10,7 +10,7 @@ install_if_needed <- function(package_to_install){
 }
 
 ci_setup <- function(){
-  options(repos = c(rev(structure(BiocManager::repositories()))))
+  options(repos = structure(BiocManager::repositories()))
   install_if_needed("devtools")
   install_if_needed("packrat")
   packrat::init(restart = FALSE,

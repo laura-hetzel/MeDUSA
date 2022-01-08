@@ -17,7 +17,8 @@ biocViews:
 Depends: magrittr
 Imports: stringr, dplyr, tibble, ggplot2, stats, usedist, densityClust, tidyr, 
          FactoMineR, factoextra, ggpubr, mixOmics, data.table, plotly, superheat,
-         ggsci, PeriodicTable, MSnbase, pbapply
+         ggsci, PeriodicTable, MSnbase, pbapply, GGally, logging, pROC, 
+         randomForest, xcms
 RoxygenNote: 7.1.2
 Suggests: 
     testthat (>= 3.0.0)

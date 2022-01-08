@@ -11,7 +11,7 @@ read_mzml(mzml = NULL)
 the package example will be used}
 }
 \value{
-List of dataframes with mz and intensity (i)
+XCMS object with spectra
 }
 \description{
 Read DIMS data from an mzML file
