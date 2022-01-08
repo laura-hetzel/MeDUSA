@@ -24,7 +24,7 @@ BG_filter <- function(dataframe, limit=2.5, blank_regex ="blank",
   ## Compare sample_cols with the mean, replace them by 0 if they are below
   ## thresh from what I understand up until now: Sweep creates the Intensity
   ## Ratio as a summary statistic, which sweeps across the sample columns
-  ## The function across those columns is basically a division by the 
+  ## The function across those columns is basically a division by the
   ## corresponding Background value.
   ## I'm gettin errors related to: Dimensions of matrix need to be equal to the
   ## function input data
@@ -33,7 +33,7 @@ BG_filter <- function(dataframe, limit=2.5, blank_regex ="blank",
   below_limit <- (sample_df / dataframe$background) <= limit
   sample_df[below_limit] <- 0
   return(sample_df)
-  #dataframe[sample_cols][sweep(dataframe[sample_cols], 1, 
+  #dataframe[sample_cols][sweep(dataframe[sample_cols], 1,
   #dataframe$background, `/`) <= limit] <- 0
   #result <- dataframe[, -blank_cols]
   #return(result)
@@ -56,9 +56,6 @@ BG_filter <- function(dataframe, limit=2.5, blank_regex ="blank",
 #' filtering, both a and b can be calculated using the linear_equation()
 #' function included in this package.
 #'
-#' @examples
-#' MD_filter(master_df_pos, master_df_pos$mz)
-#'
 #' @export
 #' @importFrom dplyr filter
 #' @import ggplot2
@@ -67,7 +64,7 @@ MD_filter <- function(dataframe, mz_col, a = 0.00112, b = 0.01953) {
   ## In-function MD calculation
   dataframe$MZ <- mz_col
   ## Either floor() or trunc() can be used for this part.
-  MZR <- trunc(mz_col, digits = 0) 
+  MZR <- trunc(mz_col, digits = 0)
   dataframe$MD <- MZ - MZR
   dataframe$MD.limit <- b + a * mz_col
 
@@ -79,17 +76,17 @@ MD_filter <- function(dataframe, mz_col, a = 0.00112, b = 0.01953) {
   ## This approach uses the linear equation to create an additional column and
   ## based on this column, we will be filtering out data.
 
-  ## Below are in total 3 different plots: 1 of the starting dataframe, the 
+  ## Below are in total 3 different plots: 1 of the starting dataframe, the
   ## second of the filtered dataframe the third is basically added to the first,
   ## in order to highlight the "to be removed" datapoints as a means of tagging
   ## them prior to removal.
 
-  
+
   ## Notice how this is the exact opposite from the "filtered" dataframe below.
   ## This one filters everything ABOVE the limit, as everything below will be
   ## kept and we want those datapoints which will be removed, highlighted.
   ## Not those which will remain.
-  highlight_df <- dataframe %>% filter(MD >= MD.limit) 
+  highlight_df <- dataframe %>% filter(MD >= MD.limit)
 
   ## DO the same for inlcusion list of HMDB, We need to make: 1, Linear eq. 2,
   ## inclusion list plot 3, metaboshiny. 4, R package.
