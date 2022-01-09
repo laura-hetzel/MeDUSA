@@ -9,7 +9,8 @@ stages:
 
 before_script:
   - apt-get update
-  - apt install -y libcurl4-openssl-dev libssl-dev libxml2-dev libxslt-dev libnetcdf-dev libxt-dev qpdf libssh2-1-dev libpq-dev zlib1g-dev build-essential libglpk40
+  - apt install -y libcurl4-openssl-dev libssl-dev libxml2-dev libxslt-dev
+  - apt install -y libnetcdf-dev libxt-dev qpdf build-essential libglpk40
 
 cache:
   key: one-key-to-rule-them-all
@@ -30,3 +31,4 @@ coverage:
   stage: test
   script:
     - R -e 'source("ci.R"); ci_coverage()'
+
