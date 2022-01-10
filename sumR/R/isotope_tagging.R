@@ -103,27 +103,159 @@ mass_spec_plot <- function(final_df_vis){
   return(gg)
 }
 
+#' @title Annotation for isotopes
+#' @description A list of annotation information of isotopes
+#' @usage annotate_iso(mz_vector, ppm , z )
+#' @param mz_vector mz value vector
+#' @param ppm error part per million
+#' @param z charge values
+#' @importFrom
+annotate_iso <- function(mz_vector, ppm , z ){
+  list_annotate <- c()
+  for (i in 1:length(mz_vector)) {
+    list_annotate[[i]] <- Rdisop::decomposeMass(mz_vector[i], ppm = ppm,z = z, maxisotopes = 10, minElements = "C0", maxElements = "C999999")
+  }
+  return(list_annotate)
+}
+
+
+#' @title Annotation for formula
+#' @description Adds column with chemical formula
+#' @usage annnotate_formula(final_df,list_annotate)
+#' @param final_df final dataframe
+#' @param list_annotate A list of annotation information of isotopes
+#' @importFrom dplyr tidyverse
+annnotate_formula <- function(final_df,list_annotate){
+  final_df <- final_df %>% add_column(formula = NA)
+  final_df$Isotopic_Status[is.na(final_df$Isotopic_Status)] <- " "
+
+  for (i in 1:length(final_df$Isotopic_Status)) {
+    if (final_df$Isotopic_Status[i] == "molecular_ion") {
+      final_df$formula[i] <- list_annotate[[i]]$formula[1]
+    } else if (final_df$Isotopic_Status[i]  == "c13_isotope") {
+      final_df$formula[i] <- list_annotate[[i - 1]]$formula[1]
+    } else{
+      final_df$formula[i] <- "Unknown"
+    }
+  }
+  return(final_df)
+}
+
+
+# Still in development
+#' @title Annotation for adducts
+#' @description
+#' @usage
+#' @param
+#' @param
+#' @param
+#' @param
+#' @importFrom
+annotate_add <- function(mz_vector){
+  x <- massdiff(mz_vector)
+  y <- adductMatch(x, add = mass2adduct::adducts, ppm = 5)
+}
+
+# Still in development
+# Maybe replaced later
+#' @title Imputation method for missing intensity values
+#' @description Imputation method for missing intensity values
+#' @usage
+#' @param
+impute.KNN.obs.sel <- function(dat, # incomplete data matrix
+                               cor.var.sel = 0.2, # correlation threshold for variable pre-selection
+                               K=5, # number of neighbors
+                               verbose=T) {
+
+  datimp <- dat
+
+  # incomplete observations
+  incom.obs <- which(apply(dat,1,function(x) any(is.na(x))))
+  if (verbose) message(paste0("Number of imcomplete observations: ", length(incom.obs)))
+
+  # incomplete variables
+  incom.vars <- which(apply(dat,2,function(x) any(is.na(x))))
+  if (verbose) message("Proceeding obs... ")
+
+  # Pearson correlation for variable pre-selection
+  Cor <- cor(dat,use = "p")
+
+  # Calculate distance
+  D2list <- lapply(incom.vars, function(j) {
+    varsel <- which(abs(Cor[j,]) > cor.var.sel)
+    if (length(varsel) > 10) varsel <- order(abs(Cor[j,]),decreasing = T)[1:11]
+    if (length(varsel) < 5) varsel <- order(abs(Cor[j,]),decreasing = T)[1:6]
+    D2 <- as.matrix(dist(scale(dat[,varsel])),upper = T,diag = T)
+    if (any(is.na(D2))) {
+      D2a <- as.matrix(dist(scale(dat)),upper = T,diag = T)*sqrt(length(varsel)/ncol(dat))
+      D2[is.na(D2)] <- D2a[is.na(D2)] }
+    diag(D2) <- NA
+    D2})
+  names(D2list) <- incom.vars
+
+  # get neighbors and impute by their weighted average
+  for (i in incom.obs) {
+    if (verbose) cat(paste(i," "))
+    comvars <-  complete.cases(as.numeric(dat[i,]))
+    dattmp <-  dat
+    for (j in which(!comvars)) {
+      D2 <- D2list[[as.character(j)]]
+      if (any(!is.na(D2[i,]))) {
+        KNNids <- order(D2[i,],na.last = NA)
+        KNNids_naomit <- KNNids[sapply(KNNids,function(ii) any(!is.na(dat[ii,j])))]
+      }  else KNNids  <- NULL
+
+      if (!is.null(KNNids)) KNNids_sel <- intersect(KNNids[1:min(K,length(KNNids))],KNNids_naomit)
+      if (length(KNNids_sel) < 1) KNNids_sel <- KNNids_naomit[1:min(floor(K/2),length(KNNids_naomit))] else
+        if (length(which(sapply(KNNids_sel,function(ii) !is.na(dat[ii,j])))) < floor(K/2) )  KNNids_sel <- KNNids_naomit[1:min(floor(K/2),length(KNNids_naomit))]
+        if (any(!is.na(D2[i,])) & length(KNNids)>= 1) {
+          dattmp_sel <- dattmp[KNNids_sel,j]
+          dattmp[i,j] <- sum(dattmp_sel*exp(-D2[i,KNNids_sel]),na.rm = T)/sum(exp(-D2[i,KNNids_sel])[!is.na(dattmp_sel)],na.rm=T) }
+    }
+    datimp[i,] <- dattmp[i,]
+  }
+
+  # if there are still NAs, take mean
+  datimp <- apply(datimp,2, function(x) {
+    if (any(is.na(x))) x[is.na(x)] <- mean(x,na.rm = T)
+    x})
+
+
+
+  datimp}
 
 
 #---------------------------------------------------------------------------------------------------
 #' @title Isotope tagging
 #' @description Tags isotopes based on intensity ratio and difference in mass
 #' @usage Isotope_tagging(df, iso_diff , ppm , by_step )
-#' @param df Dataframe must contain columns c("mz", "intensity")
+#' @param df Dataframe must contain columns c("mz", "intensity") with "mz" as first column
 #' @param iso_diff_da Mass difference between mol ion and isotope
 #' @param ppm Parts Per Million Tolerance
 #' @param by_step "by" in sequence mz range
+<<<<<<< HEAD
+#' @param z charge
+#' @importFrom  data.table as.data.table finstersect
+=======
 #' @importFrom  data.table as.data.table fintersect
+>>>>>>> c7141ad40976887a0de108682b2e89af9daf69e7
 #' @importFrom  dplyr tibble filter select mutate
-isotope_tagging <- function(df , iso_diff_da, ppm , by_step ){
-#-----------------------------------------------------------------------------------
-## Start body part of function BAIT
-DT <- as.data.table(df)
-#setting mz & intensity to vectors
-mz_vector <-  DT[, mz]
-int_vector <- DT[, intensity]
+#' @export
 
-#creating new df with mass_error , lower bound and upperbound
+isotope_tagging <- function(df , iso_diff_da, ppm , by_step ){
+  #-----------------------------------------------------------------------------------
+  ## Start body part of function BAIT
+
+  #keep orginal copy
+  df1 <- df
+
+  #creating new data frame with mean intensity column # note now complete case but will be replaced by imputation method
+  df <- data.frame(mz = df[,1], intensity = rowMeans(df[,-1], na.rm = TRUE))
+  #setting mz & intensity to vectors
+  mz_vector <-  df$mz
+  int_vector <- df$intensity
+
+  #creating new df with mass_error , lower bound and upperbound
   df <- mutate(df,
                mass_error = ppm_to_dalton(mz, ppm),
                min_error  = mz - mass_error,
@@ -195,15 +327,24 @@ int_vector <- DT[, intensity]
     mutate(Confidence_ppm = paste("(",round(min_error.x,2),",",round(max_error.x,2),")"))
 
   final_df <- final_df[, c(2,1,15,12,13,14)]
-  final_df
+
+  #Annotation
+  list_annotate <- annotate_iso(mz_vector, ppm , z )
+  final_df <- annnotate_formula(final_df,list_annotate)
 
   #plotting
   print(mass_spec_plot(final_df_vis))
 
-  return(final_df)
+
+  #adding colums to original dataframe
+  df1$formula <- final_df$formula
+  df1$Isotopic_Status <- final_df$Isotopic_Status
+  df1$Confidence_ppm <- final_df$Confidence_ppm
+  df1$Mol_Isotope_Pair <- final_df$Mol_Isotope_Pair
+  df1$Difference_Da <- final_df$Difference_Da
+  df1$id <- final_df$id
+
+
+  return(df1)
 }
-
-
-
-
 
