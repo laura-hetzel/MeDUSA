@@ -15,10 +15,33 @@ Encoding: UTF-8
 LazyData: true
 biocViews:
 Depends: magrittr
-Imports: stringr, dplyr, tibble, ggplot2, stats, usedist, densityClust, tidyr, 
-         FactoMineR, factoextra, ggpubr, mixOmics, data.table, plotly, superheat,
-         ggsci, PeriodicTable, MSnbase, pbapply, GGally, logging, pROC, 
-         randomForest, xcms, viridis
+Imports: 
+    stringr,
+    dplyr,
+    tibble,
+    ggplot2,
+    stats,
+    usedist,
+    densityClust,
+    tidyr,
+    FactoMineR,
+    factoextra,
+    ggpubr,
+    mixOmics,
+    data.table,
+    plotly,
+    superheat,
+    ggsci,
+    PeriodicTable,
+    MSnbase,
+    pbapply,
+    GGally,
+    logging,
+    pROC,
+    randomForest,
+    xcms,
+    viridis,
+    Rdpack
 RoxygenNote: 7.1.2
 Suggests: 
     rmarkdown,
