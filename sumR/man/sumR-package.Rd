@@ -4,7 +4,7 @@
 \name{sumR-package}
 \alias{sumR}
 \alias{sumR-package}
-\title{}
+\title{SumR Package}
 \description{
 Set of tools to set up a pipeline for the analysis of DI-MS data.
 }

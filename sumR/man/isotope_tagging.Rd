@@ -7,7 +7,7 @@
 Isotope_tagging(df, iso_diff , ppm , by_step )
 }
 \arguments{
-\item{df}{Dataframe must contain columns c("mz", "intensity")}
+\item{df}{Dataframe must contain columns c("mz", "intensity") with "mz" as first column}
 
 \item{iso_diff_da}{Mass difference between mol ion and isotope}
 

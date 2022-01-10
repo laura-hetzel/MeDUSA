@@ -109,7 +109,6 @@ mass_spec_plot <- function(final_df_vis){
 #' @param mz_vector mz value vector
 #' @param ppm error part per million
 #' @param z charge values
-#' @importFrom
 annotate_iso <- function(mz_vector, ppm , z ){
   list_annotate <- c()
   for (i in 1:length(mz_vector)) {
@@ -124,9 +123,9 @@ annotate_iso <- function(mz_vector, ppm , z ){
 #' @usage annnotate_formula(final_df,list_annotate)
 #' @param final_df final dataframe
 #' @param list_annotate A list of annotation information of isotopes
-#' @importFrom dplyr tidyverse
+#' @importFrom dplyr %>%
 annnotate_formula <- function(final_df,list_annotate){
-  final_df <- final_df %>% add_column(formula = NA)
+  final_df$formula <- NA 
   final_df$Isotopic_Status[is.na(final_df$Isotopic_Status)] <- " "
 
   for (i in 1:length(final_df$Isotopic_Status)) {
@@ -144,13 +143,6 @@ annnotate_formula <- function(final_df,list_annotate){
 
 # Still in development
 #' @title Annotation for adducts
-#' @description
-#' @usage
-#' @param
-#' @param
-#' @param
-#' @param
-#' @importFrom
 annotate_add <- function(mz_vector){
   x <- massdiff(mz_vector)
   y <- adductMatch(x, add = mass2adduct::adducts, ppm = 5)
@@ -160,8 +152,6 @@ annotate_add <- function(mz_vector){
 # Maybe replaced later
 #' @title Imputation method for missing intensity values
 #' @description Imputation method for missing intensity values
-#' @usage
-#' @param
 impute.KNN.obs.sel <- function(dat, # incomplete data matrix
                                cor.var.sel = 0.2, # correlation threshold for variable pre-selection
                                K=5, # number of neighbors
@@ -233,15 +223,9 @@ impute.KNN.obs.sel <- function(dat, # incomplete data matrix
 #' @param iso_diff_da Mass difference between mol ion and isotope
 #' @param ppm Parts Per Million Tolerance
 #' @param by_step "by" in sequence mz range
-<<<<<<< HEAD
-#' @param z charge
-#' @importFrom  data.table as.data.table finstersect
-=======
 #' @importFrom  data.table as.data.table fintersect
->>>>>>> c7141ad40976887a0de108682b2e89af9daf69e7
 #' @importFrom  dplyr tibble filter select mutate
 #' @export
-
 isotope_tagging <- function(df , iso_diff_da, ppm , by_step ){
   #-----------------------------------------------------------------------------------
   ## Start body part of function BAIT
