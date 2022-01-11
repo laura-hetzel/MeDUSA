@@ -15,7 +15,7 @@ before_script:
 cache:
   key: one-key-to-rule-them-all
   paths:
-    - sumR/
+    - /usr/local/lib/R/site-library
 
 setup:
   stage: setup
