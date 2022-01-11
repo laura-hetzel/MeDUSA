@@ -36,6 +36,35 @@ read_mzml <- function(mzml = NULL){
   })
 }
 
+#' @title Combine spectra and centroid
+#' @param data XCMS object
+#' @importFrom tools file_path_sans_ext
+#' @importFrom xcms smooth pickPeaks
+#' @import MSnbase
+#' @export
+combine_spectra_centroid <- function(data){
+  list_data <- split(data, f = data@featureData@data$polarity)
+  names(list_data) <- c("negative", "positive")
+  sapply(names(list_data), function(polarity){
+    mzml <- data@phenoData@data$sampleNames
+    file <- sprintf("%s_centroided_%s.mzML",
+                    basename(tools::file_path_sans_ext(mzml)),
+                    polarity)
+    if (file.exists(file)) {
+      file.remove(file)
+    }
+
+    list_data[[polarity]] %>%
+      MSnbase:::combineSpectra(method = function(x){
+        meanMzInts(x, intensityFun = base::max)
+      }) %>%
+      smooth() %>%
+      pickPeaks() %>%
+      writeMSData(file)
+    file
+  })
+}
+
 #' @title DIMS pipeline
 #' @importFrom xcms MSWParam findChromPeaks groupChromPeaks MzClustParam
 #' @importFrom pbapply pblapply
@@ -50,10 +79,8 @@ dims_pipeline <- function(data){
   params <- xcms::MSWParam(SNR.method = "data.mean", winSize.noise = 500)
   data <- do.call(c, pblapply(per_injection, cl = 8, function(inj){
     dat <-  suppressMessages(xcms::findChromPeaks(inj, param = params))
-    calibration_vec <- get_calibrations(chromPeaks(dat)$mz)
-    prm <- CalibrantMassParam(mz = calibration_vec,
-                              method = "edgeshift", mzabs = 0.0001, mzppm = 5)
-    calibrate(dat, param = prm)
+    # Filter using exclusing list
+    dat
   }))
 
   clust_param <- xcms::MzClustParam(sampleGroups = groups)
