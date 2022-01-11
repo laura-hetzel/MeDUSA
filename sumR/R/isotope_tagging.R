@@ -58,7 +58,7 @@ Intensity_ratio_range <- function(mz,by_step){
 #' @param mz Mass
 #' @param Intensity_ratio_vec Intensity ratio vector for carbon
 #' @param by_step "by" in sequence range
-#' @importFrom dplyr select mutate case_when
+#' @importFrom dplyr select mutate case_when  %>%
 subset_matrix_filter <- function(df, mz , Intensity_ratio_vec, by_step ){
   seq_vec  <- seq(from = min(mz) , to = max(mz), by  = by_step)
   result <- c()
@@ -86,6 +86,7 @@ subset_matrix_filter <- function(df, mz , Intensity_ratio_vec, by_step ){
 #' @usage mass_spec_plot(final_df_vis)
 #' @param final_df_vis dataframe of the mono-isotopic and isotopic peaks pair's with id column
 #' @importFrom  plotly plot_ly highlight_key add_markers add_segments  layout rangeslider ggplotly highlight
+#' @importFrom dplyr %>%
 mass_spec_plot <- function(final_df_vis){
   d <- highlight_key(final_df_vis, ~id )
 
@@ -109,6 +110,7 @@ mass_spec_plot <- function(final_df_vis){
 #' @param mz_vector mz value vector
 #' @param ppm error part per million
 #' @param z charge values
+#' @importFrom Rdisop decomposeMass
 annotate_iso <- function(mz_vector, ppm , z ){
   list_annotate <- c()
   for (i in 1:length(mz_vector)) {
@@ -123,9 +125,8 @@ annotate_iso <- function(mz_vector, ppm , z ){
 #' @usage annnotate_formula(final_df,list_annotate)
 #' @param final_df final dataframe
 #' @param list_annotate A list of annotation information of isotopes
-#' @importFrom dplyr %>%
 annnotate_formula <- function(final_df,list_annotate){
-  final_df$formula <- NA 
+  final_df$formula <- NA
   final_df$Isotopic_Status[is.na(final_df$Isotopic_Status)] <- " "
 
   for (i in 1:length(final_df$Isotopic_Status)) {
@@ -139,7 +140,6 @@ annnotate_formula <- function(final_df,list_annotate){
   }
   return(final_df)
 }
-
 
 # Still in development
 #' @title Annotation for adducts
@@ -223,10 +223,13 @@ impute.KNN.obs.sel <- function(dat, # incomplete data matrix
 #' @param iso_diff_da Mass difference between mol ion and isotope
 #' @param ppm Parts Per Million Tolerance
 #' @param by_step "by" in sequence mz range
-#' @importFrom  data.table as.data.table fintersect
-#' @importFrom  dplyr tibble filter select mutate
+#' @param z charge
+#' @importFrom  data.table fintersect
+#' @importFrom  dplyr mutate tibble filter select mutate rename
+#' @importFrom tibble tibble
+#' @importFrom tidyselect everything
 #' @export
-isotope_tagging <- function(df , iso_diff_da, ppm , by_step ){
+isotope_tagging <- function(df , iso_diff_da, ppm , by_step, z){
   #-----------------------------------------------------------------------------------
   ## Start body part of function BAIT
 
@@ -331,4 +334,6 @@ isotope_tagging <- function(df , iso_diff_da, ppm , by_step ){
 
   return(df1)
 }
+
+
 

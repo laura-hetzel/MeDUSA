@@ -41,7 +41,9 @@ Imports:
     randomForest,
     xcms,
     viridis,
-    Rdpack
+    Rdpack,
+    fame,
+    Rdisop
 RoxygenNote: 7.1.2
 Suggests: 
     rmarkdown,

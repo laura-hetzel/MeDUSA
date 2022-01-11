@@ -14,6 +14,8 @@ Isotope_tagging(df, iso_diff , ppm , by_step )
 \item{ppm}{Parts Per Million Tolerance}
 
 \item{by_step}{"by" in sequence mz range}
+
+\item{z}{charge}
 }
 \description{
 Tags isotopes based on intensity ratio and difference in mass
