@@ -42,7 +42,8 @@ Imports:
     xcms,
     viridis,
     Rdpack,
-    Rdisop
+    Rdisop,
+    pmp
 RoxygenNote: 7.1.2
 Suggests: 
     rmarkdown,
