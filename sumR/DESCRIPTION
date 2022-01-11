@@ -43,7 +43,8 @@ Imports:
     viridis,
     Rdpack,
     Rdisop,
-    pmp
+    pmp,
+    tidyselect
 RoxygenNote: 7.1.2
 Suggests: 
     rmarkdown,
