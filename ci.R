@@ -10,7 +10,6 @@ install_if_needed <- function(package_to_install){
 }
 
 ci_setup <- function(){
-  print(.libPaths())
   options(repos = structure(BiocManager::repositories()))
   install_if_needed("devtools")
   devtools::install(upgrade = F)
@@ -18,14 +17,12 @@ ci_setup <- function(){
 
 ci_check <- function(){
   if (length(list.files(path = "R") > 0)) {
-    ci_setup()
     devtools::check(error_on = "error")
   }
 }
 
 ci_coverage <- function(){
   if (length(list.files(path = "R") > 0)) {
-    ci_setup()
     install_if_needed("covr")
     covr::package_coverage(type = c("tests", "examples"))
   }

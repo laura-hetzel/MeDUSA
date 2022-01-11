@@ -15,7 +15,7 @@ before_script:
 cache:
   key: one-key-to-rule-them-all
   paths:
-    - /usr/local/lib/R/site-library
+    - /usr/local/lib/R/site-library/
 
 setup:
   stage: setup
