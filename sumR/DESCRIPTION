@@ -42,7 +42,6 @@ Imports:
     xcms,
     viridis,
     Rdpack,
-    fame,
     Rdisop
 RoxygenNote: 7.1.2
 Suggests: 

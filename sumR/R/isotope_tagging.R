@@ -224,12 +224,13 @@ impute.KNN.obs.sel <- function(dat, # incomplete data matrix
 #' @param ppm Parts Per Million Tolerance
 #' @param by_step "by" in sequence mz range
 #' @param z charge
-#' @importFrom  data.table fintersect
+#' @importFrom  data.table fintersect as.data.table
 #' @importFrom  dplyr mutate tibble filter select mutate rename
 #' @importFrom tibble tibble
 #' @importFrom tidyselect everything
 #' @export
-isotope_tagging <- function(df , iso_diff_da, ppm , by_step, z){
+isotope_tagging <- function(df, iso_diff_da = 1.0034,
+                            ppm = 5, by_step = 100, z = 1){
   #-----------------------------------------------------------------------------------
   ## Start body part of function BAIT
 
