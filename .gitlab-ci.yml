@@ -15,7 +15,7 @@ before_script:
 cache:
   key: one-key-to-rule-them-all
   paths:
-    - sumR/packrat/
+    - sumR/
 
 setup:
   stage: setup
