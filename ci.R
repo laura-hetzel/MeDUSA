@@ -12,23 +12,27 @@ install_if_needed <- function(package_to_install){
 ci_setup <- function(){
   if (!dir.exists("cache")) {
     dir.create("cache", showWarnings = F)
-    folder <- sprintf("%s/cache", getwd())
-    print(sprintf("creating cache folder at %s", folder))
-    .libPaths(folder)
+    print(sprintf("Creating cache folder at %s/cache", getwd()))
   }
-  print(.libPaths()[1])
+  folder <- sprintf("%s/cache", getwd())
+  .libPaths(folder)
   options(repos = structure(BiocManager::repositories()))
   install_if_needed("devtools")
+  usethis::use_build_ignore("cache")
   devtools::install(upgrade = F)
 }
 
 ci_check <- function(){
+  folder <- sprintf("%s/cache", getwd())
+  .libPaths(folder)
   if (length(list.files(path = "R") > 0)) {
     devtools::check(error_on = "error")
   }
 }
 
 ci_coverage <- function(){
+  folder <- sprintf("%s/cache", getwd())
+  .libPaths(folder)
   if (length(list.files(path = "R") > 0)) {
     install_if_needed("covr")
     covr::package_coverage(type = c("tests", "examples"))

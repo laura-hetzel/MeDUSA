@@ -4,3 +4,4 @@
 ^sumR\.Rproj$
 ^packrat/
 ^\.Rprofile$
+^cache$
