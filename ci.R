@@ -13,7 +13,6 @@ ci_setup <- function(){
   print(.libPaths())
   options(repos = structure(BiocManager::repositories()))
   install_if_needed("devtools")
-  devtools::document()
   devtools::install(upgrade = F)
 }
 
