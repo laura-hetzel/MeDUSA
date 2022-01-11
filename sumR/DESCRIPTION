@@ -15,11 +15,40 @@ Encoding: UTF-8
 LazyData: true
 biocViews:
 Depends: magrittr
-Imports: stringr, dplyr, tibble, ggplot2, stats, usedist, densityClust, tidyr, 
-         FactoMineR, factoextra, ggpubr, mixOmics, data.table, plotly, superheat,
-         ggsci, PeriodicTable, MSnbase, pbapply, GGally, logging, pROC, 
-         randomForest, xcms, viridis
+Imports: 
+    stringr,
+    dplyr,
+    tibble,
+    ggplot2,
+    stats,
+    usedist,
+    densityClust,
+    tidyr,
+    FactoMineR,
+    factoextra,
+    ggpubr,
+    mixOmics,
+    data.table,
+    plotly,
+    superheat,
+    ggsci,
+    PeriodicTable,
+    MSnbase,
+    pbapply,
+    GGally,
+    logging,
+    pROC,
+    randomForest,
+    xcms,
+    viridis,
+    Rdpack,
+    Rdisop,
+    pmp,
+    tidyselect
 RoxygenNote: 7.1.2
 Suggests: 
+    rmarkdown,
+    knitr,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+VignetteBuilder: knitr

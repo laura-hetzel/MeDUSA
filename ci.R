@@ -10,28 +10,30 @@ install_if_needed <- function(package_to_install){
 }
 
 ci_setup <- function(){
+  if (!dir.exists("cache")) {
+    dir.create("cache", showWarnings = F)
+    print(sprintf("Creating cache folder at %s/cache", getwd()))
+  }
+  folder <- sprintf("%s/cache", getwd())
+  .libPaths(folder)
   options(repos = structure(BiocManager::repositories()))
   install_if_needed("devtools")
-  install_if_needed("packrat")
-  packrat::init(restart = FALSE,
-                options = list(
-                  external.packages = c(
-                    "devtools", "roxygen2",
-                    "remotes", "digest"
-                  )
-                ))
+  usethis::use_build_ignore("cache")
+  devtools::install(upgrade = F)
 }
 
 ci_check <- function(){
+  folder <- sprintf("%s/cache", getwd())
+  .libPaths(folder)
   if (length(list.files(path = "R") > 0)) {
-    ci_setup()
     devtools::check(error_on = "error")
   }
 }
 
 ci_coverage <- function(){
+  folder <- sprintf("%s/cache", getwd())
+  .libPaths(folder)
   if (length(list.files(path = "R") > 0)) {
-    ci_setup()
     install_if_needed("covr")
     covr::package_coverage(type = c("tests", "examples"))
   }

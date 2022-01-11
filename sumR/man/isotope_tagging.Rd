@@ -7,13 +7,15 @@
 Isotope_tagging(df, iso_diff , ppm , by_step )
 }
 \arguments{
-\item{df}{Dataframe must contain columns c("mz", "intensity")}
+\item{df}{Dataframe must contain columns c("mz", "intensity") with "mz" as first column}
 
 \item{iso_diff_da}{Mass difference between mol ion and isotope}
 
 \item{ppm}{Parts Per Million Tolerance}
 
 \item{by_step}{"by" in sequence mz range}
+
+\item{z}{charge}
 }
 \description{
 Tags isotopes based on intensity ratio and difference in mass

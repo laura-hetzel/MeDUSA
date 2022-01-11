@@ -36,39 +36,85 @@ read_mzml <- function(mzml = NULL){
   })
 }
 
+#' @title Combine spectra and centroid
+#' @param data XCMS object
+#' @importFrom tools file_path_sans_ext
+#' @importFrom xcms smooth pickPeaks
+#' @import MSnbase
+#' @export
+combine_spectra_centroid <- function(data){
+  list_data <- split(data, f = data@featureData@data$polarity)
+  names(list_data) <- c("negative", "positive")
+  sapply(names(list_data), function(polarity){
+    mzml <- data@phenoData@data$sampleNames
+    file <- sprintf("%s_centroided_%s.mzML",
+                    basename(tools::file_path_sans_ext(mzml)),
+                    polarity)
+    if (file.exists(file)) {
+      file.remove(file)
+    }
+
+    list_data[[polarity]] %>%
+      MSnbase:::combineSpectra(method = function(x){
+        meanMzInts(x, intensityFun = combine_intensity)#base::max)
+      }) %>%
+      smooth() %>%
+      pickPeaks() %>%
+      writeMSData(file)
+    file
+  })
+}
+
+
+combine_intensity <- function(x){
+  m <- mean(x[x > 0])
+  ifelse(is.nan(m), 0, m)
+}
+
 #' @title DIMS pipeline
 #' @importFrom xcms MSWParam findChromPeaks groupChromPeaks MzClustParam
+#' fillChromPeaks FillChromPeaksParam
 #' @importFrom pbapply pblapply
 #' @importFrom logging loginfo
 #' @export
 dims_pipeline <- function(data){
-  loginfo("Running DIMS pipeline")
-  groups <- seq_len(nrow(data@featureData))
-  per_injection <- split(data, f = groups)
-  loginfo(sprintf("Finding peaks in %s spectra", length(groups)))
+  suppressWarnings({
+    loginfo("Running DIMS pipeline")
+    groups <- seq_len(nrow(data@featureData))
+    per_injection <- split(data, f = groups)
+    loginfo(sprintf("Identifying peaks in %s spectra", length(groups)))
 
-  params <- xcms::MSWParam(SNR.method = "data.mean", winSize.noise = 500)
-  data <- do.call(c, pblapply(per_injection, cl = 8, function(inj){
-    dat <-  suppressMessages(xcms::findChromPeaks(inj, param = params))
-    calibration_vec <- get_calibrations(chromPeaks(dat)$mz)
-    prm <- CalibrantMassParam(mz = calibration_vec,
-                              method = "edgeshift", mzabs = 0.0001, mzppm = 5)
-    calibrate(dat, param = prm)
-  }))
+    params <- xcms::MSWParam(SNR.method = "data.mean", winSize.noise = 500)
+    data <- do.call(c, pblapply(per_injection, cl = 4, function(inj){
+      dat <-  suppressMessages(xcms::findChromPeaks(inj, param = params))
+      # Filter using exclusing list
+      dat
+    }))
 
-  clust_param <- xcms::MzClustParam(sampleGroups = groups)
-  data <- xcms::groupChromPeaks(data, param = clust_param)
-  loginfo("DIMS pipeline complete")
+    clust_param <- xcms::MzClustParam(sampleGroups = groups)
+    data <- xcms::groupChromPeaks(data, param = clust_param)
+    data <- fillChromPeaks(data, param = FillChromPeaksParam())
+    loginfo("DIMS pipeline complete")
+
+  })
   data
 }
 
-#' @title get vector of Calibration MZs
-#' @param mzs Vector of experimental measured M/Zs
-#' @return a vector of 'correct' MZ values, used to correct the experimental M/Zs
-get_calibrations <- function(mzs){
 
-  return(mzs)
+
+
+#' @title Process features obtained from XCMS
+#' @param data XCMS object with grouped peaks
+#' @importFrom xcms featureValues featureDefinitions
+#' @importFrom pmp mv_imputation
+#' @export
+feature_processing <- function(data){
+  intensity_df <- featureValues(data)
+  df_imp <- mv_imputation(df = intensity_df, method = "sv")
+  df <- cbind(mz = xcms::featureDefinitions(data)$mzmed, df_imp)
+  as.data.frame(df)
 }
+
 
 #' ppm calculation
 #'
