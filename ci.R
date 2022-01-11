@@ -12,10 +12,11 @@ install_if_needed <- function(package_to_install){
 ci_setup <- function(){
   options(repos = structure(BiocManager::repositories()))
   install_if_needed("packrat")
-  packrat::init(restart = FALSE)
-  packrat::restore()
+  if (!dir.exists("packrat")) {
+    packrat::init(restart = FALSE)
+  }
+  devtools::install(upgrade = F)
   packrat::snapshot()
-
 }
 
 ci_check <- function(){
