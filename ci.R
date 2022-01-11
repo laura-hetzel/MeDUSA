@@ -11,16 +11,8 @@ install_if_needed <- function(package_to_install){
 
 ci_setup <- function(){
   options(repos = structure(BiocManager::repositories()))
-  install_if_needed("devtools")
   install_if_needed("packrat")
-  install_if_needed("Rdpack")
-  packrat::init(restart = FALSE,
-                options = list(
-                  external.packages = c(
-                    "devtools", "roxygen2",
-                    "remotes", "digest"
-                  )
-                ))
+  packrat::init(restart = FALSE)
   packrat::restore()
 }
 
