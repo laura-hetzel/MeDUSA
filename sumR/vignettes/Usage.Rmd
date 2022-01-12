@@ -14,6 +14,43 @@ knitr::opts_chunk$set(
 )
 ```
 
+_This package is under heavy development. Please do not use this package for actual reserach._
+
 ```{r setup}
 library(sumR)
+```
+
+First we load up some example data. Here we have 4 injection of which 1 is a blank sample, all with negative polarity. These files have spectra which are combined together and centroided. 
+```{r files}
+dir <- system.file("extdata", package = "sumR")
+files <- list.files(dir, pattern = ".*negative.*.mzML$", full.names = T)
+files
+```
+
+We're using `xcms` in order to read our mzML files. 
+```{r reading}
+data <- read_mzml(files)
+data
+```
+
+Next, we are identifying peaks and grouping them into features using the `dims_pipeline`. During this process, we also filter any chromatic peaks using an exclusion filter. In `feature_processing` we combine some of our feature data in order to make it ready for isotope detection.
+
+```{r processing}
+data <- dims_pipeline(data)
+data
+```
+
+```{r features}
+df <- feature_processing(data)
+```
+
+Here we run the isotope detection algorithm. It adds several columns to our previous data.frame which can be used to filter isotopes from our feature set. 
+
+```{r isotopes}
+df <- isotope_tagging(df)
+head(df)
+```
+
+```{r sessionInfo}
+sessionInfo()
 ```

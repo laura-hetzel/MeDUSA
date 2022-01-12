@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{read_msdata}
 \alias{read_msdata}
-\title{Read MS data}
+\title{(LEGACY, use read_mzml instead) Read MS data}
 \usage{
 read_msdata(path = "data")
 }
@@ -13,5 +13,5 @@ read_msdata(path = "data")
 Data.frame with ordered mz values
 }
 \description{
-Read MS data
+(LEGACY, use read_mzml instead) Read MS data
 }
