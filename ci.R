@@ -18,6 +18,7 @@ ci_setup <- function(){
   .libPaths(folder)
   options(repos = structure(BiocManager::repositories()))
   install_if_needed("devtools")
+  install_if_needed("covr")
   usethis::use_build_ignore("cache")
   devtools::install(upgrade = F)
 }
@@ -34,8 +35,6 @@ ci_coverage <- function(){
   folder <- sprintf("%s/cache", getwd())
   .libPaths(folder)
   if (length(list.files(path = "R") > 0)) {
-    install_if_needed("covr")
     covr::package_coverage(type = c("tests", "examples"))
   }
 }
-
