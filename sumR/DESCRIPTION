@@ -44,7 +44,9 @@ Imports:
     Rdpack,
     Rdisop,
     pmp,
-    tidyselect
+    tidyselect,
+    Biobase,
+    utils
 RoxygenNote: 7.1.2
 Suggests: 
     rmarkdown,

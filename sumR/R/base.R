@@ -1,4 +1,4 @@
-#' @title Read MS data
+#' @title (LEGACY, use read_mzml instead) Read MS data
 #' @param path path to the file
 #' @return Data.frame with ordered mz values
 #' @export
@@ -29,7 +29,11 @@ read_mzml <- function(mzml = NULL){
     mzml <- system.file("extdata/20200609_MeOH.mzML", package = "sumR")
   }
   tryCatch({
-    data <- MSnbase::readMSData(mzml, mode = "onDisk")
+    pd <- data.frame(sampleNames = mzml, class = "sample")
+    blanks <- grep("Blank", mzml)
+    pd$class[blanks] <- "blank"
+    data <- MSnbase::readMSData(mzml, mode = "onDisk",
+                                pdata = new("NAnnotatedDataFrame", pd))
     return(data)
   }, error = function(x){
     stop("Cannot parse the given file, not recognized as a proper .mzML file")
@@ -40,9 +44,11 @@ read_mzml <- function(mzml = NULL){
 #' @param data XCMS object
 #' @importFrom tools file_path_sans_ext
 #' @importFrom xcms smooth pickPeaks
+#' @importFrom utils getFromNamespace
 #' @import MSnbase
 #' @export
 combine_spectra_centroid <- function(data){
+  combineSpectra <- utils::getFromNamespace("combineSpectra", "MSnbase")
   list_data <- split(data, f = data@featureData@data$polarity)
   names(list_data) <- c("negative", "positive")
   sapply(names(list_data), function(polarity){
@@ -55,7 +61,7 @@ combine_spectra_centroid <- function(data){
     }
 
     list_data[[polarity]] %>%
-      MSnbase:::combineSpectra(method = function(x){
+      combineSpectra(method = function(x){
         meanMzInts(x, intensityFun = combine_intensity)#base::max)
       }) %>%
       smooth() %>%
@@ -95,23 +101,29 @@ dims_pipeline <- function(data){
     data <- xcms::groupChromPeaks(data, param = clust_param)
     data <- fillChromPeaks(data, param = FillChromPeaksParam())
     loginfo("DIMS pipeline complete")
-
   })
   data
 }
 
 
 
-
 #' @title Process features obtained from XCMS
 #' @param data XCMS object with grouped peaks
 #' @importFrom xcms featureValues featureDefinitions
-#' @importFrom pmp mv_imputation
+#' @importFrom pmp filter_peaks_by_blank mv_imputation
+#' @importFrom Biobase pData
 #' @export
 feature_processing <- function(data){
   intensity_df <- featureValues(data)
+  classes <- Biobase::pData(data)$class
+  intensity_df <- filter_peaks_by_blank(intensity_df, fold_change = 5,
+                        classes = classes,
+                        blank_label = "blank",
+                        remove_samples = FALSE)
   df_imp <- mv_imputation(df = intensity_df, method = "sv")
-  df <- cbind(mz = xcms::featureDefinitions(data)$mzmed, df_imp)
+
+  mz <- xcms::featureDefinitions(data)[rownames(df_imp), ]$mzmed
+  df <- cbind(mz = mz, df_imp)
   as.data.frame(df)
 }
 
