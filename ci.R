@@ -35,6 +35,7 @@ ci_coverage <- function(){
   folder <- sprintf("%s/cache", getwd())
   .libPaths(folder)
   if (length(list.files(path = "R") > 0)) {
-    covr::package_coverage(type = c("tests", "examples"))
+    cov <- covr::package_coverage(type = c("tests", "examples"))
+    covr::gitlab(coverage = cov, quiet = FALSE)
   }
 }
