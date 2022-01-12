@@ -44,9 +44,11 @@ read_mzml <- function(mzml = NULL){
 #' @param data XCMS object
 #' @importFrom tools file_path_sans_ext
 #' @importFrom xcms smooth pickPeaks
+#' @importFrom utils getFromNamespace
 #' @import MSnbase
 #' @export
 combine_spectra_centroid <- function(data){
+  combineSpectra <- utils::getFromNamespace("combineSpectra", "MSnbase")
   list_data <- split(data, f = data@featureData@data$polarity)
   names(list_data) <- c("negative", "positive")
   sapply(names(list_data), function(polarity){
@@ -59,7 +61,7 @@ combine_spectra_centroid <- function(data){
     }
 
     list_data[[polarity]] %>%
-      MSnbase:::combineSpectra(method = function(x){
+      combineSpectra(method = function(x){
         meanMzInts(x, intensityFun = combine_intensity)#base::max)
       }) %>%
       smooth() %>%
