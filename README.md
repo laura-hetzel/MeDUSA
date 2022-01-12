@@ -1,8 +1,8 @@
 # README
 
 <!-- badges: start -->
-![](https://gitlab.com/lacdr-abs/sum-r/badges/main/pipeline.svg)
-![](https://gitlab.com/lacdr-abs/sum-r/badges/main/coverage.svg)
+![](https://gitlab.com/lacdr-abs/sum-r/badges/%{default_branch}/pipeline.svg)
+![](https://gitlab.com/lacdr-abs/sum-r/badges/%{default_branch}/coverage.svg)
 <!-- badges: end -->
 
 This is the README for the `sumR` package.
