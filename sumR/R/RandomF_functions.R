@@ -286,12 +286,23 @@ RF_model<-function(training_set,test_set,mtry,ntree,seed){
 
 
 ## choosing the best mtry  
-mtry_select<-function(training_set,test_set,seed){
-  model_list <- data.frame(mtry=1:(length(training_set)-1)) ## 151 according to number of peaks
+
+
+#' @title choose mtry 
+#' @description This function choose the mtry according to the user preference (Accuracy, Sensitivity, Specificity) 
+#' @param training_set the training set
+#' @param test_set the test set
+#' @param seed global seed for reproducible results
+#' @param ntree number of trees used in the original model
+#' @importFrom randomForest randomForest
+#' @importFrom dplyr select
+#' @importFrom caret confusionMatrix
+mtry_select<-function(training_set,test_set,seed,ntree){
+  model_list <- data.frame(mtry=1:(length(training_set)-1)) 
   for (i in c(1:(length(training_set)-1))) {
     set.seed(seed)
     fit <- randomForest(x=(training_set %>% dplyr::select(-samples)),
-                        y=training_set$samples,data=training_set,ntree=500,mtry=i,importance = T)
+                        y=training_set$samples,data=training_set,ntree=ntree,mtry=i,importance = T)
     
     model_list$err_rate[i]<-fit[["err.rate"]][nrow(fit[["err.rate"]]),1]
     
@@ -316,12 +327,24 @@ mtry_select<-function(training_set,test_set,seed){
 
 # permutation of data  ----------------------------------------------------
 
-## the concept here is we randomly change the samples name and see how the model will do when trying to classify the samples 
-## if the accuracy is bad then our model is good 
 
 
+#' @title data permutation
+#' @description This function apply data permutation to test the accuracy of the model against permutated data  
+#' @param training_set the training set
+#' @param test_set the test set
+#' @param model the random forest model  
+#' @param seed global seed for reproducible results
+#' @param class1 sample group 1 name for renaming
+#' @param class2 sample group 2 name for renaming
+#' @param n number permutation
+#' @param sample_no the number of all samples(training+test set)
+#' @importFrom  dplyr select
+#' @importFrom caret confusionMatrix
+#' @importFrom lattice histogram
+permutation.test <- function(training_set,test_set, model, n,class1,class2,sample_no){
+  data<-rbind(training_set,test_set)
 
-permutation.test <- function(data, model, n,class1,class2,sample_no){
   permuted_df <- data.frame(n=1:n) 
   
   for (i in c(1:n)) {
@@ -341,4 +364,5 @@ permutation.test <- function(data, model, n,class1,class2,sample_no){
   return(list(plot,permuted_df))
 }
 #get all permutations
+
 
