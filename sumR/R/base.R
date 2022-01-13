@@ -26,7 +26,8 @@ read_msdata <- function(path = "data") {
 #' @return XCMS object with spectra
 read_mzml <- function(mzml = NULL){
   if (is.null(mzml)) {
-    mzml <- system.file("extdata/20200609_MeOH.mzML", package = "sumR")
+    dir <- system.file("extdata", package = "sumR")
+    mzml <- list.files(dir, pattern = ".*negative.*.mzML$", full.names = T)
   }
   tryCatch({
     pd <- data.frame(sampleNames = mzml, class = "sample")
@@ -79,11 +80,11 @@ combine_intensity <- function(x){
 
 #' @title DIMS pipeline
 #' @importFrom xcms MSWParam findChromPeaks groupChromPeaks MzClustParam
-#' fillChromPeaks FillChromPeaksParam
+#' fillChromPeaks FillChromPeaksParam chromPeaks
 #' @importFrom pbapply pblapply
 #' @importFrom logging loginfo
 #' @export
-dims_pipeline <- function(data){
+dims_pipeline <- function(data, plot_md = FALSE){
   suppressWarnings({
     loginfo("Running DIMS pipeline")
     groups <- seq_len(nrow(data@featureData))
@@ -94,6 +95,11 @@ dims_pipeline <- function(data){
     data <- do.call(c, pblapply(per_injection, cl = 4, function(inj){
       dat <-  suppressMessages(xcms::findChromPeaks(inj, param = params))
       # Filter using exclusing list
+      df <- as.data.frame(xcms::chromPeaks(dat))
+      df <- md_pipeline(df[,c(1,2,3)], plot_md)
+      print(head(df))
+      # filter the peaks using the md
+      # xcms::filterChromPeaks(dat)
       dat
     }))
 
