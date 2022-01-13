@@ -242,6 +242,21 @@ randomForest_CV<- function (training_set,test_set,class1,class2,k,seed,n){
 
 
 ## the final model
+
+#' @title random forest model
+#' @description This function make the final random forest model with the selected features  
+#' @param training_set the training set
+#' @param test_set the test set
+#' @param mtry number of mtry for the model
+#' @param seed global seed for reproducible results
+#' @param ntree number of trees for the model 
+#' @importFrom randomForest randomForest
+#' @importFrom dplyr select
+#' @importFrom caret rfe
+#' @importFrom dplyr select
+#' @importFrom caret confusionMatrix
+#' @importFrom pROC roc
+#' @importFrom pROC auc
 RF_model<-function(training_set,test_set,mtry,ntree,seed){
   
   ## the final model
@@ -305,7 +320,6 @@ mtry_select<-function(training_set,test_set,seed){
 ## if the accuracy is bad then our model is good 
 
 
-permuted_data<-rbind(training_set,test_set)
 
 permutation.test <- function(data, model, n,class1,class2,sample_no){
   permuted_df <- data.frame(n=1:n) 
@@ -326,6 +340,5 @@ permutation.test <- function(data, model, n,class1,class2,sample_no){
   print(plot)
   return(list(plot,permuted_df))
 }
-test<-permutation.test(permuted_data, model_f, 1000,"X","Y",50)
 #get all permutations
 
