@@ -288,7 +288,7 @@ RF_model<-function(training_set,test_set,mtry,ntree,seed){
 
   print(confusionMatrix(table(data=prediction, reference = test_set$samples)))
 
-  results<-as.data.frame(cbind("Actual"=test_set$samples,"Prediction"=predtrain))
+  results<-as.data.frame(cbind("Actual"=test_set$samples,"Prediction"=prediction))
 
   rocfinal<- roc(results$Actual,results$Prediction )
   aucfinal<- auc(rocfinal)
