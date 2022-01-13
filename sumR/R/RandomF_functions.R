@@ -292,7 +292,7 @@ RF_model<-function(training_set,test_set,mtry,ntree,seed){
 
   rocfinal<- roc(results$Actual,results$Prediction )
   aucfinal<- auc(rocfinal)
-  return(list("results"=results,"rocfinal"=rocfinal,"aucfinal"=aucfinal))
+  return(list("results"=results,"rocfinal"=rocfinal,"aucfinal"=aucfinal,"model"=model))
 }
 
 
