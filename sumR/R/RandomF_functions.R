@@ -362,7 +362,7 @@ permutation.test <- function(training_set,test_set, model, n,class1,class2,sampl
   for (i in c(1:n)) {
     permuted_data<-data
     x <- c(class1,class2)
-    false_samples<-sample(x, sample_no, replace = TRUE)
+    false_samples<-sample(x, sample_no, replace = TRUE,prob = c(1,1))
     permuted_data$samples<-as.factor(false_samples)
     permuted_predict<-predict(model,newdata = permuted_data %>% dplyr::select(-samples))
     cf<-confusionMatrix(permuted_predict,permuted_data$samples)
