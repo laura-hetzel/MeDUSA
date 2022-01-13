@@ -17,6 +17,8 @@ biocViews:
 Depends: magrittr
 Imports: 
     stringr,
+    tibble,
+    caTools,
     dplyr,
     tibble,
     ggplot2,
