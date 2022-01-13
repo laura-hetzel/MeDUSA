@@ -44,6 +44,9 @@ Imports:
     Rdpack,
     Rdisop,
     pmp,
+    caret,
+    lattice,
+    readr,
     tidyselect,
     Biobase,
     utils
