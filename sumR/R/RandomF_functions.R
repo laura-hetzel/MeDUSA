@@ -1,15 +1,15 @@
 #
-## data should be in transposed form (mz as columns and samples column named =samples )
 #' @title Redundant variables removal
 #' @description This function removes correlated peaks at a certain cutoff value
-#' @param data the dataframe with m/z as columns and a sample column named samples
+#' @param data the dataframe with mz column and samples columns
 #' @param cuttoff a certain value of cuttoff for high correlation
 #' @importFrom tibble column_to_rownames
 #' @importFrom tibble rownames_to_column
 #' @importFrom caret findCorrelation
 #' @importFrom dplyr select
 redvar_removal <- function (data,cutoff){
-  data<-column_to_rownames(data,"samples")
+data <- column_to_rownames(data,"mz")
+  data <- as.data.frame(t(data))
 
   cor_matrix <- cor(data)
 
@@ -78,7 +78,21 @@ imp_select<-function(data,data_t,subsets,seed,method,repeats,class1,class2){
 }
 
 
-
+#' @title datasplit
+#' @param data the dataframe with m/z as columns and a sample column named samples
+#' @param split ratio a certain value for split ratio
+#' @param seed global seed
+#' @importFrom caTools sample.split
+data_split<-function(seed,data,split_ratio){
+  set.seed(seed) ## reproducible results 
+  split<- sample.split(data$samples, SplitRatio = split_ratio)
+  
+  training_set<-subset(data, split == TRUE)
+  test_set<-subset(data, split == FALSE)
+  
+  return(list("training_set"=training_set,"test_set"=test_set))
+  
+}
 # random forest cross validation ------------------------------------------
 
 
