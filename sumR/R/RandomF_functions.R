@@ -40,9 +40,8 @@ data <- column_to_rownames(data,"mz")
 #' @param class2 sample group 2 name for renaming
 #' @importFrom tibble column_to_rownames
 #' @importFrom tibble rownames_to_column
-#' @importFrom caret rfeControl
-#' @importFrom caret rfe
-#' @importFrom dplyr select
+#' @importFrom caret rfeControl rfe rfFuncs
+#' @importFrom dplyr select any_vars
 #' @importFrom ggplot2 ggplot
 #' @importFrom dplyr filter_all
 imp_select<-function(data,data_t,subsets,seed,method,repeats,class1,class2){
@@ -84,14 +83,14 @@ imp_select<-function(data,data_t,subsets,seed,method,repeats,class1,class2){
 #' @param seed global seed
 #' @importFrom caTools sample.split
 data_split<-function(seed,data,split_ratio){
-  set.seed(seed) ## reproducible results 
+  set.seed(seed) ## reproducible results
   split<- sample.split(data$samples, SplitRatio = split_ratio)
-  
+
   training_set<-subset(data, split == TRUE)
   test_set<-subset(data, split == FALSE)
-  
+
   return(list("training_set"=training_set,"test_set"=test_set))
-  
+
 }
 # random forest cross validation ------------------------------------------
 

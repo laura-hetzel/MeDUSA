@@ -32,9 +32,10 @@ read_mzml <- function(mzml = NULL){
     mzml <- list.files(dir, pattern = ".*negative.*.mzML$", full.names = T)
   }
   tryCatch({
-    pd <- data.frame(sampleNames = mzml, class = "sample")
+    pd <- data.frame(sampleNames = mzml, class = "sample", group = "UP")
     blanks <- grep("Blank", mzml)
     pd$class[blanks] <- "blank"
+    pd$group[grep(".*LOW.*", mzml)] <- "LOW"
     data <- MSnbase::readMSData(mzml, mode = "onDisk",
                                 pdata = new("NAnnotatedDataFrame", pd))
     return(data)
@@ -119,6 +120,7 @@ dims_pipeline <- function(data, plot_md = FALSE){
 
 #' @title Process features obtained from XCMS
 #' @param data XCMS object with grouped peaks
+#' @param remove_blanks Should blank samples be removed?
 #' @importFrom xcms featureValues featureDefinitions
 #' @importFrom pmp filter_peaks_by_blank mv_imputation
 #' @importFrom Biobase pData
@@ -126,20 +128,38 @@ dims_pipeline <- function(data, plot_md = FALSE){
 #' data <- dims_pipeline(read_mzml())
 #' feature_processing(data)
 #' @export
-feature_processing <- function(data){
+feature_processing <- function(data, impute_method = "knn", remove_blanks = TRUE){
   intensity_df <- featureValues(data)
   classes <- Biobase::pData(data)$class
-  intensity_df <- filter_peaks_by_blank(intensity_df, fold_change = 5,
+
+  intensity_df <- filter_peaks_by_blank(intensity_df, fold_change = 3,
                         classes = classes,
                         blank_label = "blank",
-                        remove_samples = TRUE)
-  df_imp <- mv_imputation(df = intensity_df, method = "sv")
+                        remove_samples = remove_blanks)
 
-  mz <- xcms::featureDefinitions(data)[rownames(df_imp), ]$mzmed
-  df <- cbind(mz = mz, df_imp)
+  intensity_df <- mv_imputation(df = intensity_df, method = "knn")
+
+  mz <- xcms::featureDefinitions(data)[rownames(intensity_df), ]$mzmed
+  df <- cbind(mz = mz, intensity_df)
   as.data.frame(df)
 }
 
+#' @title Normalize intensity dataframe
+#' @param intensity_df Dataframe with intensities. Can contain isotope information
+#' @importFrom  pmp pqn_normalisation glog_transformation
+#' @export
+normalize_features <- function(intensity_df){
+  others <- intensity_df[, grep("*.mzML$", colnames(intensity_df), invert = T)]
+  intensity_df <- intensity_df[, grep("*.mzML$", colnames(intensity_df))]
+
+  intensity_df <- pqn_normalisation(df = intensity_df,
+                                    classes = colnames(intensity_df),
+                                    qc_label = "all")
+  intensity_df <- glog_transformation(df = intensity_df,
+                                      classes = colnames(intensity_df),
+                                      qc_label = colnames(intensity_df))
+  as.data.frame(cbind(intensity_df, others))
+}
 
 #' ppm calculation
 #'

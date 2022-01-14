@@ -23,7 +23,7 @@ library(sumR)
 First we load up some example data. Here we have 4 injection of which 1 is a blank sample, all with negative polarity. These files have spectra which are combined together and centroided. 
 ```{r files}
 dir <- system.file("extdata", package = "sumR")
-files <- list.files(dir, pattern = ".*negative.*.mzML$", full.names = T)
+files <- list.files(dir, pattern = ".*.mzML$", full.names = T)
 files
 ```
 
@@ -39,7 +39,9 @@ data <- dims_pipeline(data)
 ```
 
 ```{r features, fig.width=12}
+data
 df <- feature_processing(data)
+df
 ```
 
 
@@ -47,7 +49,38 @@ Here we run the isotope detection algorithm. It adds several columns to our prev
 
 ```{r isotopes}
 df <- isotope_tagging(df)
-head(df)
+```
+```{r normalize}
+df2 <- normalize_features(df)
+
+```
+
+```{r pca, fig.width=12}
+
+intensity_df <- df2[, grep("*.mzML$", colnames(df2))]
+pca <- prcomp(intensity_df, center = TRUE, scale. = TRUE)
+if ("ggbiplot" %in% installed.packages()) {
+  ggbiplot::ggbiplot(pca)
+} else {
+  plot(pca$x)
+}
+```
+
+```{r umap}
+if ("umap" %in% installed.packages()) {
+  library(umap)
+  library(ggplot2)
+  map <- umap(intensity_df)
+  df = as.data.frame(map$layout)
+  colnames(df) <- c("x", "y")
+  maxes <- as.vector(apply(intensity_df, 1, which.max))
+  col_vec <- c("LOW", "LOW", "UP", "UP", "UP", "UP")
+  df$type <- col_vec[maxes]
+  ggplot(df, aes(x = x, y = y, color = type)) + 
+    geom_point() +
+    ggtitle("Maximum intensity of each feature colored by group")
+}
+
 ```
 
 ```{r sessionInfo}

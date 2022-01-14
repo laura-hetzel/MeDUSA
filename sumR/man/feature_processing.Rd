@@ -4,10 +4,12 @@
 \alias{feature_processing}
 \title{Process features obtained from XCMS}
 \usage{
-feature_processing(data)
+feature_processing(data, impute_method = "knn", remove_blanks = TRUE)
 }
 \arguments{
 \item{data}{XCMS object with grouped peaks}
+
+\item{remove_blanks}{Should blank samples be removed?}
 }
 \description{
 Process features obtained from XCMS
