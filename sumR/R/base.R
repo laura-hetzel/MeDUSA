@@ -96,7 +96,7 @@ dims_pipeline <- function(data, plot_md = FALSE){
     loginfo(sprintf("Identifying peaks in %s spectra", length(groups)))
 
     params <- xcms::MSWParam(SNR.method = "data.mean", winSize.noise = 500)
-    data <- do.call(c, pblapply(per_injection, cl = 4, function(inj){
+    data <- do.call(c, pblapply(per_injection, cl = 1, function(inj){
       dat <-  suppressMessages(xcms::findChromPeaks(inj, param = params))
       # Filter using exclusing list
       df <- as.data.frame(xcms::chromPeaks(dat))
