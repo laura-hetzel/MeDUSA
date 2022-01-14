@@ -7,7 +7,7 @@
 redvar_removal(data, cutoff)
 }
 \arguments{
-\item{data}{the dataframe with m/z as columns and a sample column named samples}
+\item{data}{the dataframe with mz column and samples columns}
 
 \item{cuttoff}{a certain value of cuttoff for high correlation}
 }

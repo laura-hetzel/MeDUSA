@@ -9,3 +9,6 @@ dims_pipeline(data, plot_md = FALSE)
 \description{
 DIMS pipeline
 }
+\examples{
+dims_pipeline(read_mzml())
+}

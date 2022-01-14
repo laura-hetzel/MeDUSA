@@ -22,6 +22,8 @@ read_msdata <- function(path = "data") {
 #' @param mzml Path to a mzml file. If omitted,
 #' the package example will be used
 #' @importFrom MSnbase readMSData
+#' @examples
+#' read_mzml()
 #' @export
 #' @return XCMS object with spectra
 read_mzml <- function(mzml = NULL){
@@ -83,6 +85,8 @@ combine_intensity <- function(x){
 #' fillChromPeaks FillChromPeaksParam chromPeaks
 #' @importFrom pbapply pblapply
 #' @importFrom logging loginfo
+#' @examples
+#' dims_pipeline(read_mzml())
 #' @export
 dims_pipeline <- function(data, plot_md = FALSE){
   suppressWarnings({
@@ -97,11 +101,11 @@ dims_pipeline <- function(data, plot_md = FALSE){
       # Filter using exclusing list
       df <- as.data.frame(xcms::chromPeaks(dat))
       df <- md_pipeline(df[,c(1,2,3)], plot_md)
-      print(head(df))
       # filter the peaks using the md
       # xcms::filterChromPeaks(dat)
       dat
     }))
+
 
     clust_param <- xcms::MzClustParam(sampleGroups = groups)
     data <- xcms::groupChromPeaks(data, param = clust_param)
@@ -118,6 +122,9 @@ dims_pipeline <- function(data, plot_md = FALSE){
 #' @importFrom xcms featureValues featureDefinitions
 #' @importFrom pmp filter_peaks_by_blank mv_imputation
 #' @importFrom Biobase pData
+#' @examples
+#' data <- dims_pipeline(read_mzml())
+#' feature_processing(data)
 #' @export
 feature_processing <- function(data){
   intensity_df <- featureValues(data)

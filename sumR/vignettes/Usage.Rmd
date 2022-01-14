@@ -30,14 +30,12 @@ files
 We're using `xcms` in order to read our mzML files. 
 ```{r reading}
 data <- read_mzml(files)
-data
 ```
 
 Next, we are identifying peaks and grouping them into features using the `dims_pipeline`. During this process, we also filter any chromatic peaks using an exclusion filter. In `feature_processing` we combine some of our feature data in order to make it ready for isotope detection.
 
 ```{r processing}
 data <- dims_pipeline(data)
-data
 ```
 
 ```{r features}

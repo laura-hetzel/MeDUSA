@@ -12,3 +12,7 @@ feature_processing(data)
 \description{
 Process features obtained from XCMS
 }
+\examples{
+data <- dims_pipeline(read_mzml())
+feature_processing(data)
+}
