@@ -38,9 +38,11 @@ Next, we are identifying peaks and grouping them into features using the `dims_p
 data <- dims_pipeline(data)
 ```
 
-```{r features}
+```{r features, fig.width=12}
 df <- feature_processing(data)
+pca_biplot(df)
 ```
+
 
 Here we run the isotope detection algorithm. It adds several columns to our previous data.frame which can be used to filter isotopes from our feature set. 
 

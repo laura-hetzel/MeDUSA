@@ -132,7 +132,7 @@ feature_processing <- function(data){
   intensity_df <- filter_peaks_by_blank(intensity_df, fold_change = 5,
                         classes = classes,
                         blank_label = "blank",
-                        remove_samples = FALSE)
+                        remove_samples = TRUE)
   df_imp <- mv_imputation(df = intensity_df, method = "sv")
 
   mz <- xcms::featureDefinitions(data)[rownames(df_imp), ]$mzmed
