@@ -40,7 +40,6 @@ data <- dims_pipeline(data)
 
 ```{r features, fig.width=12}
 df <- feature_processing(data)
-pca_biplot(df)
 ```
 
 

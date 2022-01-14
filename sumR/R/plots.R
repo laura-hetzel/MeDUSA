@@ -25,16 +25,6 @@ volcanoPlot <- function(data, xvalues, yvalues, title){
     labs_pubr()
 }
 
-#' @title PCA biplot function
-#' @param df Dataframe with intensities obtain from `feature_processing`
-#' @importFrom ggbiplot ggbiplot
-#' @importFrom stats prcomp
-#' @export
-pca_biplot <- function(df){
-  pca <- prcomp(df[,c(-which(colnames(df) == "mz"))], center = TRUE,scale. = TRUE)
-  ggbiplot(pca)
-}
-
 
 #' Plot PCA
 #'
