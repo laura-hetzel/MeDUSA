@@ -6,7 +6,35 @@ library(dunn.test) ## dunn test
 library(data.table)
 library(miscTools)
 library(rstatix)
+library(purrr)
+library(IMIFA)
 
+data_imputation<-function(data,noise,seed){
+  
+  map_dfc(data, function(x){
+    set.seed(seed)
+    for (i in 1:length(x)) {
+      if(x[i] == 0) {
+        x[i] <- runif(1, min = 1, max = noise)
+      }
+      else {next}
+    }
+    return(x)
+  })
+  
+}
+  
+  
+## Transformation using log2 and pareto scaling 
+
+data_transform<-function(data,centering=F){
+  data<-column_to_rownames(data,"mz")
+  data<-log2(data)
+  data<-pareto_scale((data),centering = centering)
+  data<-as.data.frame(data)
+  return(data)
+  
+}
 
 # statistical tests  ----------------------------------------------------
 
