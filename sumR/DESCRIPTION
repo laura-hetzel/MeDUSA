@@ -50,6 +50,8 @@ Imports:
     lattice,
     readr,
     tidyselect,
+    IMIFA,
+    purrr,
     Biobase,
     utils
 RoxygenNote: 7.1.2
