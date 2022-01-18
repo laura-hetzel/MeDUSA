@@ -21,12 +21,12 @@ ppm_calc <- function(mass1, mass2) {
 
 #' @title alignment check 
 #' @description align_check makes sure that all the m/z values are aligned/binned correctly
-#' @description align_check takes a data frame of peaks with mz column as an argument,
-#' @description and the coordinates for the plot to be zoomed in on, as an optional argument
-#' @description align_check outputs a list of three elements:
-#' @description 1- Dataframe of 1 column containing the ppm error values
-#' @description 2- boxplot of the ppm erro values with xcoords zoomed in to -20,0 (default)
-#' @description 3- table of summary stats of ppm error values
+#' align_check takes a data frame of peaks with mz column as an argument,
+#' and the coordinates for the plot to be zoomed in on, as an optional argument
+#' align_check outputs a list of three elements:
+#' 1- Dataframe of 1 column containing the ppm error values
+#' 2- boxplot of the ppm erro values with xcoords zoomed in to -20,0 (default)
+#' 3- table of summary stats of ppm error values
 #' @examples 
 #' @export
 align_check <- function(data_frame_fn, xcoords = c(-20, 0)) {
@@ -56,13 +56,12 @@ check_alignment <- align_check(get_data(file))
 
 #' @title Deletion of unwanted samples  
 #' @description binning dependency 1
-#' @description delete any duplication of a samples 
-#' @description delete any sample that is kicked out by the tolerance 
+#' delete any duplication of a samples 
+#' delete any sample that is kicked out by the tolerance 
 #' @param mass 
-#' @param intensities
 #' @param samples
 #' @param tolerance
-condition <- function(mass, intensities, samples, tolerance) {
+condition <- function(mass, samples, tolerance) {
   if (anyDuplicated(samples)) {
     return(NA)
   }
