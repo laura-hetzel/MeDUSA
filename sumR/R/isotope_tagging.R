@@ -6,8 +6,8 @@
 #' @param ppm  Parts Per Million Tolerance
 #' @usage ppm_to_dalton(mass, ppm)
 ppm_to_dalton <- function(mass, ppm) {
-  if(is.null(ppm))
-    ppm <- 5
+  if(is.null(ppm)){
+    ppm <- 5}
   da_error  <- (mass*ppm) / 1e6
   return(da_error)}
 
@@ -17,10 +17,10 @@ ppm_to_dalton <- function(mass, ppm) {
 #' @param mz_vector mz value vector
 #' @param ppm error part per million
 #' @usage annotate_add(mz_vector, ppm)
-#' @importFrom  mass2adduct adductMatch
+#' @importFrom  mass2adduct adductMatch massdiff
 annotate_add <- function(mz_vector, ppm){
-  if(is.null(ppm))
-    ppm <- 5
+  if(is.null(ppm)){
+    ppm <- 5}
   x <- massdiff(mz_vector)
   adduct_matches <- adductMatch(x, add = mass2adduct::adducts2, ppm=ppm)
   return(adduct_matches)
@@ -62,10 +62,10 @@ add_intensities <- function(df, adducts){
 #' @usage isotope_molecules(adducts_isotope, ppm , z )
 #' @importFrom Rdisop decomposeIsotopes
 isotope_molecules <- function(adducts_isotope,ppm,z){
-  if(is.null(ppm))
-    ppm <- 5
-  if(is.null(z))
-    z <- 0
+  if(is.null(ppm)){
+    ppm <- 5}
+  if(is.null(z)){
+    z <- 0}
   isotope_molecules_list <- NULL
   length_iso <- nrow(adducts_isotope)
   for (i in 1:length_iso) {
@@ -223,7 +223,7 @@ impute.KNN.obs.sel <- function(dat, # incomplete data matrix
 #' @param z charge
 #' @usage Isotope_tagging(df , ppm ,z)
 #' @importFrom  data.table fintersect
-#' @importFrom dplyr mutate  filter select mutate 
+#' @importFrom dplyr mutate  filter select mutate case_when
 #' @importFrom tibble tibble
 #' @importFrom tidyselect everything
 #' @importFrom sqldf sqldf
@@ -235,10 +235,10 @@ isotope_tagging <- function(df, ppm, z){
   copy_df <- df
   
   #default settings
-  if(is.null(ppm))
-    ppm <- 5
-  if(is.null(z))
-    z <- 0
+  if(is.null(ppm)){
+    ppm <- 5}
+  if(is.null(z)){
+    z <- 0}
   
   
   #creating new data frame with mean intensity column # note now complete case but will be replaced by imputation method
@@ -310,7 +310,7 @@ isotope_tagging <- function(df, ppm, z){
   copy_df$max_error <- df$max_error
   # copy_df$Adduct <- final_df$matches needs to be fixed
   
-  return(final_df)
+  return(copy_df)
 }
 
 

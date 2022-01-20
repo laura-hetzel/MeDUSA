@@ -56,7 +56,8 @@ Imports:
     utils (>= 4.1.2),
     viridis (>= 0.6.2),
     xcms (>= 3.16.1),
-    sqldf
+    sqldf,
+    mass2adduct
 Suggests: 
     knitr (>= 1.37),
     rmarkdown (>= 2.11),
