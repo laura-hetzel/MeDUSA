@@ -9,7 +9,7 @@ get_data <- function(file){
   files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", 
                       pattern = ".txt")
   for (i in seq_along(files)) {
-    assign(paste("Df", i, sep = "."), read_delim(files[i], col_names = c("x","mz","y", "intensity", "z")))
+    assign(paste("Df", i, sep = "."), read_delim(files[i], col_names = c("1","mz","2", "intensity", "3")))
   }
   l <- mget(ls(pattern = "Df.[1:244]"))
 }
@@ -80,6 +80,7 @@ condition <- function(mass, intensities, samples, tolerance) {
 #' @param samples
 #' @param tolerance
 binning <- function(mass, intensities, samples, tolerance){
+  print(mass)
   n <- length(mass)
   d <- diff(mass)
   nBoundaries <- max(20L, floor(3L * log(n)))
@@ -126,8 +127,8 @@ binning <- function(mass, intensities, samples, tolerance){
 binPeaks <- function(l, ppm = 5) {
   nonEmpty <- sapply(l, nrow) != 0L
   samples <- rep.int(seq_along(l), sapply(l, nrow))
-   mass <- unname(unlist((lapply(l[nonEmpty], function(x) x$mz)), recursive = FALSE, use.names = FALSE))
-  intensities <- unlist(lapply(l[nonEmpty], function(x) x$intensity), recursive = FALSE, use.names = FALSE)
+   mass <- unname(unlist((lapply(l[nonEmpty], function(x) as.double(x$mz))), recursive = FALSE, use.names = FALSE))
+   intensities <- unlist(lapply(l[nonEmpty], function(x) x$intensity), recursive = FALSE, use.names = FALSE)
   s <- sort.int(mass, index.return = TRUE) # sort vector based on masses lowest to highest 
   mass <- s$x
   intensities <- intensities[s$ix]
@@ -138,6 +139,7 @@ binPeaks <- function(l, ppm = 5) {
   intensities <- intensities[s$ix]
   samples <- samples[s$ix]
   lIdx <- split(seq_along(mass), samples)
+  print("check")
   l[nonEmpty] <- mapply(FUN = function(p, i) {
     p$mz <- mass[i]
     p$intensity <- intensities[i]
