@@ -10,7 +10,7 @@ stages:
 before_script:
   - apt-get update
   - apt install -y libcurl4-openssl-dev libssl-dev libxml2-dev libxslt-dev
-  - apt install -y libnetcdf-dev libxt-dev qpdf build-essential libglpk40
+  - apt install -y libnetcdf-dev libxt-dev qpdf build-essential libglpk40 libgsl-dev
 
 cache:
   key: one-key-to-rule-them-all
