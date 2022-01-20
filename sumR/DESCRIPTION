@@ -1,63 +1,72 @@
-Package: sumR
 Type: Package
+Package: sumR
 Title: Package for analysis of DI-MS data.
 Version: 0.1.0
-Authors@R: c(person("Alida", "Kindt", email = "a.s.d.kindt@lacdr.leidenuniv.nl", role = c("aut", "cre")),
-             person("Ahmed", "Ali", email = "ali@lacdr.leidenuniv.nl", role = c("aut")),
-             person("Klara", "Blaschitz", role = c("aut")),
-             person("Pascal", "Maas", email = "p.maas@lacdr.leidenuniv.nl", role = c("aut")),
-             person("Eman", "Muhammad", role = c("aut")),
-             person("Merys", "Valdez", email = "m.e.valdez@lacdr.leidenuniv.nl", role = c("aut")),
-             person("David", "Rasp", email = "d.rasp@lacdr.leidenuniv.nl", role = c("aut"), comment = c(ORCID = "0000-0003-0164-2163")))
-Description: Set of tools to set up a pipeline for the analysis of DI-MS data. 
+Authors@R: c(
+    person("Alida", "Kindt", , "a.s.d.kindt@lacdr.leidenuniv.nl", role = c("aut", "cre")),
+    person("Ahmed", "Ali", , "ali@lacdr.leidenuniv.nl", role = "aut"),
+    person("Klara", "Blaschitz", role = "aut"),
+    person("Pascal", "Maas", , "p.maas@lacdr.leidenuniv.nl", role = "aut"),
+    person("Eman", "Muhammad", role = "aut"),
+    person("Merys", "Valdez", , "m.e.valdez@lacdr.leidenuniv.nl", role = "aut"),
+    person("David", "Rasp", , "d.rasp@lacdr.leidenuniv.nl", role = "aut",
+           comment = c(ORCID = "0000-0003-0164-2163"))
+  )
+Description: Set of tools to set up a pipeline for the analysis of DI-MS
+    data.
 License: GPL (>= 3)
+Depends: 
+    magrittr (>= 2.0.1)
+Imports: 
+    Biobase (>= 2.54.0),
+    caret (>= 6.0.90),
+    caTools (>= 1.18.2),
+    data.table (>= 1.14.2),
+    densityClust (>= 0.3),
+    dplyr (>= 1.0.7),
+    factoextra (>= 1.0.7),
+    FactoMineR (>= 2.4),
+    GGally (>= 2.1.2),
+    ggplot2 (>= 3.3.5),
+    ggpubr (>= 0.4.0),
+    ggsci (>= 2.9),
+    IMIFA (>= 2.1.8),
+    lattice (>= 0.20.45),
+    logging (>= 0.10.108),
+    mixOmics (>= 6.18.1),
+    MSnbase (>= 2.20.1),
+    pbapply (>= 1.5.0),
+    PeriodicTable (>= 0.1.2),
+    plotly (>= 4.10.0),
+    pmp (>= 1.6.0),
+    pROC (>= 1.18.0),
+    purrr (>= 0.3.4),
+    randomForest (>= 4.6.14),
+    Rdisop (>= 1.54.0),
+    Rdpack (>= 2.1.3),
+    readr (>= 2.1.1),
+    stats (>= 4.1.2),
+    stringr (>= 1.4.0),
+    superheat (>= 0.1.0),
+    tibble (>= 3.1.6),
+    tibble (>= 3.1.6),
+    tidyr (>= 1.1.4),
+    tidyselect (>= 1.1.1),
+    usedist (>= 0.4.0),
+    utils (>= 4.1.2),
+    viridis (>= 0.6.2),
+    xcms (>= 3.16.1),
+    sqldf
+Suggests: 
+    knitr (>= 1.37),
+    rmarkdown (>= 2.11),
+    testthat (>= 3.1.1)
+VignetteBuilder: 
+    knitr
+RdMacros: 
+    Rdpack
+biocViews:
+Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
-biocViews:
-Depends: magrittr
-Imports: 
-    stringr,
-    tibble,
-    caTools,
-    dplyr,
-    tibble,
-    ggplot2,
-    stats,
-    usedist,
-    densityClust,
-    tidyr,
-    FactoMineR,
-    factoextra,
-    ggpubr,
-    mixOmics,
-    data.table,
-    plotly,
-    superheat,
-    ggsci,
-    PeriodicTable,
-    MSnbase,
-    pbapply,
-    GGally,
-    logging,
-    pROC,
-    randomForest,
-    xcms,
-    viridis,
-    Rdpack,
-    Rdisop,
-    pmp,
-    caret,
-    lattice,
-    readr,
-    tidyselect,
-    IMIFA,
-    purrr,
-    Biobase,
-    utils
 RoxygenNote: 7.1.2
-Suggests: 
-    rmarkdown,
-    knitr,
-    testthat (>= 3.0.0)
-Config/testthat/edition: 3
-VignetteBuilder: knitr
