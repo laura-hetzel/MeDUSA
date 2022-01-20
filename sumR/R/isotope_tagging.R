@@ -15,6 +15,7 @@ ppm_to_dalton <- function(mass, ppm) {
 #' @usage annotate_add(mz_vector, ppm , z )
 #' @param mz_vector mz value vector
 #' @param ppm error part per million
+#' @importFrom  mass2adduct adductMatch
 annotate_add <- function(mz_vector,ppm){
   x <- massdiff(mz_vector)
   adduct_matches <- adductMatch(x, add = mass2adduct::adducts2, ppm = ppm)
@@ -28,6 +29,7 @@ annotate_add <- function(mz_vector,ppm){
 #' @usage isotope_molecules(df, adducts )
 #' @param df input dataframe
 #' @param adducts data frame adducts
+#' @importFrom dplyr filter 
 add_intensities <- function(df, adducts){
   add_a <- filter(df, df$mz %in% adducts$A)
   add_a <- add_a[,1:2]
@@ -223,7 +225,7 @@ isotope_tagging <- function(df, ppm , z){
   ## Start body part of function BAIT
   #keep orginal copy
   copy_df <- df
-  
+
   #creating new data frame with mean intensity column # note now complete case but will be replaced by imputation method
   df <- data.frame(mz = df[,1], intensity = rowMeans(df[,-1], na.rm = TRUE))
   #setting mz & intensity to vectors
