@@ -1,4 +1,18 @@
+##getting the data 
 
+#' @title Import experimental data
+#' @param files String location of the experimental files
+#' @importFrom plyr 
+#' @importFrom readr read_delim 
+#' @export
+get_data <- function(files){
+  files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", 
+                      pattern = ".txt")
+  for (i in seq_along(files)) {
+    assign(paste("Df", i, sep = "."), read_delim(files[i], col_names = c("x","mz","y", "intensity", "z")))
+  }
+  l <- mget(ls(pattern = "Df[1:244]"))
+}
 
 #' @title ppm calculation 
 #' @description ppm_calc calculated the parts per million error between two different masses
@@ -110,9 +124,8 @@ binning <- function(mass, intensities, samples, tolerance){
 #' @description binPeaks function! This needs the two functions above
 #' @param list of dataframes 
 binPeaks <- function(l, ppm = 5) {
-  nn <- sapply(l, nrow)
-  nonEmpty <- nn != 0L
-  samples <- rep.int(seq_along(l), nn)
+  nonEmpty <- sapply(l, nrow) != 0L
+  samples <- rep.int(seq_along(l), sapply(l, nrow))
    mass <- unname(unlist((lapply(l[nonEmpty], function(x) x$mz)), recursive = FALSE, use.names = FALSE))
   intensities <- unlist(lapply(l[nonEmpty], function(x) x$intensity), recursive = FALSE, use.names = FALSE)
   s <- sort.int(mass, index.return = TRUE) # sort vector based on masses lowest to highest 
@@ -136,51 +149,23 @@ binPeaks <- function(l, ppm = 5) {
 #-------------------------------------------
 ##testing 
 #-------------------------------------------
+l <- get_data(file)
+t1 <- binPeaks(l)
+t2 <- binPeaks(t1)
+t3 <- binPeaks(t2)
+t4 <- binPeaks(t3)
 
-binPeaks(l)
 
-t <- binPeaks(l)
-t <- l$df1
-
+t <- t4$df2
 align_check(t)
 
 
 
 
-##getting the data 
 
-#' @title Import experimental data
-#' @param file String location of the experimental file
-#' @importFrom stats na.omit
-#' @importFrom readr read_delim
-#' @export
-get_data <- function(file){
-  # Downloading the experimental data and converting it to a data frame
-  ex_data_df <- read_delim(file, col_names = T)
-  colnames(ex_data_df) <- c("x","mz","y", "intensity", "z")
-  ex_data_df <- ex_data_df[,c("mz","intensity")]
-  return(ex_data_df)
-}
-
-create_df_list <- function(df1,df2, df3, df4, df5, df6, df7, df8, df9, df10){
-  l <- mget(ls(pattern = "df[1,2,3,4,5,6,7,8,9,10]"))
-}
   
 
-dfs <- function(file) {
-  df1 <- get_data("/Users/klarab/Documents/GitHub/sum-r/scripts/bin_test/test1.txt")
-  df2 <- get_data("/Users/klarab/Documents/GitHub/sum-r/scripts/bin_test/test2.txt")
-  df3 <- get_data("/Users/klarab/Documents/GitHub/sum-r/scripts/bin_test/test3.txt")
-  df4 <- get_data("/Users/klarab/Documents/GitHub/sum-r/scripts/bin_test/test4.txt")
-  df5 <- get_data("/Users/klarab/Documents/GitHub/sum-r/scripts/bin_test/test5.txt")
-  df6 <- get_data("/Users/klarab/Documents/GitHub/sum-r/scripts/bin_test/test6.txt")
-  df7 <- get_data("/Users/klarab/Documents/GitHub/sum-r/scripts/bin_test/test7.txt")
-  df8 <- get_data("/Users/klarab/Documents/GitHub/sum-r/scripts/bin_test/test8.txt")
-  df9 <- get_data("/Users/klarab/Documents/GitHub/sum-r/scripts/bin_test/test9.txt")
-  df10 <- get_data("/Users/klarab/Documents/GitHub/sum-r/scripts/bin_test/test10.txt")
-  l <- create_df_list(df1,df2, df3, df4, df5, df6, df7, df8, df9, df10)
-}
-l <- dfs(file)
+
 
 
 
