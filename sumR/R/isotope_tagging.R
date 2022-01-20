@@ -208,7 +208,7 @@ impute.KNN.obs.sel <- function(dat, # incomplete data matrix
 #---------------------------------------------------------------------------------------------------
 #' @title Isotope tagging
 #' @description Tags isotopes based on intensity ratio and difference in mass
-#' @usage Isotope_tagging(df, , ppm ,z)
+#' @usage Isotope_tagging(df , ppm ,z)
 #' @param df Dataframe must contain columns c("mz", "intensity") with "mz" as first column
 #' @param ppm Parts Per Million Tolerance
 #' @param z charge
@@ -218,7 +218,6 @@ impute.KNN.obs.sel <- function(dat, # incomplete data matrix
 #' @importFrom tidyselect everything
 #' @importFrom sqldf sqldf
 #' @export
-#'
 isotope_tagging <- function(df, ppm , z){
   #-----------------------------------------------------------------------------------
   ## Start body part of function BAIT

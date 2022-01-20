@@ -55,7 +55,8 @@ Imports:
     usedist (>= 0.4.0),
     utils (>= 4.1.2),
     viridis (>= 0.6.2),
-    xcms (>= 3.16.1)
+    xcms (>= 3.16.1),
+    sqldf
 Suggests: 
     knitr (>= 1.37),
     rmarkdown (>= 2.11),
