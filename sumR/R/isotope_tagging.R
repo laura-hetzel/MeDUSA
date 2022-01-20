@@ -2,23 +2,27 @@
 #functions to use in Isotope_tagging
 #' @title Dalton error calculation
 #' @description This function computes the error in Dalton
-#' @usage ppm_to_dalton(mass)
 #' @param mass Mass of interest in m/z
 #' @param ppm  Parts Per Million Tolerance
+#' @usage ppm_to_dalton(mass, ppm)
 ppm_to_dalton <- function(mass, ppm) {
+  if(is.null(ppm))
+    ppm <- 5
   da_error  <- (mass*ppm) / 1e6
   return(da_error)}
 
 
 #' @title Annotation for adducts incl isotopes
-#' @description A list of annotation information of adducts
-#' @usage annotate_add(mz_vector, ppm , z )
+#' @description A list of annotation information of adducts)
 #' @param mz_vector mz value vector
 #' @param ppm error part per million
+#' @usage annotate_add(mz_vector, ppm)
 #' @importFrom  mass2adduct adductMatch
-annotate_add <- function(mz_vector,ppm){
+annotate_add <- function(mz_vector, ppm){
+  if(is.null(ppm))
+    ppm <- 5
   x <- massdiff(mz_vector)
-  adduct_matches <- adductMatch(x, add = mass2adduct::adducts2, ppm = ppm)
+  adduct_matches <- adductMatch(x, add = mass2adduct::adducts2, ppm=ppm)
   return(adduct_matches)
 }
 
@@ -26,9 +30,9 @@ annotate_add <- function(mz_vector,ppm){
 
 #' @title Adding intensities
 #' @description A list of annotation information of isotopes
-#' @usage isotope_molecules(df, adducts )
 #' @param df input dataframe
 #' @param adducts data frame adducts
+#' @usage isotope_molecules(df, adducts )
 #' @importFrom dplyr filter 
 add_intensities <- function(df, adducts){
   add_a <- filter(df, df$mz %in% adducts$A)
@@ -52,12 +56,16 @@ add_intensities <- function(df, adducts){
 
 #' @title Annotation list for isotopes
 #' @description A list of annotation information of isotopes
-#' @usage isotope_molecules(adducts_isotope, ppm , z )
 #' @param adducts_istoptope dataframe filtered for isotopes with possible isotopes
 #' @param ppm error part per million
 #' @param  z charge values
+#' @usage isotope_molecules(adducts_isotope, ppm , z )
 #' @importFrom Rdisop decomposeIsotopes
 isotope_molecules <- function(adducts_isotope,ppm,z){
+  if(is.null(ppm))
+    ppm <- 5
+  if(is.null(z))
+    z <- 0
   isotope_molecules_list <- NULL
   length_iso <- nrow(adducts_isotope)
   for (i in 1:length_iso) {
@@ -69,9 +77,9 @@ isotope_molecules <- function(adducts_isotope,ppm,z){
 
 #' @title Filtering by validity
 #' @description A list of annotation information of isotopes
-#' @usage isotope_valid(isotope_molecules_list
 #' @param isotope_molecules list of annotate information for isotopes
-isotop_valid <- function(isotope_molecules_list){
+#' @usage isotope_valid(isotope_molecules_list)
+isotope_valid <- function(isotope_molecules_list){
   isotope_valid_list <- NULL
   isotope_molecules_list[sapply(isotope_molecules_list, is.null)] <- NULL
   length_iso_v <- length(isotope_molecules_list)
@@ -86,8 +94,8 @@ isotop_valid <- function(isotope_molecules_list){
 
 #' @title Creating dataframe from isotope_valid_list
 #' @description Creating dataframe from isotope_valid_list
-#' @usage isotope_valid(isotope_molecules_list
 #' @param isotope_molecules list of annotate information for isotopes
+#' @usage valid_list_as_df(isotope_valid_list)
 valid_list_as_df <- function(isotope_valid_list){
   
   isotope_valid_list[sapply(isotope_valid_list, is.null)] <- NULL
@@ -118,9 +126,9 @@ valid_list_as_df <- function(isotope_valid_list){
 
 #' @title Mass spectrometer visualization
 #' @description Gives a graphical representation of the mono-isotopic and isotopic peaks
-#' @usage mass_spec_plot(final_df_vis)
 #' @param final_df_vis dataframe of the mono-isotopic and isotopic peaks pair's with id column
 #' @importFrom  plotly plot_ly highlight_key add_markers add_segments  layout rangeslider ggplotly highlight
+#' @usage mass_spec_plot(final_df_vis)
 #' @importFrom dplyr %>%
 mass_spec_plot <- function(final_df_vis){
   d <- highlight_key(final_df_vis, ~id )
@@ -210,22 +218,29 @@ impute.KNN.obs.sel <- function(dat, # incomplete data matrix
 #---------------------------------------------------------------------------------------------------
 #' @title Isotope tagging
 #' @description Tags isotopes based on intensity ratio and difference in mass
-#' @usage Isotope_tagging(df , ppm ,z)
 #' @param df Dataframe must contain columns c("mz", "intensity") with "mz" as first column
 #' @param ppm Parts Per Million Tolerance
 #' @param z charge
+#' @usage Isotope_tagging(df , ppm ,z)
 #' @importFrom  data.table fintersect
 #' @importFrom dplyr mutate  filter select mutate 
 #' @importFrom tibble tibble
 #' @importFrom tidyselect everything
 #' @importFrom sqldf sqldf
 #' @export
-isotope_tagging <- function(df, ppm , z){
+isotope_tagging <- function(df, ppm, z){
   #-----------------------------------------------------------------------------------
   ## Start body part of function BAIT
   #keep orginal copy
   copy_df <- df
-
+  
+  #default settings
+  if(is.null(ppm))
+    ppm <- 5
+  if(is.null(z))
+    z <- 0
+  
+  
   #creating new data frame with mean intensity column # note now complete case but will be replaced by imputation method
   df <- data.frame(mz = df[,1], intensity = rowMeans(df[,-1], na.rm = TRUE))
   #setting mz & intensity to vectors
@@ -250,7 +265,7 @@ isotope_tagging <- function(df, ppm , z){
   isotope_molecules_list <- isotope_molecules(adducts_isotope, ppm, z)
   
   # filtering keeping only valid results
-  isotope_valid_list <- isotop_valid(isotope_molecules_list)
+  isotope_valid_list <- isotope_valid(isotope_molecules_list)
   
   # transforming isotope_valid_mist into dataframe
   isotope_valid_df <- valid_list_as_df(isotope_valid_list)
