@@ -27,8 +27,7 @@ annotate_add <- function(mz_vector,ppm){
 #' @description A list of annotation information of isotopes
 #' @usage isotope_molecules(df, adducts )
 #' @param df input dataframe
-#' @param adducts
-#' @importFrom dplyr filter, merge , %in%
+#' @param adducts data frame adducts
 add_intensities <- function(df, adducts){
   add_a <- filter(df, df$mz %in% adducts$A)
   add_a <- add_a[,1:2]
@@ -70,7 +69,6 @@ isotope_molecules <- function(adducts_isotope,ppm,z){
 #' @description A list of annotation information of isotopes
 #' @usage isotope_valid(isotope_molecules_list
 #' @param isotope_molecules list of annotate information for isotopes
-#' @importFrom dplyr lapply
 isotop_valid <- function(isotope_molecules_list){
   isotope_valid_list <- NULL
   isotope_molecules_list[sapply(isotope_molecules_list, is.null)] <- NULL
@@ -215,7 +213,7 @@ impute.KNN.obs.sel <- function(dat, # incomplete data matrix
 #' @param ppm Parts Per Million Tolerance
 #' @param z charge
 #' @importFrom  data.table fintersect
-#' @importFrom dplyr mutate  filter select mutate
+#' @importFrom dplyr mutate  filter select mutate 
 #' @importFrom tibble tibble
 #' @importFrom tidyselect everything
 #' @importFrom sqldf sqldf
@@ -224,7 +222,6 @@ impute.KNN.obs.sel <- function(dat, # incomplete data matrix
 isotope_tagging <- function(df, ppm , z){
   #-----------------------------------------------------------------------------------
   ## Start body part of function BAIT
-  
   #keep orginal copy
   copy_df <- df
   
