@@ -4,16 +4,12 @@
 \alias{isotope_tagging}
 \title{Isotope tagging}
 \usage{
-Isotope_tagging(df, iso_diff , ppm , by_step )
+isotope_tagging(df , ppm ,z)
 }
 \arguments{
 \item{df}{Dataframe must contain columns c("mz", "intensity") with "mz" as first column}
 
-\item{iso_diff_da}{Mass difference between mol ion and isotope}
-
 \item{ppm}{Parts Per Million Tolerance}
-
-\item{by_step}{"by" in sequence mz range}
 
 \item{z}{charge}
 }

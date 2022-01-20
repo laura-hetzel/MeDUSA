@@ -17,7 +17,7 @@ ppm_to_dalton <- function(mass, ppm) {
 #' @param mz_vector mz value vector
 #' @param ppm error part per million
 #' @usage annotate_add(mz_vector, ppm)
-#' @importFrom  mass2adduct adductMatch massdiff
+#' @importFrom  mass2adduct adductMatch massdiff 
 annotate_add <- function(mz_vector, ppm){
   if(is.null(ppm)){
     ppm <- 5}
@@ -32,7 +32,7 @@ annotate_add <- function(mz_vector, ppm){
 #' @description A list of annotation information of isotopes
 #' @param df input dataframe
 #' @param adducts data frame adducts
-#' @usage isotope_molecules(df, adducts )
+#' @usage add_intensities(df, adducts )
 #' @importFrom dplyr filter 
 add_intensities <- function(df, adducts){
   add_a <- filter(df, df$mz %in% adducts$A)
@@ -56,7 +56,7 @@ add_intensities <- function(df, adducts){
 
 #' @title Annotation list for isotopes
 #' @description A list of annotation information of isotopes
-#' @param adducts_istoptope dataframe filtered for isotopes with possible isotopes
+#' @param adducts_isotope dataframe filtered for isotopes with possible isotopes
 #' @param ppm error part per million
 #' @param  z charge values
 #' @usage isotope_molecules(adducts_isotope, ppm , z )
@@ -77,7 +77,7 @@ isotope_molecules <- function(adducts_isotope,ppm,z){
 
 #' @title Filtering by validity
 #' @description A list of annotation information of isotopes
-#' @param isotope_molecules list of annotate information for isotopes
+#' @param isotope_molecules_list list of annotate information for isotopes
 #' @usage isotope_valid(isotope_molecules_list)
 isotope_valid <- function(isotope_molecules_list){
   isotope_valid_list <- NULL
@@ -94,7 +94,7 @@ isotope_valid <- function(isotope_molecules_list){
 
 #' @title Creating dataframe from isotope_valid_list
 #' @description Creating dataframe from isotope_valid_list
-#' @param isotope_molecules list of annotate information for isotopes
+#' @param isotope_valid_list list of annotate information for isotopes
 #' @usage valid_list_as_df(isotope_valid_list)
 valid_list_as_df <- function(isotope_valid_list){
   
@@ -221,7 +221,7 @@ impute.KNN.obs.sel <- function(dat, # incomplete data matrix
 #' @param df Dataframe must contain columns c("mz", "intensity") with "mz" as first column
 #' @param ppm Parts Per Million Tolerance
 #' @param z charge
-#' @usage Isotope_tagging(df , ppm ,z)
+#' @usage isotope_tagging(df , ppm ,z)
 #' @importFrom  data.table fintersect
 #' @importFrom dplyr mutate  filter select mutate case_when
 #' @importFrom tibble tibble

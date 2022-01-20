@@ -4,7 +4,7 @@
 \alias{ppm_to_dalton}
 \title{Dalton error calculation}
 \usage{
-ppm_to_dalton(mass)
+ppm_to_dalton(mass, ppm)
 }
 \arguments{
 \item{mass}{Mass of interest in m/z}

@@ -48,7 +48,7 @@ df
 Here we run the isotope detection algorithm. It adds several columns to our previous data.frame which can be used to filter isotopes from our feature set. 
 
 ```{r isotopes}
-df <- isotope_tagging(df)
+df <- isotope_tagging(df, ppm =5 ,z=1 )
 ```
 ```{r normalize}
 df2 <- normalize_features(df)
