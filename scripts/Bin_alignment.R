@@ -5,13 +5,13 @@
 #' @importFrom plyr 
 #' @importFrom readr read_delim 
 #' @export
-get_data <- function(files){
+get_data <- function(file){
   files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", 
                       pattern = ".txt")
   for (i in seq_along(files)) {
     assign(paste("Df", i, sep = "."), read_delim(files[i], col_names = c("x","mz","y", "intensity", "z")))
   }
-  l <- mget(ls(pattern = "Df[1:244]"))
+  l <- mget(ls(pattern = "Df.[1:244]"))
 }
 
 #' @title ppm calculation 
@@ -156,7 +156,7 @@ t3 <- binPeaks(t2)
 t4 <- binPeaks(t3)
 
 
-t <- t4$df2
+t <- t4$Df.1
 align_check(t)
 
 
