@@ -4,7 +4,7 @@
 \alias{feature_processing}
 \title{Process features obtained from XCMS}
 \usage{
-feature_processing(data, impute_method = "rf", remove_blanks = TRUE)
+feature_processing(data, impute_method = "knn", remove_blanks = TRUE)
 }
 \arguments{
 \item{data}{XCMS object with grouped peaks}
