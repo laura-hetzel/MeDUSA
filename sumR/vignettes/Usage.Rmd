@@ -55,7 +55,7 @@ df2 <- normalize_features(df)
 
 ```
 
-```{r pca, eval =F fig.width=12}
+```{r pca, eval =F, fig.width=12}
 
 intensity_df <- df2[, grep("*.mzML$", colnames(df2))]
 pca <- prcomp(intensity_df, center = TRUE, scale. = TRUE)
