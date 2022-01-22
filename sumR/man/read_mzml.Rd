@@ -16,3 +16,6 @@ XCMS object with spectra
 \description{
 Read DIMS data from an mzML file
 }
+\examples{
+read_mzml()
+}

@@ -4,9 +4,9 @@
 \name{sumR-package}
 \alias{sumR}
 \alias{sumR-package}
-\title{SumR Package}
+\title{sumR Package}
 \description{
-Set of tools to set up a pipeline for the analysis of DI-MS data.
+sumR Package
 }
 \author{
 \strong{Maintainer}: Alida Kindt \email{a.s.d.kindt@lacdr.leidenuniv.nl}

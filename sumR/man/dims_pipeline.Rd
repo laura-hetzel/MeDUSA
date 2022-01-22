@@ -4,8 +4,11 @@
 \alias{dims_pipeline}
 \title{DIMS pipeline}
 \usage{
-dims_pipeline(data)
+dims_pipeline(data, plot_md = FALSE)
 }
 \description{
 DIMS pipeline
+}
+\examples{
+dims_pipeline(read_mzml())
 }

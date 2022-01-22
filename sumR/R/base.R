@@ -22,16 +22,20 @@ read_msdata <- function(path = "data") {
 #' @param mzml Path to a mzml file. If omitted,
 #' the package example will be used
 #' @importFrom MSnbase readMSData
+#' @examples
+#' read_mzml()
 #' @export
 #' @return XCMS object with spectra
 read_mzml <- function(mzml = NULL){
   if (is.null(mzml)) {
-    mzml <- system.file("extdata/20200609_MeOH.mzML", package = "sumR")
+    dir <- system.file("extdata", package = "sumR")
+    mzml <- list.files(dir, pattern = ".*negative.*.mzML$", full.names = T)
   }
   tryCatch({
-    pd <- data.frame(sampleNames = mzml, class = "sample")
+    pd <- data.frame(sampleNames = mzml, class = "sample", group = "UP")
     blanks <- grep("Blank", mzml)
     pd$class[blanks] <- "blank"
+    pd$group[grep(".*LOW.*", mzml)] <- "LOW"
     data <- MSnbase::readMSData(mzml, mode = "onDisk",
                                 pdata = new("NAnnotatedDataFrame", pd))
     return(data)
@@ -79,11 +83,13 @@ combine_intensity <- function(x){
 
 #' @title DIMS pipeline
 #' @importFrom xcms MSWParam findChromPeaks groupChromPeaks MzClustParam
-#' fillChromPeaks FillChromPeaksParam
+#' fillChromPeaks FillChromPeaksParam chromPeaks
 #' @importFrom pbapply pblapply
 #' @importFrom logging loginfo
+#' @examples
+#' dims_pipeline(read_mzml())
 #' @export
-dims_pipeline <- function(data){
+dims_pipeline <- function(data, plot_md = FALSE){
   suppressWarnings({
     loginfo("Running DIMS pipeline")
     groups <- seq_len(nrow(data@featureData))
@@ -91,11 +97,16 @@ dims_pipeline <- function(data){
     loginfo(sprintf("Identifying peaks in %s spectra", length(groups)))
 
     params <- xcms::MSWParam(SNR.method = "data.mean", winSize.noise = 500)
-    data <- do.call(c, pblapply(per_injection, cl = 4, function(inj){
+    data <- do.call(c, pblapply(per_injection, cl = 1, function(inj){
       dat <-  suppressMessages(xcms::findChromPeaks(inj, param = params))
       # Filter using exclusing list
+      df <- as.data.frame(xcms::chromPeaks(dat))
+      df <- md_pipeline(df[,c(1,2,3)], plot_md)
+      # filter the peaks using the md
+      # xcms::filterChromPeaks(dat)
       dat
     }))
+
 
     clust_param <- xcms::MzClustParam(sampleGroups = groups)
     data <- xcms::groupChromPeaks(data, param = clust_param)
@@ -109,24 +120,46 @@ dims_pipeline <- function(data){
 
 #' @title Process features obtained from XCMS
 #' @param data XCMS object with grouped peaks
+#' @param remove_blanks Should blank samples be removed?
 #' @importFrom xcms featureValues featureDefinitions
 #' @importFrom pmp filter_peaks_by_blank mv_imputation
 #' @importFrom Biobase pData
+#' @examples
+#' data <- dims_pipeline(read_mzml())
+#' feature_processing(data)
 #' @export
-feature_processing <- function(data){
+feature_processing <- function(data, impute_method = "knn", remove_blanks = TRUE){
   intensity_df <- featureValues(data)
   classes <- Biobase::pData(data)$class
-  intensity_df <- filter_peaks_by_blank(intensity_df, fold_change = 5,
+
+  intensity_df <- filter_peaks_by_blank(intensity_df, fold_change = 3,
                         classes = classes,
                         blank_label = "blank",
-                        remove_samples = FALSE)
-  df_imp <- mv_imputation(df = intensity_df, method = "sv")
+                        remove_samples = remove_blanks)
 
-  mz <- xcms::featureDefinitions(data)[rownames(df_imp), ]$mzmed
-  df <- cbind(mz = mz, df_imp)
+  intensity_df <- mv_imputation(df = intensity_df, method = "knn")
+
+  mz <- xcms::featureDefinitions(data)[rownames(intensity_df), ]$mzmed
+  df <- cbind(mz = mz, intensity_df)
   as.data.frame(df)
 }
 
+#' @title Normalize intensity dataframe
+#' @param intensity_df Dataframe with intensities. Can contain isotope information
+#' @importFrom  pmp pqn_normalisation glog_transformation
+#' @export
+normalize_features <- function(intensity_df){
+  others <- intensity_df[, grep("*.mzML$", colnames(intensity_df), invert = T)]
+  intensity_df <- intensity_df[, grep("*.mzML$", colnames(intensity_df))]
+
+  intensity_df <- pqn_normalisation(df = intensity_df,
+                                    classes = colnames(intensity_df),
+                                    qc_label = "all")
+  intensity_df <- glog_transformation(df = intensity_df,
+                                      classes = colnames(intensity_df),
+                                      qc_label = colnames(intensity_df))
+  as.data.frame(cbind(intensity_df, others))
+}
 
 #' ppm calculation
 #'

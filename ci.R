@@ -24,18 +24,15 @@ ci_setup <- function(){
 }
 
 ci_check <- function(){
-  folder <- sprintf("%s/cache", getwd())
-  .libPaths(folder)
   if (length(list.files(path = "R") > 0)) {
+    ci_setup()
     devtools::check(error_on = "error")
   }
 }
 
 ci_coverage <- function(){
-  folder <- sprintf("%s/cache", getwd())
-  .libPaths(folder)
   if (length(list.files(path = "R") > 0)) {
-    cov <- covr::package_coverage(type = c("tests", "examples"))
-    covr::gitlab(coverage = cov, quiet = FALSE)
+    ci_setup()
+    covr::package_coverage(type = c("tests", "examples"))
   }
 }

@@ -2,10 +2,15 @@
 % Please edit documentation in R/isotope_tagging.R
 \name{annotate_add}
 \alias{annotate_add}
-\title{Annotation for adducts}
+\title{Annotation for adducts incl isotopes}
 \usage{
-annotate_add(mz_vector)
+annotate_add(mz_vector, ppm)
+}
+\arguments{
+\item{mz_vector}{mz value vector}
+
+\item{ppm}{error part per million}
 }
 \description{
-Annotation for adducts
+A list of annotation information of adducts)
 }
