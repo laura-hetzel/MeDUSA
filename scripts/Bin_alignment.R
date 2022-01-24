@@ -9,9 +9,10 @@ get_data <- function(file){
   files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", 
                       pattern = ".txt")
   for (i in seq_along(files)) {
-    assign(paste("Df", i, sep = "."), read_delim(files[i], col_names = c("1","mz","2", "intensity", "3")))
+    assign(paste("Df", i, sep = "."), read_delim(files[i], 
+                                                 col_names = c("1","mz","2", "intensity", "3")))
   }
-  l <- mget(ls(pattern = "Df.[1:244]"))
+  l_df <- mget(ls(pattern = "Df."))
 }
 
 #' @title ppm calculation 
@@ -20,8 +21,12 @@ get_data <- function(file){
 #' @export
 ppm_calc <- function(mass1, mass2) {
   ppm_error <- ((mass1 - mass2)/mass1) * 1e6
+  print(head(mass1))
+  print(head(mass2))
   return(ppm_error)
 }
+align_check(t)
+
 
 #' @title alignment check 
 #' @description align_check makes sure that all the m/z values are aligned/binned correctly
@@ -80,7 +85,6 @@ condition <- function(mass, intensities, samples, tolerance) {
 #' @param samples
 #' @param tolerance
 binning <- function(mass, intensities, samples, tolerance){
-  print(mass)
   n <- length(mass)
   d <- diff(mass)
   nBoundaries <- max(20L, floor(3L * log(n)))
@@ -124,48 +128,46 @@ binning <- function(mass, intensities, samples, tolerance){
 #' @title Binning of the peaks 
 #' @description binPeaks function! This needs the two functions above
 #' @param list of dataframes 
-binPeaks <- function(l, ppm = 5) {
+binPeaks <- function(l, tolerance = 0.002) {#or tolerance?
   nonEmpty <- sapply(l, nrow) != 0L
   samples <- rep.int(seq_along(l), sapply(l, nrow))
    mass <- unname(unlist((lapply(l[nonEmpty], function(x) as.double(x$mz))), recursive = FALSE, use.names = FALSE))
-   intensities <- unlist(lapply(l[nonEmpty], function(x) x$intensity), recursive = FALSE, use.names = FALSE)
-  s <- sort.int(mass, index.return = TRUE) # sort vector based on masses lowest to highest 
+   intensities <- unlist(lapply(l[nonEmpty], function(x) as.double(x$intensity)), recursive = FALSE, use.names = FALSE)
+   s <- sort.int(mass, index.return = TRUE) # sort vector based on masses lowest to highest 
   mass <- s$x
   intensities <- intensities[s$ix]
   samples <- samples[s$ix]
-  mass <- binning(mass = mass, intensities = intensities, samples = samples, tolerance = ppm)
+  mass <- binning(mass = mass, intensities = intensities, samples = samples, tolerance = tolerance)
   s <- sort.int(mass, index.return = TRUE)
   mass <- s$x
   intensities <- intensities[s$ix]
   samples <- samples[s$ix]
   lIdx <- split(seq_along(mass), samples)
-  print("check")
-  l[nonEmpty] <- mapply(FUN = function(p, i) {
+  l[nonEmpty] <- mapply(FUN = function(p, i) { # reassigning of the new masses 
+    p = NULL
     p$mz <- mass[i]
     p$intensity <- intensities[i]
     return(p)
   }, p = l[nonEmpty], i = lIdx, MoreArgs = NULL, SIMPLIFY = FALSE, USE.NAMES = FALSE)
+ 
   return(l)
 }
 
 #-------------------------------------------
 ##testing 
 #-------------------------------------------
-l <- get_data(file)
-t1 <- binPeaks(l)
+
+t1 <- binPeaks(l_df)
 t2 <- binPeaks(t1)
 t3 <- binPeaks(t2)
 t4 <- binPeaks(t3)
+l_df <- get_data(file)
 
 
-t <- t4$Df.1
+t <- t1$Df.1
 align_check(t)
 
-
-
-
-
-  
+write.table(t, file = "first_iteration.txt", sep = "\t", row.names = FALSE , col.names = F)
 
 
 
