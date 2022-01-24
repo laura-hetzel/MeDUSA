@@ -154,7 +154,7 @@ binPeaks <- function(l, tolerance = 0.002) {#or tolerance?
 }
 
 #-------------------------------------------
-##testing 
+##testing 1sdfa
 #-------------------------------------------
 
 t1 <- binPeaks(l_df)
