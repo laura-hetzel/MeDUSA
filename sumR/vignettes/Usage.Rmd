@@ -47,7 +47,7 @@ df
 
 Here we run the isotope detection algorithm. It adds several columns to our previous data.frame which can be used to filter isotopes from our feature set. 
 
-```{r isotopes}
+```{r isotopes, eval = F}
 df <- isotope_tagging(df, ppm =5 ,z=1 )
 ```
 ```{r normalize}
@@ -55,7 +55,7 @@ df2 <- normalize_features(df)
 
 ```
 
-```{r pca, fig.width=12}
+```{r pca, eval =F, fig.width=12}
 
 intensity_df <- df2[, grep("*.mzML$", colnames(df2))]
 pca <- prcomp(intensity_df, center = TRUE, scale. = TRUE)
@@ -66,7 +66,7 @@ if ("ggbiplot" %in% installed.packages()) {
 }
 ```
 
-```{r umap}
+```{r umap, eval = F}
 if ("umap" %in% installed.packages()) {
   library(umap)
   library(ggplot2)

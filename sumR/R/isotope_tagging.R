@@ -6,71 +6,52 @@
 #' @param ppm  Parts Per Million Tolerance
 #' @usage ppm_to_dalton(mass, ppm)
 ppm_to_dalton <- function(mass, ppm) {
-  if(is.null(ppm)){
-    ppm <- 5}
   da_error  <- (mass*ppm) / 1e6
   return(da_error)}
-
-
-#' @title Annotation for adducts incl isotopes
-#' @description A list of annotation information of adducts)
-#' @param mz_vector mz value vector
-#' @param ppm error part per million
-#' @usage annotate_add(mz_vector, ppm)
-#' @importFrom  mass2adduct adductMatch massdiff 
-annotate_add <- function(mz_vector, ppm){
-  if(is.null(ppm)){
-    ppm <- 5}
-  x <- massdiff(mz_vector)
-  adduct_matches <- adductMatch(x, add = mass2adduct::adducts2, ppm=ppm)
-  return(adduct_matches)
-}
 
 
 
 #' @title Adding intensities
 #' @description A list of annotation information of isotopes
 #' @param df input dataframe
-#' @param adducts data frame adducts
-#' @usage add_intensities(df, adducts )
+#' @param iso_df data frame adducts
+#' @usage add_intensities(df, iso_df)
 #' @importFrom dplyr filter 
-add_intensities <- function(df, adducts){
-  add_a <- filter(df, df$mz %in% adducts$A)
-  add_a <- add_a[,1:2]
-  add_a$intensity_A <- add_a$intensity
-  add_a$intensity <- NULL
+add_intensities <- function(df, iso_df){
+  add_mol <- merge(filter(df, df$mz %in% iso_df$mol_ion),iso_df, by.x = "mz", by.y = "mol_ion", all.x = TRUE)
+  add_mol <- add_mol[,c(1,2)]
+  add_mol$intensity_mol <- add_mol$intensity
+  add_mol$mz_mol <- add_mol$mz
+  add_mol$intensity <- NULL
+  add_mol$mz <- NULL
   
-  adduct_A <- merge(x = adducts, y = add_a, by.x = "A", by.y = "mz", all.x = TRUE)
   
-  add_b <- filter(df, df$mz %in% adducts$B)
-  add_b <- add_b[,1:2]
-  add_b$intensity_B <- add_b$intensity
-  add_b$intensity <- NULL
+  add_iso <- merge(filter(df, df$mz %in% iso_df$isotope),iso_df, by.x = "mz", by.y = "isotope", all.x = TRUE)
+  add_iso <- add_iso[,c(1,2)]
+  add_iso$intensity_iso <- add_iso$intensity
+  add_iso$mz_iso <- add_iso$mz
+  add_iso$intensity <- NULL
+  add_iso$mz <-NULL
   
-  adduct <- merge(x = adducts, y = add_b, by.x = "B", by.y = "mz", all.x = TRUE)
+  iso_df_fin <- cbind(add_mol,add_iso)
   
-  adduct$intensity_A <- adduct_A$intensity_A
   
-  return(adduct)
+  return(iso_df_fin)
 }
 
 #' @title Annotation list for isotopes
 #' @description A list of annotation information of isotopes
-#' @param adducts_isotope dataframe filtered for isotopes with possible isotopes
+#' @param iso_df_fin dataframe filtered for isotopes with possible isotopes
 #' @param ppm error part per million
 #' @param  z charge values
-#' @usage isotope_molecules(adducts_isotope, ppm , z )
+#' @usage isotope_molecules(iso_df_fin, ppm , z )
 #' @importFrom Rdisop decomposeIsotopes
-isotope_molecules <- function(adducts_isotope,ppm,z){
-  if(is.null(ppm)){
-    ppm <- 5}
-  if(is.null(z)){
-    z <- 0}
+isotope_molecules <- function(iso_df_fin, ppm ,z){
   isotope_molecules_list <- NULL
-  length_iso <- nrow(adducts_isotope)
+  length_iso <- nrow(iso_df_fin)
   for (i in 1:length_iso) {
-    masses <- c(adducts_isotope$A[i], adducts_isotope$B[i])
-    intensities <- c(100, ((adducts_isotope$intensity_B[i]/adducts_isotope$intensity_A[i])*100) )
+    masses <- c(iso_df_fin$mz_mol[i], iso_df_fin$mz_iso[i])
+    intensities <- c(100, ((iso_df_fin$intensity_iso[i]/iso_df_fin$intensity_mol[i])*100) )
     isotope_molecules_list[[i]] <- decomposeIsotopes(masses , intensities,  ppm = ppm , z = z)
   }
   return(isotope_molecules_list)}
@@ -97,7 +78,6 @@ isotope_valid <- function(isotope_molecules_list){
 #' @param isotope_valid_list list of annotate information for isotopes
 #' @usage valid_list_as_df(isotope_valid_list)
 valid_list_as_df <- function(isotope_valid_list){
-  
   isotope_valid_list[sapply(isotope_valid_list, is.null)] <- NULL
   rep <- length(isotope_valid_list)
   isotope_mass <- rep(NA, rep)
@@ -133,7 +113,7 @@ valid_list_as_df <- function(isotope_valid_list){
 mass_spec_plot <- function(final_df_vis){
   d <- highlight_key(final_df_vis, ~id )
   
-  fig <- plot_ly(data = d, x = ~mz, y = ~intensity, color = ~isotopic_status,colors = "Set1",
+  fig <- plot_ly(data = d, x = ~mz, y = ~intensity, color = ~Isotopic_status,colors = "Set1",
                  text = ~paste("<b>m/z </b>: ",mz, '<br><b>id</b>:', id), hoverinfo = "text")
   fig <- fig %>%
     add_markers() %>%
@@ -148,101 +128,30 @@ mass_spec_plot <- function(final_df_vis){
 }
 
 
-# Still in development
-# Maybe replaced later
-#' @title Imputation method for missing intensity values
-#' @description Imputation method for missing intensity values
-impute.KNN.obs.sel <- function(dat, # incomplete data matrix
-                               cor.var.sel = 0.2, # correlation threshold for variable pre-selection
-                               K=5, # number of neighbors
-                               verbose=T) {
-  
-  datimp <- dat
-  
-  # incomplete observations
-  incom.obs <- which(apply(dat,1,function(x) any(is.na(x))))
-  if (verbose) message(paste0("Number of imcomplete observations: ", length(incom.obs)))
-  
-  # incomplete variables
-  incom.vars <- which(apply(dat,2,function(x) any(is.na(x))))
-  if (verbose) message("Proceeding obs... ")
-  
-  # Pearson correlation for variable pre-selection
-  Cor <- cor(dat,use = "p")
-  
-  # Calculate distance
-  D2list <- lapply(incom.vars, function(j) {
-    varsel <- which(abs(Cor[j,]) > cor.var.sel)
-    if (length(varsel) > 10) varsel <- order(abs(Cor[j,]),decreasing = T)[1:11]
-    if (length(varsel) < 5) varsel <- order(abs(Cor[j,]),decreasing = T)[1:6]
-    D2 <- as.matrix(dist(scale(dat[,varsel])),upper = T,diag = T)
-    if (any(is.na(D2))) {
-      D2a <- as.matrix(dist(scale(dat)),upper = T,diag = T)*sqrt(length(varsel)/ncol(dat))
-      D2[is.na(D2)] <- D2a[is.na(D2)] }
-    diag(D2) <- NA
-    D2})
-  names(D2list) <- incom.vars
-  
-  # get neighbors and impute by their weighted average
-  for (i in incom.obs) {
-    if (verbose) cat(paste(i," "))
-    comvars <-  complete.cases(as.numeric(dat[i,]))
-    dattmp <-  dat
-    for (j in which(!comvars)) {
-      D2 <- D2list[[as.character(j)]]
-      if (any(!is.na(D2[i,]))) {
-        KNNids <- order(D2[i,],na.last = NA)
-        KNNids_naomit <- KNNids[sapply(KNNids,function(ii) any(!is.na(dat[ii,j])))]
-      }  else KNNids  <- NULL
-      
-      if (!is.null(KNNids)) KNNids_sel <- intersect(KNNids[1:min(K,length(KNNids))],KNNids_naomit)
-      if (length(KNNids_sel) < 1) KNNids_sel <- KNNids_naomit[1:min(floor(K/2),length(KNNids_naomit))] else
-        if (length(which(sapply(KNNids_sel,function(ii) !is.na(dat[ii,j])))) < floor(K/2) )  KNNids_sel <- KNNids_naomit[1:min(floor(K/2),length(KNNids_naomit))]
-        if (any(!is.na(D2[i,])) & length(KNNids)>= 1) {
-          dattmp_sel <- dattmp[KNNids_sel,j]
-          dattmp[i,j] <- sum(dattmp_sel*exp(-D2[i,KNNids_sel]),na.rm = T)/sum(exp(-D2[i,KNNids_sel])[!is.na(dattmp_sel)],na.rm=T) }
-    }
-    datimp[i,] <- dattmp[i,]
-  }
-  
-  # if there are still NAs, take mean
-  datimp <- apply(datimp,2, function(x) {
-    if (any(is.na(x))) x[is.na(x)] <- mean(x,na.rm = T)
-    x})
-  
-  
-  
-  datimp}
-
-
 #---------------------------------------------------------------------------------------------------
 #' @title Isotope tagging
 #' @description Tags isotopes based on intensity ratio and difference in mass
 #' @param df Dataframe must contain columns c("mz", "intensity") with "mz" as first column
 #' @param ppm Parts Per Million Tolerance
 #' @param z charge
-#' @usage isotope_tagging(df , ppm ,z)
-#' @importFrom  data.table fintersect
+#' @param isotope_da difference in mass for monoisotopic molecule and isotope in Da
+#' @usage isotope_tagging(df , ppm ,z , isotope_da)
+#' @importFrom  data.table fintersect as.data.table
 #' @importFrom dplyr mutate  filter select mutate case_when
 #' @importFrom tibble tibble
 #' @importFrom tidyselect everything
 #' @importFrom sqldf sqldf
 #' @export
-isotope_tagging <- function(df, ppm, z){
+isotope_tagging <- function(df, ppm, z, isotope_da){
   #-----------------------------------------------------------------------------------
   ## Start body part of function BAIT
-  #keep orginal copy
-  copy_df <- df
-  
-  #default settings
-  if(is.null(ppm)){
-    ppm <- 5}
-  if(is.null(z)){
-    z <- 0}
+  #keep original copy
+  copy_df <- df 
   
   
   #creating new data frame with mean intensity column # note now complete case but will be replaced by imputation method
   df <- data.frame(mz = df[,1], intensity = rowMeans(df[,-1], na.rm = TRUE))
+  
   #setting mz & intensity to vectors
   mz_vector <-  df$mz
   
@@ -251,18 +160,42 @@ isotope_tagging <- function(df, ppm, z){
                mass_error = ppm_to_dalton(mz, ppm),
                min_error  = mz - mass_error,
                max_error  = mz + mass_error)
+  #assigning minimum error and max error
+  min_error_vec <- df$min_error
+  max_error_vec <- df$max_error
+  
   #-------------------------------------------------------------------------------------
   # Annotation
-  adduct_matches <- annotate_add(mz_vector, ppm)
+  
+  # Annotation by mass difference 
+  # computing maximum difference and minimum difference
+  max_diff_mat <- abs(outer(max_error_vec, min_error_vec, `-`))
+  min_diff_mat <- abs(outer(min_error_vec, max_error_vec, `-`))
+  
+  #filtering + indexing max and min difference
+  index_max_mz <- which(max_diff_mat >= isotope_da, 
+                        arr.ind = TRUE )
+  index_min_mz <- which(min_diff_mat <= isotope_da & min_diff_mat > 0,
+                        arr.ind = TRUE )
+  
+  
+  index_dt_min <- as.data.table(index_min_mz )
+  index_dt_max <- as.data.table(index_max_mz)
+  
+  index_dt_matches <- fintersect(index_dt_min, index_dt_max , all = TRUE) 
+  
+  #making new df of the isotopes 
+  iso_df <- tibble(mol_ion = mz_vector[index_dt_matches[,col]],
+                   isotope = mz_vector[index_dt_matches[,row]],) 
   
   # Adding intensities
-  adducts_matches_int <- add_intensities(df, adduct_matches)
+  adducts_matches_int <- add_intensities(df, iso_df)
   
   # filter for isotope elements
-  adducts_isotope <- filter( adducts_matches_int,  adducts_matches_int$matches %in% c("13C"))
+  #adducts_isotope <- filter( adducts_matches_int,  adducts_matches_int$matches %in% c("13C"))
   
   # decompose isotopes
-  isotope_molecules_list <- isotope_molecules(adducts_isotope, ppm, z)
+  isotope_molecules_list <- isotope_molecules(adducts_matches_int, ppm, z)
   
   # filtering keeping only valid results
   isotope_valid_list <- isotope_valid(isotope_molecules_list)
@@ -284,33 +217,33 @@ isotope_tagging <- function(df, ppm, z){
   merge_dff <- sqldf("select * from isotope_valid_df inner join df on (isotope_valid_df.exactmass > df.min_error and isotope_valid_df.exactmass <= df.max_error) ")
   merge_dff <- na.omit(merge_dff)
   
-  final <- merge(x = merge_df, y = merge_dff, by = "formula", all = TRUE)
+  final <- merge(x = merge_df, y = merge_dff, by ="formula")
   final <- na.omit(final)
+  final$id <- paste0('id-', 1:nrow(final))
+  final$Isotopic_status <- paste0("Molecular_ion")
+  final$iso_ratio <- final$intensity.x/final$intensity.y
+  final_m <- final[,c(1,27,15,21,24,25,22,16,9,12,13,10,28,26,5)]
+  colnames(final_m) <- c("fomula","Isotopic_status","exactmass","mz","min_error","max_error","intensity",
+                         "isotope_mass","isotope_mz","iso_min_error","iso_max_error","intensity_iso","intensity_ratio","id","score")
+  
+  final$Isotopic_status <- paste0("c13_isotope")
+  final_i <- final[,c(1,27,15,9,11,12,10,16,9,12,13,10,28,26,5)]
+  colnames(final_i) <- c("fomula","Isotopic_status","exactmass","mz","min_error","max_error","intensity",
+                         "isotope_mass","isotope_mz","iso_min_error","iso_max_error","intensity_iso","intensity_ratio","id","score")
+  final_c <- rbind(final_m, final_i)
+  final_c <- final_c[order(final_c$mz),]
   
   
-  # Creating isotopic Status
-  final_df <- select(mutate(df,
-                            Isotopic_status = case_when(
-                              mz_vector  %in% final$mz.x~ "c13_isotope",
-                              mz_vector  %in% final$mz.y ~ "molecular_ion")),
-                     Isotopic_status ,
-                     everything())
-  
-  # Adding adducts to dataframe
-  adduct_b <- adduct_matches[,c(2,5)]
-  final_df <- merge(final_df,adduct_b, by.x = "mz", by.y = "B", all = TRUE)
-  
+  #Adding adducts to dataframe
+  final_f <- merge(copy_df,final_c ,by="mz", all= TRUE)
+  final_f <- final_f[,-c(1:ncol(copy_df))]
   #plotting
-  #print(mass_spec_plot(final_df_vis))
+  #print(mass_spec_plot(final_c))
   
-  
-  #adding colums to original dataframe
-  copy_df$Isotopic_Status <- final_df$Isotopic_status
-  copy_df$min_error <- df$min_error
-  copy_df$max_error <- df$max_error
-  # copy_df$Adduct <- final_df$matches needs to be fixed
-  
-  return(copy_df)
+  rownames <- rownames(copy_df)
+  #return data 
+  return_df <- cbind(final_f, copy_df)
+  rownames(return_df) <- rownames
+  return(return_df)
 }
-
 
