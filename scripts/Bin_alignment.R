@@ -149,22 +149,10 @@ binPeaks <- function(l, tolerance = 5e-6) {
   return(l)
 }
 
-
-#-------------------------------------------
-##testing  
-#-------------------------------------------
-l_df <- get_data(file)
-#mz_df_ua <- plyr::join_all(l_df, by = "mz", type = "full")
-for (i in 1:1) {
-  l_df <- binPeaks(l_df)
-}
-#mz_df_a <- plyr::join_all(l_df, by = "mz", type = "full")
-
-
-pm_files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", 
-                    pattern = ".txt")
-
-CreateDF <- function(l) {
+#' @title Merge dataframes of all aligned samples 
+#' @param dataframe obtained from experimental data using `binPeaks`
+#' @param path obtained from user input -> path to where the files are stored
+createDF <- function(l) {
   MyMerge <- function(x, y){
     df <- merge(x, y, by = "mz", all.x = TRUE, all.y = TRUE)
   }
@@ -176,12 +164,33 @@ CreateDF <- function(l) {
   return(l)
 }
 
+#-------------------------------------------
+##testing  
+#-------------------------------------------
+l <- get_data(file)
+pm_files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", pattern = ".txt")
 
-merged_df <- CreateDF(l_df)
+for (i in 1:2) {
+  l <- binPeaks(l)
+}
+count <- 2L
+while (TRUE) {
+  new <- binPeaks(l)
+  count <- count + 1L
+  new_df <- createDF(new)
+  df <- createDF(l)
+  if (nrow(df) == nrow(new_df)) {
+    break
+  }
+  if (count == 10) {
+    break
+  }
+  l <- new
+}
+
+align_check(l)
 
 
-
-align_check(merged_df)
 
 write.table(t, file = "0_iteration.txt", sep = "\t", row.names = FALSE , col.names = F)
 
