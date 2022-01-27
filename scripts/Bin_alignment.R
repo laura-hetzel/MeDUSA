@@ -10,7 +10,7 @@ get_data <- function(file){
                       pattern = ".txt")
   for (i in seq_along(files)) {
     assign(paste("Df", i, sep = "."), read_delim(files[i], 
-                                                 col_names = c("1","mz","2", "intensity", "3")))
+                                                 col_names = c("1", "mz", "2", "intensity", "3")))
   }
   l_df <- mget(ls(pattern = "Df."))
 }
@@ -21,11 +21,8 @@ get_data <- function(file){
 #' @export
 ppm_calc <- function(mass1, mass2) {
   ppm_error <- ((mass1 - mass2)/mass1) * 1e6
-  print(head(mass1))
-  print(head(mass2))
   return(ppm_error)
 }
-align_check(t)
 
 
 #' @title alignment check 
@@ -40,7 +37,7 @@ align_check(t)
 #' @importFrom tibble as_tibble_col
 #' @importFrom ggplot2 ggplot
 #' @export
-align_check <- function(data_frame_fn, xcoords = c(-20, 0)) {
+align_check <- function(data_frame_fn, xcoords = c(-50, 0)) {
   odd_ind_fn <- seq(3, length(data_frame_fn$mz), 2)
   even_ind_fn <- seq(2, length(data_frame_fn$mz),2)
   ppm_err_fn <- ppm_calc(data_frame_fn$mz[even_ind_fn], data_frame_fn$mz[odd_ind_fn]) %>% 
@@ -85,10 +82,10 @@ condition <- function(mass, intensities, samples, tolerance) {
 #' @param samples
 #' @param tolerance
 binning <- function(mass, intensities, samples, tolerance){
-  n <- length(mass)
-  d <- diff(mass)
-  nBoundaries <- max(20L, floor(3L * log(n)))
-  boundary <- list(left = double(nBoundaries), right = double(nBoundaries))
+  n <- length(mass) #number of peaks 
+  d <- diff(mass)   #difference between masses 
+  nBoundaries <- max(20L, floor(3L * log(n)))#setting of amount of bins
+  boundary <- list(left = double(nBoundaries), right = double(nBoundaries))#boundaries list 
   currentBoundary <- 1L
   boundary$left[currentBoundary] <- 1L
   boundary$right[currentBoundary] <- n
@@ -128,8 +125,8 @@ binning <- function(mass, intensities, samples, tolerance){
 #' @title Binning of the peaks 
 #' @description binPeaks function! This needs the two functions above
 #' @param list of dataframes 
-binPeaks <- function(l, tolerance = 0.002) {#or tolerance?
-  nonEmpty <- sapply(l, nrow) != 0L
+binPeaks <- function(l, tolerance = 5e-6) {
+  nonEmpty <- sapply(l, nrow) != 0L #checking if the list is not empty
   samples <- rep.int(seq_along(l), sapply(l, nrow))
    mass <- unname(unlist((lapply(l[nonEmpty], function(x) as.double(x$mz))), recursive = FALSE, use.names = FALSE))
    intensities <- unlist(lapply(l[nonEmpty], function(x) as.double(x$intensity)), recursive = FALSE, use.names = FALSE)
@@ -138,7 +135,7 @@ binPeaks <- function(l, tolerance = 0.002) {#or tolerance?
   intensities <- intensities[s$ix]
   samples <- samples[s$ix]
   mass <- binning(mass = mass, intensities = intensities, samples = samples, tolerance = tolerance)
-  s <- sort.int(mass, index.return = TRUE)
+  s <- sort.int(mass, index.return = TRUE)# sort results into mass lowest to highest 
   mass <- s$x
   intensities <- intensities[s$ix]
   samples <- samples[s$ix]
@@ -147,30 +144,48 @@ binPeaks <- function(l, tolerance = 0.002) {#or tolerance?
     p = NULL
     p$mz <- mass[i]
     p$intensity <- intensities[i]
-    return(p)
+    return(as.data.frame(p))
   }, p = l[nonEmpty], i = lIdx, MoreArgs = NULL, SIMPLIFY = FALSE, USE.NAMES = FALSE)
- 
   return(l)
 }
 
-#-------------------------------------------
-##testing 1sdfa
-#-------------------------------------------
 
-t1 <- binPeaks(l_df)
-t2 <- binPeaks(t1)
-t3 <- binPeaks(t2)
-t4 <- binPeaks(t3)
+#-------------------------------------------
+##testing  
+#-------------------------------------------
 l_df <- get_data(file)
+#mz_df_ua <- plyr::join_all(l_df, by = "mz", type = "full")
+for (i in 1:1) {
+  l_df <- binPeaks(l_df)
+}
+#mz_df_a <- plyr::join_all(l_df, by = "mz", type = "full")
 
 
-t <- t1$Df.1
-align_check(t)
+pm_files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", 
+                    pattern = ".txt")
 
-write.table(t, file = "first_iteration.txt", sep = "\t", row.names = FALSE , col.names = F)
+CreateDF <- function(l) {
+  MyMerge <- function(x, y){
+    df <- merge(x, y, by = "mz", all.x = TRUE, all.y = TRUE)
+  }
+  
+  l <- Reduce(MyMerge, l)
+  l[is.na(l)] <- 0
+  IDvalues <- pm_files %>% stringr::str_remove(".txt")
+  colnames(l) <- c("mz", IDvalues)
+  return(l)
+}
+
+
+merged_df <- CreateDF(l_df)
 
 
 
+align_check(merged_df)
+
+write.table(t, file = "0_iteration.txt", sep = "\t", row.names = FALSE , col.names = F)
+
+getAnywhere("MALDIQuant")
 
 
 
