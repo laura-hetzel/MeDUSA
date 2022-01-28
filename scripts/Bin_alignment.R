@@ -149,6 +149,7 @@ binPeaks <- function(l, tolerance = 5e-6) {
   return(l)
 }
 
+pm_files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", pattern = ".txt")
 #' @title Merge dataframes of all aligned samples 
 #' @param dataframe obtained from experimental data using `binPeaks`
 #' @param path obtained from user input -> path to where the files are stored
@@ -164,35 +165,52 @@ createDF <- function(l) {
   return(l)
 }
 
+#' @title iterations of the alignment function over the data 
+#' @description the code iterates over the data as long as 
+#' the number of bins changes, when the number of bins 
+#' doesn't change anymore iterations stop, maximal number
+#' of iterations is set to 15
+#' Also, plotting the decrease of the bins 
+#' @param df_list obtained from `binPeaks` 
+#' @export
+iterate <- function(l){
+  l <- binPeaks(l)
+  count <- 1L
+  bins <- c()
+  while (TRUE) {
+    new <- binPeaks(l)
+    count <- count + 1L
+    new_df <- createDF(new)
+    df <- createDF(l)
+    bins <- c(bins, nrow(df))
+    if (nrow(df) == nrow(new_df)) {
+      break
+    }
+    if (count == 15) {
+      break
+    }
+    l <- new
+  }
+  df_bins <- as.data.frame(cbind(bins, 1:count))
+  bin_plot <- ggplot(df_bins) + geom_line(aes(x = V2, y = bins)) +
+    labs(x = "Number of Alignments",
+         y = "Number of bins") 
+  aligned_list <-  list(aligned_df = df,
+                        aligned_per_sample = l, 
+                        bin_plot =  bin_plot)
+  return(aligned_list)
+}
 #-------------------------------------------
 ##testing  
 #-------------------------------------------
 l <- get_data(file)
-pm_files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", pattern = ".txt")
-
-for (i in 1:2) {
-  l <- binPeaks(l)
-}
-count <- 2L
-while (TRUE) {
-  new <- binPeaks(l)
-  count <- count + 1L
-  new_df <- createDF(new)
-  df <- createDF(l)
-  if (nrow(df) == nrow(new_df)) {
-    break
-  }
-  if (count == 10) {
-    break
-  }
-  l <- new
-}
-
-align_check(l)
+alignment <- iterate(l)
 
 
 
-write.table(t, file = "0_iteration.txt", sep = "\t", row.names = FALSE , col.names = F)
+
+
+
 
 getAnywhere("MALDIQuant")
 
