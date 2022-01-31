@@ -149,11 +149,11 @@ binPeaks <- function(l, tolerance = 5e-6) {
   return(l)
 }
 
-pm_files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", pattern = ".txt")
+
 #' @title Merge dataframes of all aligned samples 
 #' @param dataframe obtained from experimental data using `binPeaks`
-#' @param path obtained from user input -> path to where the files are stored
-createDF <- function(l) {
+#' @param pm_files String location of the experimental file
+createDF <- function(l, pm_files) {
   MyMerge <- function(x, y){
     df <- merge(x, y, by = "mz", all.x = TRUE, all.y = TRUE)
   }
@@ -172,22 +172,23 @@ createDF <- function(l) {
 #' of iterations is set to 15
 #' Also, plotting the decrease of the bins 
 #' @param df_list obtained from `binPeaks` 
-#' @param value x obtained from user input 
+#' @param value max_align obtained from user input 
+#' #' @param pm_files String location of the experimental file
 #' @export
-iterate <- function(l){
+iterate <- function(l, max_align){
   l <- binPeaks(l)
   count <- 1L
   bins <- c()
-  df <- createDF(l)
+  df <- createDF(l, pm_files)
   while (TRUE) {
     new <- binPeaks(l)
     count <- count + 1L
-    new_df <- createDF(new)
+    new_df <- createDF(new, pm_files)
     bins <- c(bins, nrow(df))
     if (nrow(df) == nrow(new_df)) {
       break
     }
-    if (count == 10) {
+    if (count == max_align) {
       break
     }
     l <- new
@@ -206,13 +207,8 @@ iterate <- function(l){
 ##testing  
 #-------------------------------------------
 l <- get_data(file)
-alignment <- iterate(l)
-
-
-
-
-
-
+alignment <- iterate(l, max_align = 5)
+pm_files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", pattern = ".txt")
 
 
 
