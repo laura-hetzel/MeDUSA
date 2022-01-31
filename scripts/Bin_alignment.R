@@ -172,26 +172,28 @@ createDF <- function(l) {
 #' of iterations is set to 15
 #' Also, plotting the decrease of the bins 
 #' @param df_list obtained from `binPeaks` 
+#' @param value x obtained from user input 
 #' @export
 iterate <- function(l){
   l <- binPeaks(l)
   count <- 1L
   bins <- c()
+  df <- createDF(l)
   while (TRUE) {
     new <- binPeaks(l)
     count <- count + 1L
     new_df <- createDF(new)
-    df <- createDF(l)
     bins <- c(bins, nrow(df))
     if (nrow(df) == nrow(new_df)) {
       break
     }
-    if (count == 15) {
+    if (count == 10) {
       break
     }
     l <- new
+    df <- new_df
   }
-  df_bins <- as.data.frame(cbind(bins, 1:count))
+  df_bins <- as.data.frame(cbind(bins, 1:(count - 1L)))
   bin_plot <- ggplot(df_bins) + geom_line(aes(x = V2, y = bins)) +
     labs(x = "Number of Alignments",
          y = "Number of bins") 
@@ -212,7 +214,7 @@ alignment <- iterate(l)
 
 
 
-getAnywhere("MALDIQuant")
+
 
 
 
