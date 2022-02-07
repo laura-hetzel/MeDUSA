@@ -9,11 +9,23 @@ get_data <- function(file){
   files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", 
                       pattern = ".txt")
   for (i in seq_along(files)) {
-    assign(paste("Df", i, sep = "."), read_delim(files[i], 
-                                                 col_names = c("1", "mz", "2", "intensity", "3")))
+    assign(paste("Df", i, sep = "."), read_delim(files[i],
+                                                 col_types = cols(mz = col_double(), 
+                                                                  instesity = col_double()), 
+                                                 id = "name", 
+                                                 col_names = (c("1", "mz", "2", "intensity", "3"))))
+                                                
+    
   }
   l_df <- mget(ls(pattern = "Df."))
 }
+l <- get_data(file)
+df <- plyr::join_all(l, by = "mz", type = "full")
+df <- df[,c("name", "mz", "intensity")]
+new_df <- pivot_longer(df, cols = "name")
+
+
+
 
 #' @title ppm calculation 
 #' @description ppm_calc calculated the parts per million error between two different masses
@@ -213,4 +225,10 @@ pm_files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", pa
 
 
 
+
+
+
+
+getAnywhere("MALDIquant")
+argsAnywhere(MALDIquant)
 
