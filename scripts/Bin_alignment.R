@@ -19,11 +19,20 @@ get_data <- function(file){
   }
   l_df <- mget(ls(pattern = "Df."))
 }
+#only first iteration 
 l <- get_data(file)
 df <- plyr::join_all(l, by = "mz", type = "full")
 df <- df[,c("name", "mz", "intensity")]
-new_df <- pivot_longer(df, cols = "name")
-
+name_col <- df$name
+new_df <- pivot_wider(df, names_from = "name", id_cols = "mz", 
+                     values_from = "intensity")
+#
+#second and following iterations
+l <- binPeaks(l)
+df <- plyr::join_all(l, by = "mz", type = "full")
+df <- cbind(df, name_col)
+new_df <- pivot_wider(df, names_from = "name", id_cols = "mz", 
+                      values_from = "intensity")
 
 
 
@@ -156,8 +165,9 @@ binPeaks <- function(l, tolerance = 5e-6) {
     p = NULL
     p$mz <- mass[i]
     p$intensity <- intensities[i]
+    p$name <- samples[i]
     return(as.data.frame(p))
-  }, p = l[nonEmpty], i = lIdx, MoreArgs = NULL, SIMPLIFY = FALSE, USE.NAMES = FALSE)
+  }, p = l[nonEmpty], i = lIdx, MoreArgs = NULL, SIMPLIFY = FALSE, USE.NAMES = TRUE)
   return(l)
 }
 
@@ -223,12 +233,4 @@ alignment <- iterate(l, max_align = 5)
 pm_files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", pattern = ".txt")
 
 
-
-
-
-
-
-
-getAnywhere("MALDIquant")
-argsAnywhere(MALDIquant)
 
