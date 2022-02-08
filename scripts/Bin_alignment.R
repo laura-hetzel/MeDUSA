@@ -23,16 +23,15 @@ get_data <- function(file){
 l <- get_data(file)
 df <- plyr::join_all(l, by = "mz", type = "full")
 df <- df[,c("name", "mz", "intensity")]
-name_col <- df$name
 new_df <- pivot_wider(df, names_from = "name", id_cols = "mz", 
                      values_from = "intensity")
 #
 #second and following iterations
 l <- binPeaks(l)
 df <- plyr::join_all(l, by = "mz", type = "full")
-df <- cbind(df, name_col)
 new_df <- pivot_wider(df, names_from = "name", id_cols = "mz", 
                       values_from = "intensity")
+new_df <- new_df[order(new_df$mz),]
 
 
 
@@ -151,23 +150,26 @@ binPeaks <- function(l, tolerance = 5e-6) {
   samples <- rep.int(seq_along(l), sapply(l, nrow))
    mass <- unname(unlist((lapply(l[nonEmpty], function(x) as.double(x$mz))), recursive = FALSE, use.names = FALSE))
    intensities <- unlist(lapply(l[nonEmpty], function(x) as.double(x$intensity)), recursive = FALSE, use.names = FALSE)
+   name <- unlist(lapply(l[nonEmpty], function(x) x$name), recursive = FALSE, use.names = FALSE)
    s <- sort.int(mass, index.return = TRUE) # sort vector based on masses lowest to highest 
   mass <- s$x
   intensities <- intensities[s$ix]
   samples <- samples[s$ix]
+  name <- name[s$ix]
   mass <- binning(mass = mass, intensities = intensities, samples = samples, tolerance = tolerance)
   s <- sort.int(mass, index.return = TRUE)# sort results into mass lowest to highest 
   mass <- s$x
   intensities <- intensities[s$ix]
   samples <- samples[s$ix]
+  name <- name[s$ix]
   lIdx <- split(seq_along(mass), samples)
   l[nonEmpty] <- mapply(FUN = function(p, i) { # reassigning of the new masses 
     p = NULL
     p$mz <- mass[i]
     p$intensity <- intensities[i]
-    p$name <- samples[i]
+    p$name <- name[i]
     return(as.data.frame(p))
-  }, p = l[nonEmpty], i = lIdx, MoreArgs = NULL, SIMPLIFY = FALSE, USE.NAMES = TRUE)
+  }, p = l[nonEmpty], i = lIdx, MoreArgs = NULL, SIMPLIFY = FALSE, USE.NAMES = FALSE)
   return(l)
 }
 
