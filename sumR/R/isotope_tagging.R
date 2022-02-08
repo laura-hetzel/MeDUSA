@@ -1,7 +1,7 @@
 ###############################################
 #               sumR                          #
 # Topic : Detection of isotopes and adducts   #
-# Merys Valdez, January 2022,  LACDR          #
+# Merys Valdez, February  2022,  LACDR        #
 ###############################################
 
 
@@ -16,11 +16,12 @@
 #(5) valid_list_as_df function 
 #(6) isotope_finding function 
 #(7) adduct_finding function 
-#(8) big_merge function      
-#(9) mass_spec_plot function
+#(8) big_merge function
+#(9)  bar_plot   function  
+#(10) mass_spec_plot function
 
 # Part 2 : The isotope_tagging function
-#(10) isotope_tagging function
+#(11) isotope_tagging function
 
 
 
@@ -334,7 +335,7 @@ big_merge <- function(isotope_valid_df, df, copy_df){
   final <- na.omit(final)
   final$id <- paste0('id-', 1:nrow(final))
   final$isotopic_status <- paste0("Molecular_ion")
-  final$iso_ratio <- final$intensity.x/final$intensity.y
+  final$iso_ratio <- round((final$intensity.x/final$intensity.y),2)
   final_m <- final[,c(1, 15, 27, 21, 24, 25, 22, 16, 9, 12, 13, 10, 28, 26, 5)]
   colnames(final_m) <- c("fomula", "exactmass_compound", "isotopic_status", 
                          "mz", "min_error", "max_error", "intensity",
@@ -368,10 +369,39 @@ big_merge <- function(isotope_valid_df, df, copy_df){
   return(result)
 }
 
-
-
 #-------------------------------
-#(9) mass_spec_plot  function  -
+#(9)       bar_plot   function  -
+#-------------------------------
+#' @title Bar plot visualization
+#' @description Displays a bar plot for the different isotopic status 
+#' @param final_df data frame of the mono-isotopic and isotopic peaks pair's with id column
+#' @importFrom  ggplot2 ggplot geom_bar scale_fill_brewer xlab geom_text ylab
+#' @usage bar_plot(final_df)
+#' @importFrom dplyr %>% rename
+bar_plot <- function(final_df){
+  
+# Filtering for only available isotopic status 
+vis_df <- final_df[!is.na(final_df$isotopic_status), ]
+vis_df$isotopic_status <- factor(vis_df$isotopic_status)
+
+# Creating data frame for barplot
+count_df <- as.data.frame(table(vis_df$isotopic_status))   
+count_df  <- count_df %>% 
+  rename(
+    isotopic_status = Var1,
+    count = Freq
+  )
+# Bar plot
+p <- ggplot(count_df, aes(x=isotopic_status,y=count, fill=isotopic_status))+
+  geom_bar(stat="identity", width=0.7)+
+  scale_fill_brewer(palette="Dark2") +
+  xlab(label = "Isotopic status") +
+  geom_text(aes(label = count), vjust = -1) +
+  ylab(label="Count") 
+return(p)
+}
+#-------------------------------
+#(10) mass_spec_plot  function  -
 #-------------------------------
 #' @title Mass spectrometry visualization
 #' @description Gives a graphical representation of the mono-isotopic and isotopic peaks
@@ -380,23 +410,30 @@ big_merge <- function(isotope_valid_df, df, copy_df){
 #' @usage mass_spec_plot(final_df)
 #' @importFrom dplyr %>%
 mass_spec_plot <- function(final_df){
-  d <- highlight_key(final_df , ~id)
+  vis_df <- final_df[!is.na(final_df$isotopic_status), ]
+  d <- highlight_key(vis_df , ~id)
   
   fig <- plot_ly(data = d, 
                  x = ~mz, 
                  y = ~intensity, 
                  color = ~isotopic_status,
-                 colors = "Set1",
-                 text = ~paste("<b>m/z </b>: ",mz, '<br><b>id</b>:', id), hoverinfo = "text")
+                 colors = "Dark2",
+                 hoverinfo = 'text',
+                 text = ~paste("<b>m/z</b>: ",round(mz,3), '<br><b>id</b>:', id, '<br><b>intensity ratio</b>:', intensity_ratio))
   fig <- fig %>%
     add_markers() %>%
     add_segments(
-      data = final_df , x = ~mz, xend = ~mz,
-      y = 0, yend = ~intensity, color = I("grey"), showlegend = FALSE)  %>%
-    rangeslider(final_df$mz[1], max(final_df$mz))
+      data = vis_df , x = ~mz, xend = ~mz,
+      y = 0, yend = ~intensity, color = I("grey"), showlegend = FALSE)  %>% 
+    layout(
+        title = "Mass spectrometry of detected isotopes")
+      
   
-  gg <- ggplotly(fig, tooltip = "id")
-  gg <- highlight(gg, dynamic = TRUE)
+  gg <- ggplotly(fig)
+  gg <- highlight(gg, dynamic = TRUE, off ='plotly_doubleclick' )
+  gg  
+  
+  
   return(gg)
 }
 
@@ -411,7 +448,7 @@ mass_spec_plot <- function(final_df){
 
 
 #---------------------------------
-#(10) isotope_tagging  function  -
+#(11) isotope_tagging  function  -
 #---------------------------------
 #' @title Isotope tagging
 #' @description Tags isotopes based on intensity ratio and difference in mass between mono- and isotopic ion
@@ -435,7 +472,6 @@ isotope_tagging <- function(df, ppm, z){
   Element_notation <- c("C","Cl")
   Element <- c("C13","Cl37")
   isotope_da <- c(1.0034 , 1.9970)
-  isotope_df  <- NULL
   isotope_df <- as.data.frame(cbind(Element, Element_notation, isotope_da))
   isotope_df$isotope_da <- as.numeric(isotope_df$isotope_da)
   
@@ -454,7 +490,7 @@ isotope_tagging <- function(df, ppm, z){
   # Setting mz variables to vectors
   mz_vector <-  df$mz
   
-  # Creating new data frame with mass_error , lower bound and upperbound
+  # Creating new data frame with mass_error , lower bound and upper bound
   df <- mutate(df,
                mass_error = ppm_to_dalton(mz, ppm),
                min_error  = mz - mass_error,
@@ -475,7 +511,7 @@ isotope_tagging <- function(df, ppm, z){
   
   
   
-  #Big merge and printing the number of founf isotopes
+  # Big merge and printing the number of found isotopes
   final_f  <- big_merge(isotope_valid_df, df, copy_df)
   print(paste("Number of isotopes found:",length(unique(final_f$id))))
   
@@ -486,13 +522,10 @@ isotope_tagging <- function(df, ppm, z){
   test_adduct <- merge(final_f, adduct_found[,2:3], by.x ="mz" , by.y = "isotope", all.x = TRUE)
   final_df <- test_adduct %>% distinct(mz, .keep_all = TRUE)
   
-  #-----------------------------------------------------------------------------
-  # Plotting
-  # print(mass_spec_plot(final_df))
   
   
   #-----------------------------------------------------------------------------
-  # Returning orginal features with data 
+  # Returning original features with data 
   
   # Extracting feature names
   rownames <- rownames(copy_df)
@@ -500,6 +533,21 @@ isotope_tagging <- function(df, ppm, z){
   # Return data frame
   return_df <- cbind(final_df, copy_df)
   rownames(return_df) <- rownames
+  
+  
+  
+  
+  #-----------------------------------------------------------------------------
+  # Plotting
+   print(bar_plot(final_df))
+   print(mass_spec_plot(final_df))
+  
+  
+
+  
   return(return_df)
 }
 
+
+
+  
