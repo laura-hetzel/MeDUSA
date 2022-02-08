@@ -54,13 +54,13 @@ Imports:
     stringr (>= 1.4.0),
     superheat (>= 0.1.0),
     tibble (>= 3.1.6),
-    tibble (>= 3.1.6),
     tidyr (>= 1.1.4),
     tidyselect (>= 1.1.1),
     usedist (>= 0.4.0),
     utils (>= 4.1.2),
     viridis (>= 0.6.2),
-    xcms (>= 3.16.1)
+    xcms (>= 3.16.1),
+    purrr
 Suggests: 
     knitr (>= 1.37),
     rmarkdown (>= 2.11),
