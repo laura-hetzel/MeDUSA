@@ -19,20 +19,6 @@ get_data <- function(file){
   }
   l_df <- mget(ls(pattern = "Df."))
 }
-#only first iteration 
-l <- get_data(file)
-df <- plyr::join_all(l, by = "mz", type = "full")
-df <- df[,c("name", "mz", "intensity")]
-new_df <- pivot_wider(df, names_from = "name", id_cols = "mz", 
-                     values_from = "intensity")
-#
-#second and following iterations
-l <- binPeaks(l)
-df <- plyr::join_all(l, by = NULL, type = "full", match = "all")
-new_df <- pivot_wider(df, names_from = "name", id_cols = "mz", 
-                      values_from = "intensity")
-new_df <- new_df[order(new_df$mz),]
-
 
 #' @title ppm calculation 
 #' @description ppm_calc calculated the parts per million error between two different masses
@@ -169,7 +155,7 @@ binPeaks <- function(l, tolerance = 5e-6) {
     p$name <- name[i]
     return(as.data.frame(p))
   }, p = l[nonEmpty], i = lIdx, MoreArgs = NULL, SIMPLIFY = FALSE, USE.NAMES = FALSE)
-  return(l)
+  return(as.list(l))
 }
 
 
@@ -196,18 +182,25 @@ createDF <- function(l, pm_files) {
 #' Also, plotting the decrease of the bins 
 #' @param df_list obtained from `binPeaks` 
 #' @param value max_align obtained from user input 
-#' #' @param pm_files String location of the experimental file
+#only first iteration 
 #' @export
-iterate <- function(l, max_align){
-  l <- binPeaks(l)
-  count <- 1L
+iteration <- function(l, max_align){
+  count <- 0L
   bins <- c()
-  df <- createDF(l, pm_files)
+  df <- plyr::join_all(l, by = NULL, type = "full", match = "all")
+  df <- df[,c("name", "mz", "intensity")]
+  df <- pivot_wider(df, names_from = "name", id_cols = "mz", 
+                    values_from = "intensity")
+  df <- df[order(df$mz),]
+  bins <- c(bins, nrow(df))
   while (TRUE) {
     new <- binPeaks(l)
     count <- count + 1L
-    new_df <- createDF(new, pm_files)
-    bins <- c(bins, nrow(df))
+    new_df <- plyr::join_all(new, by = NULL, type = "full", match = "all")
+    new_df <- pivot_wider(new_df, names_from = "name", id_cols = "mz", 
+                          values_from = "intensity")
+    new_df <- new_df[order(new_df$mz),]
+    bins <- c(bins, nrow(new_df))
     if (nrow(df) == nrow(new_df)) {
       break
     }
@@ -217,7 +210,7 @@ iterate <- function(l, max_align){
     l <- new
     df <- new_df
   }
-  df_bins <- as.data.frame(cbind(bins, 1:(count - 1L)))
+  df_bins <- as.data.frame(cbind(bins, 0:(count)))
   bin_plot <- ggplot(df_bins) + geom_line(aes(x = V2, y = bins)) +
     labs(x = "Number of Alignments",
          y = "Number of bins") 
@@ -226,11 +219,13 @@ iterate <- function(l, max_align){
                         bin_plot =  bin_plot)
   return(aligned_list)
 }
+
+
 #-------------------------------------------
 ##testing  
 #-------------------------------------------
 l <- get_data(file)
 pm_files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", pattern = ".txt")
-alignment <- iterate(l, max_align = 5)
+alignment <- iteration(l, max_align = 5)
 
 
