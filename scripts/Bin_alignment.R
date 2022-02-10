@@ -11,7 +11,7 @@ get_data <- function(file){
   for (i in seq_along(files)) {
     assign(paste("Df", i, sep = "."), read_delim(files[i],
                                                  col_types = cols(mz = col_double(), 
-                                                                  instesity = col_double()), 
+                                                                  intensity = col_double()), 
                                                  id = "name", 
                                                  col_names = (c("1", "mz", "2", "intensity", "3"))))
                                                 
@@ -28,11 +28,10 @@ new_df <- pivot_wider(df, names_from = "name", id_cols = "mz",
 #
 #second and following iterations
 l <- binPeaks(l)
-df <- plyr::join_all(l, by = "mz", type = "full")
+df <- plyr::join_all(l, by = NULL, type = "full", match = "all")
 new_df <- pivot_wider(df, names_from = "name", id_cols = "mz", 
                       values_from = "intensity")
 new_df <- new_df[order(new_df$mz),]
-
 
 
 #' @title ppm calculation 
@@ -231,8 +230,7 @@ iterate <- function(l, max_align){
 ##testing  
 #-------------------------------------------
 l <- get_data(file)
-alignment <- iterate(l, max_align = 5)
 pm_files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", pattern = ".txt")
-
+alignment <- iterate(l, max_align = 5)
 
 
