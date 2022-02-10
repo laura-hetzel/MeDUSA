@@ -9,11 +9,12 @@ get_data <- function(file){
   files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", 
                       pattern = ".txt")
   for (i in seq_along(files)) {
-    assign(paste("Df", i, sep = "."), read_delim(files[i],
-                                                 col_types = cols(mz = col_double(), 
-                                                                  intensity = col_double()), 
-                                                 id = "name", 
-                                                 col_names = (c("1", "mz", "2", "intensity", "3"))))
+    assign(paste("Df", i, sep = "."), 
+           read_delim(files[i],
+                      col_types = cols(mz = col_double(), 
+                                      intensity = col_double()), 
+                      id = "name", 
+                      col_names = (c("1", "mz", "2", "intensity", "3"))))
                                                 
     
   }
@@ -158,22 +159,6 @@ binPeaks <- function(l, tolerance = 5e-6) {
   return(as.list(l))
 }
 
-
-#' @title Merge dataframes of all aligned samples 
-#' @param dataframe obtained from experimental data using `binPeaks`
-#' @param pm_files String location of the experimental file
-createDF <- function(l, pm_files) {
-  MyMerge <- function(x, y){
-    df <- merge(x, y, by = "mz", all.x = TRUE, all.y = TRUE)
-  }
-  
-  l <- Reduce(MyMerge, l)
-  l[is.na(l)] <- 0
-  IDvalues <- pm_files %>% stringr::str_remove(".txt")
-  colnames(l) <- c("mz", IDvalues)
-  return(l)
-}
-
 #' @title iterations of the alignment function over the data 
 #' @description the code iterates over the data as long as 
 #' the number of bins changes, when the number of bins 
@@ -225,7 +210,6 @@ iteration <- function(l, max_align){
 ##testing  
 #-------------------------------------------
 l <- get_data(file)
-pm_files <- list.files(path = "/Users/klarab/Documents/GitHub/sum-r/scripts", pattern = ".txt")
 alignment <- iteration(l, max_align = 5)
 
 
