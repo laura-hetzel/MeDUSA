@@ -56,8 +56,8 @@ ppmToDalton <- function(mass, ppm = 5) {
 #' @description Adds an intensity column for mono-isotopic ion and isotope ions
 #' @param data data.frame, containing mz and intensity information
 #' @param iso_df data.frame that contains possible mono-isotopic ion and isotope based on solely mass differences
-#' @usage addIntensities(data, iso_df)
 #' @importFrom dplyr filter
+#' @usage addIntensities(data, iso_df)
 addIntensities <- function(data, iso_df) {
   # Adding intensity for mono-isotopic ion
   add_mol <- merge(filter(data, data$mz %in% iso_df$mol_ion), iso_df,
@@ -97,8 +97,9 @@ addIntensities <- function(data, iso_df) {
 #' @param ppm An integer, defining parts per million (ppm) for tolerance (default = 5)
 #' @param z An integer, defining charge z of m/z peaks for calculation of real mass. 0 is for auto-detection (default = 0)
 #' @param Elements vector, with selected isotopic elements of interest (default = c("C13")), options : c("C13","Cl37")
-#' @usage isotopeMolecules(adducts_matches_int, Elements = c("C13"), ppm = 5 , z = 0)
 #' @importFrom Rdisop decomposeIsotopes initializeElements
+#' @usage isotopeMolecules(adducts_matches_int, Elements = c("C13"), ppm = 5 , z = 0)
+
 isotopeMolecules <- function(adducts_matches_int, Elements = c("C13"), ppm = 5, z = 0) {
   
   # Check isotopic selection
@@ -390,8 +391,8 @@ bigMerge <- function(isotope_valid_df, data, copy_df) {
 #' @description Displays a bar plot for the different types of isotopic status'
 #' @param final_df a data.frame of the mono-isotopic and isotopic peaks pair's with id column
 #' @importFrom  ggplot2 ggplot geom_bar scale_fill_brewer xlab geom_text ylab
-#' @usage barPlot(final_df)
 #' @importFrom dplyr %>% rename
+#' @usage barPlot(final_df)
 barPlot <- function(final_df) {
   
   # Filtering for only available isotopic status
@@ -472,8 +473,8 @@ massSpecPlot <- function(final_df) {
 #' @param ppm An integer, defining parts per million (ppm) for tolerance (default = 5)
 #' @param z An integer, defining charge z of m/z peaks for calculation of real mass. 0 is for auto-detection (default = 0)
 #' @param Elements A vector containing the isotopic element of interest (default = c("C13"))
-#' @usage isotopeTagging(data, ppm = 5, Elements = c("C13"), z = 0)
 #' @importFrom dplyr %>% distinct
+#' @usage isotopeTagging(data, ppm = 5, Elements = c("C13"), z = 0)
 #' @export
 isotopeTagging <- function(data, ppm = 5, Elements = c("C13"), z = 0) {
   #-----------------------------------------------------------------------------
