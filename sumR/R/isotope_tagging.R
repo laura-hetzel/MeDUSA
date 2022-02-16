@@ -308,9 +308,6 @@ adductFinding <- function(adduct_df, max_diff_mat, min_diff_mat, mz_vector) {
 #' @usage bigMerge(isotope_valid_df, data, copy_df)
 bigMerge <- function(isotope_valid_df, data, copy_df) {
   
-  # Test replacing sqdlf
-  # merge_isotope_test <- isotope_valid_df %>%  filter(between(isotope_mass, df$min_error, df$max_error ))
-  
   
   #-----------------------------------------------------------------------------
   # Merge based upon the condition of falling within min and max error mass for isotopes
@@ -471,10 +468,10 @@ massSpecPlot <- function(final_df) {
 #---------------------------------
 #' @title Isotope tagging
 #' @description Tags isotopes based on intensity ratio and difference in mass between mono- and isotopic ion
-#' @param data data.frame,  which contain columns c("mz", "intensity") with "mz" as first column
+#' @param data data.frame,  which contain column named "mz", all other columns will be assigned as intensity
 #' @param ppm An integer, defining parts per million (ppm) for tolerance (default = 5)
 #' @param z An integer, defining charge z of m/z peaks for calculation of real mass. 0 is for auto-detection (default = 0)
-#' @param Elements A vector containing the isotopic element of interest (default = "C13")
+#' @param Elements A vector containing the isotopic element of interest (default = c("C13"))
 #' @usage isotopeTagging(data, ppm = 5, Elements = c("C13"), z = 0)
 #' @importFrom dplyr %>% distinct
 #' @export
@@ -500,7 +497,7 @@ isotopeTagging <- function(data, ppm = 5, Elements = c("C13"), z = 0) {
   # Start body of isotope_tagging function
   #-----------------------------------------------------------------------------
   # Creating new data frame with mean intensity column # note now complete case but will be replaced by imputation method
-  df <- data.frame(mz = data[, 1], intensity = rowMeans(data[, -1], na.rm = TRUE))
+  df <- data.frame(mz = data[, c("mz")], intensity = rowMeans(data[, -c("mz")], na.rm = TRUE))
   
   # Setting mz variables to vectors
   mz_vector <- df$mz
