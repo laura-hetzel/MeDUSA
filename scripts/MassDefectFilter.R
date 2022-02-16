@@ -21,7 +21,7 @@ get_hmdb_file <- function(file){
 #' @title Import experimental data
 #' @param file String location of the experimetal file
 #' @importFrom stats na.omit
-#' @importFrom tidyverse read_delim
+#' @importFrom readr read_delim
 #' @export
 get_data <- function(file){
   #' Downloading the experimental data and converting it to a data frame
@@ -43,7 +43,7 @@ mass_defect_calculation <- function(dataframe){
 
 #' @title Defining Mass Defect filter 
 #' @description  the theoretical maximum Mass Defect of human metabolites is used to calculate this cut off
-#' @param dataframe MD_df obtained from the HMDB using `mass_defect_function`
+#' @param dataframe MD_df obtained from the HMDB using `mass_defect_calculation`
 #' @export
 make_filter_list <- function(MD_df){
   filter_list <- as.data.frame(apply(MD_df[,"mz"], 1, function(row){
@@ -56,7 +56,7 @@ make_filter_list <- function(MD_df){
 
 #' @title Retrieve inclusion list in a data frame format (default or user input)
 #' @param file (optional) String location of the inclusion list
-#' @importFrom tidyverse read_delim
+#' @importFrom readr read_delim
 #' @export
 get_inclusion_list <- function(file){
   # Inclusion list creation
@@ -71,7 +71,7 @@ get_inclusion_list <- function(file){
 }
 
 #' @title Filtering the data by  mass defect 
-#' @param dataframe MD_df obtained from from the HMDB using `mass_defect_function`
+#' @param dataframe MD_df obtained from from the HMDB using `mass_defect_calculation`
 #' @param dataframe incl_list obtained from the `get_inclusion_list`
 #' @param dataframe filter_list obtained from the `create_fit_df`
 #' @importFrom dplyr filter
@@ -89,14 +89,16 @@ MD_filter <- function(MD_df, filter_list, incl_list){
 }
 
 #' @title Plotting of the data - m/z vs. MD 
-#' @param dataframe MD_df obtained from the HMDB using `mass_defect_function` or
-#' @param dataframe filtered_MD_df obtained from the HMDB using `MD_filter`
-#' @export
-plot_mz_MD <- function(MD_df, title){
-  plot(MD_df$mz, MD_df$MD, cex.axis = 0.8,
+#' @param dataframe MD_df obtained from the experimental data using `mass_defect_calculation`
+#' @param dataframe filtered_MD_df obtained from the experimental data using `MD_filter`
+#' @export 
+plot_mz_MD <- function(MD_df_filtered, MD_df, title){
+  mz_removed <- nrow(MD_df) - nrow(MD_df_filtered)
+  plot(MD_df_filtered$mz, MD_df_filtered$MD, cex.axis = 0.8,
        col = alpha("black", 0.5), pch = 20, cex = 0.8,
        ylim = c(0,1), xlim = c(50,1200), ylab = "MD", xlab = "m/z",
-       main = title, cex.lab = 0.8, cex.main = 0.8)
+       main = title, sub = paste("datapoints removed = ", mz_removed),
+       cex.lab = 0.8, cex.main = 0.8, cex.sub = 0.8)
 }
 
 #' @title Export results in a csv file 
@@ -126,11 +128,16 @@ pipeline <- function(file = NULL){
   # filter experimental data 
   filtered_df_exp <- MD_filter(md_df_exp, filtered_list_exp, in_list)
   # plotting
-  plot_mz_MD(md_df_exp, title = "Raw")
-  plot_mz_MD(filtered_df_exp, title = "Filtered")
+  plot_mz_MD(filtered_df_hmdb, md_df_hmdb, title = "Filtered")
   #save filtered data in csv file 
   result_output(filtered_df_exp)
 }
 
 pipeline()
+
+
+
+
+
+
 

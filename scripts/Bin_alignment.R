@@ -165,6 +165,8 @@ binPeaks <- function(l, tolerance = 5e-6) {
 #' doesn't change anymore iterations stop, maximal number
 #' of iterations is set to 15
 #' Also, plotting the decrease of the bins 
+#' @importFrom plyr join_all
+#' @importFrom tidyr pivot_wider
 #' @param df_list obtained from `binPeaks` 
 #' @param value max_align obtained from user input 
 #only first iteration 
