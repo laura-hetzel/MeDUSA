@@ -1,7 +1,7 @@
 #' @title Retrieve HMDB data in a data frame format - default = endogenous metabolites 
 #' @param file (optional) String location of the HMDB file
 #' @importFrom stats na.omit
-#' @importFrom tidyverse read_delim
+#' @importFrom readr read_delim
 #' @export
 get_hmdb_file <- function(file){
   #if (is.null(file)) {
@@ -10,7 +10,8 @@ get_hmdb_file <- function(file){
     #url <- "https://hmdb.ca/metabolites.csv?action=index&c=hmdb_id&controller=metabolites&d=up&endogenous=1&filter=true&utf8=%E2%9C%93"
   #} else {
     #' Downloading the data and converting it to a data frame
-    dataframe <- read_delim("end.metabolites.txt", delim = ",")            #82.595 rows as should be
+    #dataframe <- read.delim("end.metabolites.txt", sep = ",")            
+    dataframe <- read_delim("end.metabolites.txt", delim = ",")
     colnames(dataframe) <- c("HMDB_ID", "Name", "SMILES", "INCHIKEY", "Chemical_Formula", "Average_Mass", "mz")
     #removing rows with no Mass data
     dataframe <- na.omit(dataframe)
@@ -19,27 +20,29 @@ get_hmdb_file <- function(file){
 }
 
 #' @title Import experimental data
-#' @param file String location of the experimetal file
-#' @importFrom stats na.omit
+#' @param file String location of the experimental file
 #' @importFrom readr read_delim
 #' @export
 get_data <- function(file){
   #' Downloading the experimental data and converting it to a data frame
+  #ex_data_df <- read.delim("peaks.csv", sep = ",")
   ex_data_df <- read_delim("peaks.csv", col_names = T)
   return(ex_data_df)
 }
 
 #' @title Mass defect calculation function
 #' @param dataframe Data frame obtained from HMDB using `get_hmdb_file`
-#' @importFrom dplyr mutate
 #' @export
 mass_defect_calculation <- function(dataframe){
   mz_col <- dataframe$mz
   MD <- mz_col %% 1
   #to add the MD to the new data frame
-  MD_df <- dplyr::mutate(dataframe, MD)
-  return(MD_df)
+  dataframe$MD <- MD
+  head(dataframe)
+  return(dataframe)
 }
+
+
 
 #' @title Defining Mass Defect filter 
 #' @description  the theoretical maximum Mass Defect of human metabolites is used to calculate this cut off
@@ -56,25 +59,25 @@ make_filter_list <- function(MD_df){
 
 #' @title Retrieve inclusion list in a data frame format (default or user input)
 #' @param file (optional) String location of the inclusion list
-#' @importFrom readr read_delim
+#' @importFrom utils read.delim
 #' @export
 get_inclusion_list <- function(file){
   # Inclusion list creation
   # default file from McMillan paper 
   # no file given must use this one 
  if (is.null(file)) {
-    incl_list <- read_delim("hmdb_inclusions_list_pos_McMillan.txt", delim = "\t")
-  } else {
-    incl_list <- read_delim(file, delim = "\t")
+   incl_list <- read.delim("hmdb_inclusions_list_pos_McMillan.txt", sep = "\t")
+ } else {
+    incl_list <- read.delim(file, sep = "\t")
   }
   return(incl_list)
 }
+
 
 #' @title Filtering the data by  mass defect 
 #' @param dataframe MD_df obtained from from the HMDB using `mass_defect_calculation`
 #' @param dataframe incl_list obtained from the `get_inclusion_list`
 #' @param dataframe filter_list obtained from the `create_fit_df`
-#' @importFrom dplyr filter
 MD_filter <- function(MD_df, filter_list, incl_list){
   #' set mass accuracy (in Daltons) for inclusion list matching
   ma <- 0.01

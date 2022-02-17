@@ -2,7 +2,6 @@
 
 #' @title Import experimental data
 #' @param files String location of the experimental files
-#' @importFrom plyr 
 #' @importFrom readr read_delim 
 #' @export
 get_data <- function(file){
