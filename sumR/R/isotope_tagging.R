@@ -157,16 +157,16 @@ validListAsDf <- function(isotope_valid_list) {
   isotope_valid_list[sapply(isotope_valid_list, is.null)] <- NULL
 
   # Transforming list into data frame
-  isotope_valid_df <- do.call(rbind, lapply(1:length(isotope_valid_list), function(i) {
+  isotope_valid_df <- do.call(rbind, lapply(isotope_valid_list, function(i) {
     data.frame(
-      valid = isotope_valid_list[[i]]$valid,
-      formula = isotope_valid_list[[i]]$formula,
-      exactmass = isotope_valid_list[[i]]$exactmass,
-      isotope_mass = isotope_valid_list[[i]]$isotopes[1, 2],
-      score = isotope_valid_list[[i]]$score,
-      charge = isotope_valid_list[[i]]$charge,
-      parity = isotope_valid_list[[i]]$parity,
-      DBE = isotope_valid_list[[i]]$DBE
+      valid = i$valid,
+      formula = i$formula,
+      exactmass = i$exactmass,
+      isotope_mass = i$isotopes[1, 2],
+      score = i$score,
+      charge = i$charge,
+      parity = i$parity,
+      DBE = i$DBE
     )
   }))
 
@@ -196,11 +196,10 @@ isotopeFinding <- function(data, mz_vector, isotope_df, Elements = c("C13"), ppm
   # Filtering for isotopic elements of interest
   isotope_filter <- filter(isotope_df, isotope_df$Element %in% Elements)
 
-  # Creating data frame for return
-  results_valid <- NULL
+
 
   # Looping for each isotopic elements of interest
-  for (i in 1:length(isotope_filter$isotope_da)) {
+  results_valid <- do.call(rbind, lapply(1:length(isotope_filter$isotope_da), function(i){
 
     # Searching for mass differences that fall within tolerance interval for each possible mono- and isotopic pair
     index_max_mz <- which(max_diff_mat >= isotope_filter$isotope_da[i],
@@ -240,8 +239,8 @@ isotopeFinding <- function(data, mz_vector, isotope_df, Elements = c("C13"), ppm
     isotope_valid_df <- isotope_valid_df[grep(isotope_df$Element_notation[i], isotope_valid_df$formula), ]
 
     # Iterative row-binding for each "X"- element of interest
-    results_valid <- rbind(results_valid, isotope_valid_df)
-  }
+    return(isotope_valid_df)
+  }))
   return(results_valid)
 }
 
@@ -259,11 +258,9 @@ isotopeFinding <- function(data, mz_vector, isotope_df, Elements = c("C13"), ppm
 #' @importFrom  data.table as.data.table fintersect
 #' @usage adductFinding(adduct_df, max_diff_mat, min_diff_mat, mz_vector)
 adductFinding <- function(adduct_df, max_diff_mat, min_diff_mat, mz_vector) {
-  # Creating data frame for return
-  results_valid <- NULL
 
   # Looping to search for each mass of an adduct
-  for (i in 1:length(adduct_df$mass)) {
+  results_valid <- do.call(rbind, lapply(1:length(adduct_df$mass), function(i){ 
     index_max_mz <- which(max_diff_mat >= adduct_df$mass[i],
       arr.ind = TRUE
     )
@@ -271,6 +268,7 @@ adductFinding <- function(adduct_df, max_diff_mat, min_diff_mat, mz_vector) {
       arr.ind = TRUE
     )
 
+    
     # Transforming from data frame to data table to optimize speed of merging
     index_dt_min <- as.data.table(index_min_mz)
     index_dt_max <- as.data.table(index_max_mz)
@@ -283,8 +281,8 @@ adductFinding <- function(adduct_df, max_diff_mat, min_diff_mat, mz_vector) {
       isotope = mz_vector[index_dt_matches[, row]],
       adduct = adduct_df$name[i]
     )
-    results_valid <- rbind(results_valid, iso_df)
-  }
+    return(iso_df)
+  }))
   return(results_valid)
 }
 
@@ -370,11 +368,12 @@ bigMerge <- function(isotope_valid_df, data, copy_df) {
 
   # Correcting for duplicates
   final_mono_iso <- merge(copy_df, final_mono_iso, by = "mz", all = TRUE)
+  final_mono_iso <- final_mono_iso%>% distinct(mz, .keep_all = TRUE)
   final_mono_iso <- final_mono_iso[, -c(1:ncol(copy_df))]
 
   # Setting mz in line
   result <- cbind(final_mono_iso[, 1:3], mz = copy_df$mz, final_mono_iso[, -c(1:3)])
-
+  result <- result %>% distinct(mz, .keep_all = TRUE)
   return(result)
 }
 
@@ -559,5 +558,4 @@ isotopeTagging <- function(data, ppm = 5, Elements = c("C13"), z = 0 , plot = TR
  
   return(return_df)
 }
-
 
