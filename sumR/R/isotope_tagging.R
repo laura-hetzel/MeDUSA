@@ -464,14 +464,14 @@ massSpecPlot <- function(final_df) {
 # (11) isotopeTagging  function  -
 #---------------------------------
 #' @title Isotope tagging
-#' @description Tags isotopes based on intensity ratio and difference in mass between mono- and isotopic ion
+#' @description Tags isotopes based on intensity ratio and difference in mass between mono- and isotopic ions
 #' @param data data.frame,  which contain column named "mz", all other columns will be coerced as intensity
 #' @param ppm An integer, defining parts per million (ppm) for tolerance (default = 5)
 #' @param z An integer, defining charge z of m/z peaks for calculation of real mass. 0 is for auto-detection (default = 0)
 #' @param Elements A vector containing the isotopic element of interest (default = c("C13"))
 #' @param plot Logical, returns box plot for isotope and interactive mass spectrometry of detected isotopes (default = TRUE)
 #' @importFrom dplyr %>% distinct select
-#' @usage isotopeTagging(data, ppm = 5, Elements = c("C13"), z = 0)
+#' @usage isotopeTagging(data, ppm = 5, Elements = c("C13"), z = 0, plot = TRUE)
 #' @export
 isotopeTagging <- function(data, ppm = 5, Elements = c("C13"), z = 0 , plot = TRUE) {
   #-----------------------------------------------------------------------------
