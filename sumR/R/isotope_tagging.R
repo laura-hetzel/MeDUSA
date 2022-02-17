@@ -61,28 +61,28 @@ ppmToDalton <- function(mass, ppm = 5) {
 addIntensities <- function(data, iso_df) {
   # Adding intensity for mono-isotopic ion
   add_mol <- merge(filter(data, data$mz %in% iso_df$mol_ion), iso_df,
-                   by.x = "mz",
-                   by.y = "mol_ion", all.x = TRUE
+    by.x = "mz",
+    by.y = "mol_ion", all.x = TRUE
   )
   add_mol <- add_mol[, c(1, 2)]
   add_mol <- data.frame(intensity_mol = add_mol$intensity, mz_mol = add_mol$mz)
-  
-  
+
+
   # Adding intensity for isotope ion
   add_iso <- merge(filter(data, data$mz %in% iso_df$isotope), iso_df,
-                   by.x = "mz",
-                   by.y = "isotope", all.x = TRUE
+    by.x = "mz",
+    by.y = "isotope", all.x = TRUE
   )
   add_iso <- add_iso[, c(1, 2)]
-  
-  
+
+
   # Binding mono- and isotope masses and intensities into data frame
   iso_df_fin <- data.frame(
     intensity_mol = add_mol$intensity, mz_mol = add_mol$mz,
     intensity_iso = add_iso$intensity, mz_iso = add_iso$mz
   )
-  
-  
+
+
   return(iso_df_fin)
 }
 
@@ -99,26 +99,25 @@ addIntensities <- function(data, iso_df) {
 #' @param Elements vector, with selected isotopic elements of interest (default = c("C13")), options : c("C13","Cl37")
 #' @importFrom Rdisop decomposeIsotopes initializeElements
 #' @usage isotopeMolecules(adducts_matches_int, Elements = c("C13"), ppm = 5 , z = 0)
-
 isotopeMolecules <- function(adducts_matches_int, Elements = c("C13"), ppm = 5, z = 0) {
-  
+
   # Check isotopic selection
   if (length(Elements) == 2) {
     element_vector <- c("C", "H", "N", "O", "P", "S", "Cl")
   } else {
-    (element_vector <- c("C", "H", "N", "O", "P", "S"))
+    element_vector <- c("C", "H", "N", "O", "P", "S")
   }
-  
+
   # Initialize Elements
   element_vector <- initializeElements(element_vector)
-  
+
   # Decompose isotopes
   isotope_molecules_list <- lapply(1:nrow(adducts_matches_int), function(i) {
     masses <- c(adducts_matches_int$mz_mol[i], adducts_matches_int$mz_iso[i])
     intensities <- c(100, ((adducts_matches_int$intensity_iso[i] / adducts_matches_int$intensity_mol[i]) * 100))
     decomposeIsotopes(masses, intensities, ppm = ppm, z = z, elements = element_vector)
   })
-  
+
   return(isotope_molecules_list)
 }
 
@@ -130,16 +129,15 @@ isotopeMolecules <- function(adducts_matches_int, Elements = c("C13"), ppm = 5, 
 #' @title Filtering isotopes by validity
 #' @description Filtering a list of possible isotopes based on validity
 #' @param isotope_molecules_list A list, of possible isotopes containing annotate information
-#' @importFrom  purrr map
 #' @usage isotopeValid(isotope_molecules_list)
 isotopeValid <- function(isotope_molecules_list) {
   # Removing missing values from list
   isotope_molecules_list[sapply(isotope_molecules_list, is.null)] <- NULL
-  
+
   # Loop searching/filtering for valid compounds
   isotope_valid_list <- lapply(1:length(isotope_molecules_list), function(i) {
     if (isotope_molecules_list[[i]]$valid[1] == "Valid") {
-      map(isotope_molecules_list[[i]], 1)
+      lapply(isotope_molecules_list[[i]], `[[`, 1)
     }
   })
   return(isotope_valid_list)
@@ -154,10 +152,10 @@ isotopeValid <- function(isotope_molecules_list) {
 #' @param isotope_valid_list A list, of valid annotate information concerning the compounds
 #' @usage validListAsDf(isotope_valid_list)
 validListAsDf <- function(isotope_valid_list) {
-  
+
   # Removing missing values from list
   isotope_valid_list[sapply(isotope_valid_list, is.null)] <- NULL
-  
+
   # Transforming list into data frame
   isotope_valid_df <- do.call(rbind, lapply(1:length(isotope_valid_list), function(i) {
     data.frame(
@@ -171,13 +169,9 @@ validListAsDf <- function(isotope_valid_list) {
       DBE = isotope_valid_list[[i]]$DBE
     )
   }))
-  
+
   return(isotope_valid_df)
 }
-
-
-
-
 
 
 #-------------------------------
@@ -198,53 +192,53 @@ validListAsDf <- function(isotope_valid_list) {
 #' @usage isotopeFinding(data, mz_vector, isotope_df, Elements = c("C13"), ppm = 5, z = 0, max_diff_mat, min_diff_mat)
 isotopeFinding <- function(data, mz_vector, isotope_df, Elements = c("C13"), ppm = 5, z = 0, max_diff_mat, min_diff_mat) {
   # Setting Elements of interest
-  
+
   # Filtering for isotopic elements of interest
   isotope_filter <- filter(isotope_df, isotope_df$Element %in% Elements)
-  
+
   # Creating data frame for return
   results_valid <- NULL
-  
+
   # Looping for each isotopic elements of interest
   for (i in 1:length(isotope_filter$isotope_da)) {
-    
+
     # Searching for mass differences that fall within tolerance interval for each possible mono- and isotopic pair
     index_max_mz <- which(max_diff_mat >= isotope_filter$isotope_da[i],
-                          arr.ind = TRUE
+      arr.ind = TRUE
     )
     index_min_mz <- which(min_diff_mat <= isotope_filter$isotope_da[i] &
-                            min_diff_mat > 0,
-                          arr.ind = TRUE
+      min_diff_mat > 0,
+    arr.ind = TRUE
     )
-    
+
     # Transforming to data frame to data table to improve speed of merging
     index_dt_min <- as.data.table(index_min_mz)
     index_dt_max <- as.data.table(index_max_mz)
-    
+
     # Selecting mass differences that fall within tolerance interval for each possible mono- and isotopic pair
     index_dt_matches <- fintersect(index_dt_min, index_dt_max, all = TRUE)
-    
+
     # Creating a data frame for mono- and isotopic ions
     iso_df <- data.frame(
       mol_ion = mz_vector[index_dt_matches[, col]],
       isotope = mz_vector[index_dt_matches[, row]]
     )
-    
+
     # Adding intensity values for each mz value
     adducts_matches_int <- addIntensities(data, iso_df)
-    
+
     # Decompose isotopes
     isotope_molecules_list <- isotopeMolecules(adducts_matches_int, Elements, ppm, z)
-    
+
     # Filtering keeping only valid compounds
     isotope_valid_list <- isotopeValid(isotope_molecules_list)
-    
+
     # Transforming isotope_valid_list into a data frame
     isotope_valid_df <- validListAsDf(isotope_valid_list)
-    
+
     # Checking if formula contains "X"- element of interest
     isotope_valid_df <- isotope_valid_df[grep(isotope_df$Element_notation[i], isotope_valid_df$formula), ]
-    
+
     # Iterative row-binding for each "X"- element of interest
     results_valid <- rbind(results_valid, isotope_valid_df)
   }
@@ -267,22 +261,22 @@ isotopeFinding <- function(data, mz_vector, isotope_df, Elements = c("C13"), ppm
 adductFinding <- function(adduct_df, max_diff_mat, min_diff_mat, mz_vector) {
   # Creating data frame for return
   results_valid <- NULL
-  
+
   # Looping to search for each mass of an adduct
   for (i in 1:length(adduct_df$mass)) {
     index_max_mz <- which(max_diff_mat >= adduct_df$mass[i],
-                          arr.ind = TRUE
+      arr.ind = TRUE
     )
     index_min_mz <- which(min_diff_mat <= adduct_df$mass[i] & min_diff_mat > 0,
-                          arr.ind = TRUE
+      arr.ind = TRUE
     )
-    
+
     # Transforming from data frame to data table to optimize speed of merging
     index_dt_min <- as.data.table(index_min_mz)
     index_dt_max <- as.data.table(index_max_mz)
-    
+
     index_dt_matches <- fintersect(index_dt_min, index_dt_max, all = TRUE)
-    
+
     # Creating new data frame for adducts
     iso_df <- data.frame(
       mol_ion = mz_vector[index_dt_matches[, col]],
@@ -304,85 +298,87 @@ adductFinding <- function(adduct_df, max_diff_mat, min_diff_mat, mz_vector) {
 #' @param isotope_valid_df a data.frame of valid annotate information for isotopes
 #' @param data the input data.frame, with min_error and max_error columns bind
 #' @param copy_df a data.frame copy of the input data frame
-#' @importFrom  sqldf sqldf
-#' @importFrom dplyr %>%
+#' @importFrom  data.table setDT
 #' @usage bigMerge(isotope_valid_df, data, copy_df)
 bigMerge <- function(isotope_valid_df, data, copy_df) {
-  
-  
-  #-----------------------------------------------------------------------------
-  # Merge based upon the condition of falling within min and max error mass for isotopes
-  merge_isotope <- sqldf("select * from isotope_valid_df left join data on
-                    (isotope_valid_df.isotope_mass > data.min_error and isotope_valid_df.isotope_mass <= data.max_error) ")
-  # Merge based upon the condition of falling within min and max error mass for isotopes
-  merge_mono_iso <- sqldf("select * from isotope_valid_df inner join data on
-                     (isotope_valid_df.exactmass > data.min_error and isotope_valid_df.exactmass <= data.max_error) ")
-  
-  
+  setDT(isotope_valid_df)
+  setDT(data)
+
+  merge_isotope <- isotope_valid_df[data,
+    on = .(isotope_mass >= min_error, isotope_mass < max_error), nomatch = 0,
+    .(formula, exactmass, isotope_mass, score, charge, mz, min_error, max_error, intensity)
+  ]
+
+  merge_mono <- isotope_valid_df[data,
+    on = .(exactmass >= min_error, exactmass < max_error), nomatch = 0,
+    .(formula, exactmass, isotope_mass, score, charge, mz, min_error, max_error, intensity)
+  ]
+
+
   #-----------------------------------------------------------------------------
   # Create final data frame containing annotation information for mono-isotope
-  merge_mono_iso <- merge(x = merge_isotope, y = merge_mono_iso, by = "formula")
-  merge_mono_iso <- na.omit(merge_mono_iso)
-  
-  # Adding id, isotopopic status and intensity ratio
+  merge_mono_iso <- merge(x = merge_isotope, y = merge_mono, by = "formula")
+
+  # Adding id, isotopic status and intensity ratio
   merge_mono_iso$id <- paste0(1:nrow(merge_mono_iso))
   merge_mono_iso$isotopic_status <- paste0("Molecular_ion")
   merge_mono_iso$int_ratio <- round((merge_mono_iso$intensity.x / merge_mono_iso$intensity.y), 2)
-  
+  merge_mono_iso <- as.data.frame(merge_mono_iso)
   # Creating column names which need to be selected
   colnames_mono <- c(
     "formula", "exactmass.y", "isotopic_status", "mz.y", "min_error.y", "max_error.y", "intensity.y",
-    "isotope_mass.y", "mz.x", "mass_error.x", "min_error.x", "intensity.x", "int_ratio", "id", "score.y"
+    "isotope_mass.y", "mz.x", "min_error.x", "max_error.x", "intensity.x", "int_ratio", "id", "score.y"
   )
-  
+
   # Selecting columns for mono isotopic information
   final_mono <- merge_mono_iso[, colnames_mono]
-  
+
   # Creating final column names
   colnames_mono_iso <- c(
     "formula", "exactmass_compound", "isotopic_status", "mz", "min_error", "max_error", "intensity",
     "isotope_mass", "isotope_mz", "iso_min_error", "iso_max_error", "intensity_iso", "intensity_ratio",
     "id", "score"
   )
-  
+
   # Setting column names for mono isotopic information
   colnames(final_mono) <- colnames_mono_iso
-  
-  
+
+
   #-----------------------------------------------------------------------------
   # Create final data frame containing annotation information for isotope
-  
+
   # Assigning status depending if "X"-element found in formula
   merge_mono_iso$isotopic_status <- ifelse(grepl("Cl", merge_mono_iso$formula) == TRUE, "Cl37-isotope", "C13-isotope")
-  
+
   # Creating column names which need to be selected
   colnames_iso <- c(
     "formula", "exactmass.y", "isotopic_status", "mz.x", "min_error.x", "max_error.x", "intensity.x",
-    "isotope_mass.x", "mz.x", "mass_error.x", "min_error.x", "intensity.x", "int_ratio", "id", "score.y"
+    "isotope_mass.x", "mz.x", "min_error.x", "max_error.x", "intensity.x", "int_ratio", "id", "score.y"
   )
-  
+
   # Selecting columns for isotopic information
   final_iso <- merge_mono_iso[, colnames_iso]
-  
+
   # Setting column names for isotopic information
   colnames(final_iso) <- colnames_mono_iso
-  
+
   #-----------------------------------------------------------------------------
   # Row binding mono- and isotopic information
   final_mono_iso <- rbind(final_mono, final_iso)
   final_mono_iso <- final_mono_iso[order(final_mono_iso$mz), ]
-  
-  
+
+
   # Correcting for duplicates
   final_mono_iso <- merge(copy_df, final_mono_iso, by = "mz", all = TRUE)
-  final_mono_iso <- final_mono_iso %>% distinct(mz, .keep_all = TRUE)
   final_mono_iso <- final_mono_iso[, -c(1:ncol(copy_df))]
-  
+
   # Setting mz in line
   result <- cbind(final_mono_iso[, 1:3], mz = copy_df$mz, final_mono_iso[, -c(1:3)])
-  
+
   return(result)
 }
+
+
 
 #-------------------------------
 # (9)      barPlot   function  -
@@ -394,11 +390,11 @@ bigMerge <- function(isotope_valid_df, data, copy_df) {
 #' @importFrom dplyr %>% rename
 #' @usage barPlot(final_df)
 barPlot <- function(final_df) {
-  
+
   # Filtering for only available isotopic status
   vis_df <- final_df[!is.na(final_df$isotopic_status), ]
   vis_df$isotopic_status <- factor(vis_df$isotopic_status)
-  
+
   # Creating data frame for bar plot
   count_df <- as.data.frame(table(vis_df$isotopic_status))
   count_df <- count_df %>%
@@ -430,7 +426,7 @@ barPlot <- function(final_df) {
 massSpecPlot <- function(final_df) {
   vis_df <- final_df[!is.na(final_df$isotopic_status), ]
   d <- highlight_key(vis_df, ~id)
-  
+
   fig <- plot_ly(
     data = d,
     x = ~mz,
@@ -444,12 +440,12 @@ massSpecPlot <- function(final_df) {
     add_markers() %>%
     add_segments(data = vis_df, x = ~mz, xend = ~mz, y = 0, yend = ~intensity, color = I("grey"), showlegend = FALSE) %>%
     layout(title = "Mass spectrometry of detected isotopes")
-  
+
   gg <- ggplotly(fig)
   gg <- highlight(gg, dynamic = TRUE, off = "plotly_doubleclick")
   gg
-  
-  
+
+
   return(gg)
 }
 
@@ -469,94 +465,99 @@ massSpecPlot <- function(final_df) {
 #---------------------------------
 #' @title Isotope tagging
 #' @description Tags isotopes based on intensity ratio and difference in mass between mono- and isotopic ion
-#' @param data data.frame,  which contain column named "mz", all other columns will be assigned as intensity
+#' @param data data.frame,  which contain column named "mz", all other columns will be coerced as intensity
 #' @param ppm An integer, defining parts per million (ppm) for tolerance (default = 5)
 #' @param z An integer, defining charge z of m/z peaks for calculation of real mass. 0 is for auto-detection (default = 0)
 #' @param Elements A vector containing the isotopic element of interest (default = c("C13"))
-#' @importFrom dplyr %>% distinct
+#' @param plot Logical, returns box plot for isotope and interactive mass spectrometry of detected isotopes (default = TRUE)
+#' @importFrom dplyr %>% distinct select
 #' @usage isotopeTagging(data, ppm = 5, Elements = c("C13"), z = 0)
 #' @export
-isotopeTagging <- function(data, ppm = 5, Elements = c("C13"), z = 0) {
+isotopeTagging <- function(data, ppm = 5, Elements = c("C13"), z = 0 , plot = TRUE) {
   #-----------------------------------------------------------------------------
-  # Check if input data frame is correct
-  
-  
+  # Check for input arguments
+  if (is.null(data)) {
+    stop("No data detected")
+  }
+
+  Check <- c("C13", "Cl37")
+  if (!Elements %in% Check) {
+    stop("Invalid 'Elements' value")
+  }
+
   #-----------------------------------------------------------------------------
   # Keep original copy
   copy_df <- data
-  
+
   #-----------------------------------------------------------------------------
   # Creating isotope and adduct information data frames
-  
+
   # Isotope data frame information
   isotope_df <- data.frame(Element = c("C13", "Cl37"), Element_notation = c("C", "Cl"), isotope_da = c(1.0034, 1.9970))
-  
+
   # Adduct data frame information
   adduct_df <- data.frame(name = c("Na adduct", " K adduct"), mass = c(21.98194, 37.95589))
-  
-  
+
+
   # Start body of isotope_tagging function
   #-----------------------------------------------------------------------------
   # Creating new data frame with mean intensity column # note now complete case but will be replaced by imputation method
-  df <- data.frame(mz = data[, c("mz")], intensity = rowMeans(data[, -c("mz")], na.rm = TRUE))
-  
+  df <- data.frame(mz = data[, c("mz")], intensity = rowMeans(select(data, -c("mz")), na.rm = TRUE))
+
   # Setting mz variables to vectors
-  mz_vector <- df$mz
-  
+  mz_vector <- as.numeric(df$mz)
+
   # Creating new data frame with mass_error , lower bound and upper bound
   df <- data.frame(mz = df$mz, intensity = df$intensity, mass_error = ppmToDalton(df$mz, ppm), min_error = df$mz - ppmToDalton(df$mz, ppm), max_error = df$mz + ppmToDalton(df$mz, ppm))
-  
-  
+
+
   # Assigning minimum error and max error
   min_error_vec <- df$min_error
   max_error_vec <- df$max_error
-  
-  
+
+
   # Computing maximum difference and minimum difference between mz values
   max_diff_mat <- abs(outer(max_error_vec, min_error_vec, `-`))
   min_diff_mat <- abs(outer(min_error_vec, max_error_vec, `-`))
-  
+
   #-----------------------------------------------------------------------------
   # Searching for valid isotopes of interest
   isotope_valid_df <- isotopeFinding(df, mz_vector, isotope_df, Elements = Elements, ppm, z, max_diff_mat, min_diff_mat)
-  
-  
-  
+
+
+
   # Big merge and printing the number of found isotopes
   big_merge_df <- bigMerge(isotope_valid_df, df, copy_df)
   print(paste("Number of isotopes found:", length(unique(big_merge_df$id))))
-  
-  
+
+
   #-----------------------------------------------------------------------------
   # Searching for adducts
   adduct_found <- adductFinding(adduct_df, max_diff_mat, min_diff_mat, mz_vector)
   test_adduct <- merge(big_merge_df, adduct_found[, 2:3], by.x = "mz", by.y = "isotope", all.x = TRUE)
   final_df <- test_adduct %>% distinct(mz, .keep_all = TRUE)
-  
-  
-  
+
+
+
   #-----------------------------------------------------------------------------
   # Returning original features with data
-  
+
   # Extracting feature names
   rownames <- rownames(copy_df)
-  
+
   # Return data frame
   return_df <- cbind(final_df, copy_df)
   rownames(return_df) <- rownames
-  
-  
-  
-  
+
+
   #-----------------------------------------------------------------------------
   # Plotting
-  print(barPlot(final_df))
-  print(massSpecPlot(final_df))
-  
+  if (plot == TRUE) {
+    print(barPlot(final_df))
+    print(massSpecPlot(final_df))
+  }
+ 
   return(return_df)
 }
 
 
-
-
-  
