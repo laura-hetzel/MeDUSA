@@ -34,11 +34,9 @@ get_data <- function(file){
 #' @param dataframe Data frame obtained from HMDB using `get_hmdb_file`
 #' @export
 mass_defect_calculation <- function(dataframe){
-  mz_col <- dataframe$mz
-  MD <- mz_col %% 1
+  MD <- dataframe$mz %% 1
   #to add the MD to the new data frame
   dataframe$MD <- MD
-  head(dataframe)
   return(dataframe)
 }
 
@@ -46,54 +44,35 @@ mass_defect_calculation <- function(dataframe){
 
 #' @title Defining Mass Defect filter 
 #' @description  the theoretical maximum Mass Defect of human metabolites is used to calculate this cut off
-#' @param dataframe MD_df obtained from the HMDB using `mass_defect_calculation`
+#' @param filtered_df obtained from the HMDB using `mass_defect_calculation`
 #' @export
-make_filter_list <- function(MD_df){
-  filter_list <- as.data.frame(apply(MD_df[,"mz"], 1, function(row){
-    y <- 0.00112 * row + 0.01953
-    return(y)
-  }))
-  colnames(filter_list) <- "mz"
-  return(filter_list)
+make_filter_list <- function(filtered_df){
+  filtered_df$mz <- 0.00112 * filtered_df$mz + 0.01953
+  return(filtered_df)
 }
-
-#' @title Retrieve inclusion list in a data frame format (default or user input)
-#' @param file (optional) String location of the inclusion list
-#' @importFrom utils read.delim
-#' @export
-get_inclusion_list <- function(file){
-  # Inclusion list creation
-  # default file from McMillan paper 
-  # no file given must use this one 
- if (is.null(file)) {
-   incl_list <- read.delim("hmdb_inclusions_list_pos_McMillan.txt", sep = "\t")
- } else {
-    incl_list <- read.delim(file, sep = "\t")
-  }
-  return(incl_list)
-}
-
 
 #' @title Filtering the data by  mass defect 
-#' @param dataframe MD_df obtained from from the HMDB using `mass_defect_calculation`
-#' @param dataframe incl_list obtained from the `get_inclusion_list`
-#' @param dataframe filter_list obtained from the `create_fit_df`
-MD_filter <- function(MD_df, filter_list, incl_list){
-  #' set mass accuracy (in Daltons) for inclusion list matching
-  ma <- 0.01
+#' @param MD_df obtained from from the HMDB using `mass_defect_calculation`
+#' @param filtered_df obtained from the `make_filter_list`
+#' @param incl_list path to inclusion list obtained from user input or use of default inclusion list (McMillan et al., 2016)
+#' @param mass_accuracy obtained from user input or use of default value set to 0.01
+#' @importFrom utils read.delim
+MD_filter <- function(MD_df, filtered_df, 
+                      incl_list = "hmdb_inclusions_list_pos_McMillan.txt", mass_accuracy = 0.01){
+  incl_list <- read.delim(file = incl_list, sep = "\t")
   #find masses in inclusion list in MD_df
-  incl_list_filtered <- incl_list[which(incl_list$"inclusion" == "y"),]                  #if in the input data inclusion list is put to yes it is included here
-  cmp <- function(MD_df, incl_list_filtered, cutoff = ma){abs(incl_list_filtered - MD_df) <= cutoff}  #compare compounds from inclusion list to the data
+  incl_list_filtered <- incl_list[which(incl_list$inclusion == "y"),]                  #if in the input data inclusion list is put to yes it is included here
+  cmp <- function(MD_df, incl_list_filtered, cutoff = mass_accuracy){abs(incl_list_filtered - MD_df) <= cutoff}  #compare compounds from inclusion list to the data
   match <- which(outer(incl_list_filtered$mz, MD_df$mz, cmp), arr.ind = TRUE)     # assign comparable values a logical TRUE value
   filtered_rows <- rownames(MD_df)[as.numeric(levels(factor(match[,2])))]                               # return row names of TRUE rows
   #keep rows in MD_df if m/z defect is less than or equal to fitted value OR value is in inclusion list
-  filtered_df <- MD_df[which((MD_df$MD <= filter_list$mz) | rownames(MD_df) %in% filtered_rows),]
+  filtered_df <- MD_df[which((MD_df$MD <= filtered_df$mz) | rownames(MD_df) %in% filtered_rows),]
   return(filtered_df)
 }
 
 #' @title Plotting of the data - m/z vs. MD 
-#' @param dataframe MD_df obtained from the experimental data using `mass_defect_calculation`
-#' @param dataframe filtered_MD_df obtained from the experimental data using `MD_filter`
+#' @param MD_df dataframe obtained from the experimental data using `mass_defect_calculation`
+#' @param filtered_MD_df dataframe obtained from the experimental data using `MD_filter`
 #' @export 
 plot_mz_MD <- function(MD_df_filtered, MD_df, title){
   mz_removed <- nrow(MD_df) - nrow(MD_df_filtered)
@@ -111,7 +90,14 @@ result_output <- function(filtered_df){
   write.csv(filtered_df,"filtered_data.csv", row.names = F)
 }
 
-pipeline <- function(file = NULL){
+
+#' @title Mass defect filter pipeline 
+#' @param file obtained from user input or use of default files = example data 
+#' @importFrom stats na.omit
+#' @importFrom readr read_delim
+#' @importFrom utils read.delim
+#' @export
+process_MassDefectFilter <- function(file = NULL){
   #import hmdb
   dataframe_hmdb <- get_hmdb_file(file)
   #calculate MD HMDB
@@ -124,19 +110,15 @@ pipeline <- function(file = NULL){
   md_df_exp <- mass_defect_calculation(ex_data_df)
   #make filtered list experimental data
   filtered_list_exp <- make_filter_list(md_df_exp)
-  # import inclusion list
-  in_list <- get_inclusion_list(file)
   # filter hmdb
-  filtered_df_hmdb <- MD_filter(md_df_hmdb, filtered_list_hmdb, in_list)
+  filtered_df_hmdb <- MD_filter(md_df_hmdb, filtered_list_hmdb)
   # filter experimental data 
-  filtered_df_exp <- MD_filter(md_df_exp, filtered_list_exp, in_list)
+  filtered_df_exp <- MD_filter(md_df_exp, filtered_list_exp)
   # plotting
-  plot_mz_MD(filtered_df_hmdb, md_df_hmdb, title = "Filtered")
+  plot_mz_MD(filtered_df_hmdb, md_df_hmdb, title = "Filtered")#make plot optional 
   #save filtered data in csv file 
   result_output(filtered_df_exp)
 }
-
-pipeline()
 
 
 
