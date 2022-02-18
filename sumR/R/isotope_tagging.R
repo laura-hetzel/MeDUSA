@@ -197,9 +197,8 @@ isotopeFinding <- function(data, mz_vector, isotope_df, Elements = c("C13"), ppm
   isotope_filter <- filter(isotope_df, isotope_df$Element %in% Elements)
 
 
-
   # Looping for each isotopic elements of interest
-  results_valid <- do.call(rbind, lapply(1:length(isotope_filter$isotope_da), function(i){
+  results_valid <- do.call(rbind, lapply(1:length(isotope_filter$isotope_da), function(i) {
 
     # Searching for mass differences that fall within tolerance interval for each possible mono- and isotopic pair
     index_max_mz <- which(max_diff_mat >= isotope_filter$isotope_da[i],
@@ -259,8 +258,8 @@ isotopeFinding <- function(data, mz_vector, isotope_df, Elements = c("C13"), ppm
 #' @usage adductFinding(adduct_df, max_diff_mat, min_diff_mat, mz_vector)
 adductFinding <- function(adduct_df, max_diff_mat, min_diff_mat, mz_vector) {
 
-  # Looping to search for each mass of an adduct
-  results_valid <- do.call(rbind, lapply(1:length(adduct_df$mass), function(i){ 
+  # Looping to search for each mass of an adduct and row binding them
+  results_valid <- do.call(rbind, lapply(1:length(adduct_df$mass), function(i) {
     index_max_mz <- which(max_diff_mat >= adduct_df$mass[i],
       arr.ind = TRUE
     )
@@ -268,20 +267,20 @@ adductFinding <- function(adduct_df, max_diff_mat, min_diff_mat, mz_vector) {
       arr.ind = TRUE
     )
 
-    
     # Transforming from data frame to data table to optimize speed of merging
     index_dt_min <- as.data.table(index_min_mz)
     index_dt_max <- as.data.table(index_max_mz)
-
+    
+    # merging found matches
     index_dt_matches <- fintersect(index_dt_min, index_dt_max, all = TRUE)
 
     # Creating new data frame for adducts
-    iso_df <- data.frame(
-      mol_ion = mz_vector[index_dt_matches[, col]],
-      isotope = mz_vector[index_dt_matches[, row]],
-      adduct = adduct_df$name[i]
+    adduct_df <- data.frame(
+      compound = mz_vector[index_dt_matches[, col]],
+      adduct = mz_vector[index_dt_matches[, row]],
+      adducts = adduct_df$name[i]
     )
-    return(iso_df)
+    return(adduct_df)
   }))
   return(results_valid)
 }
@@ -299,18 +298,24 @@ adductFinding <- function(adduct_df, max_diff_mat, min_diff_mat, mz_vector) {
 #' @importFrom  data.table setDT
 #' @usage bigMerge(isotope_valid_df, data, copy_df)
 bigMerge <- function(isotope_valid_df, data, copy_df) {
+  # merging isotope_valid_df witf data based on the condition that
+  # the mass off compound or it's isotopes is between the min error and max error of mz
+
+  # Setting data.frame to data.table
   setDT(isotope_valid_df)
   setDT(data)
 
+  # merging for isotopes
   merge_isotope <- isotope_valid_df[data,
     on = .(isotope_mass >= min_error, isotope_mass < max_error), nomatch = 0,
     .(formula, exactmass, isotope_mass, score, charge, mz, min_error, max_error, intensity)
   ]
-
+  # merging for mono - isotopes
   merge_mono <- isotope_valid_df[data,
     on = .(exactmass >= min_error, exactmass < max_error), nomatch = 0,
     .(formula, exactmass, isotope_mass, score, charge, mz, min_error, max_error, intensity)
   ]
+
 
 
   #-----------------------------------------------------------------------------
@@ -342,6 +347,7 @@ bigMerge <- function(isotope_valid_df, data, copy_df) {
   colnames(final_mono) <- colnames_mono_iso
 
 
+
   #-----------------------------------------------------------------------------
   # Create final data frame containing annotation information for isotope
 
@@ -360,15 +366,16 @@ bigMerge <- function(isotope_valid_df, data, copy_df) {
   # Setting column names for isotopic information
   colnames(final_iso) <- colnames_mono_iso
 
+
+
   #-----------------------------------------------------------------------------
   # Row binding mono- and isotopic information
   final_mono_iso <- rbind(final_mono, final_iso)
   final_mono_iso <- final_mono_iso[order(final_mono_iso$mz), ]
 
-
   # Correcting for duplicates
   final_mono_iso <- merge(copy_df, final_mono_iso, by = "mz", all = TRUE)
-  final_mono_iso <- final_mono_iso%>% distinct(mz, .keep_all = TRUE)
+  final_mono_iso <- final_mono_iso %>% distinct(mz, .keep_all = TRUE)
   final_mono_iso <- final_mono_iso[, -c(1:ncol(copy_df))]
 
   # Setting mz in line
@@ -472,7 +479,7 @@ massSpecPlot <- function(final_df) {
 #' @importFrom dplyr %>% distinct select
 #' @usage isotopeTagging(data, ppm = 5, Elements = c("C13"), z = 0, plot = TRUE)
 #' @export
-isotopeTagging <- function(data, ppm = 5, Elements = c("C13"), z = 0 , plot = TRUE) {
+isotopeTagging <- function(data, ppm = 5, Elements = c("C13"), z = 0, plot = TRUE) {
   #-----------------------------------------------------------------------------
   # Check for input arguments
   if (is.null(data)) {
@@ -488,6 +495,8 @@ isotopeTagging <- function(data, ppm = 5, Elements = c("C13"), z = 0 , plot = TR
   # Keep original copy
   copy_df <- data
 
+
+
   #-----------------------------------------------------------------------------
   # Creating isotope and adduct information data frames
 
@@ -495,7 +504,8 @@ isotopeTagging <- function(data, ppm = 5, Elements = c("C13"), z = 0 , plot = TR
   isotope_df <- data.frame(Element = c("C13", "Cl37"), Element_notation = c("C", "Cl"), isotope_da = c(1.0034, 1.9970))
 
   # Adduct data frame information
-  adduct_df <- data.frame(name = c("Na adduct", " K adduct"), mass = c(21.98194, 37.95589))
+  adduct_df <- data.frame(name = c("Na adduct", "K adduct", "NH4 adduct"), mass = c(21.98194, 37.95589, 17.02660))
+
 
 
   # Start body of isotope_tagging function
@@ -509,20 +519,19 @@ isotopeTagging <- function(data, ppm = 5, Elements = c("C13"), z = 0 , plot = TR
   # Creating new data frame with mass_error , lower bound and upper bound
   df <- data.frame(mz = df$mz, intensity = df$intensity, mass_error = ppmToDalton(df$mz, ppm), min_error = df$mz - ppmToDalton(df$mz, ppm), max_error = df$mz + ppmToDalton(df$mz, ppm))
 
-
   # Assigning minimum error and max error
   min_error_vec <- df$min_error
   max_error_vec <- df$max_error
-
 
   # Computing maximum difference and minimum difference between mz values
   max_diff_mat <- abs(outer(max_error_vec, min_error_vec, `-`))
   min_diff_mat <- abs(outer(min_error_vec, max_error_vec, `-`))
 
+
+
   #-----------------------------------------------------------------------------
   # Searching for valid isotopes of interest
   isotope_valid_df <- isotopeFinding(df, mz_vector, isotope_df, Elements = Elements, ppm, z, max_diff_mat, min_diff_mat)
-
 
 
   # Big merge and printing the number of found isotopes
@@ -530,12 +539,12 @@ isotopeTagging <- function(data, ppm = 5, Elements = c("C13"), z = 0 , plot = TR
   print(paste("Number of isotopes found:", length(unique(big_merge_df$id))))
 
 
+
   #-----------------------------------------------------------------------------
   # Searching for adducts
   adduct_found <- adductFinding(adduct_df, max_diff_mat, min_diff_mat, mz_vector)
-  test_adduct <- merge(big_merge_df, adduct_found[, 2:3], by.x = "mz", by.y = "isotope", all.x = TRUE)
+  test_adduct <- merge(big_merge_df, adduct_found[, 2:3], by.x = "mz", by.y = "adduct", all.x = TRUE)
   final_df <- test_adduct %>% distinct(mz, .keep_all = TRUE)
-
 
 
   #-----------------------------------------------------------------------------
@@ -555,7 +564,6 @@ isotopeTagging <- function(data, ppm = 5, Elements = c("C13"), z = 0 , plot = TR
     print(barPlot(final_df))
     print(massSpecPlot(final_df))
   }
- 
+
   return(return_df)
 }
-
