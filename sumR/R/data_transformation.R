@@ -1,25 +1,16 @@
 
-
 #' @title data imputation
 #' @description This function apply data imputation from 1 to selected noise level  
 #' @param data dataframe 
 #' @param noise numerical value for the noise level
 #' @param seed global seed for reproducible results
-#' @importFrom  purrr map_dfc
-data_imputation<-function(data,noise,seed){
-  
-  map_dfc(data, function(x){
+  data_imputation<-function(data,noise,seed){
     set.seed(seed)
-    for (i in 1:length(x)) {
-      if(x[i] == 0) {
-        x[i] <- runif(1, min = 1, max = noise)
-      }
-      else {next}
-    }
-    return(x)
-  })
-  
+    data[data == 0] <- runif(1, min = 1, max = noise)
+    return(data)
 }
+  
+
 
 
 #' @title data transformation
