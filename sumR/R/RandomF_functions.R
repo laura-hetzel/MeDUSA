@@ -1,29 +1,21 @@
-#
+## data should be in transposed form (mz as columns and samples column named =samples )
 #' @title Redundant variables removal
 #' @description This function removes correlated peaks at a certain cutoff value
-#' @param data the dataframe with mz column and samples columns
-#' @param cuttoff a certain value of cuttoff for high correlation
-#' @importFrom tibble column_to_rownames
-#' @importFrom tibble rownames_to_column
+#' @param data the dataframe with m/z as columns and a sample column named samples
+#' @param cuttoff a certain value of cuttoff for high correlation (default=0.75)
+#' @importFrom tibble column_to_rownames rownames_to_column
 #' @importFrom caret findCorrelation
 #' @importFrom dplyr select
-redvar_removal <- function (data,cutoff){
-data <- column_to_rownames(data,"mz")
-  data <- as.data.frame(t(data))
-
+redvar_removal <- function (data,cutoff=0.75){
+  data<-column_to_rownames(data,"mz")
+  data<-as.data.frame(t(data))
   cor_matrix <- cor(data)
-
-  # find attributes that are highly corrected (ideally >0.75)
   high_cor <- findCorrelation(cor_matrix, cutoff=cutoff)
-
   high_cor_removal<-data[,high_cor] ## highly correlated peaks
-  data<- data %>% dplyr::select(-colnames(high_cor_removal)) ## removing of high cor peaks
+  data<- data %>% dplyr :: select(-colnames(high_cor_removal)) ## removing of high cor peaks
   data<-rownames_to_column(data,"samples")
-
   return(data)
 }
-
-
 
 
 
@@ -31,66 +23,61 @@ data <- column_to_rownames(data,"mz")
 #' @title feature selection
 #' @description This function select the desired numbers of most imp features for random forest model
 #' @param data_t the dataframe with m/z as columns and a sample column named samples
-#' @param data the master dataframe
 #' @param subsets how many peaks do u want to be selected or the range of peaks
 #' @param seed global seed for reproducible results
-#' @param method "repeatedcv" the method for feature selection is repeated cross validation
-#' @param repeats numbers of repeats for cross validation
+#' @param method default is "repeatedcv" the method for feature selection is repeated cross validation
+#' @param repeats numbers of repeats for cross validation default = 5
 #' @param class1 sample group 1 name for renaming
 #' @param class2 sample group 2 name for renaming
-#' @importFrom tibble column_to_rownames
-#' @importFrom tibble rownames_to_column
 #' @importFrom caret rfeControl rfe rfFuncs
-#' @importFrom dplyr select any_vars
-#' @importFrom ggplot2 ggplot
-#' @importFrom dplyr filter_all
-imp_select<-function(data,data_t,subsets,seed,method,repeats,class1,class2){
-
-
+#' @importFrom dplyr select  
+imp_select<-function(data,data_t,subsets,seed,method="repeatedcv",repeats=5,class1,class2){
   data_t$samples <- as.factor(ifelse(grepl(data_t$samples, pattern = class1), class1, class2))
-
   control <- rfeControl(functions = rfFuncs,method =method,repeats =repeats)
-  # run the RFE algorithm
   set.seed(seed)
-
   feature_select_cor <- rfe(data_t %>% dplyr::select(-samples),
                             data_t$samples, rfeControl=control,sizes =subsets)
+  return("feature_select_model"=feature_select_cor)
+}
 
-  # summarize the results
-  print(feature_select_cor)
-
-  # plot the results
-
-  plot<-ggplot(data = feature_select_cor, metric = "Accuracy") + theme_bw()
-  print(plot)
-
-
-  data<-data %>% filter_all(any_vars(. %in% predictors(feature_select_cor)))
-
+#' @title feature selection dataframe
+#' @param data the master dataframe
+#' @param feature_select_model feature select model from imp_select function
+#' @param class1 sample group 1 name for renaming
+#' @param class2 sample group 2 name for renaming
+#' @importFrom dplyr any_vars filter_all
+#' @importFrom tibble column_to_rownames rownames_to_column
+#' @importFrom caret predictors
+imp_data<-function(feature_select_model,data,class1,class2){
+  data<-data %>% filter_all(any_vars(. %in% predictors(feature_select_model)))
   data<-column_to_rownames(data,"mz")
   data<-as.data.frame(t(data))
   data<-rownames_to_column(data,"samples")
   data$samples <- as.factor(ifelse(grepl(data$samples, pattern = class1), class1, class2))
   colnames(data)<-as.character(colnames(data))
-
   return(data)
+}
+
+#' @title feature selection plot
+#' @param feature_select_model feature select model from imp_select function
+#' @importFrom ggplot2 ggplot
+plot_imp_select<-function(feature_select_model){
+  plot<-ggplot(data = feature_select_model, metric = "Accuracy") + theme_bw()
+  return(plot)
 }
 
 
 #' @title datasplit
 #' @param data the dataframe with m/z as columns and a sample column named samples
-#' @param split ratio a certain value for split ratio
+#' @param split ratio a certain value for split ratio (default=0.8)
 #' @param seed global seed
 #' @importFrom caTools sample.split
-data_split<-function(seed,data,split_ratio){
-  set.seed(seed) ## reproducible results
+data_split<-function(seed,data,split_ratio=0.8){
+  set.seed(seed) ## reproducible results 
   split<- sample.split(data$samples, SplitRatio = split_ratio)
-
   training_set<-subset(data, split == TRUE)
   test_set<-subset(data, split == FALSE)
-
   return(list("training_set"=training_set,"test_set"=test_set))
-
 }
 # random forest cross validation ------------------------------------------
 
