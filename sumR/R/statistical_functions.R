@@ -1,4 +1,3 @@
-
 ## shapiro's test for normality check
 ## dataframe is transposed with mz values as columns
 
@@ -6,9 +5,8 @@
 #' @description shapiro test for normality check
 #' @param dataframe transposed dataframe with m/z as columns 
 #' @param threshold numerical value for wanted threshold . the default is 0.05
-#' @importFrom  future.apply future_apply
 shapiro_results <- function(dataframe,threshold=0.05){
-  Test_results <- future_apply(dataframe,2, function(x) shapiro.test(as.numeric(x)))
+  Test_results <- apply(dataframe,2, function(x) shapiro.test(as.numeric(x)))
   P.values <- unlist(lapply(Test_results, function(x) x$p.value))
   P.values <- as.data.frame(P.values)
   normality <- P.values > threshold  ##pavalues larger than 0.05 assume normal distribution 
@@ -25,10 +23,9 @@ shapiro_results <- function(dataframe,threshold=0.05){
 #' @param dataframe transposed dataframe with m/z as columns 
 #' @param classifiers a factor vector with the classes of the samples 
 #' @param threshold numerical value for wanted threshold . the default is 0.05
-#' @importFrom  future.apply future_apply
 #' @importFrom rstatix levene_test
 leveneTestvalues <- function(dataframe, classifiers, threshold=0.05){
-  Test_results <- future_apply(dataframe, 2, function(x) levene_test(formula = x ~ classifiers, data = dataframe))
+  Test_results <- apply(dataframe, 2, function(x) levene_test(formula = x ~ classifiers, data = dataframe))
   P.values <- unlist(lapply(Test_results, function(x) x$p))
   P.values <- as.data.frame(na.omit(P.values))
   Unequalvariances <- P.values < threshold
