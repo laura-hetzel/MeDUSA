@@ -197,47 +197,32 @@ CV_data<-function(data,imp_all,class1,class2){
   return(data)
 }
 
-## the final model
+# the final model
 
 #' @title random forest model
-#' @description This function make the final random forest model with the selected features
+#' @description This function make the final random forest model with the selected features  
 #' @param training_set the training set
 #' @param test_set the test set
 #' @param mtry number of mtry for the model
 #' @param seed global seed for reproducible results
-#' @param ntree number of trees for the model
+#' @param ntree number of trees for the model 
 #' @importFrom randomForest randomForest
 #' @importFrom dplyr select
-#' @importFrom caret rfe
 #' @importFrom caret confusionMatrix
-#' @importFrom pROC roc
-#' @importFrom pROC auc
+#' @importFrom pROC roc auc
 RF_model<-function(training_set,test_set,mtry,ntree,seed){
-
   ## the final model
-  set.seed(seed)
+  set.seed(seed) 
   model<-randomForest(x=(training_set %>% dplyr::select(-samples)),y=training_set$samples,data=training_set,ntree=ntree,mtry=mtry,
-                      importance = T,proximity = T) #importance=T so we can plot imp var
-  # proximity = T so we can plot proximity plot
-
-  print(model)
-  plot(model)
-
-
-  ## prediction of model
+                      importance = T,proximity = T) #importance=T so we can plot imp var 
   test_set$samples <- as.factor(test_set$samples)
-
   prediction <- predict(model,newdata=test_set,type="class")
-
-  print(confusionMatrix(table(data=prediction, reference = test_set$samples)))
-
+  confusion_matrix<-confusionMatrix(table(data=prediction, reference = test_set$samples))
   results<-as.data.frame(cbind("Actual"=test_set$samples,"Prediction"=prediction))
-
   rocfinal<- roc(results$Actual,results$Prediction )
   aucfinal<- auc(rocfinal)
-  return(list("results"=results,"rocfinal"=rocfinal,"aucfinal"=aucfinal,"model"=model))
+  return(list("results"=results,"rocfinal"=rocfinal,"aucfinal"=aucfinal,"model"=model,"confusion_matrix"=confusion_matrix))
 }
-
 
 
 ## choosing the best mtry
