@@ -314,22 +314,15 @@ mtry_select<-function(training_set,test_set,seed,ntree){
     set.seed(seed)
     fit <- randomForest(x=(training_set %>% dplyr::select(-samples)),
                         y=training_set$samples,data=training_set,ntree=ntree,mtry=i,importance = T)
-
     model_list$err_rate[i]<-fit[["err.rate"]][nrow(fit[["err.rate"]]),1]
-
-
     ## prediction of model
     test_set$samples <- as.factor(test_set$samples)
     prediction <- predict(fit,newdata=test_set,type="class")
     cf<-confusionMatrix(data=prediction, reference = test_set$samples)
-
     model_list$Accuracy[i]<-cf[["overall"]][["Accuracy"]]
     model_list$Sensitivity[i]<-cf[["byClass"]][["Sensitivity"]]
     model_list$Specificity[i]<-cf[["byClass"]][["Specificity"]]
-
   }
-
-
   return(model_list)
 }
 
@@ -341,10 +334,10 @@ mtry_select<-function(training_set,test_set,seed,ntree){
 
 
 #' @title data permutation
-#' @description This function apply data permutation to test the accuracy of the model against permutated data
+#' @description This function apply data permutation to test the accuracy of the model against permutated data  
 #' @param training_set the training set
 #' @param test_set the test set
-#' @param model the random forest model
+#' @param model the random forest model  
 #' @param seed global seed for reproducible results
 #' @param class1 sample group 1 name for renaming
 #' @param class2 sample group 2 name for renaming
@@ -352,28 +345,19 @@ mtry_select<-function(training_set,test_set,seed,ntree){
 #' @param sample_no the number of all samples(training+test set)
 #' @importFrom  dplyr select
 #' @importFrom caret confusionMatrix
-#' @importFrom lattice histogram
 permutation.test <- function(training_set,test_set, model, n,class1,class2,sample_no){
-  data<-rbind(training_set,test_set)
-
-  permuted_df <- data.frame(n=1:n)
-
+  permuted_data<-rbind(training_set,test_set)
+  permuted_df <- data.frame(n=1:n)  
   for (i in c(1:n)) {
-    permuted_data<-data
     x <- c(class1,class2)
-    false_samples<-sample(x, sample_no, replace = TRUE,prob = c(1,1))
+    false_samples<-sample(x, sample_no, replace = TRUE)
     permuted_data$samples<-as.factor(false_samples)
     permuted_predict<-predict(model,newdata = permuted_data %>% dplyr::select(-samples))
     cf<-confusionMatrix(permuted_predict,permuted_data$samples)
     cf<-as.data.frame(cf$overall)
-
     permuted_df$accuracy[i]<-cf[1,]
   }
-
-  plot<-histogram(permuted_df$accuracy)
+  plot<-hist(permuted_df$accuracy)
   print(plot)
   return(list(plot,permuted_df))
 }
-#get all permutations
-
-
