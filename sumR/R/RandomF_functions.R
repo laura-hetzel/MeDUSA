@@ -144,6 +144,7 @@ rf_group <- function(k, data, class1 , class2 , seed){
 #' @importFrom pROC roc auc
 #' @importFrom magrittr %>%
 #' @importFrom utils head
+#' @importFrom stats predict
 randomForest_CV<- function (training_set,test_set,class1,class2,k,seed,n){
   rflist <- rf_group(k = k,data=training_set,class1,class2, seed = seed)  
   data<-training_set
@@ -220,6 +221,7 @@ CV_data<-function(data,imp_all,class1,class2){
 #' @importFrom caret confusionMatrix
 #' @importFrom pROC roc auc
 #' @importFrom magrittr %>%
+#' @importFrom stats predict
 RF_model<-function(training_set,test_set,mtry,ntree,seed){
   ## the final model
   set.seed(seed) 
@@ -248,6 +250,7 @@ RF_model<-function(training_set,test_set,mtry,ntree,seed){
 #' @importFrom dplyr select
 #' @importFrom caret confusionMatrix
 #' @importFrom magrittr %>%
+#' @importFrom stats predict
 mtry_select<-function(training_set,test_set,seed,ntree){
   model_list <- data.frame(mtry=1:(length(training_set)-1))
   for (i in c(1:(length(training_set)-1))) {
@@ -286,6 +289,8 @@ mtry_select<-function(training_set,test_set,seed,ntree){
 #' @importFrom  dplyr select
 #' @importFrom caret confusionMatrix
 #' @importFrom magrittr %>%
+#' @importFrom graphics hist
+#' @importFrom stats predict
 permutation.test <- function(training_set,test_set, model, n,class1,class2,sample_no){
   permuted_data<-rbind(training_set,test_set)
   permuted_df <- data.frame(n=1:n)  

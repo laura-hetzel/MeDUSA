@@ -48,6 +48,7 @@ volcanoPlot <- function(data, xvalues, yvalues, title){
 #' @importFrom ggplot2 geom_hline
 #' @importFrom ggplot2 geom_vline
 #' @importFrom magrittr %>%
+#' @importFrom graphics par
 #'
 #' @examples
 plot_PCA <- function(data, method = c("facto", "stats"),classifiers){
@@ -110,6 +111,7 @@ plot_PCA <- function(data, method = c("facto", "stats"),classifiers){
 #' @importFrom mixOmics auroc
 #' @importFrom mixOmics plotLoadings
 #' @importFrom magrittr %>%
+#' @importFrom graphics par
 #'
 #' @examples
 
@@ -225,6 +227,7 @@ parallel_coord <- function(data, tag = c(TRUE,FALSE),columns,groupColumn,scale,b
 #' @param test_set the final test set with samples column
 #' @importFrom pROC roc
 #' @importFrom pROC auc
+#' @importFrom graphics par
 RF_CV_plots<-function(model,test_set){
   test_set$samples <- as.factor(test_set$samples)
   results <- predict(model,newdata=test_set,type="class")
@@ -255,6 +258,7 @@ RF_CV_plots<-function(model,test_set){
 #' @importFrom ggplot2 theme_bw
 #' @importFrom ggplot2 ggtitle
 #' @importFrom stats cmdscale
+#' @importFrom graphics par
 RandomForestPlots<-function(model,training_set){
 
   plot(model)

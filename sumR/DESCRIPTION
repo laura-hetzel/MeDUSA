@@ -32,6 +32,7 @@ Imports:
     ggplot2 (>= 3.3.5),
     ggpubr (>= 0.4.0),
     ggsci (>= 2.9),
+    graphics,
     IMIFA (>= 2.1.8),
     lattice (>= 0.20.45),
     logging (>= 0.10.108),

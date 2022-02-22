@@ -9,8 +9,6 @@ MD_filter(MD_df, filter_list, incl_list)
 MD_filter(MD_df, filter_list, incl_list)
 }
 \arguments{
-\item{MD_df}{}
-
 \item{filter_list}{}
 
 \item{incl_list}{}
