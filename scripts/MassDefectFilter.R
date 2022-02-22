@@ -74,12 +74,12 @@ MD_filter <- function(MD_df, filtered_df,
 #' @param MD_df dataframe obtained from the experimental data using `mass_defect_calculation`
 #' @param filtered_MD_df dataframe obtained from the experimental data using `MD_filter`
 #' @export 
-plot_mz_MD <- function(MD_df_filtered, MD_df, title){
+plot_mz_MD <- function(MD_df_filtered, MD_df){
   mz_removed <- nrow(MD_df) - nrow(MD_df_filtered)
   plot(MD_df_filtered$mz, MD_df_filtered$MD, cex.axis = 0.8,
        col = alpha("black", 0.5), pch = 20, cex = 0.8,
        ylim = c(0,1), xlim = c(50,1200), ylab = "MD", xlab = "m/z",
-       main = title, sub = paste("datapoints removed = ", mz_removed),
+       main = "Filtered Data", sub = paste("datapoints removed = ", mz_removed),
        cex.lab = 0.8, cex.main = 0.8, cex.sub = 0.8)
 }
 
@@ -92,35 +92,27 @@ result_output <- function(filtered_df){
 
 
 #' @title Mass defect filter pipeline 
-#' @param file obtained from user input or use of default files = example data 
+#' @param file path to file that contains the input data 
+#' @param mz_MD_plot logical variable deciding if plot is wanted per default set to TRUE 
 #' @importFrom stats na.omit
 #' @importFrom readr read_delim
 #' @importFrom utils read.delim
 #' @export
-process_MassDefectFilter <- function(file = NULL){
-  #import hmdb
-  dataframe_hmdb <- get_hmdb_file(file)
-  #calculate MD HMDB
-  md_df_hmdb <- mass_defect_calculation(dataframe_hmdb)
-  #make filtered list hmdb
-  filtered_list_hmdb <- make_filter_list(md_df_hmdb)
-  #import experimental data
+MassDefectFilter <- function(file = NULL, mz_MD_plot = TRUE){
   ex_data_df <- get_data(file)
-  # calculate MD experimental data 
+  # calculate the MD for all compounds
   md_df_exp <- mass_defect_calculation(ex_data_df)
-  #make filtered list experimental data
+  # make filtered list experimental data
   filtered_list_exp <- make_filter_list(md_df_exp)
-  # filter hmdb
-  filtered_df_hmdb <- MD_filter(md_df_hmdb, filtered_list_hmdb)
   # filter experimental data 
   filtered_df_exp <- MD_filter(md_df_exp, filtered_list_exp)
   # plotting
-  plot_mz_MD(filtered_df_hmdb, md_df_hmdb, title = "Filtered")#make plot optional 
-  #save filtered data in csv file 
-  result_output(filtered_df_exp)
+  if (mz_MD_plot == T) {
+    plot_mz_MD(filtered_df_exp, md_df_exp)
+  }
 }
 
-
+MassDefectFilter()
 
 
 
