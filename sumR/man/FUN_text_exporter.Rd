@@ -17,7 +17,6 @@ FUN_text_exporter(rnamed_cnamed_df, file_path, extension)
 
 }
 \description{
-takes teh df, separates it into mz,int files for each sample (1st loop)
+takes the df, separates it into mz,int files for each sample (1st loop)
 export each file with desired file path,and custom extension (2nd loop)
-UNALIGNED ! UNLIMITED POWAAAAAH
 }

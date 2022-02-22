@@ -4,12 +4,12 @@
 \alias{redvar_removal}
 \title{Redundant variables removal}
 \usage{
-redvar_removal(data, cutoff)
+redvar_removal(data, cutoff = 0.75)
 }
 \arguments{
-\item{data}{the dataframe with mz column and samples columns}
+\item{data}{the dataframe with m/z as columns and a sample column named samples}
 
-\item{cuttoff}{a certain value of cuttoff for high correlation}
+\item{cuttoff}{a certain value of cuttoff for high correlation (default=0.75)}
 }
 \description{
 This function removes correlated peaks at a certain cutoff value

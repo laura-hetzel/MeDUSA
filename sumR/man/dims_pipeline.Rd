@@ -6,6 +6,11 @@
 \usage{
 dims_pipeline(data, plot_md = FALSE)
 }
+\arguments{
+\item{data}{}
+
+\item{plot_md}{}
+}
 \description{
 DIMS pipeline
 }

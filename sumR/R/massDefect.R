@@ -56,10 +56,11 @@ get_inclusion_list <- function(file = NULL){
   return(incl_list)
 }
 
+#' @param MD_df 
+#' @param filter_list 
+#' @param incl_list 
+#'
 #' @title Filtering the data by  mass defect
-#' @param dataframe MD_df obtained from from the HMDB using `mass_defect_function`
-#' @param dataframe incl_list obtained from the `get_inclusion_list`
-#' @param dataframe filter_list obtained from the `create_fit_df`
 #' @importFrom dplyr filter
 MD_filter <- function(MD_df, filter_list, incl_list){
   # set mass accuracy (in Daltons) for inclusion list matching

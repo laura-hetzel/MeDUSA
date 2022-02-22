@@ -5,6 +5,7 @@
 #' @description shapiro test for normality check
 #' @param dataframe transposed dataframe with m/z as columns 
 #' @param threshold numerical value for wanted threshold . the default is 0.05
+#' @importFrom stats shapiro.test
 shapiro_results <- function(dataframe,threshold=0.05){
   Test_results <- apply(dataframe,2, function(x) shapiro.test(as.numeric(x)))
   P.values <- unlist(lapply(Test_results, function(x) x$p.value))
@@ -42,14 +43,18 @@ leveneTestvalues <- function(dataframe, classifiers, threshold=0.05){
 
 #' @title welch t test 
 #' @description welch t test between two groups of samples (assuming unequal variance)
+#'
 #' @param dataframe transposed dataframe with m/z as columns (transformed dataframe)
 #' @param dataframe2 transposed dataframe with m/z as columns (raw imputed dataframe)
-#' @param classifiers a factor vector with the classes of the samples 
 #' @param threshold numerical value for wanted threshold . the default is 0.1
+#' @param samples 
 #' @param corr_method character string for correction method . default is "fdr"
+#'
 #' @importFrom  future.apply future_apply
 #' @importFrom miscTools colMedians
 #' @importFrom utils combn
+#' @importFrom stats p.adjust
+#' @importFrom stats t.test
 Welch_ttest <- function(dataframe, dataframe2, samples, threshold=0.1,corr_method="fdr"){
   mz <- as.numeric(row.names(t(dataframe)))
   T.test <- future_apply(dataframe, 2, function(x) t.test(x ~ samples, var.equal = FALSE))
@@ -94,6 +99,7 @@ Welch_ttest <- function(dataframe, dataframe2, samples, threshold=0.1,corr_metho
 #' @importFrom  future.apply future_apply
 #' @importFrom miscTools colMedians
 #' @importFrom utils combn
+#' @importFrom stats p.adjust
 wilcox_results <- function(dataframe,dataframe2, samples, threshold=0.1,corr_method="fdr",paired = F){
   mz <- as.numeric(row.names(t(dataframe)))
   wilcox.test <- future_apply(dataframe, 2, function(x) wilcox.test(formula = x ~ samples,data=dataframe , paired = paired ))
@@ -129,13 +135,16 @@ wilcox_results <- function(dataframe,dataframe2, samples, threshold=0.1,corr_met
 
 #' @title welch anova test 
 #' @description welch anova test between more than two groups of samples (assuming unequal variance)
+#'
 #' @param dataframe transposed dataframe with m/z as columns (transformed dataframe)
 #' @param dataframe2 transposed dataframe with m/z as columns (raw imputed dataframe)
-#' @param classifiers a factor vector with the classes of the samples 
+#' @param samples 
 #' @param threshold numerical value for wanted threshold . the default is 0.1
+#'
 #' @importFrom  future.apply future_apply
 #' @importFrom miscTools colMedians
 #' @importFrom utils combn
+#' @importFrom stats oneway.test
 WelchAnova <- function(dataframe,dataframe2, samples, threshold=0.1){
   mz <- as.numeric(row.names(t(dataframe)))
   Test_results <- future_apply(dataframe, 2, function(x) oneway.test(x ~ samples, var.equal = FALSE))
@@ -174,10 +183,12 @@ WelchAnova <- function(dataframe,dataframe2, samples, threshold=0.1){
 
 #' @title Kruskal-Wallis test 
 #' @description Kruskal-Wallis test  test between more than two groups of samples 
+#'
 #' @param dataframe transposed dataframe with m/z as columns (transformed dataframe)
 #' @param dataframe2 transposed dataframe with m/z as columns (raw imputed dataframe)
-#' @param classifiers a factor vector with the classes of the samples 
+#' @param samples 
 #' @param threshold numerical value for wanted threshold . the default is 0.1
+#'
 #' @importFrom  future.apply future_apply
 #' @importFrom miscTools colMedians
 #' @importFrom utils combn
@@ -186,6 +197,8 @@ WelchAnova <- function(dataframe,dataframe2, samples, threshold=0.1){
 #' @importFrom dplyr any_vars
 #' @importFrom tibble column_to_rownames
 #' @importFrom tibble rownames_to_column
+#' @importFrom magrittr %>%
+#' @importFrom stats kruskal.test
 Kruskal_results <- function(dataframe,dataframe2,samples, threshold=0.1){
   mz <- (row.names(t(dataframe)))
   Test_results <- future_apply(dataframe, 2, function(x) kruskal.test(x, samples))
@@ -225,13 +238,15 @@ Kruskal_results <- function(dataframe,dataframe2,samples, threshold=0.1){
 
 #' @title Dunn test 
 #' @description Dunn post hoc test after kruskal-wallis test
+#'
 #' @param dataframe transposed dataframe with m/z as columns (results of significant kruskal test)
-#' @param classifiers a factor vector with the classes of the samples 
 #' @param threshold numerical value for wanted threshold 
 #' @param comb a numerical value for number of group combinations
+#' @param samples 
 #' @param method a character string for correction method .. default is "bh"
+#'
 #' @importFrom  future.apply future_apply
-#' @importFrom dunn.test dunn.test
+#' @importFrom dunn.test dunn.test 
 Dunn_test <- function(dataframe, samples, threshold,comb,method="bh"){
   mz <- rep(row.names(t(dataframe)), each = comb)
   Test_results <- future_apply(dataframe, 2, function(x) dunn.test(x, samples, method = method)) ## adjusted p value using bh

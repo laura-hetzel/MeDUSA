@@ -13,7 +13,15 @@ BG_filter(
 )
 }
 \arguments{
-\item{mz_column}{}
+\item{dataframe}{}
+
+\item{limit}{}
+
+\item{blank_regex}{}
+
+\item{mz_regex}{}
+
+\item{sample_regex}{}
 }
 \description{
 it is used to conduct background removal).

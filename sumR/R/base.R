@@ -4,6 +4,8 @@
 #' @export
 #' @importFrom stringr str_remove
 #' @importFrom dplyr bind_rows
+#' @importFrom utils read.table
+#' @importFrom stats setNames
 read_msdata <- function(path = "data") {
   files <- list.files(path = "data", full.names = T)
   file_names <- str_remove(string = files, pattern = ".txt")
@@ -49,6 +51,7 @@ read_mzml <- function(mzml = NULL){
 #' @importFrom tools file_path_sans_ext
 #' @importFrom xcms smooth pickPeaks
 #' @importFrom utils getFromNamespace
+#' @importFrom magrittr %>%
 #' @import MSnbase
 #' @export
 combine_spectra_centroid <- function(data){
@@ -76,11 +79,23 @@ combine_spectra_centroid <- function(data){
 }
 
 
+#' Title
+#'
+#' @param x 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 combine_intensity <- function(x){
   m <- mean(x[x > 0])
   ifelse(is.nan(m), 0, m)
 }
 
+#' @param data 
+#'
+#' @param plot_md 
+#'
 #' @title DIMS pipeline
 #' @importFrom xcms MSWParam findChromPeaks groupChromPeaks MzClustParam
 #' fillChromPeaks FillChromPeaksParam chromPeaks
@@ -119,8 +134,11 @@ dims_pipeline <- function(data, plot_md = FALSE){
 
 
 #' @title Process features obtained from XCMS
+#'
 #' @param data XCMS object with grouped peaks
+#' @param impute_method 
 #' @param remove_blanks Should blank samples be removed?
+#'
 #' @importFrom xcms featureValues featureDefinitions
 #' @importFrom pmp filter_peaks_by_blank mv_imputation
 #' @importFrom Biobase pData
@@ -172,6 +190,9 @@ ppm_calc <- function(mass1, mass2) {
 
 #' Align check
 #'
+#' @param data_frame_fn 
+#' @param xcoords 
+#'
 #' @description align_check makes sure that all the m/z values are
 #' aligned/binned correctly
 #'
@@ -188,6 +209,7 @@ ppm_calc <- function(mass1, mass2) {
 #' @export
 #' @importFrom tibble as_tibble_col
 #' @import ggplot2
+#' @importFrom magrittr %>%
 align_check <- function(data_frame_fn, xcoords = c(-20, 0)) {
   odd_ind_fn <- seq(3, length(data_frame_fn$mz), 2)
   even_ind_fn <- seq(2, length(data_frame_fn$mz), 2)
@@ -242,6 +264,13 @@ condition <- function(mass, samples, tolerance) {
 #'
 #' @return
 
+#'
+#' @param dataframe 
+#' @param filter_type 
+#' @param blank_thresh 
+#' @param nsamples_thresh 
+#' @param blank_regx 
+#' @param filtered_df 
 #'
 #' @examples
 #' @importFrom dplyr select contains if_else filter

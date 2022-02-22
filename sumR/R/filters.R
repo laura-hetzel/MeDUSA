@@ -8,8 +8,11 @@
 #' if they correspond to the same m/z of a blank within a specified range
 #' (for example within 150% of the blank intensity).
 #'
+#' @param limit 
+#' @param blank_regex 
+#' @param mz_regex 
+#' @param sample_regex 
 #' @param dataframe
-#' @param mz_column
 #'
 #' @examples
 #'
@@ -59,6 +62,7 @@ BG_filter <- function(dataframe, limit=2.5, blank_regex ="blank",
 #' @export
 #' @importFrom dplyr filter
 #' @import ggplot2
+#' @importFrom magrittr %>%
 MD_filter <- function(dataframe, mz_col, a = 0.00112, b = 0.01953) {
   ## Solves problem of customizable lin. eq as well: In case HMDB updates data
   ## In-function MD calculation

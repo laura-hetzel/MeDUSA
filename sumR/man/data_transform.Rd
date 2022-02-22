@@ -9,7 +9,7 @@ data_transform(data, centering = F)
 \arguments{
 \item{data}{dataframe}
 
-\item{centring}{a logical vector TRUE or FALSE for centered scaling . the default is FALSE}
+\item{centering}{}
 }
 \description{
 This function apply data transformation using log2 and pareto scale

@@ -6,6 +6,11 @@
 \usage{
 align_check(data_frame_fn, xcoords = c(-20, 0))
 }
+\arguments{
+\item{data_frame_fn}{}
+
+\item{xcoords}{}
+}
 \description{
 align_check makes sure that all the m/z values are
 aligned/binned correctly
