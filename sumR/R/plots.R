@@ -47,6 +47,7 @@ volcanoPlot <- function(data, xvalues, yvalues, title){
 #' @importFrom stats prcomp
 #' @importFrom ggplot2 geom_hline
 #' @importFrom ggplot2 geom_vline
+#' @importFrom magrittr %>%
 #'
 #' @examples
 plot_PCA <- function(data, method = c("facto", "stats"),classifiers){
@@ -108,6 +109,7 @@ plot_PCA <- function(data, method = c("facto", "stats"),classifiers){
 #' @importFrom mixOmics plotIndiv
 #' @importFrom mixOmics auroc
 #' @importFrom mixOmics plotLoadings
+#' @importFrom magrittr %>%
 #'
 #' @examples
 
@@ -134,6 +136,7 @@ plotPLSDA <- function(data, classifiers,comp,method){
 #' @param pretty.order.cols logical vector the default is TRUE
 #' @importFrom superheat superheat
 #' @importFrom viridis mako
+#' @importFrom magrittr %>%
 heatMap<-function(data,classifiers,pretty.order.rows=T,pretty.order.cols =T){
  superheat <- data %>% superheat(left.label.size = 0.05,
             left.label.text.size =7,
@@ -251,6 +254,7 @@ RF_CV_plots<-function(model,test_set){
 #' @importFrom ggplot2 geom_label
 #' @importFrom ggplot2 theme_bw
 #' @importFrom ggplot2 ggtitle
+#' @importFrom stats cmdscale
 RandomForestPlots<-function(model,training_set){
 
   plot(model)

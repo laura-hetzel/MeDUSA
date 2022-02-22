@@ -4,20 +4,27 @@
 \alias{imp_select}
 \title{feature selection}
 \usage{
-imp_select(data, data_t, subsets, seed, method, repeats, class1, class2)
+imp_select(
+  data,
+  data_t,
+  subsets,
+  seed,
+  method = "repeatedcv",
+  repeats = 5,
+  class1,
+  class2
+)
 }
 \arguments{
-\item{data}{the master dataframe}
-
 \item{data_t}{the dataframe with m/z as columns and a sample column named samples}
 
 \item{subsets}{how many peaks do u want to be selected or the range of peaks}
 
 \item{seed}{global seed for reproducible results}
 
-\item{method}{"repeatedcv" the method for feature selection is repeated cross validation}
+\item{method}{default is "repeatedcv" the method for feature selection is repeated cross validation}
 
-\item{repeats}{numbers of repeats for cross validation}
+\item{repeats}{numbers of repeats for cross validation default = 5}
 
 \item{class1}{sample group 1 name for renaming}
 

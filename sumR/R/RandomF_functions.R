@@ -6,6 +6,8 @@
 #' @importFrom tibble column_to_rownames rownames_to_column
 #' @importFrom caret findCorrelation
 #' @importFrom dplyr select
+#' @importFrom magrittr %>%
+#' @importFrom stats cor
 redvar_removal <- function (data,cutoff=0.75){
   data<-column_to_rownames(data,"mz")
   data<-as.data.frame(t(data))
@@ -30,7 +32,8 @@ redvar_removal <- function (data,cutoff=0.75){
 #' @param class1 sample group 1 name for renaming
 #' @param class2 sample group 2 name for renaming
 #' @importFrom caret rfeControl rfe rfFuncs
-#' @importFrom dplyr select  
+#' @importFrom dplyr select
+#' @importFrom magrittr %>%
 imp_select<-function(data,data_t,subsets,seed,method="repeatedcv",repeats=5,class1,class2){
   data_t$samples <- as.factor(ifelse(grepl(data_t$samples, pattern = class1), class1, class2))
   control <- rfeControl(functions = rfFuncs,method =method,repeats =repeats)
@@ -48,6 +51,7 @@ imp_select<-function(data,data_t,subsets,seed,method="repeatedcv",repeats=5,clas
 #' @importFrom dplyr any_vars filter_all
 #' @importFrom tibble column_to_rownames rownames_to_column
 #' @importFrom caret predictors
+#' @importFrom magrittr %>%
 imp_data<-function(feature_select_model,data,class1,class2){
   data<-data %>% filter_all(any_vars(. %in% predictors(feature_select_model)))
   data<-column_to_rownames(data,"mz")
@@ -68,9 +72,11 @@ plot_imp_select<-function(feature_select_model){
 
 
 #' @title datasplit
+#'
 #' @param data the dataframe with m/z as columns and a sample column named samples
-#' @param split ratio a certain value for split ratio (default=0.8)
+#' @param split_ratio 
 #' @param seed global seed
+#'
 #' @importFrom caTools sample.split
 data_split<-function(seed,data,split_ratio=0.8){
   set.seed(seed) ## reproducible results 
@@ -136,6 +142,8 @@ rf_group <- function(k, data, class1 , class2 , seed){
 #' @importFrom caret rfe confusionMatrix
 #' @importFrom dplyr select arrange desc
 #' @importFrom pROC roc auc
+#' @importFrom magrittr %>%
+#' @importFrom utils head
 randomForest_CV<- function (training_set,test_set,class1,class2,k,seed,n){
   rflist <- rf_group(k = k,data=training_set,class1,class2, seed = seed)  
   data<-training_set
@@ -181,6 +189,7 @@ randomForest_CV<- function (training_set,test_set,class1,class2,k,seed,n){
 #' @param class2 sample group 2 name for renaming
 #' @importFrom dplyr filter_all any_vars
 #' @importFrom tibble rownames_to_column column_to_rownames
+#' @importFrom magrittr %>%
 CV_data<-function(data,imp_all,class1,class2){
   data$samples<-paste(data$samples,1:nrow(data),sep="_") ## we just do this step so we can move the samples to row names .. 
   rownames(data)<-NULL
@@ -210,6 +219,7 @@ CV_data<-function(data,imp_all,class1,class2){
 #' @importFrom dplyr select
 #' @importFrom caret confusionMatrix
 #' @importFrom pROC roc auc
+#' @importFrom magrittr %>%
 RF_model<-function(training_set,test_set,mtry,ntree,seed){
   ## the final model
   set.seed(seed) 
@@ -237,6 +247,7 @@ RF_model<-function(training_set,test_set,mtry,ntree,seed){
 #' @importFrom randomForest randomForest
 #' @importFrom dplyr select
 #' @importFrom caret confusionMatrix
+#' @importFrom magrittr %>%
 mtry_select<-function(training_set,test_set,seed,ntree){
   model_list <- data.frame(mtry=1:(length(training_set)-1))
   for (i in c(1:(length(training_set)-1))) {
@@ -274,6 +285,7 @@ mtry_select<-function(training_set,test_set,seed,ntree){
 #' @param sample_no the number of all samples(training+test set)
 #' @importFrom  dplyr select
 #' @importFrom caret confusionMatrix
+#' @importFrom magrittr %>%
 permutation.test <- function(training_set,test_set, model, n,class1,class2,sample_no){
   permuted_data<-rbind(training_set,test_set)
   permuted_df <- data.frame(n=1:n)  

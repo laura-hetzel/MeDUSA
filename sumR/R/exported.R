@@ -44,12 +44,12 @@ iso_hippo <- function(df, isotope_da = 1.0034, iso_tolerance = 0.0034) {
 #' @param file_path desire output path, should be a string
 #' @param extension desired custom extension to files (aside from .txt), string
 #' 
-#' @description takes teh df, separates it into mz,int files for each sample (1st loop)
+#' @description takes the df, separates it into mz,int files for each sample (1st loop)
 #' export each file with desired file path,and custom extension (2nd loop)
-#' UNALIGNED ! UNLIMITED POWAAAAAH
 #'
 #' @return
 #' @export
+#' @importFrom utils write.table
 #'
 #' @examples
 FUN_text_exporter <- function(rnamed_cnamed_df, file_path, extension) {

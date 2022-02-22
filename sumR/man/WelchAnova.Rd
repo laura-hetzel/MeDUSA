@@ -11,9 +11,9 @@ WelchAnova(dataframe, dataframe2, samples, threshold = 0.1)
 
 \item{dataframe2}{transposed dataframe with m/z as columns (raw imputed dataframe)}
 
-\item{threshold}{numerical value for wanted threshold . the default is 0.1}
+\item{samples}{}
 
-\item{classifiers}{a factor vector with the classes of the samples}
+\item{threshold}{numerical value for wanted threshold . the default is 0.1}
 }
 \description{
 welch anova test between more than two groups of samples (assuming unequal variance)

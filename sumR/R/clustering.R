@@ -16,6 +16,7 @@
 #' @importFrom dplyr filter
 #' @importFrom stats as.dist
 #' @importFrom dplyr pull
+#' @importFrom magrittr %>%
 mydensityClust_1 <- function(data, mz_min, mz_max, dc) {
 
   # pre-processing for densityClust()
@@ -51,6 +52,7 @@ mydensityClust_1 <- function(data, mz_min, mz_max, dc) {
 #' @examples
 #' @importFrom dplyr mutate
 #' @importFrom dplyr filter
+#' @importFrom magrittr %>%
 getclusteredData <- function(data, mzClust, mz_min, mz_max) {
   ## this is a function that takes the results of the densityClust() function
   ## from densityClust package, outputs the data with rho & delta

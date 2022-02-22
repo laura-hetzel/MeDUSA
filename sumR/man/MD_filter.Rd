@@ -9,6 +9,15 @@ MD_filter(MD_df, filter_list, incl_list)
 MD_filter(MD_df, filter_list, incl_list)
 }
 \arguments{
+\item{MD_df}{}
+
+\item{filter_list}{}
+
+\item{incl_list}{}
+
+\item{dataframe}{is the dataframe on which KM calculations need to be
+conducted}
+
 \item{mz_col}{is the mass to charge column within the specified dataframe}
 
 \item{a}{is the coefficient of the linear equation used for data filtering}
@@ -16,8 +25,6 @@ MD_filter(MD_df, filter_list, incl_list)
 \item{b}{is the addition value of the linear equation used for data
 filtering, both a and b can be calculated using the linear_equation()
 function included in this package.}
-
-\item{dataframe}{filter_list obtained from the `create_fit_df`}
 }
 \description{
 filters data based on Mass Defect

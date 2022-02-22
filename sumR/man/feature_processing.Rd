@@ -9,6 +9,8 @@ feature_processing(data, impute_method = "knn", remove_blanks = TRUE)
 \arguments{
 \item{data}{XCMS object with grouped peaks}
 
+\item{impute_method}{}
+
 \item{remove_blanks}{Should blank samples be removed?}
 }
 \description{
