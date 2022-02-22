@@ -1,5 +1,5 @@
 #' @title Mass defect calculation function
-#' @param dataframe Data frame containing experimental data
+#' @param dataframe data frame containing experimental data
 #' @export
 mass_defect_calculation <- function(dataframe){
   MD <- dataframe$mz %% 1
