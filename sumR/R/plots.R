@@ -47,7 +47,7 @@ volcanoPlot <- function(data, xvalues, yvalues, title){
 #' @importFrom stats prcomp
 #' @importFrom ggplot2 geom_hline
 #' @importFrom ggplot2 geom_vline
-#' @importFrom magrittr %>%
+#' @importFrom dplyr %>%
 #' @importFrom graphics par
 #'
 #' @examples
@@ -100,6 +100,77 @@ plot_PCA <- function(data, method = c("facto", "stats"),classifiers){
   }
 
 }
+
+
+#' @title PCA scree plot
+#' @importFrom FactoMineR PCA
+#' @importFrom factoextra fviz_eig
+#' @param data transposed dataframe with m/z as columns
+PCA_scree<-function(data){
+  res_pca <- PCA(data, graph = FALSE)
+  fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 100),main="PCA - scree plot" ) 
+}
+
+#' @title PCA variables plot
+#' @importFrom FactoMineR PCA
+#' @importFrom factoextra get_pca_var
+#' @importFrom factoextra fviz_pca_var
+#' @param data transposed dataframe with m/z as columns
+PCA_variables<-function(data){
+  res_pca <- PCA(data, graph = FALSE)
+  var <- get_pca_var(res_pca)
+ fviz_pca_var(res_pca,col.var = "grey",col.circle = "grey",title="variables-PCA")
+}
+
+
+#' @title PCA individuals plot
+#' @importFrom FactoMineR PCA
+#' @importFrom factoextra fviz_pca_ind
+#' @param data transposed dataframe with m/z as columns
+PCA_ind<-function(data){
+  res_pca <- PCA(data, graph = FALSE)
+  fviz_pca_ind(res_pca, col.ind = "cos2",
+                     gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+                     repel = TRUE,# Avoid text overlapping (slow if many points)
+                     title="individuals-PCA - names of the sample")
+}
+
+#' @title PCA ellipse plot
+#' @importFrom FactoMineR PCA
+#' @importFrom factoextra fviz_pca_ind
+#' @param data transposed dataframe with m/z as columns
+#' @param classifiers sample groups as factor
+PCA_ellipse<-function(data,classifiers){
+  res_pca <- PCA(data, graph = FALSE)
+  fviz_pca_ind(res_pca,
+               geom.ind = "point", # show points only (nbut not "text")
+               col.ind = classifiers, # color by groups
+               palette = "viridis",
+               addEllipses = TRUE, # Concentration ellipses
+               legend.title = "Sample type",
+               title = "PCA samples ")
+}
+
+
+#' @title PCA ellipse plot from stats
+#' @importFrom ggpubr ggscatter
+#' @importFrom stats prcomp
+#' @importFrom ggplot2 geom_hline
+#' @importFrom ggplot2 geom_vline
+#' @importFrom dplyr %>%
+#' @param classifiers sample groups as factor
+#' @param data transposed dataframe with m/z as columns
+PCA_ellipse_stats<-function(data,classifiers){
+  PCA2 <- prcomp(as.matrix(data), scale. = F) #PCA model using transposed df
+  PCA_scores <- as.data.frame(PCA2$x) %>% dplyr::select(PC1, PC2)
+  PCA_scores$Sample <- classifiers ## we add our classifiers here
+  ggscatter(PCA_scores, x = "PC1", y = "PC2",
+            color = "Sample", shape = "Sample", palette = "aaas",
+            mean.point = TRUE, ellipse = TRUE, title = "PCA Samples") +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "black")
+}
+
 #' Plot PLS-DA
 #'
 #' @param data transposed dataframe with m/z as columns
@@ -110,7 +181,7 @@ plot_PCA <- function(data, method = c("facto", "stats"),classifiers){
 #' @importFrom mixOmics plotIndiv
 #' @importFrom mixOmics auroc
 #' @importFrom mixOmics plotLoadings
-#' @importFrom magrittr %>%
+#' @importFrom dplyr %>%
 #' @importFrom graphics par
 #'
 #' @examples
@@ -138,7 +209,7 @@ plotPLSDA <- function(data, classifiers,comp,method){
 #' @param pretty.order.cols logical vector the default is TRUE
 #' @importFrom superheat superheat
 #' @importFrom viridis mako
-#' @importFrom magrittr %>%
+#' @importFrom dplyr %>%
 heatMap<-function(data,classifiers,pretty.order.rows=T,pretty.order.cols =T){
  superheat <- data %>% superheat(left.label.size = 0.05,
             left.label.text.size =7,
