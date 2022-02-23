@@ -9,10 +9,10 @@ get_data <- function(files){
     assign(paste("Df", i, sep = "."), 
            read_delim(files[i],
                       col_types = cols(mz = col_double(), 
-                                      intensity = col_double()), 
+                                       intensity = col_double()), 
                       id = "name", 
                       col_names = (c("1", "mz", "2", "intensity", "3"))))
-                                                
+    
     
   }
   df_list <- mget(ls(pattern = "Df."))
@@ -41,10 +41,12 @@ align_check <- function(aligned_peaks) {
   odd_ind_fn <- seq(3, length(aligned_peaks$mz), 2)
   even_ind_fn <- seq(2, length(aligned_peaks$mz),2)
   ppm_err_fn <- ppm_calc(aligned_peaks$mz[even_ind_fn], aligned_peaks$mz[odd_ind_fn]) %>% 
-    as_tibble_col(column_name = "ppm_error") #just select the column in the df 
-  #as.data.frame(data_frame_fn$ppm_error)
+    as_tibble_col(column_name = "ppm_error") 
   return(ppm_err_fn)
 }
+
+align_analysis <- check_process(aligned_peaks, T, T)
+
 
 #' @title Boxplot of the ppm errors 
 #' @param ppm_err_fn dataframe obtained from `align_check`
@@ -85,7 +87,7 @@ check_process <- function(aligned_peaks, summary_errors = F, boxplot = F, xcoord
   }
   if (boxplot == T) {
     error_plot <- ppm_err_plot(input) +
-          coord_cartesian(xlim = xcoords) 
+      coord_cartesian(xlim = xcoords) 
     check[[x]] <- error_plot
   }
   return(check)
@@ -163,10 +165,10 @@ binning <- function(mass, intensities, samples, tolerance = 5e-6){
 binPeaks <- function(df_list, tolerance = 5e-6) {
   nonEmpty <- sapply(df_list, nrow) != 0L #checking if the list is not empty
   samples <- rep.int(seq_along(df_list), sapply(df_list, nrow))
-   mass <- unname(unlist((lapply(df_list[nonEmpty], function(x) as.double(x$mz))), recursive = FALSE, use.names = FALSE))
-   intensities <- unlist(lapply(df_list[nonEmpty], function(x) as.double(x$intensity)), recursive = FALSE, use.names = FALSE)
-   name <- unlist(lapply(df_list[nonEmpty], function(x) x$name), recursive = FALSE, use.names = FALSE)
-   s <- sort.int(mass, index.return = TRUE) # sort vector based on masses lowest to highest 
+  mass <- unname(unlist((lapply(df_list[nonEmpty], function(x) as.double(x$mz))), recursive = FALSE, use.names = FALSE))
+  intensities <- unlist(lapply(df_list[nonEmpty], function(x) as.double(x$intensity)), recursive = FALSE, use.names = FALSE)
+  name <- unlist(lapply(df_list[nonEmpty], function(x) x$name), recursive = FALSE, use.names = FALSE)
+  s <- sort.int(mass, index.return = TRUE) # sort vector based on masses lowest to highest 
   mass <- s$x
   intensities <- intensities[s$ix]
   samples <- samples[s$ix]
@@ -246,4 +248,4 @@ bin_plot <- function(df_bins, bins, count){
 #-------------------------------------------
 df_list <- get_data(file)
 aligned_peaks <- iteration(df_list, max_align = 5)
-align_analysis <- check_process(aligned_peaks, T, T)
+align_analysis <- check_process(aligned_peaks, F, T)
