@@ -32,21 +32,15 @@ ppm_calc <- function(mass1, mass2) {
 
 
 #' @title alignment check 
-#' @description a
-#' @importFrom dplyr %>%
-#' @importFrom tibble as_tibble_col
 #' @param aligned_peaks dataframe of aligned peaks obtained iteration function 
 #' @export
 align_check <- function(aligned_peaks) {
   odd_ind_fn <- seq(3, length(aligned_peaks$mz), 2)
   even_ind_fn <- seq(2, length(aligned_peaks$mz),2)
-  ppm_err_fn <- ppm_calc(aligned_peaks$mz[even_ind_fn], aligned_peaks$mz[odd_ind_fn]) %>% 
-    as_tibble_col(column_name = "ppm_error") 
+  ppm_err_fn <- data.frame("ppm_error" = ppm_calc(aligned_peaks$mz[even_ind_fn], aligned_peaks$mz[odd_ind_fn]))
+  #ppm_err_fn <- data.frame("ppm_error = ppm_calc(...)`
   return(ppm_err_fn)
 }
-
-align_analysis <- check_process(aligned_peaks, T, T)
-
 
 #' @title Boxplot of the ppm errors 
 #' @param ppm_err_fn dataframe obtained from `align_check`
@@ -73,7 +67,8 @@ ppm_err_plot <- function(ppm_err_fn){
 #' @param boxplot logical value obtained from user input per default set to FALSE
 #' @param xcoords vector obtained from user input or use of default value c(-50, 0)
 #' @importFrom ggplot2 ggplot
-check_process <- function(aligned_peaks, summary_errors = F, boxplot = F, xcoords = c(-50, 0)){
+check_process <- function(aligned_peaks, summary_errors = F, 
+                          boxplot = F, xcoords = c(-50, 0)){
   check <- align_check(aligned_peaks)
   x <- 2
   if (summary_errors | boxplot == T) {
@@ -121,17 +116,25 @@ binning <- function(mass, intensities, samples, tolerance = 5e-6){
   n <- length(mass) #number of peaks 
   d <- diff(mass)   #difference between masses 
   nBoundaries <- max(20L, floor(3L * log(n)))#setting of amount of bins
-  boundary <- list(left = double(nBoundaries), right = double(nBoundaries))#boundaries list 
+  boundary <- list(left = double(nBoundaries), 
+                   right = double(nBoundaries))#boundaries list 
   currentBoundary <- 1L
   boundary$left[currentBoundary] <- 1L
   boundary$right[currentBoundary] <- n
+  
   while (currentBoundary > 0L) {
     left <- boundary$left[currentBoundary]
     right <- boundary$right[currentBoundary]
     currentBoundary <- currentBoundary - 1L
     gaps <- d[left:(right - 1L)]
+    ## Find the largest gap
     gapIdx <- which.max(gaps) + left - 1L
-    l <- condition(mass = mass[left:gapIdx], intensities = intensities[left:gapIdx], samples = samples[left:gapIdx], tolerance = tolerance)
+    
+    l <- condition(mass = mass[left:gapIdx], 
+                   intensities = intensities[left:gapIdx], 
+                   samples = samples[left:gapIdx], 
+                   tolerance = tolerance)
+    
     if (is.na(l[1L])) {
       currentBoundary <- currentBoundary + 1L
       boundary$left[currentBoundary] <- left
@@ -140,7 +143,11 @@ binning <- function(mass, intensities, samples, tolerance = 5e-6){
     else {
       mass[left:gapIdx] <- l
     }
-    r <- condition(mass = mass[(gapIdx + 1L):right], intensities = intensities[(gapIdx + 1L):right], samples = samples[(gapIdx + 1L):right], tolerance = tolerance)
+    r <- condition(mass = mass[(gapIdx + 1L):right], 
+                   intensities = intensities[(gapIdx + 1L):right], 
+                   samples = samples[(gapIdx + 1L):right], 
+                   tolerance = tolerance)
+    
     if (is.na(r[1L])) {
       currentBoundary <- currentBoundary + 1L
       boundary$left[currentBoundary] <- gapIdx + 1L
@@ -151,8 +158,10 @@ binning <- function(mass, intensities, samples, tolerance = 5e-6){
     }
     if (currentBoundary == nBoundaries) {
       nBoundaries <- floor(nBoundaries * 1.5)
-      boundary$left <- c(boundary$left, double(nBoundaries - currentBoundary))
-      boundary$right <- c(boundary$right, double(nBoundaries - currentBoundary))
+      boundary$left <- c(boundary$left, 
+                         double(nBoundaries - currentBoundary))
+      boundary$right <- c(boundary$right, 
+                          double(nBoundaries - currentBoundary))
     } 
   }
   return(mass)
@@ -164,29 +173,43 @@ binning <- function(mass, intensities, samples, tolerance = 5e-6){
 #' @param tolerance obtained from the user input or use of default value 5e-6
 binPeaks <- function(df_list, tolerance = 5e-6) {
   nonEmpty <- sapply(df_list, nrow) != 0L #checking if the list is not empty
-  samples <- rep.int(seq_along(df_list), sapply(df_list, nrow))
-  mass <- unname(unlist((lapply(df_list[nonEmpty], function(x) as.double(x$mz))), recursive = FALSE, use.names = FALSE))
-  intensities <- unlist(lapply(df_list[nonEmpty], function(x) as.double(x$intensity)), recursive = FALSE, use.names = FALSE)
-  name <- unlist(lapply(df_list[nonEmpty], function(x) x$name), recursive = FALSE, use.names = FALSE)
+  samples <- rep.int(seq_along(df_list), 
+                     sapply(df_list, nrow))
+  
+  mass <- unname(unlist((lapply(df_list[nonEmpty], 
+                                function(x) as.double(x$mz))), 
+                        recursive = FALSE, use.names = FALSE))
+  intensities <- unlist(lapply(df_list[nonEmpty], 
+                               function(x) as.double(x$intensity)), 
+                        recursive = FALSE, use.names = FALSE)
+  name <- unlist(lapply(df_list[nonEmpty], 
+                        function(x) x$name), 
+                        recursive = FALSE, use.names = FALSE)
+  
   s <- sort.int(mass, index.return = TRUE) # sort vector based on masses lowest to highest 
   mass <- s$x
   intensities <- intensities[s$ix]
   samples <- samples[s$ix]
   name <- name[s$ix]
-  mass <- binning(mass = mass, intensities = intensities, samples = samples, tolerance = tolerance)
+  
+  mass <- binning(mass = mass, intensities = intensities, 
+                  samples = samples, tolerance = tolerance)
+  
   s <- sort.int(mass, index.return = TRUE)# sort results into mass lowest to highest 
   mass <- s$x
   intensities <- intensities[s$ix]
   samples <- samples[s$ix]
   name <- name[s$ix]
   lIdx <- split(seq_along(mass), samples)
+  
   df_list[nonEmpty] <- mapply(FUN = function(p, i) { # reassigning of the new masses 
     p = NULL
     p$mz <- mass[i]
     p$intensity <- intensities[i]
     p$name <- name[i]
     return(as.data.frame(p))
-  }, p = df_list[nonEmpty], i = lIdx, MoreArgs = NULL, SIMPLIFY = FALSE, USE.NAMES = FALSE)
+  }, p = df_list[nonEmpty], i = lIdx, MoreArgs = NULL, 
+  SIMPLIFY = FALSE, USE.NAMES = FALSE)
   return(as.list(df_list))
 }
 
@@ -200,21 +223,29 @@ binPeaks <- function(df_list, tolerance = 5e-6) {
 #' @importFrom tidyr pivot_wider
 #' @param df_list list of dataframes obtained from `binPeaks` 
 #' @param max_align value obtained from user input or use of default value 8
+#' @param bin_plot logical value obtained from user input per default set to FALSE
+#' decides if the line plot showing the reduction of the bins per iteration is shown
 #' @export
-iteration <- function(df_list, max_align = 8){
+iteration <- function(df_list, max_align = 8, bin_plot = F){
   count <- 0L
   bins <- c()
-  df <- plyr::join_all(df_list, by = NULL, type = "full", match = "all")
+  df <- plyr::join_all(df_list, by = NULL, 
+                       type = "full", match = "all")
   df <- df[,c("name", "mz", "intensity")]
-  df <- pivot_wider(df, names_from = "name", id_cols = "mz", 
+  df <- pivot_wider(df, names_from = "name", 
+                    id_cols = "mz", 
                     values_from = "intensity")
+  
   df <- df[order(df$mz),]
   bins <- c(bins, nrow(df))
+  
   while (TRUE) {
     new <- binPeaks(df_list)
     count <- count + 1L
-    new_df <- plyr::join_all(new, by = NULL, type = "full", match = "all")
-    new_df <- pivot_wider(new_df, names_from = "name", id_cols = "mz", 
+    new_df <- plyr::join_all(new, by = NULL, 
+                             type = "full", match = "all")
+    new_df <- pivot_wider(new_df, names_from = "name", 
+                          id_cols = "mz", 
                           values_from = "intensity")
     new_df <- new_df[order(new_df$mz),]
     bins <- c(bins, nrow(new_df))
@@ -227,25 +258,22 @@ iteration <- function(df_list, max_align = 8){
     df_list <- new
     df <- new_df
   }
-  return(df)
-}
-
-#' @title Plotting of the decrease in peaks 
-#' @param df_bins dataframe obtained from `iteration`
-#' @param bins vector containing number of bins obtained from `iteration`
-#' @param count value representing the number of iterations obtained from `iteration`
-#' @importFrom ggplot2 ggplot
-bin_plot <- function(df_bins, bins, count){
+  if (bin_plot == T) {
   df_bins <- as.data.frame(cbind(bins, 0:(count)))
   reduction_plot <- ggplot(df_bins) + geom_line(aes(x = V2, y = bins)) +
     labs(x = "Number of Alignments",
          y = "Number of bins") 
-  return(reduction_plot)
+  df <- list(df = df, 
+             reduction_plot = reduction_plot)
+    return(df)
+  }
+  return(df)
 }
+
 
 #-------------------------------------------
 ##testing  
 #-------------------------------------------
 df_list <- get_data(file)
-aligned_peaks <- iteration(df_list, max_align = 5)
+aligned_peaks <- iteration(df_list, max_align = 5, T)
 align_analysis <- check_process(aligned_peaks, F, T)
