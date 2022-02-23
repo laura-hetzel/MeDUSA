@@ -9,7 +9,6 @@ ppm_calc <- function(mass1, mass2) {
   return(ppm_error)
 }
 
-
 #' @title alignment check
 #' @param aligned_peaks dataframe of aligned peaks obtained iteration function
 #' @export
@@ -32,40 +31,7 @@ ppm_err_plot <- function(ppm_err_fn){
   return(ppm_err_plot_fn)
 }
 
-#' @title Checking the results of the alignment with boxplot output if desired
-#' @description here the user can choose what kind of analysis they want to have on
-#' their alignment, check_process makes sure that all the m/z values are aligned/binned
-#' correctly, check_process takes a data frame of peaks with mz column as an argument,
-#' and the coordinates for the plot to be zoomed in on, as an optional argument
-#' check_process outputs either a dataframe (1) or a list of two to three elements:
-#' 1- Dataframe of 1 column containing the ppm error values
-#' 2- (optional)table of summary stats of ppm error values
-#' 3- (optional)- boxplot of the ppm erro values with xcoords zoomed in to -50,0 (default)
-#' @param aligned_peaks dataframe obtained from `iteration`
-#' @param summary_errors logical value obtained from user input per default set to FALSE
-#' @param boxplot logical value obtained from user input per default set to FALSE
-#' @param xcoords vector obtained from user input or use of default value c(-50, 0)
-#' @importFrom ggplot2 ggplot
-check_process <- function(aligned_peaks, summary_errors = F,
-                          boxplot = F, xcoords = c(-50, 0)){
-  check <- align_check(aligned_peaks)
-  x <- 2
-  if (summary_errors | boxplot == T) {
-    input <- check
-    check <- as.list(check)
-  }
-  if (summary_errors == T) {
-    ppm_err_summary_fn <- summary(input)
-    check[[x]] <- ppm_err_summary_fn
-    x <- x + 1
-  }
-  if (boxplot == T) {
-    error_plot <- ppm_err_plot(input) +
-      coord_cartesian(xlim = xcoords)
-    check[[x]] <- error_plot
-  }
-  return(check)
-}
+
 
 #' @title Deletion of unwanted samples
 #' @description binning dependency 1

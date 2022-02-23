@@ -42,6 +42,7 @@ Imports:
     pbapply (>= 1.5.0),
     PeriodicTable (>= 0.1.2),
     plotly (>= 4.10.0),
+    plyr (>= 1.8.6),
     pmp (>= 1.6.0),
     pROC (>= 1.18.0),
     purrr (>= 0.3.4),
