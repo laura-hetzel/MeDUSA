@@ -8,8 +8,7 @@
 #' @return volcano plot
 #' @import ggplot2
 #' @importFrom ggsci scale_color_aaas
-#' @importFrom ggpubr theme_pubr
-#' @importFrom ggpubr labs_pubr
+#' @importFrom ggpubr theme_pubr labs_pubr
 volcanoPlot <- function(data, xvalues, yvalues, title){
   ggplot(data) +
     geom_point(aes(x=xvalues, y=-log10(yvalues), colour=significant)) + ## color by significant of fdr <0.1
@@ -39,14 +38,10 @@ volcanoPlot <- function(data, xvalues, yvalues, title){
 #' @return
 #' @export
 #' @importFrom FactoMineR PCA
-#' @importFrom factoextra get_pca_var
-#' @importFrom factoextra fviz_eig
-#' @importFrom factoextra fviz_pca_var
-#' @importFrom factoextra fviz_pca_ind
+#' @importFrom factoextra get_pca_var fviz_eig fviz_pca_var fviz_pca_ind
 #' @importFrom ggpubr ggscatter
 #' @importFrom stats prcomp
-#' @importFrom ggplot2 geom_hline
-#' @importFrom ggplot2 geom_vline
+#' @importFrom ggplot2 geom_hline geom_vline
 #' @importFrom dplyr %>%
 #' @importFrom graphics par
 #'
@@ -155,8 +150,7 @@ PCA_ellipse<-function(data,classifiers){
 #' @title PCA ellipse plot from stats
 #' @importFrom ggpubr ggscatter
 #' @importFrom stats prcomp
-#' @importFrom ggplot2 geom_hline
-#' @importFrom ggplot2 geom_vline
+#' @importFrom ggplot2 geom_hline geom_vline
 #' @importFrom dplyr %>%
 #' @param classifiers sample groups as factor
 #' @param data transposed dataframe with m/z as columns
@@ -177,29 +171,55 @@ PCA_ellipse_stats<-function(data,classifiers){
 #' @param classifiers samples groups as factor
 #' @param comp integer value indicating the component of interest from the object
 #' @param method method for contribution "median", "mean"
-#' @importFrom mixOmics plsda
-#' @importFrom mixOmics plotIndiv
-#' @importFrom mixOmics auroc
-#' @importFrom mixOmics plotLoadings
-#' @importFrom dplyr %>%
+#' @importFrom mixOmics plsda plotIndiv auroc plotLoadings
 #' @importFrom graphics par
 #'
 #' @examples
-
 plotPLSDA <- function(data, classifiers,comp,method){
   plsda <-  plsda(data, classifiers)
-
   ## plotting the samples classifiers with ellipses
   plotIndiv(plsda, ind.names = FALSE, star = TRUE, ellipse = TRUE, legend = TRUE,title = "PLS-DA samples")
    par(ask=TRUE)
-
   ## plotting the ROC curve and calculating the auc of the plsda model
    auroc(plsda,roc.comp = comp, title = "PLS-DA ROC Curve ")
  par(ask=TRUE)
-
    plotLoadings(plsda, contrib = 'max', method = method, comp = comp,title="PLS-DA contribution")
-
 }
+
+
+#' @title PLSDA individual plot
+#' @importFrom mixOmics plsda plotIndiv
+#' @param data transposed dataframe with m/z as columns
+#' @param classifiers sample groups as factor
+PLSDA_ind<-function(data,classifiers){
+  plsda <-  plsda(data, classifiers)
+  ## plotting the samples classifiers with ellipses
+  plotIndiv(plsda, ind.names = FALSE, star = TRUE, ellipse = TRUE, legend = TRUE,title = "PLS-DA samples") 
+}
+
+
+#' @title PLSDA ROC plot
+#' @importFrom mixOmics plsda auroc
+#' @param data transposed dataframe with m/z as columns
+#' @param classifiers sample groups as factor
+#' @param comp integer value indicating the component of interest from the object (default=1)
+PLSDA_ROC<-function(data,classifiers,comp=1){
+  plsda <-  plsda(data, classifiers)
+  auroc(plsda,roc.comp = comp, title = "PLS-DA ROC Curve ")
+}
+
+
+#' @title PLSDA ROC plot
+#' @importFrom mixOmics plsda plotLoadings
+#' @param data transposed dataframe with m/z as columns
+#' @param classifiers sample groups as factor
+#' @param comp integer value indicating the component of interest from the object (default=1)
+#' @param method method for contribution "median" or "mean", default is "median"
+PLSDA_loadings<-function(data,classifiers,comp=1,method="median"){
+  plsda <-  plsda(data, classifiers)
+  plotLoadings(plsda, contrib = 'max', method = method, comp = comp,title="PLS-DA contribution")
+}
+
 
 #' heatmap
 #' @description heatmap plot of m/z intensities of grouped samples
@@ -245,13 +265,10 @@ heatMap<-function(data,classifiers,pretty.order.rows=T,pretty.order.cols =T){
 #' @param highlight_color the highlight color, the default is c("maroon","navy")
 #' @importFrom GGally ggparcoord
 #' @importFrom ggpubr theme_pubr
-#' @importFrom ggplot2 geom_line
-#' @importFrom ggplot2 geom_point
-#' @importFrom ggplot2 scale_color_manual
+#' @importFrom ggplot2 geom_line geom_point scale_color_manual
 parallel_coord <- function(data, tag = c(TRUE,FALSE),columns,groupColumn,scale,boxplot = FALSE,
                            highlight=highlight,highlight_color=c("maroon","navy")){
   if(tag[1] == FALSE){
-
     ggparcoord(data,
                columns = columns, groupColumn = groupColumn,
                showPoints = TRUE,
@@ -267,13 +284,10 @@ parallel_coord <- function(data, tag = c(TRUE,FALSE),columns,groupColumn,scale,b
       font("ylab", size = 20)+
       font("legend.title", face = "bold",size=15)+
       font("legend.text",size=15)
-
   }
   else if(tag[1] == TRUE){
-
     ## tagging a certain value to highlight it in the parallel coords
     tag<-within(data, Highlight<-highlight)
-
     ggparcoord(tag[order(tag$Highlight),], columns = columns, groupColumn = "Highlight",
                ## we use the extra column we created as groupcolumn to show this highlight
                showPoints = TRUE,
@@ -283,10 +297,7 @@ parallel_coord <- function(data, tag = c(TRUE,FALSE),columns,groupColumn,scale,b
       labs(x = "Groups",y= "m/z intensity") +
       theme(plot.title = element_text(size=20),
             panel.grid = element_blank())+geom_line(size=1)
-
-
   }
-
   }
 
 # random forest visualization ---------------------------------------------
