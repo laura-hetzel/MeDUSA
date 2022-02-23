@@ -116,7 +116,7 @@ dims_pipeline <- function(data, plot_md = FALSE){
       dat <-  suppressMessages(xcms::findChromPeaks(inj, param = params))
       # Filter using exclusing list
       df <- as.data.frame(xcms::chromPeaks(dat))
-      df <- md_pipeline(df[,c(1,2,3)], plot_md)
+      df <- MassDefectFilter(df[,c(1,2,3)], plot_md)
       # filter the peaks using the md
       # xcms::filterChromPeaks(dat)
       dat
