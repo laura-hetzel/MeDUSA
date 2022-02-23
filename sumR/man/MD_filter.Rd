@@ -4,14 +4,32 @@
 \alias{MD_filter}
 \title{MD filter}
 \usage{
-MD_filter(MD_df, filter_list, incl_list)
+MD_filter(
+  MD_df,
+  filter_df,
+  incl_list = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt", package =
+    "sumR"),
+  mass_accuracy = 0.01
+)
 
-MD_filter(MD_df, filter_list, incl_list)
+MD_filter(
+  MD_df,
+  filter_df,
+  incl_list = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt", package =
+    "sumR"),
+  mass_accuracy = 0.01
+)
 }
 \arguments{
-\item{filter_list}{}
+\item{MD_df}{obtained from from the HMDB using `mass_defect_calculation`}
 
-\item{incl_list}{}
+\item{filter_df}{obtained from the `make_filter_list`}
+
+\item{incl_list}{(optional) path to inclusion list obtained from 
+user input or use of default inclusion list (McMillan et al., 2016)}
+
+\item{mass_accuracy}{(optional) obtained from user input or use of 
+default value set to 0.01}
 
 \item{dataframe}{is the dataframe on which KM calculations need to be
 conducted}

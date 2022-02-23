@@ -4,10 +4,12 @@
 \alias{plot_mz_MD}
 \title{Plotting of the data - m/z vs. MD}
 \usage{
-plot_mz_MD(MD_df, title)
+plot_mz_MD(MD_df, MD_df_filtered)
 }
 \arguments{
-\item{dataframe}{filtered_MD_df obtained from the HMDB using `MD_filter`}
+\item{MD_df}{data frame obtained from the experimental data using `mass_defect_calculation`}
+
+\item{MD_df_filtered}{data frame obtained from the experimental data using `MD_filter`}
 }
 \description{
 Plotting of the data - m/z vs. MD

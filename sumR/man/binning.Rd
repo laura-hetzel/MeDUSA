@@ -2,16 +2,19 @@
 % Please edit documentation in R/binning.R
 \name{binning}
 \alias{binning}
-\title{Binning function}
+\title{Setting of the bin boundaries}
 \usage{
-binning(mass, tolerance, times, sample_num)
+binning(mass, intensities, samples, tolerance = 5e-06)
 }
 \arguments{
-\item{sample_num}{}
-}
-\value{
+\item{mass}{obtained from the input files}
 
+\item{intensities}{obtained from the input files}
+
+\item{samples}{obtained from the input files}
+
+\item{tolerance}{obtained from the user input or use of default value 5e-6}
 }
 \description{
-Binning function
+binning dependency 2
 }

@@ -81,7 +81,7 @@ combine_spectra_centroid <- function(data){
 
 #' Title
 #'
-#' @param x 
+#' @param x
 #'
 #' @return
 #' @export
@@ -92,9 +92,9 @@ combine_intensity <- function(x){
   ifelse(is.nan(m), 0, m)
 }
 
-#' @param data 
+#' @param data
 #'
-#' @param plot_md 
+#' @param plot_md
 #'
 #' @title DIMS pipeline
 #' @importFrom xcms MSWParam findChromPeaks groupChromPeaks MzClustParam
@@ -136,7 +136,7 @@ dims_pipeline <- function(data, plot_md = FALSE){
 #' @title Process features obtained from XCMS
 #'
 #' @param data XCMS object with grouped peaks
-#' @param impute_method 
+#' @param impute_method
 #' @param remove_blanks Should blank samples be removed?
 #'
 #' @importFrom xcms featureValues featureDefinitions
@@ -179,78 +179,39 @@ normalize_features <- function(intensity_df){
   as.data.frame(cbind(intensity_df, others))
 }
 
-#' ppm calculation
-#'
-#' @description calculates the parts per million error between two different
-#' masses
-#' @export
-ppm_calc <- function(mass1, mass2) {
-  ((mass1 - mass2) / mass1) * 1e6
-}
-
-#' Align check
-#'
-#' @param data_frame_fn 
-#' @param xcoords 
-#'
-#' @description align_check makes sure that all the m/z values are
-#' aligned/binned correctly
-#'
-#' align_check takes 2 arguments (1 optional), a dataframe of peaks with mz
-#' column, and an optinal argument for the coordinates of the plot to be zoomed
-#' in on
-#'
-#' align_check outputs a list of three elements:
+#' @title Checking the results of the alignment with boxplot output if desired
+#' @description here the user can choose what kind of analysis they want to have on
+#' their alignment, check_process makes sure that all the m/z values are aligned/binned
+#' correctly, check_process takes a data frame of peaks with mz column as an argument,
+#' and the coordinates for the plot to be zoomed in on, as an optional argument
+#' check_process outputs either a dataframe (1) or a list of two to three elements:
 #' 1- Dataframe of 1 column containing the ppm error values
-#' 2- boxplot of the ppm erro values with xcoords zoomed in to -20,0 (default)
-#' 3- table of summary stats of ppm error values
-#'
-#' @examples
-#' @export
-#' @importFrom tibble as_tibble_col
-#' @import ggplot2
-#' @importFrom magrittr %>%
-align_check <- function(data_frame_fn, xcoords = c(-20, 0)) {
-  odd_ind_fn <- seq(3, length(data_frame_fn$mz), 2)
-  even_ind_fn <- seq(2, length(data_frame_fn$mz), 2)
-  ppm_err_fn <- ppm_calc(data_frame_fn$mz[even_ind_fn],
-                         data_frame_fn$mz[odd_ind_fn]) %>%
-    as_tibble_col(column_name = "ppm_error")
-  ppm_err_plot_fn <- ggplot(ppm_err_fn, aes(x = ppm_error)) +
-    geom_boxplot() +
-    coord_cartesian(xlim = xcoords) +
-    ggtitle("ppm error boxplot") +
-    theme_classic(base_size = 20)
-  ppm_err_summary_fn <- summary(ppm_err_fn)
-  ppm_err_list <- list(
-    ppm_error_df = ppm_err_fn,
-    boxplot = ppm_err_plot_fn,
-    summary_stats = ppm_err_summary_fn
-  )
-  # paste(nrow(data_frame) - ) add a print
-  return(ppm_err_list)
-}
-
-#' Title
-#'
-#' @param mass
-#' @param samples
-#' @param tolerance
-#'
-#' @return
-#' @export
-#'
-#' @examples
-condition <- function(mass, samples, tolerance) {
-  if (anyDuplicated(samples)) {
-    return(NA)
+#' 2- (optional)table of summary stats of ppm error values
+#' 3- (optional)- boxplot of the ppm erro values with xcoords zoomed in to -50,0 (default)
+#' @param aligned_peaks dataframe obtained from `iteration`
+#' @param summary_errors logical value obtained from user input per default set to FALSE
+#' @param boxplot logical value obtained from user input per default set to FALSE
+#' @param xcoords vector obtained from user input or use of default value c(-50, 0)
+#' @importFrom ggplot2 ggplot
+bin_align_check_process <- function(aligned_peaks, summary_errors = F,
+                          boxplot = F, xcoords = c(-50, 0)){
+  check <- align_check(aligned_peaks)
+  x <- 2
+  if (summary_errors | boxplot == T) {
+    input <- check
+    check <- as.list(check)
   }
-  mean_mass <- mean(mass)
-  if (any(abs(mass - mean_mass) / mean_mass > tolerance)) {
-    return(NA)
+  if (summary_errors == T) {
+    ppm_err_summary_fn <- summary(input)
+    check[[x]] <- ppm_err_summary_fn
+    x <- x + 1
   }
-
-  return(mean_mass)
+  if (boxplot == T) {
+    error_plot <- ppm_err_plot(input) +
+      coord_cartesian(xlim = xcoords)
+    check[[x]] <- error_plot
+  }
+  return(check)
 }
 
 #' Background removal
@@ -265,12 +226,12 @@ condition <- function(mass, samples, tolerance) {
 #' @return
 
 #'
-#' @param dataframe 
-#' @param filter_type 
-#' @param blank_thresh 
-#' @param nsamples_thresh 
-#' @param blank_regx 
-#' @param filtered_df 
+#' @param dataframe
+#' @param filter_type
+#' @param blank_thresh
+#' @param nsamples_thresh
+#' @param blank_regx
+#' @param filtered_df
 #'
 #' @examples
 #' @importFrom dplyr select contains if_else filter

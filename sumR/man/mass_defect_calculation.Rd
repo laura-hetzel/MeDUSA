@@ -7,7 +7,7 @@
 mass_defect_calculation(dataframe)
 }
 \arguments{
-\item{dataframe}{Data frame obtained from HMDB using `get_hmdb_file`}
+\item{dataframe}{data frame containing experimental data}
 }
 \description{
 Mass defect calculation function
