@@ -181,14 +181,14 @@ normalize_features <- function(intensity_df){
 
 #' @title ppm calculation
 #' @description ppm_calc calculated the parts per million error between two different masses
-#' @param mass1 obtained from the input files
-#' @param mass2 obtained from the input files
-#' @examples ppm_calc(mass1, mass2)
+#' @param mass1 input from the `align_check` functions
+#' @param mass2 input from the `align_check` functions
 #' @export
 ppm_calc <- function(mass1, mass2) {
-  ppm_error <- ((mass1 - mass2)/mass1) * 1e6
+  ppm_error <- ((mass1 - mass2) / mass1) * 1e6
   return(ppm_error)
 }
+
 
 #' @title alignment check
 #' @param aligned_peaks dataframe of aligned peaks obtained iteration function
@@ -197,7 +197,6 @@ align_check <- function(aligned_peaks) {
   odd_ind_fn <- seq(3, length(aligned_peaks$mz), 2)
   even_ind_fn <- seq(2, length(aligned_peaks$mz),2)
   ppm_err_fn <- data.frame("ppm_error" = ppm_calc(aligned_peaks$mz[even_ind_fn], aligned_peaks$mz[odd_ind_fn]))
-  #ppm_err_fn <- data.frame("ppm_error = ppm_calc(...)`
   return(ppm_err_fn)
 }
 
