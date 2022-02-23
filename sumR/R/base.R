@@ -179,6 +179,39 @@ normalize_features <- function(intensity_df){
   as.data.frame(cbind(intensity_df, others))
 }
 
+#' @title ppm calculation
+#' @description ppm_calc calculated the parts per million error between two different masses
+#' @param mass1 obtained from the input files
+#' @param mass2 obtained from the input files
+#' @examples ppm_calc(mass1, mass2)
+#' @export
+ppm_calc <- function(mass1, mass2) {
+  ppm_error <- ((mass1 - mass2)/mass1) * 1e6
+  return(ppm_error)
+}
+
+#' @title alignment check
+#' @param aligned_peaks dataframe of aligned peaks obtained iteration function
+#' @export
+align_check <- function(aligned_peaks) {
+  odd_ind_fn <- seq(3, length(aligned_peaks$mz), 2)
+  even_ind_fn <- seq(2, length(aligned_peaks$mz),2)
+  ppm_err_fn <- data.frame("ppm_error" = ppm_calc(aligned_peaks$mz[even_ind_fn], aligned_peaks$mz[odd_ind_fn]))
+  #ppm_err_fn <- data.frame("ppm_error = ppm_calc(...)`
+  return(ppm_err_fn)
+}
+
+#' @title Boxplot of the ppm errors
+#' @param ppm_err_fn dataframe obtained from `align_check`
+#' @importFrom ggplot2 ggplot
+ppm_err_plot <- function(ppm_err_fn){
+  ppm_err_plot_fn <- ggplot(ppm_err_fn, aes(x = ppm_error)) +
+    geom_boxplot() +
+    ggtitle("ppm error boxplot") +
+    theme_classic(base_size = 20)
+  return(ppm_err_plot_fn)
+}
+
 #' @title Checking the results of the alignment with boxplot output if desired
 #' @description here the user can choose what kind of analysis they want to have on
 #' their alignment, check_process makes sure that all the m/z values are aligned/binned
@@ -212,6 +245,25 @@ bin_align_check_process <- function(aligned_peaks, summary_errors = F,
     check[[x]] <- error_plot
   }
   return(check)
+}
+
+
+#' @title Deletion of unwanted samples
+#' @description binning dependency 1
+#' delete any duplication of a samples
+#' delete any sample that is kicked out by the tolerance
+#' @param mass obtained from the input files
+#' @param intensities obtained from the input files
+#' @param samples obtained from the input files
+#' @param tolerance obtained from the user input or use of default value 5e-6
+condition <- function(mass, intensities, samples, tolerance = 5e-6) {
+  if (anyDuplicated(samples)) {
+    return(NA)
+  }
+  if (any(abs(mass - mean(mass))/mean(mass) > tolerance)) {
+    return(NA)
+  }
+  return(mean(mass))
 }
 
 #' Background removal
