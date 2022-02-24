@@ -183,7 +183,6 @@ normalize_features <- function(intensity_df){
 #' @description ppm_calc calculated the parts per million error between two different masses
 #' @param mass1 input from the `align_check` functions
 #' @param mass2 input from the `align_check` functions
-#' @export
 ppm_calc <- function(mass1, mass2) {
   ppm_error <- ((mass1 - mass2) / mass1) * 1e6
   return(ppm_error)
@@ -203,6 +202,7 @@ align_check <- function(aligned_peaks) {
 #' @title Boxplot of the ppm errors
 #' @param ppm_err_fn dataframe obtained from `align_check`
 #' @importFrom ggplot2 ggplot
+#' @export
 ppm_err_plot <- function(ppm_err_fn){
   ppm_err_plot_fn <- ggplot(ppm_err_fn, aes(x = ppm_error)) +
     geom_boxplot() +
@@ -225,6 +225,7 @@ ppm_err_plot <- function(ppm_err_fn){
 #' @param boxplot logical value obtained from user input per default set to FALSE
 #' @param xcoords vector obtained from user input or use of default value c(-50, 0)
 #' @importFrom ggplot2 ggplot
+#' @export
 bin_align_check_process <- function(aligned_peaks, summary_errors = F,
                           boxplot = F, xcoords = c(-50, 0)){
   check <- align_check(aligned_peaks)
