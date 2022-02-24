@@ -8,8 +8,7 @@
 #' @return volcano plot
 #' @import ggplot2
 #' @importFrom ggsci scale_color_aaas
-#' @importFrom ggpubr theme_pubr
-#' @importFrom ggpubr labs_pubr
+#' @importFrom ggpubr theme_pubr labs_pubr
 volcanoPlot <- function(data, xvalues, yvalues, title){
   ggplot(data) +
     geom_point(aes(x=xvalues, y=-log10(yvalues), colour=significant)) + ## color by significant of fdr <0.1
@@ -39,15 +38,11 @@ volcanoPlot <- function(data, xvalues, yvalues, title){
 #' @return
 #' @export
 #' @importFrom FactoMineR PCA
-#' @importFrom factoextra get_pca_var
-#' @importFrom factoextra fviz_eig
-#' @importFrom factoextra fviz_pca_var
-#' @importFrom factoextra fviz_pca_ind
+#' @importFrom factoextra get_pca_var fviz_eig fviz_pca_var fviz_pca_ind
 #' @importFrom ggpubr ggscatter
 #' @importFrom stats prcomp
-#' @importFrom ggplot2 geom_hline
-#' @importFrom ggplot2 geom_vline
-#' @importFrom magrittr %>%
+#' @importFrom ggplot2 geom_hline geom_vline
+#' @importFrom dplyr %>%
 #' @importFrom graphics par
 #'
 #' @examples
@@ -100,35 +95,131 @@ plot_PCA <- function(data, method = c("facto", "stats"),classifiers){
   }
 
 }
+
+
+#' @title PCA scree plot
+#' @importFrom FactoMineR PCA
+#' @importFrom factoextra fviz_eig
+#' @param data transposed dataframe with m/z as columns
+PCA_scree<-function(data){
+  res_pca <- PCA(data, graph = FALSE)
+  fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 100),main="PCA - scree plot" ) 
+}
+
+#' @title PCA variables plot
+#' @importFrom FactoMineR PCA
+#' @importFrom factoextra get_pca_var
+#' @importFrom factoextra fviz_pca_var
+#' @param data transposed dataframe with m/z as columns
+PCA_variables<-function(data){
+  res_pca <- PCA(data, graph = FALSE)
+  var <- get_pca_var(res_pca)
+ fviz_pca_var(res_pca,col.var = "grey",col.circle = "grey",title="variables-PCA")
+}
+
+
+#' @title PCA individuals plot
+#' @importFrom FactoMineR PCA
+#' @importFrom factoextra fviz_pca_ind
+#' @param data transposed dataframe with m/z as columns
+PCA_ind<-function(data){
+  res_pca <- PCA(data, graph = FALSE)
+  fviz_pca_ind(res_pca, col.ind = "cos2",
+                     gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+                     repel = TRUE,# Avoid text overlapping (slow if many points)
+                     title="individuals-PCA - names of the sample")
+}
+
+#' @title PCA ellipse plot
+#' @importFrom FactoMineR PCA
+#' @importFrom factoextra fviz_pca_ind
+#' @param data transposed dataframe with m/z as columns
+#' @param classifiers sample groups as factor
+PCA_ellipse<-function(data,classifiers){
+  res_pca <- PCA(data, graph = FALSE)
+  fviz_pca_ind(res_pca,
+               geom.ind = "point", # show points only (nbut not "text")
+               col.ind = classifiers, # color by groups
+               palette = "viridis",
+               addEllipses = TRUE, # Concentration ellipses
+               legend.title = "Sample type",
+               title = "PCA samples ")
+}
+
+
+#' @title PCA ellipse plot from stats
+#' @importFrom ggpubr ggscatter
+#' @importFrom stats prcomp
+#' @importFrom ggplot2 geom_hline geom_vline
+#' @importFrom dplyr %>%
+#' @param classifiers sample groups as factor
+#' @param data transposed dataframe with m/z as columns
+PCA_ellipse_stats<-function(data,classifiers){
+  PCA2 <- prcomp(as.matrix(data), scale. = F) #PCA model using transposed df
+  PCA_scores <- as.data.frame(PCA2$x) %>% dplyr::select(PC1, PC2)
+  PCA_scores$Sample <- classifiers ## we add our classifiers here
+  ggscatter(PCA_scores, x = "PC1", y = "PC2",
+            color = "Sample", shape = "Sample", palette = "aaas",
+            mean.point = TRUE, ellipse = TRUE, title = "PCA Samples") +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "black")
+}
+
 #' Plot PLS-DA
 #'
 #' @param data transposed dataframe with m/z as columns
 #' @param classifiers samples groups as factor
 #' @param comp integer value indicating the component of interest from the object
 #' @param method method for contribution "median", "mean"
-#' @importFrom mixOmics plsda
-#' @importFrom mixOmics plotIndiv
-#' @importFrom mixOmics auroc
-#' @importFrom mixOmics plotLoadings
-#' @importFrom magrittr %>%
+#' @importFrom mixOmics plsda plotIndiv auroc plotLoadings
 #' @importFrom graphics par
 #'
 #' @examples
-
 plotPLSDA <- function(data, classifiers,comp,method){
   plsda <-  plsda(data, classifiers)
-
   ## plotting the samples classifiers with ellipses
   plotIndiv(plsda, ind.names = FALSE, star = TRUE, ellipse = TRUE, legend = TRUE,title = "PLS-DA samples")
    par(ask=TRUE)
-
   ## plotting the ROC curve and calculating the auc of the plsda model
    auroc(plsda,roc.comp = comp, title = "PLS-DA ROC Curve ")
  par(ask=TRUE)
-
    plotLoadings(plsda, contrib = 'max', method = method, comp = comp,title="PLS-DA contribution")
-
 }
+
+
+#' @title PLSDA individual plot
+#' @importFrom mixOmics plsda plotIndiv
+#' @param data transposed dataframe with m/z as columns
+#' @param classifiers sample groups as factor
+PLSDA_ind<-function(data,classifiers){
+  plsda <-  plsda(data, classifiers)
+  ## plotting the samples classifiers with ellipses
+  plotIndiv(plsda, ind.names = FALSE, star = TRUE, ellipse = TRUE, legend = TRUE,title = "PLS-DA samples") 
+}
+
+
+#' @title PLSDA ROC plot
+#' @importFrom mixOmics plsda auroc
+#' @param data transposed dataframe with m/z as columns
+#' @param classifiers sample groups as factor
+#' @param comp integer value indicating the component of interest from the object (default=1)
+PLSDA_ROC<-function(data,classifiers,comp=1){
+  plsda <-  plsda(data, classifiers)
+  auroc(plsda,roc.comp = comp, title = "PLS-DA ROC Curve ")
+}
+
+
+#' @title PLSDA ROC plot
+#' @importFrom mixOmics plsda plotLoadings
+#' @param data transposed dataframe with m/z as columns
+#' @param classifiers sample groups as factor
+#' @param comp integer value indicating the component of interest from the object (default=1)
+#' @param method method for contribution "median" or "mean", default is "median"
+PLSDA_loadings<-function(data,classifiers,comp=1,method="median"){
+  plsda <-  plsda(data, classifiers)
+  plotLoadings(plsda, contrib = 'max', method = method, comp = comp,title="PLS-DA contribution")
+}
+
 
 #' heatmap
 #' @description heatmap plot of m/z intensities of grouped samples
@@ -138,7 +229,7 @@ plotPLSDA <- function(data, classifiers,comp,method){
 #' @param pretty.order.cols logical vector the default is TRUE
 #' @importFrom superheat superheat
 #' @importFrom viridis mako
-#' @importFrom magrittr %>%
+#' @importFrom dplyr %>%
 heatMap<-function(data,classifiers,pretty.order.rows=T,pretty.order.cols =T){
  superheat <- data %>% superheat(left.label.size = 0.05,
             left.label.text.size =7,
@@ -174,13 +265,10 @@ heatMap<-function(data,classifiers,pretty.order.rows=T,pretty.order.cols =T){
 #' @param highlight_color the highlight color, the default is c("maroon","navy")
 #' @importFrom GGally ggparcoord
 #' @importFrom ggpubr theme_pubr
-#' @importFrom ggplot2 geom_line
-#' @importFrom ggplot2 geom_point
-#' @importFrom ggplot2 scale_color_manual
+#' @importFrom ggplot2 geom_line geom_point scale_color_manual
 parallel_coord <- function(data, tag = c(TRUE,FALSE),columns,groupColumn,scale,boxplot = FALSE,
                            highlight=highlight,highlight_color=c("maroon","navy")){
   if(tag[1] == FALSE){
-
     ggparcoord(data,
                columns = columns, groupColumn = groupColumn,
                showPoints = TRUE,
@@ -196,13 +284,10 @@ parallel_coord <- function(data, tag = c(TRUE,FALSE),columns,groupColumn,scale,b
       font("ylab", size = 20)+
       font("legend.title", face = "bold",size=15)+
       font("legend.text",size=15)
-
   }
   else if(tag[1] == TRUE){
-
     ## tagging a certain value to highlight it in the parallel coords
     tag<-within(data, Highlight<-highlight)
-
     ggparcoord(tag[order(tag$Highlight),], columns = columns, groupColumn = "Highlight",
                ## we use the extra column we created as groupcolumn to show this highlight
                showPoints = TRUE,
@@ -212,29 +297,22 @@ parallel_coord <- function(data, tag = c(TRUE,FALSE),columns,groupColumn,scale,b
       labs(x = "Groups",y= "m/z intensity") +
       theme(plot.title = element_text(size=20),
             panel.grid = element_blank())+geom_line(size=1)
-
-
+  }
   }
 
-  }
+# random forest visualization ---------------------------------------------
 
 # random forest visualization ---------------------------------------------
 
 #' Plot random forest cross validation ROC
 #' @description plotting ROC curves for different 5 cross-validation sub models vs ROC curve of the final model
 #' Note : for this plot cross-validation from sumR package needs to be done first
-#' @param model the final model
-#' @param test_set the final test set with samples column
-#' @importFrom pROC roc
-#' @importFrom pROC auc
+#' @param roc_all ROC list from randomForest_CV function output
+#' @param auc_all AUC list from randomForest_CV function output
+#' @param rocfinal rocfinal from RF_model function output
+#' @param aucfinal aucfinal from RF_model function output
 #' @importFrom graphics par
-RF_CV_plots<-function(model,test_set){
-  test_set$samples <- as.factor(test_set$samples)
-  results <- predict(model,newdata=test_set,type="class")
-  results<-as.data.frame(cbind("actual"=test_set$samples,"prediction"=results))
-  rocfinal<- roc(results$actual,results$prediction )
-  aucfinal<- auc(rocfinal)
-
+RF_CV_plots<-function(roc_all,auc_all,rocfinal,aucfinal){
   # ROC curve of each fold
   par(mfrow=c(2,3))
   plot(roc_all[[1]],col = "Red", main = paste("Fold_1, AUC:", as.character(round(auc_all[[1]], 3))))
@@ -242,10 +320,17 @@ RF_CV_plots<-function(model,test_set){
   plot(roc_all[[3]],col = "Red", main = paste("Fold_3, AUC:", as.character(round(auc_all[[3]], 3))))
   plot(roc_all[[4]],col = "Red", main = paste("Fold_4, AUC:", as.character(round(auc_all[[4]], 3))))
   plot(roc_all[[5]],col = "Red", main = paste("Fold_5, AUC:", as.character(round(auc_all[[5]], 3))))
-  plot(rocfinal,col = "blue", main = paste("final model, AUC:", as.character(round(aucfinal, 3))))
-
+  plot(rocfinal,col = "blue", main = paste("final model, AUC:", as.character(round(aucfinal, 3)))) 
 }
 
+
+#' @description plotting ROC curves for any choosen model (final (rocfinal and aucfinal) or 
+#' from cross validation model(sepcifiy model number roc_all[[1]] and auc_all[[1]]))
+#' @param roc ROC of desired model
+#' @param auc AUC of desired model
+ROC_plot <- function(roc,auc){
+  plot(roc,col = "Red", main = paste("AUC:", as.character(round(auc, 3))))
+}
 
 #' random forest plots
 #' @description random forest plots .. click next to view the next plots
@@ -253,41 +338,39 @@ RF_CV_plots<-function(model,test_set){
 #' @param model random forest model
 #' @param training_set training set that was used for the random forest model with samples column
 #' @importFrom randomForest varImpPlot
-#' @importFrom ggplot2 ggplot
-#' @importFrom ggplot2 geom_label
-#' @importFrom ggplot2 theme_bw
-#' @importFrom ggplot2 ggtitle
-#' @importFrom stats cmdscale
-#' @importFrom graphics par
 RandomForestPlots<-function(model,training_set){
-
   plot(model)
   par(ask=TRUE)
-
   # Plot the important variables
   varImpPlot(model,col="blue",pch= 2)
   par(ask=TRUE)
+  MDS_plot(model,training_set)
+}
 
 
-  # MDS plot
+
+#' random forest plots
+#' @title MDS plot
+#' @param model random forest model
+#' @param training_set training set that was used for the random forest model with samples column
+#' @importFrom ggplot2 ggplot geom_label theme_bw ggtitle
+#' @importFrom stats cmdscale
+#' @importFrom graphics par
+MDS_plot<-function(model,training_set){
   distance_matrix <- as.dist(1-model$proximity)
-
   mds <- cmdscale(distance_matrix, eig=TRUE, x.ret=TRUE)
-
   ## calculate the percentage of variation that each MDS axis accounts for...
   mds_var <- round(mds$eig/sum(mds$eig)*100, 1)
-
   ## now make a fancy looking plot that shows the MDS axes and the variation:
   mds_values <- mds$points
   mds_data <- data.frame(Sample=rownames(mds_values),
                          X=mds_values[,1],
                          Y=mds_values[,2],
                          Status=training_set$samples)
-
   ggplot(data=mds_data, aes(x=X, y=Y, label=Sample)) +
     geom_label(aes(color=Status))+
     theme_bw() +
     xlab(paste("MDS1 - ", mds_var[1], "%", sep="")) +
     ylab(paste("MDS2 - ", mds_var[2], "%", sep="")) +
-    ggtitle("MDS plot using (1 - Random Forest Proximities)")
+    ggtitle("MDS plot using (1 - Random Forest Proximities)") 
 }

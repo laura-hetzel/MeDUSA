@@ -1,4 +1,3 @@
-
 #' @title data imputation
 #' @description This function apply data imputation from 1 to selected noise level  
 #' @param data dataframe 
@@ -16,18 +15,18 @@
 
 #' @title data transformation
 #' @description This function apply data transformation using log2 and pareto scale 
-#'
-#' @param centering 
 #' @param data dataframe 
-#'
 #' @importFrom tibble column_to_rownames
-#' @importFrom IMIFA pareto_scale
-data_transform<-function(data,centering=F){
-  
+data_transform<-function(data){
   data<-column_to_rownames(data,"mz")
   data<-log2(data)
-  data<-pareto_scale((data),centering = centering)
+  data<-paretoScaling((data))
   data<-as.data.frame(data)
   return(data)
-  
 }
+
+
+
+#' @title pareto scaling
+#' @param df dataframe 
+paretoScaling <- function(df) apply(df, 2, function(x) (x - mean(x)) / sqrt(sd(x)))
