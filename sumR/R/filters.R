@@ -1,29 +1,24 @@
-#'BG filter
-#'
-#' @author amar
-#'
-#' @description it is used to conduct background removal).
-#' It filters a dataframe of m/z values and intensities.
-#' This function allows the user to remove m/z peaks of measured samples,
-#' if they correspond to the same m/z of a blank within a specified range
-#' (for example within 150% of the blank intensity).
-#'
-#' @param limit 
-#' @param blank_regex 
-#' @param mz_regex 
-#' @param sample_regex 
-#' @param dataframe
-#'
-#' @examples
-#'
+
+#BG filter done by Amar
+
+#' @title Blank filter to remove background
+#' @description It is used to conduct background removal, it filters a data frame of m/z values and intensities
+#' @param dataframe a data.frame of m/z values and intensities including blank samples
+#' @param limit intensity ratio limit, for example within 150 percent of the blank intensity = 1.5
+#' @param blank_regex regex of blank columns, for example "blank"
+#' @param sample_regex regex of sample columns
+#' @usage bgFilter(dataframe, limit = 2.5, blank_regex = "blank", sample_regex = "^d|^ec|qc")
 #' @export
-BG_filter <- function(dataframe, limit=2.5, blank_regex ="blank",
-                     mz_regex="mz", sample_regex="^d|^ec|qc") {
+bgFilter <- function(dataframe, limit = 2.5, blank_regex = "blank", sample_regex = "^d|^ec|qc") {
+  ## Extract blank column names
   blank_cols <- grep(blank_regex, names(dataframe), ignore.case = TRUE)
-
+  
+  ## Extract sample column names
   sample_cols <- grep(sample_regex, names(dataframe), ignore.case = TRUE)
+  
+  ## Create new column with intensity means of blank samples
   dataframe$background <- rowMeans(dataframe[, blank_cols], na.rm = TRUE)
-
+  
   ## Compare sample_cols with the mean, replace them by 0 if they are below
   ## thresh from what I understand up until now: Sweep creates the Intensity
   ## Ratio as a summary statistic, which sweeps across the sample columns
@@ -32,15 +27,22 @@ BG_filter <- function(dataframe, limit=2.5, blank_regex ="blank",
   ## I'm gettin errors related to: Dimensions of matrix need to be equal to the
   ## function input data
   ## https://stackoverflow.com/questions/3444889/how-to-use-the-sweep-function
+  
+  ## Make a subset with intensity columns
   sample_df <- dataframe[, sample_cols]
-  below_limit <- (sample_df / dataframe$background) <= limit
-  sample_df[below_limit] <- 0
+  
+  ## Filter the intensity columns by conditioning to smaller or equal to limit
+  ## Returns 0 if condition is met
+  sample_df <- as.data.frame(lapply(sample_df, function(i){ifelse(i / dataframe$background <= limit, 0, i)}))
+  
+  # merys : needs to be checked if return is right
   return(sample_df)
-  #dataframe[sample_cols][sweep(dataframe[sample_cols], 1,
-  #dataframe$background, `/`) <= limit] <- 0
-  #result <- dataframe[, -blank_cols]
-  #return(result)
-  #ahmeds notes: Need to review this later, maybe replace swap with map_dfc function
+  
+  # dataframe[sample_cols][sweep(dataframe[sample_cols], 1,
+  # dataframe$background, `/`) <= limit] <- 0
+  # result <- dataframe[, -blank_cols]
+  # return(result)
+  # ahmeds notes: Need to review this later, maybe replace swap with map_dfc function
 }
 
 
@@ -59,6 +61,7 @@ BG_filter <- function(dataframe, limit=2.5, blank_regex ="blank",
 #' filtering, both a and b can be calculated using the linear_equation()
 #' function included in this package.
 #'
+#' @usage MD_filter(dataframe, mz_col, a = 0.00112, b = 0.01953)
 #' @export
 #' @importFrom dplyr filter
 #' @import ggplot2
