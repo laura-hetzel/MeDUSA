@@ -6,7 +6,7 @@
 #' @param dataframe a data.frame of m/z values and intensities including blank samples
 #' @param limit intensity ratio limit, for example within 150 percent of the blank intensity = 1.5
 #' @param blank_regex regex of blank columns, for example "blank"
-#' @param sample_regex regex of sample columns
+#' @param sample_regex regex of sample columns for example
 #' @usage bgFilter(dataframe, limit = 2.5, blank_regex = "blank", sample_regex = "^d|^ec|qc")
 #' @export
 bgFilter <- function(dataframe, limit = 2.5, blank_regex = "blank", sample_regex = "^d|^ec|qc") {
