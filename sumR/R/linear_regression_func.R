@@ -1,4 +1,3 @@
-
 ## choosing alpha value for elastic net
 #' @title Alpha value choice
 #' @description This function choose the alpha value for elastic net regression with the desired accuracy 
@@ -6,22 +5,20 @@
 #' @param test test set
 #' @param seed global seed for reproducible results
 #' @param type.measure loss to use for cross-validation. type.measure="class" ,"auc"
+#' @param lambda choose between "lambda.min" or "lambda.1se"
 #' @importFrom glmnet cv.glmnet
 #' @importFrom caret confusionMatrix
 #' @importFrom dplyr select
-glmnet_cv_alphachoice <- function(training,test,type.measure,seed){
-  
+glmnet_cv_alphachoice <- function(training,test,type.measure,seed,lambda=c("lambda.min","lambda.1se")){
   list_fits<-list()
   for(i in 0:10){
-    
     fit_name <-paste0("alpha",i/10)
     set.seed(seed)
     list_fits[[fit_name]] <-  cv.glmnet(y = training$samples,
                                         x = as.matrix(scale(training %>% dplyr::select(-samples))),
-                                        family = "binomial",alpha=i/10,type.measure = type.measure)
-    
+                                        family = "binomial",alpha=i/10,type.measure = type.measure)  
   }
-  
+  if(lambda[1] == "lambda.min"){ 
   results <-data.frame()
   for(i in 0:10){
     fit_name <-paste0("alpha",i/10)
@@ -30,12 +27,23 @@ glmnet_cv_alphachoice <- function(training,test,type.measure,seed){
     cf<-confusionMatrix(table(data=predict, reference = test$samples))
     cf_acc<-cf[["overall"]][["Accuracy"]]
     temp <-data.frame(alpha=i/10,cf_acc=cf_acc,fit_name=fit_name)
-    results<-rbind(results,temp)
-    
-    
+    results<-rbind(results,temp)    
   }
   return(results)
-  
+  } 
+  else if(lambda[1] == "lambda.1se"){  
+    results <-data.frame()
+    for(i in 0:10){
+      fit_name <-paste0("alpha",i/10)
+      predict <-predict(list_fits[[fit_name]],s=list_fits[[fit_name]]$lambda.1se,newx = as.matrix(scale(test %>% dplyr::select(-samples))),
+                        type="class")
+      cf<-confusionMatrix(table(data=predict, reference = test$samples))
+      cf_acc<-cf[["overall"]][["Accuracy"]]
+      temp <-data.frame(alpha=i/10,cf_acc=cf_acc,fit_name=fit_name)
+      results<-rbind(results,temp) 
+    }
+    return(results)
+  }
 }
 
 
