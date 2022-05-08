@@ -17,7 +17,7 @@ Welch_ttest(
 
 \item{dataframe2}{transposed dataframe with m/z as columns (raw imputed dataframe)}
 
-\item{samples}{}
+\item{samples}{a factor vector with the classes of the samples}
 
 \item{threshold}{numerical value for wanted threshold . the default is 0.1}
 

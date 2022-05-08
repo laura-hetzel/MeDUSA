@@ -4,12 +4,16 @@
 \alias{RF_CV_plots}
 \title{Plot random forest cross validation ROC}
 \usage{
-RF_CV_plots(model, test_set)
+RF_CV_plots(roc_all, auc_all, rocfinal, aucfinal)
 }
 \arguments{
-\item{model}{the final model}
+\item{roc_all}{ROC list from randomForest_CV function output}
 
-\item{test_set}{the final test set with samples column}
+\item{auc_all}{AUC list from randomForest_CV function output}
+
+\item{rocfinal}{rocfinal from RF_model function output}
+
+\item{aucfinal}{aucfinal from RF_model function output}
 }
 \description{
 plotting ROC curves for different 5 cross-validation sub models vs ROC curve of the final model

@@ -4,16 +4,16 @@
 \alias{Dunn_test}
 \title{Dunn test}
 \usage{
-Dunn_test(dataframe, samples, threshold, comb, method = "bh")
+Dunn_test(dataframe, samples, threshold = 0.05, comb = 6, method = "bh")
 }
 \arguments{
 \item{dataframe}{transposed dataframe with m/z as columns (results of significant kruskal test)}
 
-\item{samples}{}
+\item{samples}{a factor vector with the classes of the samples}
 
-\item{threshold}{numerical value for wanted threshold}
+\item{threshold}{numerical value for wanted threshold default is 0.05}
 
-\item{comb}{a numerical value for number of group combinations}
+\item{comb}{a numerical value for number of group combinations (4 groups = 6 combination)}
 
 \item{method}{a character string for correction method .. default is "bh"}
 }

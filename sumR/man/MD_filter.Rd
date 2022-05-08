@@ -4,13 +4,7 @@
 \alias{MD_filter}
 \title{MD filter}
 \usage{
-MD_filter(
-  MD_df,
-  filter_df,
-  incl_list = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt", package =
-    "sumR"),
-  mass_accuracy = 0.01
-)
+MD_filter(dataframe, mz_col, a = 0.00112, b = 0.01953)
 
 MD_filter(
   MD_df,
@@ -25,10 +19,10 @@ MD_filter(
 
 \item{filter_df}{obtained from the `make_filter_list`}
 
-\item{incl_list}{(optional) path to inclusion list obtained from 
+\item{incl_list}{(optional) path to inclusion list obtained from
 user input or use of default inclusion list (McMillan et al., 2016)}
 
-\item{mass_accuracy}{(optional) obtained from user input or use of 
+\item{mass_accuracy}{(optional) obtained from user input or use of
 default value set to 0.01}
 
 \item{dataframe}{is the dataframe on which KM calculations need to be
