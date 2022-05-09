@@ -1,5 +1,5 @@
 
-#BG filter done by Amar
+# BG filter done by Amar
 
 #' @title Blank filter to remove background
 #' @description It is used to conduct background removal, it filters a data frame of m/z values and intensities
@@ -33,7 +33,9 @@ bgFilter <- function(dataframe, limit = 2.5, blank_regex = "blank", sample_regex
 
   ## Filter the intensity columns by conditioning to smaller or equal to limit
   ## Returns 0 if condition is met
-  sample_df <- as.data.frame(lapply(sample_df, function(i){ifelse(i / dataframe$background <= limit, 0, i)}))
+  sample_df <- as.data.frame(lapply(sample_df, function(i) {
+    ifelse(i / dataframe$background <= limit, 0, i)
+  }))
 
   # merys : needs to be checked if return is right
   return(sample_df)
@@ -63,9 +65,8 @@ bgFilter <- function(dataframe, limit = 2.5, blank_regex = "blank", sample_regex
 #'
 #' @usage MD_filter(dataframe, mz_col, a = 0.00112, b = 0.01953)
 #' @export
-#' @importFrom dplyr filter
+#' @importFrom dplyr filter %>%
 #' @import ggplot2
-#' @importFrom magrittr %>%
 MD_filter <- function(dataframe, mz_col, a = 0.00112, b = 0.01953) {
   ## Solves problem of customizable lin. eq as well: In case HMDB updates data
   ## In-function MD calculation
@@ -100,32 +101,34 @@ MD_filter <- function(dataframe, mz_col, a = 0.00112, b = 0.01953) {
 
   MD_plot <- ggplot(data = dataframe, aes(x = MZ, y = MD)) +
     geom_point() +
-    geom_point(data = highlight_df, aes(x = MZ, y = MD), color = "red") +#I added this one, so the data which will be removed will be highlighted in red.
-    ggtitle(paste("Unfiltered MD data"))# deparse(substitute(dataframe)) if you want to add the dataframe name, acc to St. Ovflw
-  #stat_smooth(method="lm", se=FALSE)-> For linear line through the plot, but may not be necessary to show
+    geom_point(data = highlight_df, aes(x = MZ, y = MD), color = "red") + # I added this one, so the data which will be removed will be highlighted in red.
+    ggtitle(paste("Unfiltered MD data")) # deparse(substitute(dataframe)) if you want to add the dataframe name, acc to St. Ovflw
+  # stat_smooth(method="lm", se=FALSE)-> For linear line through the plot, but may not be necessary to show
 
 
-  #Creating a filtered dataframe:
+  # Creating a filtered dataframe:
   filtered <- dataframe %>%
-    filter(MD <= MD.limit)# As I understood: Basically all are coordinates. The maxima equation basically gives coordinates
-  #for the m/z values (x and MD = y). If it exceeds the equivalent coordinate of Y (which is MD) for the linear equation, it will be filtered.
+    filter(MD <= MD.limit) # As I understood: Basically all are coordinates. The maxima equation basically gives coordinates
+  # for the m/z values (x and MD = y). If it exceeds the equivalent coordinate of Y (which is MD) for the linear equation, it will be filtered.
 
-  MD_plot_2 <- ggplot(data = filtered, aes(x = MZ, y = MD)) + #Filtered is basically the second dataframe, #which subsets datapoints with an Y value (which is the MD), below the linear equation MD...
+  MD_plot_2 <- ggplot(data = filtered, aes(x = MZ, y = MD)) + # Filtered is basically the second dataframe, #which subsets datapoints with an Y value (which is the MD), below the linear equation MD...
     geom_point() +
     ggtitle(paste("Filtered MD data"))
-  #stat_smooth(method="lm", se=FALSE) -> For linear line through the plot, but may not be necessary to show
-  N_Removed_datapoints <- nrow(dataframe) - nrow(filtered)#To determine the number of peaks removed
+  # stat_smooth(method="lm", se=FALSE) -> For linear line through the plot, but may not be necessary to show
+  N_Removed_datapoints <- nrow(dataframe) - nrow(filtered) # To determine the number of peaks removed
   print(paste("Number of peaks removed:", N_Removed_datapoints))
-  MD_PLOTS <- list(preMD_df = dataframe,
-                   postMD_df = filtered,
-                   preMD_plot = MD_plot,
-                   postMD_plot = MD_plot_2)
+  MD_PLOTS <- list(
+    preMD_df = dataframe,
+    postMD_df = filtered,
+    preMD_plot = MD_plot,
+    postMD_plot = MD_plot_2
+  )
   return(MD_PLOTS)
 }
 
 #' Filter cells without measurements
 #' @export
-filterCells <- function(exp){
+filterCells <- function(exp) {
   exp[, colSums(is.na(assay(exp))) != nrow(exp)]
 }
 
@@ -135,10 +138,12 @@ filterCells <- function(exp){
 #' @importFrom SummarizedExperiment assay<-
 #' @export
 imputation <- function(exp, normalize = TRUE, useAssay = "Area",
-                       saveAssay = "Imputed", cores = 1){
+                       saveAssay = "Imputed", cores = 1) {
   df <- as.data.frame(assay(exp, useAssay))
   df[is.na(df)] <- 0
-  assay(exp, saveAssay) <- saver(df, estimates.only = T, ncores = cores,
-                                 size.factor = as.integer(normalize))
+  assay(exp, saveAssay) <- saver(df,
+    estimates.only = T, ncores = cores,
+    size.factor = as.integer(normalize)
+  )
   exp
 }

@@ -270,7 +270,7 @@ adductFinding <- function(adduct_df, max_diff_mat, min_diff_mat, mz_vector) {
     # Transforming from data frame to data table to optimize speed of merging
     index_dt_min <- as.data.table(index_min_mz)
     index_dt_max <- as.data.table(index_max_mz)
-    
+
     # merging found matches
     index_dt_matches <- fintersect(index_dt_min, index_dt_max, all = TRUE)
 
@@ -296,7 +296,7 @@ adductFinding <- function(adduct_df, max_diff_mat, min_diff_mat, mz_vector) {
 #' @param data the input data.frame, with min_error and max_error columns bind
 #' @param copy_df a data.frame copy of the input data frame
 #' @importFrom  data.table setDT
-#' @importFrom magrittr %>%
+#' @importFrom dplyr %>%
 #' @usage bigMerge(isotope_valid_df, data, copy_df)
 bigMerge <- function(isotope_valid_df, data, copy_df) {
   # merging isotope_valid_df witf data based on the condition that
@@ -394,8 +394,7 @@ bigMerge <- function(isotope_valid_df, data, copy_df) {
 #' @description Displays a bar plot for the different types of isotopic status'
 #' @param final_df a data.frame of the mono-isotopic and isotopic peaks pair's with id column
 #' @importFrom  ggplot2 ggplot geom_bar scale_fill_brewer xlab geom_text ylab
-#' @importFrom dplyr rename
-#' @importFrom magrittr %>%
+#' @importFrom dplyr rename %>%
 #' @usage barPlot(final_df)
 barPlot <- function(final_df) {
 
@@ -430,7 +429,7 @@ barPlot <- function(final_df) {
 #' @param final_df a data.frame of the mono-isotopic and isotopic peaks pair's with id column
 #' @importFrom  plotly plot_ly highlight_key add_markers add_segments  layout rangeslider ggplotly highlight
 #' @usage massSpecPlot(final_df)
-#' @importFrom magrittr %>%
+#' @importFrom dplyr %>%
 massSpecPlot <- function(final_df) {
   vis_df <- final_df[!is.na(final_df$isotopic_status), ]
   d <- highlight_key(vis_df, ~id)
@@ -478,11 +477,11 @@ massSpecPlot <- function(final_df) {
 #' @param z An integer, defining charge z of m/z peaks for calculation of real mass. 0 is for auto-detection (default = 0)
 #' @param Elements A vector containing the isotopic element of interest (default = c("C13"))
 #' @param plot Logical, returns box plot for isotope and interactive mass spectrometry of detected isotopes (default = TRUE)
-#' @importFrom dplyr distinct select
-#' @importFrom magrittr %>%
+#' @importFrom dplyr distinct select %>%
 #' @usage isotopeTagging(data, ppm = 5, Elements = c("C13"), z = 0, plot = TRUE)
 #' @export
-isotopeTagging <- function(data, ppm = 5, Elements = c("C13"), z = 0, plot = TRUE) {
+isotopeTagging <- function(exp, assay = "Area", ppm = 5, Elements = c("C13"), z = 0, plot = TRUE) {
+  data <- as.data.frame(cbind(mz = rowData(exp)$mz, assay(exp, assay)))
   #-----------------------------------------------------------------------------
   # Check for input arguments
   if (is.null(data)) {

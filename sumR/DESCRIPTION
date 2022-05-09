@@ -30,6 +30,7 @@ Imports:
     GGally,
     ggplot2,
     ggpubr,
+    glmnet,
     graphics,
     IMIFA,
     lattice,

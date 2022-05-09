@@ -34,7 +34,7 @@ ppm_calc <- function(mass1, mass2) {
 #' @export
 align_check <- function(aligned_peaks) {
   odd_ind_fn <- seq(3, length(aligned_peaks$mz), 2)
-  even_ind_fn <- seq(2, length(aligned_peaks$mz),2)
+  even_ind_fn <- seq(2, length(aligned_peaks$mz), 2)
   ppm_err_fn <- data.frame("ppm_error" = ppm_calc(aligned_peaks$mz[even_ind_fn], aligned_peaks$mz[odd_ind_fn]))
   return(ppm_err_fn)
 }
@@ -43,7 +43,7 @@ align_check <- function(aligned_peaks) {
 #' @param ppm_err_fn dataframe obtained from `align_check`
 #' @importFrom ggplot2 ggplot
 #' @export
-ppm_err_plot <- function(ppm_err_fn){
+ppm_err_plot <- function(ppm_err_fn) {
   ppm_err_plot_fn <- ggplot(ppm_err_fn, aes(x = ppm_error)) +
     geom_boxplot() +
     ggtitle("ppm error boxplot") +
@@ -67,7 +67,7 @@ ppm_err_plot <- function(ppm_err_fn){
 #' @importFrom ggplot2 ggplot
 #' @export
 bin_align_check_process <- function(aligned_peaks, summary_errors = F,
-                          boxplot = F, xcoords = c(-50, 0)){
+                                    boxplot = F, xcoords = c(-50, 0)) {
   check <- align_check(aligned_peaks)
   x <- 2
   if (summary_errors | boxplot == T) {
@@ -100,33 +100,21 @@ condition <- function(mass, intensities, samples, tolerance = 5e-6) {
   if (anyDuplicated(samples)) {
     return(NA)
   }
-  if (any(abs(mass - mean(mass))/mean(mass) > tolerance)) {
+  if (any(abs(mass - mean(mass)) / mean(mass) > tolerance)) {
     return(NA)
   }
   return(mean(mass))
 }
 
-#' Background removal
-#'
-#' @param dataframe
-#' @param filter_type
-#' @param blank_thresh
-#' @param nsamples_thresh
-#' @param blank_regx
-#' @param filtered_df
-#'
-#' @return
 
-#'
+#' @title Background removal
 #' @param dataframe
 #' @param filter_type
 #' @param blank_thresh
 #' @param nsamples_thresh
 #' @param blank_regx
 #' @param filtered_df
-#'
-#' @examples
-#' @importFrom dplyr select contains if_else filter
+#' @importFrom dplyr select contains if_else
 #' @export
 blank_subtraction <- function(dataframe, filter_type = "median",
                               blank_thresh = 1, nsamples_thresh = 1,
@@ -148,17 +136,18 @@ blank_subtraction <- function(dataframe, filter_type = "median",
   ## or failed
   for (i in seq_len(nrow(samples))) {
     below_thresh <- sum(samples[i, seq_len(ncol(samples))] <=
-                          blanks$threshold[i])
+      blanks$threshold[i])
     boundary <- below_thresh / ncol(samples) * 100 >= nsamples_thresh
     samples$index[i] <- if_else(boundary, "blank_fail", "blank_pass")
   }
 
   ## Dataframe that only displays the passed values, filtering out failed values
-  filtered_samples <- filter(samples, index == "blank_pass")
+
+  filtered_samples <- samples[samples$index == "blank_pass", ]
   ## Prints the number of passed values
-  print_pass <- nrow(filter(samples, index == "blank_pass"))
+  print_pass <- sum(samples == "blank_pass")
   ## Prints the number of failed values
-  print_fail <- nrow(filter(samples, index == "blank_fail"))
+  print_fail <- sum(samples == "blank_fail")
 
   if (filtered_df == TRUE) {
     ## Makes the function return a list with a dataframe containing m/z
@@ -187,11 +176,12 @@ blank_subtraction <- function(dataframe, filter_type = "median",
 #' @param formulas formulas in string format like 'c6h12o6'
 #' @importFrom stringr str_extract_all
 #' @importFrom PeriodicTable mass
-calculate_nominal_mass <- function(formulas){
-  sapply(formulas, function(formula){
+calculate_nominal_mass <- function(formulas) {
+  sapply(formulas, function(formula) {
     vec <- as.vector(str_extract_all(formula, "([A-Za-z][[:digit:]]+|[A-Z][a-z]{0,1})",
-                                     simplify = T))
-    sum(sapply(vec, function(comb){
+      simplify = T
+    ))
+    sum(sapply(vec, function(comb) {
       if (!grepl("[[:digit:]]", comb)) {
         atom <- comb
         mult <- 1

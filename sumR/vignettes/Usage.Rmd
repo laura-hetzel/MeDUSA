@@ -27,22 +27,21 @@ First we load up some example data. Here we have 4 injection of which 1 is a bla
 # files
 
 dir <- file.path(r"(F:\stem_cell_blank_cell_samples)")
-f <- list.files(dir, full.names = T, pattern = ".mzML")
+f <- list.files(dir, full.names = T, pattern = ".mzML")[13:length(f)]
 ```
 
 ## Full pipeline
 
-```{r}
-exp <- peakPicking(f[13:length(f)], doCentroid = T, massDefect = 0.8) %>%
+```{r, eval = F}
+exp <- peakPicking(f, doCentroid = T, massDefect = 0.8) %>%
   binSpectra(fraction = 0.1, npeaks = 0, meanSNR = 0, tolerance = 0.002) %>%
   binCells(tolerance = 0.002) %>%
   filterCells() %>%
-  imputation(cores = 4)
+  imputation(cores = 4, normalize = F)
 ```
 
-```{r}
-df <- assay(exp, "imputed")
-x <- isotopeTagging(as.data.frame(cbind(mz = rowData(exp)$mz, df)), plot = F)
+```{r, eval = F}
+x <- isotopeTagging(exp, assay = "Imputed", plot = F)
 exp <- exp[-grep("isotope", x$isotopic_status), ]
 ```
 
