@@ -23,6 +23,7 @@ Imports:
     Biobase,
     caret,
     caTools,
+    ChemmineR,
     data.table,
     densityClust,
     dplyr,
