@@ -7,7 +7,7 @@
 #' @importFrom utils read.table
 #' @importFrom stats setNames
 read_msdata <- function(path = "data") {
-  files <- list.files(path = "data", full.names = T)
+  files <- list.files(path, full.names = T)
   file_names <- str_remove(string = files, pattern = ".txt")
   file_list <- lapply(setNames(files, file_names), function(x) {
     read.table(x, col.names = c("mz", "intensity"))

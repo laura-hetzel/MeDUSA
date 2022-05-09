@@ -1,17 +1,8 @@
-library(pbapply)
-library(SummarizedExperiment)
-library(magrittr)
-library(parallel)
-library(MassSpecWavelet)
-library(stats)
-library(mzR)
-library(tools)
-library(SAVER)
-
+#' @title Pick peaks in a spectrum
+#' @importFrom MassSpecWavelet getLocalMaximumCWT getRidge
 pickSpectra <- function(x, SNR=0){
   ms <- as.data.frame(x)
   colnames(ms) <- c("mz", "i")
-  #    return(performPeakPicking(ms, SNR))
   wCoefs <- cbind("0" = ms$i, cwt_new(ms$i))
   localMax <- MassSpecWavelet::getLocalMaximumCWT(wCoefs)
   ridgeList <- MassSpecWavelet::getRidge(localMax)
@@ -27,7 +18,6 @@ pickSpectra <- function(x, SNR=0){
 }
 
 centroid <- function(spectrum, halfWindowSize = 2L){
-
   intensities <- savgol(spectrum[,2], halfWindowSize)
   intensities[intensities < 0] <- 0
 
@@ -35,8 +25,10 @@ centroid <- function(spectrum, halfWindowSize = 2L){
   spectrum[which(diff(diff(intensities) >= 0) < 0) + 1, ]
 }
 
+#' @title Apply Savitz-golay filter
+#' @importFrom stats filter
 savgol <- function(y, halfWindowSize = 10L, polynomialOrder = 3L){
-  filter <- function(x, hws, coef){
+  sav.filter <- function(x, hws, coef){
     n <- length(x)
     w <- 2L * hws + 1L
     y <- stats::filter(x = x, filter = coef[hws + 1L, ], sides = 2L)
@@ -62,9 +54,16 @@ savgol <- function(y, halfWindowSize = 10L, polynomialOrder = 3L){
     F
   }
 
-  filter(y, hws = halfWindowSize, coef = coef(m = halfWindowSize, k = polynomialOrder))
+  sav.filter(y, hws = halfWindowSize, coef = coef(m = halfWindowSize, k = polynomialOrder))
 }
 
+#' @title Perform peak picking
+#' @importFrom pbapply pblapply
+#' @importFrom parallel detectCores makeCluster clusterExport stopCluster
+#' @importFrom mzR openMSfile peaks header
+#' @importFrom dplyr distinct
+#' @importFrom tools file_path_sans_ext
+#' @export
 peakPicking <- function(files, doCentroid = F, massDefect = 0.8,
                         cores = detectCores(logical = F), SNR = 0){
   cl <- makeCluster(cores)
@@ -91,10 +90,10 @@ peakPicking <- function(files, doCentroid = F, massDefect = 0.8,
     df <- data.frame(scan = rep(which(non_nulls), sapply(l, nrow)), do.call(rbind, l))
     df <- dplyr::distinct(df[df$Value > 0, ])
     rownames(df) <- 1:nrow(df)
-    df <- sumR:::MassDefectFilter(df, mz_MD_plot = F)
+    df <- MassDefectFilter(df, mz_MD_plot = F)
     df[df$MD < massDefect, ]
   })
-  samps <- tools::file_path_sans_ext(basename(f))
+  samps <- tools::file_path_sans_ext(basename(files))
   stopCluster(cl)
   names(result) <- samps
   result
@@ -234,29 +233,38 @@ cwt_new <- function(ms, scales=NULL, max_scale = 32){
   wCoefs[1:oldLen, , drop = FALSE]
 }
 
-peakGrouping <- function(l, fraction = 0, cores = detectCores(logical = F), meanSNR = 0){
+#' @title Group the peaks
+#' @importFrom xcms do_groupChromPeaks_density
+#' @importFrom pbapply pblapply
+#' @importFrom parallel detectCores makeCluster clusterExport stopCluster
+#' @export
+peakGrouping <- function(l, fraction = 0, npeaks = 0,
+                         cores = detectCores(logical = F), meanSNR = 0){
   cl <- makeCluster(cores)
   clusterExport(cl, varlist = names(sys.frame()))
   result <- pbapply::pblapply(l, cl = cl, function(df){
     df$sample <- df$scan
     df$rt <- -1
     x <- suppressMessages(xcms::do_groupChromPeaks_density(peaks = df,
-                                          sampleGroups = as.factor(rep(1, nrow(df))),
-                                          minFraction = 0,
-                                          binSize = 0.025))
+                                                           sampleGroups = as.factor(rep(1, nrow(df))),
+                                                           minFraction = 0,
+                                                           binSize = 0.025))
 
     x$i <- vapply(1:nrow(x), function(i) sum(df[unlist(x[i, "peakidx"]), "i"]), numeric(1))
 
     x$meanSNR <- vapply(1:nrow(x), function(i) mean(df[unlist(x[i, "peakidx"]), "SNR"]), numeric(1))
     x <- x[, -which(colnames(x) == "peakidx")]
-    x[x$npeaks >= fraction * length(unique(df$scan)) & x$meanSNR >= meanSNR, ]
+    x[x$npeaks >= fraction * length(unique(df$scan)) & x$meanSNR >= meanSNR & x$npeaks > npeaks, ]
   })
   stopCluster(cl)
   names(result) <- names(l)
   result
 }
 
-
+#' @title Group cells together
+#' @importFrom xcms do_groupChromPeaks_density
+#' @importFrom SummarizedExperiment SummarizedExperiment
+#' @export
 groupCells <- function(res){
   df <- do.call(rbind, lapply(1:length(res), function(i){
     df <- res[[i]]
@@ -285,219 +293,3 @@ groupCells <- function(res){
 }
 
 
-dir <- file.path(r"(F:\stem_cell_blank_cell_samples)")
-f <- list.files(dir, full.names = T, pattern = ".mzML")
-
-f
-dates <- sapply(f[13:length(f)], function(file){
-  z <- mzR::openMSfile(file)
-  lubridate::as_datetime(mzR::runInfo(z)$startTimeStamp)
-})
-exp$date <- dates
-
-length(dates)
-exp
-sort(dates)
-
-peaks <- peakPicking(f, doCentroid = T)
-cells <- peakGrouping(peaks, fraction = 0.1, meanSNR = 0)
-exp <- groupCells(cells)
-exp$date <- dates[-62]
-
-
-library(SummarizedExperiment)
-exp <- exp[,colSums(assay(exp), na.rm = T) > 0 ]
-
-df <- assay(exp)
-df[is.na(df)] <- 0
-x <- sumR::isotopeTagging(as.data.frame(cbind(mz = rowData(exp)$mzmed, df)), plot = F)
-exp <- exp[-grep("isotope", x$isotopic_status), ]
-
-colData(exp)$Type <- c(rep("BLANK", 12), rep("SAMPLE", length(13:ncol(exp))))
-
-
-
-
-dimnames(df) <- dimnames(exp)
-library(SAVER)
-
-library(SummarizedExperiment)
-x <- exp[, colSums(log2(assay(exp)), na.rm = T) > 0]
-x
-df <- as.data.frame(assay(x))
-df <- log2(df)
-df[is.na(df)] <- 0
-assay(x, "imputed") <- saver(df, estimates.only = T)
-
-
-x <- exp
-df <- as.data.frame(assay(x, "imputed"))
-df
-
-
-pca <- prcomp(t(df), center = T, scale. = T, retx = T)
-x2 <- as.data.frame(pca$x)
-x2$group <- 1:nrow(x2)
-
-
-x2$date <- x[,rownames(x2)]$date
-d <- lubridate::as_datetime(x2$date)
-d
-x2$dayFactor <- sprintf("%s_%s", lubridate::week(d), lubridate::day(d))
-
-ggplot(x2, aes(x = PC1, y = PC2, group = dayFactor, color = dayFactor)) + geom_point() +
-  ggtitle("Imputed PCA", "colored by week_day") + stat_ellipse()
-
-library(ggplot2)
-
-a <- as.data.frame(stack(cor(assay(exp, "imputed"), assay(exp, "imputed"))))
-
-
-colnames(exp) <- 1:ncol(exp)
-res <- vapply(1:nrow(exp), function(i){
-  cor(1:ncol(exp), colSums(assay(exp[i, ], "imputed"), na.rm = T))
-}, double(1))
-
-
-
-df <- as.data.frame(assay(exp[, exp$Type == "SAMPLE"]))[,-51]
-
-
-
-rowSums(assay(exp[,-52]), na.rm = T)
-df <- log2(df)
-df[is.na(df)] <- 0
-
-df <- df[rowSums(df) != 0,]
-#df <- apply(df, 2, function(x) ifelse(is.na(x) | is.nan(x), mean(x, na.rm = T), x))
-#df <- df[, apply(df, 2, function(x) all(is.finite(x)))]
-pca <- prcomp(t(df), center = T, scale. = T, retx = T)
-x <- as.data.frame(pca$x)
-x$group <- 1:nrow(x)
-ggplot(x, aes(x = PC1, y = PC2, color = group, label = group)) + geom_point() +
-  ggtitle("raw pca") + scale_color_continuous() + geom_text()
-
-
-expvar <- (pca$sdev)^2 / sum(pca$sdev^2)
-cumsum(expvar * 100)
-
-
-exp <- exp[rowSums(assay(exp[, exp$Type == "BLANK"])  > 0, na.rm = T) == 0, ]
-
-
-plots <- function(df, df2, df3){
-  pca <- prcomp(df, center = T, scale. = T)
-
-  x <- as.data.frame(pca$x)
-  x$group <- 1:nrow(x)
-  p1 <- ggplot(x, aes(x = PC1, y = PC2, color = group)) + geom_point() +
-    ggtitle("raw pca") + scale_color_continuous()
-
-  pca <- prcomp(df2, center = T, scale. = T)
-  x <- as.data.frame(pca$x)
-  x$group <- 1:nrow(x)
-  p2 <- ggplot(x, aes(x = PC1, y = PC2, color = group)) + geom_point() +
-    ggtitle("imputed pca MAGIC") + scale_color_continuous()
-
-  pca <- prcomp(df3, center = T, scale. = T)
-  x <- as.data.frame(pca$x)
-  x$group <- 1:nrow(x)
-  p3 <- ggplot(x, aes(x = PC1, y = PC2, color = group)) + geom_point() +
-    ggtitle("imputed pca SAVER") + scale_color_continuous()
-  cowplot::plot_grid(plotlist = list(p1, p2, p3), ncol = 1)
-}
-
-library(Rmagic)
-
-library(ggplot2)
-x <- exp[, exp$Type == "SAMPLE"]
-
-df <- as.data.frame(assay(x))
-
-df <- df[, -52]
-df <- t(df)
-
-df <- log2(df)
-df[is.na(df)] <- 0
-df <- df[rowSums(df) > 0, colSums(df) > 0]
-pca <- prcomp(df, center = T, scale. = T)
-x <- as.data.frame(pca$x)
-x$sample <- 1:nrow(x)
-ggplot(x, aes(x = PC1, y = PC2, color = sample)) + geom_point() +
-  ggtitle("PCA") + scale_color_continuous()
-
-expvar <- (pca$sdev)^2 / sum(pca$sdev^2)
-
-plot(expvar * 100)
-barplot(expvar * 100, main = "PCA, %explained, frac: 0.1", names.arg = 1:length(expvar))
-
-map <- umap::umap(pca$x[,1:30])
-df <- as.data.frame(map$layout)
-colnames(df) <- c("one", "two")
-df$sample <- 1:nrow(df)
-ggplot(df, aes(x = one, y = two, color = sample)) + geom_point() +
-  ggtitle("UMAP of samples")
-
-
-pc1name <- sprintf("PC1 (%.1f%%)", expvar[1] * 100)
-pc2name <- sprintf("PC2 (%.1f%%)", expvar[2] * 100)
-
-
-
-
-df <- df[,-52] #52 is an outlier
-df <- log2(df)
-df[is.na(df)] <- 0
-df <- df[rowSums(df) > 0, colSums(df) > 0]
-df2 <- t(magic(t(df))$result)
-df3 <- saver(df)$estimate
-
-
-# Samples
-plots(t(df), t(df2), t(df3))
-
-# Features
-plots(df, df2, df3)
-
-
-
-
-pca <- prcomp(t(df), center = T, scale. = T)$x
-pca
-
-
-
-df3
-
-p1
-
-
-pca <- prcomp(MAGIC_data$result, center = T, scale. = T)
-p2 <- ggplot(as.data.frame(pca$x), aes(x = PC1, y = PC2)) + geom_point() +
-  ggtitle("imputed pca MAGIC")
-
-p2
-
-
-
-
-
-head(df) / head(sav$estimate)
-
-head(df)[, 1:5]
-
-exp
-
-pca$x
-pca$sdev
-pc <- prcomp(df, retx = T,
-             scale = T, center = T)
-
-expvar <- (pc$sdev)^2 / sum(pc$sdev^2)
-pc1name <- sprintf("PC1 (%.1f%%)", expvar[1] * 100)
-pc2name <- sprintf("PC2 (%.1f%%)", expvar[2] * 100)
-
-pc1name
-pc2name
-
-pc$x

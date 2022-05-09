@@ -34,32 +34,18 @@ f <- list.files(dir, full.names = T, pattern = ".mzML")
 
 ```{r}
 exp <- peakPicking(f[13:length(f)], doCentroid = T, massDefect = 0.8) %>%
-  peakGrouping(fraction = 0.1, npeaks = 0, meanSNR = 0) %>%
-  groupCells() %>%
+  binSpectra(fraction = 0.1, npeaks = 0, meanSNR = 0, tolerance = 0.002) %>%
+  binCells(tolerance = 0.002) %>%
   filterCells() %>%
-  imputation()
+  imputation(cores = 4)
 ```
 
-
-
 ```{r}
-df <- assay(exp)
-df[is.na(df)] <- 0
-x <- isotopeTagging(as.data.frame(cbind(mz = rowData(exp)$mzmed, df)), plot = F)
+df <- assay(exp, "imputed")
+x <- isotopeTagging(as.data.frame(cbind(mz = rowData(exp)$mz, df)), plot = F)
 exp <- exp[-grep("isotope", x$isotopic_status), ]
 ```
 
-
-We're using `xcms` in order to read our mzML files. 
-```{r reading, eval =F}
-data <- read_mzml(files)
-```
-
-Next, we are identifying peaks and grouping them into features using the `dims_pipeline`. During this process, we also filter any chromatic peaks using an exclusion filter. In `feature_processing` we combine some of our feature data in order to make it ready for isotope detection.
-
-```{r processing, eval =F}
-data <- dims_pipeline(data)
-```
 
 ```{r features, fig.width=12, eval =F}
 data

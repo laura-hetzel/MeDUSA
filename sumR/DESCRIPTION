@@ -39,6 +39,7 @@ Imports:
     lattice,
     logging,
     MassSpecWavelet,
+    MetaDBparse,
     miscTools,
     mixOmics,
     MSnbase,
