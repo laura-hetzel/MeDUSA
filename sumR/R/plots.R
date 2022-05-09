@@ -7,7 +7,6 @@
 #'
 #' @return volcano plot
 #' @import ggplot2
-#' @importFrom ggsci scale_color_aaas
 #' @importFrom ggpubr theme_pubr labs_pubr
 volcanoPlot <- function(data, xvalues, yvalues, title){
   ggplot(data) +
@@ -19,7 +18,6 @@ volcanoPlot <- function(data, xvalues, yvalues, title){
     theme(legend.position = "right",
           plot.title = element_text(size = rel(1.5), hjust = 0.5),
           axis.title = element_text(size = rel(1.25))) +
-    scale_color_aaas() +
     theme_pubr() +
     labs_pubr()
 }
@@ -103,7 +101,7 @@ plot_PCA <- function(data, method = c("facto", "stats"),classifiers){
 #' @param data transposed dataframe with m/z as columns
 PCA_scree<-function(data){
   res_pca <- PCA(data, graph = FALSE)
-  fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 100),main="PCA - scree plot" ) 
+  fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 100),main="PCA - scree plot" )
 }
 
 #' @title PCA variables plot
@@ -194,7 +192,7 @@ plotPLSDA <- function(data, classifiers,comp,method){
 PLSDA_ind<-function(data,classifiers){
   plsda <-  plsda(data, classifiers)
   ## plotting the samples classifiers with ellipses
-  plotIndiv(plsda, ind.names = FALSE, star = TRUE, ellipse = TRUE, legend = TRUE,title = "PLS-DA samples") 
+  plotIndiv(plsda, ind.names = FALSE, star = TRUE, ellipse = TRUE, legend = TRUE,title = "PLS-DA samples")
 }
 
 
@@ -320,11 +318,11 @@ RF_CV_plots<-function(roc_all,auc_all,rocfinal,aucfinal){
   plot(roc_all[[3]],col = "Red", main = paste("Fold_3, AUC:", as.character(round(auc_all[[3]], 3))))
   plot(roc_all[[4]],col = "Red", main = paste("Fold_4, AUC:", as.character(round(auc_all[[4]], 3))))
   plot(roc_all[[5]],col = "Red", main = paste("Fold_5, AUC:", as.character(round(auc_all[[5]], 3))))
-  plot(rocfinal,col = "blue", main = paste("final model, AUC:", as.character(round(aucfinal, 3)))) 
+  plot(rocfinal,col = "blue", main = paste("final model, AUC:", as.character(round(aucfinal, 3))))
 }
 
 
-#' @description plotting ROC curves for any choosen model (final (rocfinal and aucfinal) or 
+#' @description plotting ROC curves for any choosen model (final (rocfinal and aucfinal) or
 #' from cross validation model(sepcifiy model number roc_all[[1]] and auc_all[[1]]))
 #' @param roc ROC of desired model
 #' @param auc AUC of desired model
@@ -372,5 +370,5 @@ MDS_plot<-function(model,training_set){
     theme_bw() +
     xlab(paste("MDS1 - ", mds_var[1], "%", sep="")) +
     ylab(paste("MDS2 - ", mds_var[2], "%", sep="")) +
-    ggtitle("MDS plot using (1 - Random Forest Proximities)") 
+    ggtitle("MDS plot using (1 - Random Forest Proximities)")
 }

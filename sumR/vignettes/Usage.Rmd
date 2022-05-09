@@ -47,51 +47,6 @@ exp <- exp[-grep("isotope", x$isotopic_status), ]
 ```
 
 
-```{r features, fig.width=12, eval =F}
-data
-df <- feature_processing(data)
-df
-```
-
-
-Here we run the isotope detection algorithm. It adds several columns to our previous data.frame which can be used to filter isotopes from our feature set. 
-
-```{r isotopes, eval = F}
-df <- isotope_tagging(df, ppm =5 ,z=1 )
-```
-```{r normalize}
-df2 <- normalize_features(df)
-
-```
-
-```{r pca, eval =F, fig.width=12}
-
-intensity_df <- df2[, grep("*.mzML$", colnames(df2))]
-pca <- prcomp(intensity_df, center = TRUE, scale. = TRUE)
-if ("ggbiplot" %in% installed.packages()) {
-  ggbiplot::ggbiplot(pca)
-} else {
-  plot(pca$x)
-}
-```
-
-```{r umap, eval = F}
-if ("umap" %in% installed.packages()) {
-  library(umap)
-  library(ggplot2)
-  map <- umap(intensity_df)
-  df = as.data.frame(map$layout)
-  colnames(df) <- c("x", "y")
-  maxes <- as.vector(apply(intensity_df, 1, which.max))
-  col_vec <- c("LOW", "LOW", "UP", "UP", "UP", "UP")
-  df$type <- col_vec[maxes]
-  ggplot(df, aes(x = x, y = y, color = type)) + 
-    geom_point() +
-    ggtitle("Maximum intensity of each feature colored by group")
-}
-
-```
-
 ```{r sessionInfo}
 sessionInfo()
 ```

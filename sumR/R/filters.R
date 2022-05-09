@@ -12,13 +12,13 @@
 bgFilter <- function(dataframe, limit = 2.5, blank_regex = "blank", sample_regex = "^d|^ec|qc") {
   ## Extract blank column names
   blank_cols <- grep(blank_regex, names(dataframe), ignore.case = TRUE)
-  
+
   ## Extract sample column names
   sample_cols <- grep(sample_regex, names(dataframe), ignore.case = TRUE)
-  
+
   ## Create new column with intensity means of blank samples
   dataframe$background <- rowMeans(dataframe[, blank_cols], na.rm = TRUE)
-  
+
   ## Compare sample_cols with the mean, replace them by 0 if they are below
   ## thresh from what I understand up until now: Sweep creates the Intensity
   ## Ratio as a summary statistic, which sweeps across the sample columns
@@ -27,17 +27,17 @@ bgFilter <- function(dataframe, limit = 2.5, blank_regex = "blank", sample_regex
   ## I'm gettin errors related to: Dimensions of matrix need to be equal to the
   ## function input data
   ## https://stackoverflow.com/questions/3444889/how-to-use-the-sweep-function
-  
+
   ## Make a subset with intensity columns
   sample_df <- dataframe[, sample_cols]
-  
+
   ## Filter the intensity columns by conditioning to smaller or equal to limit
   ## Returns 0 if condition is met
   sample_df <- as.data.frame(lapply(sample_df, function(i){ifelse(i / dataframe$background <= limit, 0, i)}))
-  
+
   # merys : needs to be checked if return is right
   return(sample_df)
-  
+
   # dataframe[sample_cols][sweep(dataframe[sample_cols], 1,
   # dataframe$background, `/`) <= limit] <- 0
   # result <- dataframe[, -blank_cols]
@@ -121,4 +121,24 @@ MD_filter <- function(dataframe, mz_col, a = 0.00112, b = 0.01953) {
                    preMD_plot = MD_plot,
                    postMD_plot = MD_plot_2)
   return(MD_PLOTS)
+}
+
+#' Filter cells without measurements
+#' @export
+filterCells <- function(exp){
+  exp[, colSums(is.na(assay(exp))) != nrow(exp)]
+}
+
+
+
+#' @importFrom SAVER saver
+#' @importFrom SummarizedExperiment assay<-
+#' @export
+imputation <- function(exp, normalize = TRUE, useAssay = "Area",
+                       saveAssay = "Imputed", cores = 1){
+  df <- as.data.frame(assay(exp, useAssay))
+  df[is.na(df)] <- 0
+  assay(exp, saveAssay) <- saver(df, estimates.only = T, ncores = cores,
+                                 size.factor = as.integer(normalize))
+  exp
 }
