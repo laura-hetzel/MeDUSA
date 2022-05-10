@@ -1,208 +1,199 @@
-#' Binning function
-#'
-#' @param mass
-#' @param tolerance
-#' @param times
-#' @param sample_num
-#'
-#' @return
-#' @export
-#'
-#' @examples
-binning <- function(mass, tolerance, times, sample_num) {
-  n <- length(mass)
-  d <- diff(mass)
-  n_boundaries <- max(20L, floor(3L * log2(n))) #ensure there's enough bins
-  boundary <- list(left = double(n_boundaries), right = double(n_boundaries))
-  current_boundary <- 1L
-  boundary$left[current_boundary] <- 1L
-  boundary$right[current_boundary] <- n
+#' @title Setting of the bin boundaries
+#' @description binning dependency 2
+#' @param mass obtained from the input files
+#' @param intensities obtained from the input files
+#' @param samples obtained from the input files
+#' @param tolerance obtained from the user input or use of default value 5e-6
+binning <- function(mass, intensities, samples, tolerance = 5e-6) {
+  n <- length(mass) # number of peaks
+  d <- diff(mass) # difference between masses
+  nBoundaries <- max(20L, floor(3L * log(n))) # setting of amount of bins
+  boundary <- list(
+    left = double(nBoundaries),
+    right = double(nBoundaries)
+  ) # boundaries list
+  currentBoundary <- 1L
+  boundary$left[currentBoundary] <- 1L
+  boundary$right[currentBoundary] <- n
 
-  q <- list(left = double(n), right = double(n))
-  current_q <- 1L
-
-  while (current_boundary > 0L) {
-    left <- boundary$left[current_boundary]
-    right <- boundary$right[current_boundary]
-    current_boundary <- current_boundary - 1L
+  while (currentBoundary > 0L) {
+    left <- boundary$left[currentBoundary]
+    right <- boundary$right[currentBoundary]
+    currentBoundary <- currentBoundary - 1L
     gaps <- d[left:(right - 1L)]
     ## Find the largest gap
-    gap_idx <- which.max(gaps) + left - 1L
+    gapIdx <- which.max(gaps) + left - 1L
 
-    #condition for the ending point of the left
-    #two type of condition can be chosen here: based on tolerance/sample_number
-    #the line below needs to be modify if you want to choose another condition
-    #refer to condition_ppm() function when you need to modify
-    if (condition_num(mass = mass[left:gap_idx],
-                      times, sample_num)) {
-      current_boundary <- current_boundary + 1L
-      boundary$left[current_boundary] <- left
-      boundary$right[current_boundary] <- gap_idx
-    }
-    else {
-      #mass[left:gap_idx] <- l
-      q$left[current_q] <- mass[left]
-      q$right[current_q] <- mass[gap_idx]
-      current_q <- current_q + 1L
-    }
-    #condition for the ending point of the right
-    if (condition_num(mass = mass[(gap_idx + 1L):right], times, sample_num)) {
-      current_boundary <- current_boundary + 1L
-      boundary$left[current_boundary] <- gap_idx + 1L
-      boundary$right[current_boundary] <- right
-    }
-    else {
-      #mass[(gap_idx + 1L):right] <- r
-      q$left[current_q] <- mass[gap_idx]
-      q$right[current_q] <- mass[right]
-      current_q <- current_q + 1L
-    }
-  }
+    l <- condition(
+      mass = mass[left:gapIdx],
+      intensities = intensities[left:gapIdx],
+      samples = samples[left:gapIdx],
+      tolerance = tolerance
+    )
 
-  q$left <- q$left[1:current_q - 1L]
-  q$right <- q$right[1:current_q - 1L]
-  return(q)
-}
-
-#' Binning function
-#'
-#' @param mass
-#' @param intensities
-#' @param samples
-#' @param tolerance
-#'
-#' @return
-#' @export
-#'
-#' @examples
-binning_2 <- function(mass, intensities, samples, tolerance) {
-  n <- length(mass)
-  d <- diff(mass)
-  n_boundaries <- max(20L, floor(3L * log(n)))
-  boundary <- list(left = double(n_boundaries),
-                   right = double(n_boundaries))
-  current_boundary <- 1L
-  boundary$left[current_boundary] <- 1L
-  boundary$right[current_boundary] <- n
-  while (current_boundary > 0L) {
-
-    left <- boundary$left[current_boundary]
-    right <- boundary$right[current_boundary]
-    current_boundary <- current_boundary - 1L
-    gaps <- d[left:(right - 1L)]
-    gap_idx <- which.max(gaps) + left - 1L
-
-    l <- condition(mass = mass[left:gap_idx],
-                   samples = samples[left:gap_idx],
-                   tolerance = tolerance)
-    if (is.na(l)) {
-      current_boundary <- current_boundary + 1L
-      boundary$left[current_boundary] <- left
-      boundary$right[current_boundary] <- gap_idx
+    if (is.na(l[1L])) {
+      currentBoundary <- currentBoundary + 1L
+      boundary$left[currentBoundary] <- left
+      boundary$right[currentBoundary] <- gapIdx
+    } else {
+      mass[left:gapIdx] <- l
     }
-    else {
-      mass[left:gap_idx] <- l
-    }
+    r <- condition(
+      mass = mass[(gapIdx + 1L):right],
+      intensities = intensities[(gapIdx + 1L):right],
+      samples = samples[(gapIdx + 1L):right],
+      tolerance = tolerance
+    )
 
-    r <- condition(mass = mass[(gap_idx + 1L):right],
-                   samples = samples[(gap_idx + 1L):right],
-                   tolerance = tolerance)
     if (is.na(r[1L])) {
-      current_boundary <- current_boundary + 1L
-      boundary$left[current_boundary] <- gap_idx + 1L
-      boundary$right[current_boundary] <- right
+      currentBoundary <- currentBoundary + 1L
+      boundary$left[currentBoundary] <- gapIdx + 1L
+      boundary$right[currentBoundary] <- right
+    } else {
+      mass[(gapIdx + 1L):right] <- r
     }
-    else {
-      mass[(gap_idx + 1L):right] <- r
-    }
-    if (current_boundary == n_boundaries) {
-      n_boundaries <- floor(n_boundaries * 1.5)
-      boundary$left <- c(boundary$left,
-                         double(n_boundaries - current_boundary))
-      boundary$right <- c(boundary$right,
-                          double(n_boundaries - current_boundary))
+    if (currentBoundary == nBoundaries) {
+      nBoundaries <- floor(nBoundaries * 1.5)
+      boundary$left <- c(
+        boundary$left,
+        double(nBoundaries - currentBoundary)
+      )
+      boundary$right <- c(
+        boundary$right,
+        double(nBoundaries - currentBoundary)
+      )
     }
   }
   return(mass)
 }
 
-#' Bin peaks
-#'
-#' @param l
-#' @param tolerance
-#'
-#' @return
-#' @export
-#'
-#' @examples
-binPeaks <- function(l, tolerance = 0.002) {
-  nn <- sapply(l, nrow)
-  non_empty <- nn != 0L
-  samples <- rep.int(seq_along(l), nn)
-  mass <- unname(unlist((lapply(l[non_empty], function(x) x$mz)),
-                        recursive = FALSE, use.names = FALSE))
-  intensities <- unlist(lapply(l[non_empty], function(x) x$intensity),
-                        recursive = FALSE, use.names = FALSE)
-  s <- sort.int(mass, index.return = TRUE)
+#' @title Binning of the peaks
+#' @description binPeaks function! This needs the two functions above
+#' @param df_list list of dataframes obtained from the input files
+#' @param tolerance obtained from the user input or use of default value 5e-6
+binPeaks <- function(df_list, tolerance = 5e-6) {
+  nonEmpty <- sapply(df_list, nrow) != 0L # checking if the list is not empty
+  samples <- rep.int(
+    seq_along(df_list),
+    sapply(df_list, nrow)
+  )
+
+  mass <- unname(unlist((lapply(
+    df_list[nonEmpty],
+    function(x) as.double(x$mz)
+  )),
+  recursive = FALSE, use.names = FALSE
+  ))
+  intensities <- unlist(lapply(
+    df_list[nonEmpty],
+    function(x) as.double(x$intensity)
+  ),
+  recursive = FALSE, use.names = FALSE
+  )
+  name <- unlist(lapply(
+    df_list[nonEmpty],
+    function(x) x$name
+  ),
+  recursive = FALSE, use.names = FALSE
+  )
+
+  s <- sort.int(mass, index.return = TRUE) # sort vector based on masses lowest to highest
   mass <- s$x
   intensities <- intensities[s$ix]
   samples <- samples[s$ix]
-  mass <- binning_2(mass = mass, intensities = intensities, samples = samples,
-                    tolerance = tolerance)
-  s <- sort.int(mass, index.return = TRUE)
+  name <- name[s$ix]
+
+  mass <- binning(
+    mass = mass, intensities = intensities,
+    samples = samples, tolerance = tolerance
+  )
+
+  s <- sort.int(mass, index.return = TRUE) # sort results into mass lowest to highest
   mass <- s$x
   intensities <- intensities[s$ix]
   samples <- samples[s$ix]
+  name <- name[s$ix]
   lIdx <- split(seq_along(mass), samples)
-  l[non_empty] <- mapply(FUN = function(p, i) {
-    p$mz <- mass[i]
-    p$intensity <- intensities[i]
-    p
-  }, p = l[non_empty], i = lIdx, MoreArgs = NULL, SIMPLIFY = FALSE,
-  USE.NAMES = FALSE)
-  l
+
+  df_list[nonEmpty] <- mapply(
+    FUN = function(p, i) { # reassigning of the new masses
+      p <- NULL
+      p$mz <- mass[i]
+      p$intensity <- intensities[i]
+      p$name <- name[i]
+      return(as.data.frame(p))
+    }, p = df_list[nonEmpty], i = lIdx, MoreArgs = NULL,
+    SIMPLIFY = FALSE, USE.NAMES = FALSE
+  )
+  return(as.list(df_list))
 }
 
-#' Binning condition
-#'
-#' @param mass
-#' @param tolerance
-#'
-#' @return
+#' @title iterations of the alignment function over the data
+#' @description the code iterates over the data as long as
+#' the number of bins changes, when the number of bins
+#' doesn't change anymore iterations stop, maximal number
+#' of iterations is set to 15
+#' Also, plotting the decrease of the bins
+#' @importFrom plyr join_all
+#' @importFrom tidyr pivot_wider
+#' @param df_list list of dataframes obtained from `binPeaks`
+#' @param max_align value obtained from user input or use of default value 8
+#' @param bin_plot logical value obtained from user input per default set to FALSE
+#' decides if the line plot showing the reduction of the bins per iteration is shown
 #' @export
-#'
-#' @examples
-condition_ppm <- function(mass, tolerance) {
-  ## If the ppm between the first and the last mz of the bin is larger than
-  ## the threshold ---> continue binning
-  l <- length(mass)
-  if (abs((mass[l] - mass[1L]) / mass[l]) * 1e6 > tolerance) {
-    return(TRUE)
-  }
-  FALSE
-}
+iteration <- function(df_list, max_align = 8, bin_plot = F) {
+  count <- 0L
+  bins <- c()
+  df <- plyr::join_all(df_list,
+    by = NULL,
+    type = "full", match = "all"
+  )
+  df <- df[, c("name", "mz", "intensity")]
+  df <- pivot_wider(df,
+    names_from = "name",
+    id_cols = "mz",
+    values_from = "intensity"
+  )
 
-#' Check Binning condition
-#'
-#' @description returns TRUE if the number of mz in this bin is larger than
-#' the threshold. And FALSE otherwise.
-#' the floor of the times is 1 (ideally the lowest peak number in a bin =
-#' the sample number )
-#' the cell of the times depends on the RAM of your computer and your
-#' expectation of running speed
-#'
-#' @param mass
-#' @param times
-#' @param sample_num
-#'
-#' @return
-#' @export
-#'
-#' @examples
-condition_num <- function(mass, times, sample_num) {
-  l <- length(mass)
-  if (l > sample_num * times) {
-    return(TRUE)
+  df <- df[order(df$mz), ]
+  bins <- c(bins, nrow(df))
+
+  while (TRUE) {
+    new <- binPeaks(df_list)
+    count <- count + 1L
+    new_df <- plyr::join_all(new,
+      by = NULL,
+      type = "full", match = "all"
+    )
+    new_df <- pivot_wider(new_df,
+      names_from = "name",
+      id_cols = "mz",
+      values_from = "intensity"
+    )
+    new_df <- new_df[order(new_df$mz), ]
+    bins <- c(bins, nrow(new_df))
+    if (nrow(df) == nrow(new_df)) {
+      break
+    }
+    if (count == max_align) {
+      break
+    }
+    df_list <- new
+    df <- new_df
   }
-  return(FALSE)
+  if (bin_plot == T) {
+    df_bins <- as.data.frame(cbind(bins, 0:(count)))
+    reduction_plot <- ggplot(df_bins) +
+      geom_line(aes(x = V2, y = bins)) +
+      labs(
+        x = "Number of Alignments",
+        y = "Number of bins"
+      )
+    df <- list(
+      df = df,
+      reduction_plot = reduction_plot
+    )
+    return(df)
+  }
+  return(df)
 }

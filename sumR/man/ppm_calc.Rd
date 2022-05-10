@@ -6,7 +6,11 @@
 \usage{
 ppm_calc(mass1, mass2)
 }
+\arguments{
+\item{mass1}{input from the `align_check` functions}
+
+\item{mass2}{input from the `align_check` functions}
+}
 \description{
-calculates the parts per million error between two different
-masses
+ppm_calc calculated the parts per million error between two different masses
 }

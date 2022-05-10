@@ -4,11 +4,12 @@
 \alias{make_filter_list}
 \title{Defining Mass Defect filter}
 \usage{
-make_filter_list(MD_df)
+make_filter_list(filter_df)
 }
 \arguments{
-\item{dataframe}{MD_df obtained from the HMDB using `mass_defect_function`}
+\item{filter_df}{obtained from the HMDB using `mass_defect_calculation`}
 }
 \description{
-the theoretical maximum Mass Defect of human metabolites is used to calculate this cut off
+the theoretical maximum Mass Defect of human metabolites
+is used to calculate this cut off
 }

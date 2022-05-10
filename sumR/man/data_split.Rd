@@ -4,14 +4,12 @@
 \alias{data_split}
 \title{datasplit}
 \usage{
-data_split(seed, data, split_ratio)
+data_split(seed, data, split_ratio = 0.8)
 }
 \arguments{
 \item{seed}{global seed}
 
 \item{data}{the dataframe with m/z as columns and a sample column named samples}
-
-\item{split}{ratio a certain value for split ratio}
 }
 \description{
 datasplit

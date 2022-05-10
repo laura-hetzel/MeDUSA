@@ -17,11 +17,11 @@ Welch_ttest(
 
 \item{dataframe2}{transposed dataframe with m/z as columns (raw imputed dataframe)}
 
+\item{samples}{a factor vector with the classes of the samples}
+
 \item{threshold}{numerical value for wanted threshold . the default is 0.1}
 
 \item{corr_method}{character string for correction method . default is "fdr"}
-
-\item{classifiers}{a factor vector with the classes of the samples}
 }
 \description{
 welch t test between two groups of samples (assuming unequal variance)

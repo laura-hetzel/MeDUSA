@@ -4,18 +4,18 @@
 \alias{Dunn_test}
 \title{Dunn test}
 \usage{
-Dunn_test(dataframe, samples, threshold, comb, method = "bh")
+Dunn_test(dataframe, samples, threshold = 0.05, comb = 6, method = "bh")
 }
 \arguments{
 \item{dataframe}{transposed dataframe with m/z as columns (results of significant kruskal test)}
 
-\item{threshold}{numerical value for wanted threshold}
+\item{samples}{a factor vector with the classes of the samples}
 
-\item{comb}{a numerical value for number of group combinations}
+\item{threshold}{numerical value for wanted threshold default is 0.05}
+
+\item{comb}{a numerical value for number of group combinations (4 groups = 6 combination)}
 
 \item{method}{a character string for correction method .. default is "bh"}
-
-\item{classifiers}{a factor vector with the classes of the samples}
 }
 \description{
 Dunn post hoc test after kruskal-wallis test

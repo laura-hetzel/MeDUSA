@@ -18,13 +18,13 @@ wilcox_results(
 
 \item{dataframe2}{transposed dataframe with m/z as columns (raw imputed dataframe)}
 
+\item{samples}{a factor vector with the classes of the samples}
+
 \item{threshold}{numerical value for wanted threshold . the default is 0.1}
 
 \item{corr_method}{character string for correction method . default is "fdr"}
 
 \item{paired}{logical vector for paired test .. default paired = FALSE}
-
-\item{classifiers}{a factor vector with the classes of the samples}
 }
 \description{
 wilcox test between two groups of samples

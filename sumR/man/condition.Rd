@@ -2,16 +2,21 @@
 % Please edit documentation in R/base.R
 \name{condition}
 \alias{condition}
-\title{Title}
+\title{Deletion of unwanted samples}
 \usage{
-condition(mass, samples, tolerance)
+condition(mass, intensities, samples, tolerance = 5e-06)
 }
 \arguments{
-\item{tolerance}{}
-}
-\value{
+\item{mass}{obtained from the input files}
 
+\item{intensities}{obtained from the input files}
+
+\item{samples}{obtained from the input files}
+
+\item{tolerance}{obtained from the user input or use of default value 5e-6}
 }
 \description{
-Title
+binning dependency 1
+delete any duplication of a samples
+delete any sample that is kicked out by the tolerance
 }

@@ -16,71 +16,31 @@ knitr::opts_chunk$set(
 
 _This package is under heavy development. Please do not use this package for actual reserach._
 
-```{r setup}
+```{r setup, eval =F}
 library(sumR)
 ```
 
 First we load up some example data. Here we have 4 injection of which 1 is a blank sample, all with negative polarity. These files have spectra which are combined together and centroided. 
-```{r files}
-dir <- system.file("extdata", package = "sumR")
-files <- list.files(dir, pattern = ".*.mzML$", full.names = T)
-files
+```{r files, eval =F}
+dir <- file.path(r"(C:\Users/pmaas/Downloads/stem_cell_blank_cell_samples/stem_cell_blank_cell_samples)")
+f <- list.files(dir, full.names = T, pattern = ".mzML")
+f <- f[13:length(f)]
 ```
 
-We're using `xcms` in order to read our mzML files. 
-```{r reading}
-data <- read_mzml(files)
+## Full pipeline
+
+```{r, eval = F}
+exp <- peakPicking(f, doCentroid = T, massDefect = 0.8) %>%
+  binSpectra(fraction = 0.1, npeaks = 0, meanSNR = 0, tolerance = 0.002) %>%
+  binCells(tolerance = 0.002, filter = TRUE) %>%
+  imputation(cores = 4, normalize = F) %>%
+  isotopeTagging(assay = "Imputed", plot = FALSE, filter = TRUE) 
 ```
 
-Next, we are identifying peaks and grouping them into features using the `dims_pipeline`. During this process, we also filter any chromatic peaks using an exclusion filter. In `feature_processing` we combine some of our feature data in order to make it ready for isotope detection.
-
-```{r processing}
-data <- dims_pipeline(data)
-```
-
-```{r features, fig.width=12}
-data
-df <- feature_processing(data)
-df
-```
-
-
-Here we run the isotope detection algorithm. It adds several columns to our previous data.frame which can be used to filter isotopes from our feature set. 
-
-```{r isotopes, eval = F}
-df <- isotope_tagging(df, ppm =5 ,z=1 )
-```
-```{r normalize}
-df2 <- normalize_features(df)
-
-```
-
-```{r pca, eval =F, fig.width=12}
-
-intensity_df <- df2[, grep("*.mzML$", colnames(df2))]
-pca <- prcomp(intensity_df, center = TRUE, scale. = TRUE)
-if ("ggbiplot" %in% installed.packages()) {
-  ggbiplot::ggbiplot(pca)
-} else {
-  plot(pca$x)
-}
-```
-
-```{r umap, eval = F}
-if ("umap" %in% installed.packages()) {
-  library(umap)
-  library(ggplot2)
-  map <- umap(intensity_df)
-  df = as.data.frame(map$layout)
-  colnames(df) <- c("x", "y")
-  maxes <- as.vector(apply(intensity_df, 1, which.max))
-  col_vec <- c("LOW", "LOW", "UP", "UP", "UP", "UP")
-  df$type <- col_vec[maxes]
-  ggplot(df, aes(x = x, y = y, color = type)) + 
-    geom_point() +
-    ggtitle("Maximum intensity of each feature colored by group")
-}
-
+## Data inspection
+### PCA
+```{r pca, eval = F}
+sumR:::PCA_ind(t(assay(exp, "Imputed")))
 ```
 
 ```{r sessionInfo}

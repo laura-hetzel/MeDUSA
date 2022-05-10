@@ -2,7 +2,7 @@
 % Please edit documentation in R/RandomF_functions.R
 \name{randomForest_CV}
 \alias{randomForest_CV}
-\title{feature selection}
+\title{feature selection by cross validation}
 \usage{
 randomForest_CV(training_set, test_set, class1, class2, k, seed, n)
 }

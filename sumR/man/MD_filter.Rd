@@ -4,11 +4,30 @@
 \alias{MD_filter}
 \title{MD filter}
 \usage{
-MD_filter(MD_df, filter_list, incl_list)
+MD_filter(dataframe, mz_col, a = 0.00112, b = 0.01953)
 
-MD_filter(MD_df, filter_list, incl_list)
+MD_filter(
+  MD_df,
+  filter_df,
+  incl_list = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt", package =
+    "sumR"),
+  mass_accuracy = 0.01
+)
 }
 \arguments{
+\item{MD_df}{obtained from from the HMDB using `mass_defect_calculation`}
+
+\item{filter_df}{obtained from the `make_filter_list`}
+
+\item{incl_list}{(optional) path to inclusion list obtained from
+user input or use of default inclusion list (McMillan et al., 2016)}
+
+\item{mass_accuracy}{(optional) obtained from user input or use of
+default value set to 0.01}
+
+\item{dataframe}{is the dataframe on which KM calculations need to be
+conducted}
+
 \item{mz_col}{is the mass to charge column within the specified dataframe}
 
 \item{a}{is the coefficient of the linear equation used for data filtering}
@@ -16,8 +35,6 @@ MD_filter(MD_df, filter_list, incl_list)
 \item{b}{is the addition value of the linear equation used for data
 filtering, both a and b can be calculated using the linear_equation()
 function included in this package.}
-
-\item{dataframe}{filter_list obtained from the `create_fit_df`}
 }
 \description{
 filters data based on Mass Defect

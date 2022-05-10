@@ -2,16 +2,15 @@
 % Please edit documentation in R/binning.R
 \name{binPeaks}
 \alias{binPeaks}
-\title{Bin peaks}
+\title{Binning of the peaks}
 \usage{
-binPeaks(l, tolerance = 0.002)
+binPeaks(df_list, tolerance = 5e-06)
 }
 \arguments{
-\item{tolerance}{}
-}
-\value{
+\item{df_list}{list of dataframes obtained from the input files}
 
+\item{tolerance}{obtained from the user input or use of default value 5e-6}
 }
 \description{
-Bin peaks
+binPeaks function! This needs the two functions above
 }
