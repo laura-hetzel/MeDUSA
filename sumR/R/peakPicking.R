@@ -7,13 +7,13 @@ pickSpectra <- function(x, SNR = 0) {
   localMax <- MassSpecWavelet::getLocalMaximumCWT(wCoefs)
   ridgeList <- MassSpecWavelet::getRidge(localMax)
   majorPeakInfo <- identifyPeaks(ms$i, ridgeList, wCoefs,
-    SNR.Th = SNR, nearbyPeak = TRUE
+                                 SNR.Th = SNR, nearbyPeak = TRUE
   )
 
   df <- cbind(ms[as.vector(majorPeakInfo$allPeakIndex), ],
-    Noise = majorPeakInfo$peakNoise[names(majorPeakInfo$allPeakIndex)],
-    Value = majorPeakInfo$peakValue[names(majorPeakInfo$allPeakIndex)],
-    SNR = majorPeakInfo$peakSNR[names(majorPeakInfo$allPeakIndex)]
+              Noise = majorPeakInfo$peakNoise[names(majorPeakInfo$allPeakIndex)],
+              Value = majorPeakInfo$peakValue[names(majorPeakInfo$allPeakIndex)],
+              SNR = majorPeakInfo$peakSNR[names(majorPeakInfo$allPeakIndex)]
   )
   colnames(df) <- make.names(colnames(df), unique = T)
   df[df$SNR >= SNR, ]
@@ -65,17 +65,19 @@ savgol <- function(y, halfWindowSize = 10L, polynomialOrder = 3L) {
 #' @importFrom dplyr distinct
 #' @importFrom tools file_path_sans_ext
 #' @export
-peakPicking <- function(files, doCentroid = F, massDefect = 0.8,
+peakPicking <- function(files, doCentroid = F, massDefect = 0.8, polarity = "-",
                         cores = detectCores(logical = F), SNR = 0) {
   cl <- makeCluster(cores)
   clusterExport(cl, varlist = names(sys.frame()))
-  result <- pbapply::pblapply(files, cl = cl, function(f) {
+  result <- pbapply::pblapply(files, cl = NULL, function(f) {
     z <- mzR::openMSfile(f)
     x <- mzR::peaks(z)
-
     if (doCentroid) {
       df <- mzR::header(z)
       scans <- df$scanWindowUpperLimit - df$scanWindowLowerLimit <= 200
+      polarity_filter <- grepl("FTMS - p NSI", df$filterString)
+      if (polarity == "+") polarity_filter <- !polarity_filter
+      scans <- scans & polarity_filter
       x <- lapply(setNames(x[scans], df[scans, ]$retentionTime), centroid)
     }
 
@@ -92,6 +94,7 @@ peakPicking <- function(files, doCentroid = F, massDefect = 0.8,
     l <- l[non_nulls]
     df <- data.frame(scan = rep(which(non_nulls), sapply(l, nrow)), do.call(rbind, l))
     df <- dplyr::distinct(df[df$Value > 0, ])
+    if (nrow(df) == 0) return(NULL)
     rownames(df) <- 1:nrow(df)
     df <- MassDefectFilter(df, mz_MD_plot = F)
     df[df$MD < massDefect, ]
@@ -99,7 +102,7 @@ peakPicking <- function(files, doCentroid = F, massDefect = 0.8,
   samps <- tools::file_path_sans_ext(basename(files))
   stopCluster(cl)
   names(result) <- samps
-  result
+  result[!vapply(result, is.null, logical(1))]
 }
 
 identifyPeaks <- function(ms, ridgeList, wCoefs, scales = as.numeric(colnames(wCoefs)),
@@ -163,9 +166,9 @@ identifyPeaks <- function(ms, ridgeList, wCoefs, scales = as.numeric(colnames(wC
   for (k in 1:length(ridgeList)) {
     ind.k <- mzInd[k]
     start.k <- ifelse(ind.k - winSize.noise < 1, 1, ind.k -
-      winSize.noise)
+                        winSize.noise)
     end.k <- ifelse(ind.k + winSize.noise > nMz, nMz, ind.k +
-      winSize.noise)
+                      winSize.noise)
 
     noiseLevel.k <- quantile(noise[start.k:end.k], probs = 0.95)
     if (noiseLevel.k < minNoiseLevel) {
@@ -182,13 +185,13 @@ identifyPeaks <- function(ms, ridgeList, wCoefs, scales = as.numeric(colnames(wC
     tempInd <- NULL
     for (ind.i in selInd1) {
       tempInd <- c(tempInd, index[mzInd >= mzInd[ind.i] -
-        nearbyWinSize & mzInd <= mzInd[ind.i] + nearbyWinSize])
+                                    nearbyWinSize & mzInd <= mzInd[ind.i] + nearbyWinSize])
     }
     selInd1 <- (index %in% tempInd)
   }
   selInd2 <- (peakSNR > SNR.Th)
   selInd3 <- !(mzInd %in% c(1:(nearbyWinSize / 2), (nrow(wCoefs) -
-    (nearbyWinSize / 2) + 1):nrow(wCoefs)))
+                                                      (nearbyWinSize / 2) + 1):nrow(wCoefs)))
   selInd <- (selInd1 & selInd2 & selInd3)
   names(peakSNR) <- names(peakScale) <- names(peakNoise) <- names(peakCenterInd) <- names(peakValue) <- names(mzInd) <- ridgeName
   return(list(
@@ -211,7 +214,7 @@ cwt_new <- function(ms, scales = NULL, max_scale = 32) {
 
   if (is.null(scales)) {
     scales <- seq(1, ifelse(floor(length(ms) / 16) < max_scale,
-      floor(length(ms) / 16), max_scale
+                            floor(length(ms) / 16), max_scale
     ), 2)
   }
 
@@ -224,8 +227,8 @@ cwt_new <- function(ms, scales = NULL, max_scale = 32) {
   len <- length(ms)
 
   wCoefs <- matrix(0,
-    ncol = length(scales), nrow = length(ms),
-    dimnames = list(1:length(ms), scales)
+                   ncol = length(scales), nrow = length(ms),
+                   dimnames = list(1:length(ms), scales)
   )
   for (scale.i in scales) {
     f <- rep(0, len)
@@ -316,7 +319,7 @@ binSpectra <- function(peakList, fraction = 0, npeaks = 0,
     )
     rownames(df) <- 1:nrow(df)
     df[df$npeaks >= (fraction * length(unique(spectra$scan))) &
-      df$SNR >= meanSNR & df$npeaks > npeaks, ]
+         df$SNR >= meanSNR & df$npeaks > npeaks, ]
   })
 }
 
@@ -339,7 +342,7 @@ binCells <- function(spectraList, tolerance = 0.002, filter = TRUE) {
 
   df_list <- doBinning(df, split = "cell", tolerance = tolerance)
   df <- data.frame(do.call(rbind, df_list),
-    cell = rep(names(df_list), sapply(df_list, nrow))
+                   cell = rep(names(df_list), sapply(df_list, nrow))
   )
 
   bins <- split.data.frame(df, df$mz)
@@ -355,6 +358,7 @@ binCells <- function(spectraList, tolerance = 0.002, filter = TRUE) {
     snr[i, bins[[i]]$cell] <- bins[[i]]$snr
   }
   SummarizedExperiment(
+    colData = data.frame(names(z)),
     assays = list(Area = m, SNR = snr),
     rowData = data.frame(mz = as.double(names(bins)))
   ) %>% filterCells()
