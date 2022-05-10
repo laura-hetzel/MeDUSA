@@ -1,12 +1,13 @@
 Type: Package
 Package: sumR
 Title: Package for analysis of DI-MS data.
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: c(
     person("Alida", "Kindt", , "a.s.d.kindt@lacdr.leidenuniv.nl", role = c("aut", "cre")),
     person("Ahmed", "Ali", , "ali@lacdr.leidenuniv.nl", role = "aut"),
     person("Klara", "Blaschitz", role = "aut"),
-    person("Pascal", "Maas", , "p.maas@lacdr.leidenuniv.nl", role = "aut"),
+    person("Pascal", "Maas", , "p.maas@lacdr.leidenuniv.nl", role = "aut",
+           comment = c(ORCID = "0000-0001-9379-6041")),
     person("Eman", "Muhammad", role = "aut"),
     person("Merys", "Valdez", , "m.e.valdez@lacdr.leidenuniv.nl", role = "aut"),
     person("David", "Rasp", , "d.rasp@lacdr.leidenuniv.nl", role = "aut",
@@ -49,11 +50,9 @@ Imports:
     randomForest,
     Rdisop,
     Rdpack,
-    readr,
     rstatix,
     SAVER,
     sqldf,
-    stats,
     stringr,
     superheat,
     tibble,

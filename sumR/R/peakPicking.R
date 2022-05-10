@@ -28,7 +28,6 @@ centroid <- function(spectrum, halfWindowSize = 2L) {
 }
 
 #' @title Apply Savitz-golay filter
-#' @importFrom stats filter
 savgol <- function(y, halfWindowSize = 10L, polynomialOrder = 3L) {
   sav.filter <- function(x, hws, coef) {
     n <- length(x)
@@ -326,7 +325,7 @@ binSpectra <- function(peakList, fraction = 0, npeaks = 0,
 #' @param tolerance
 #' @importFrom SummarizedExperiment SummarizedExperiment
 #' @export
-binCells <- function(spectraList, tolerance = 0.002) {
+binCells <- function(spectraList, tolerance = 0.002, filter = TRUE) {
   df <- do.call(rbind, lapply(1:length(spectraList), function(i) {
     df <- spectraList[[i]]
     if (nrow(df) == 0) {
@@ -358,5 +357,5 @@ binCells <- function(spectraList, tolerance = 0.002) {
   SummarizedExperiment(
     assays = list(Area = m, SNR = snr),
     rowData = data.frame(mz = as.double(names(bins)))
-  )
+  ) %>% filterCells()
 }

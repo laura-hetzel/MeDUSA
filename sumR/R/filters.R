@@ -141,9 +141,10 @@ imputation <- function(exp, normalize = TRUE, useAssay = "Area",
                        saveAssay = "Imputed", cores = 1) {
   df <- as.data.frame(assay(exp, useAssay))
   df[is.na(df)] <- 0
+  if (!normalize) normalize <- NULL
   assay(exp, saveAssay) <- saver(df,
     estimates.only = T, ncores = cores,
-    size.factor = as.integer(normalize)
+    size.factor = normalize
   )
   exp
 }

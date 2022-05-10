@@ -60,7 +60,7 @@ ppmToDalton <- function(mass, ppm = 5) {
 #' @usage addIntensities(data, iso_df)
 addIntensities <- function(data, iso_df) {
   # Adding intensity for mono-isotopic ion
-  add_mol <- merge(filter(data, data$mz %in% iso_df$mol_ion), iso_df,
+  add_mol <- merge(dplyr::filter(data, data$mz %in% iso_df$mol_ion), iso_df,
     by.x = "mz",
     by.y = "mol_ion", all.x = TRUE
   )
@@ -69,7 +69,7 @@ addIntensities <- function(data, iso_df) {
 
 
   # Adding intensity for isotope ion
-  add_iso <- merge(filter(data, data$mz %in% iso_df$isotope), iso_df,
+  add_iso <- merge(dplyr::filter(data, data$mz %in% iso_df$isotope), iso_df,
     by.x = "mz",
     by.y = "isotope", all.x = TRUE
   )
@@ -194,8 +194,7 @@ isotopeFinding <- function(data, mz_vector, isotope_df, Elements = c("C13"), ppm
   # Setting Elements of interest
 
   # Filtering for isotopic elements of interest
-  isotope_filter <- filter(isotope_df, isotope_df$Element %in% Elements)
-
+  isotope_filter <- dplyr::filter(isotope_df, isotope_df$Element %in% Elements)
 
   # Looping for each isotopic elements of interest
   results_valid <- do.call(rbind, lapply(1:length(isotope_filter$isotope_da), function(i) {
@@ -480,7 +479,7 @@ massSpecPlot <- function(final_df) {
 #' @importFrom dplyr distinct select %>%
 #' @usage isotopeTagging(data, ppm = 5, Elements = c("C13"), z = 0, plot = TRUE)
 #' @export
-isotopeTagging <- function(exp, assay = "Area", ppm = 5, Elements = c("C13"), z = 0, plot = TRUE) {
+isotopeTagging <- function(exp, assay = "Area", ppm = 5, Elements = c("C13"), z = 0, plot = TRUE, filter = TRUE) {
   data <- as.data.frame(cbind(mz = rowData(exp)$mz, assay(exp, assay)))
   #-----------------------------------------------------------------------------
   # Check for input arguments
@@ -552,14 +551,6 @@ isotopeTagging <- function(exp, assay = "Area", ppm = 5, Elements = c("C13"), z 
   #-----------------------------------------------------------------------------
   # Returning original features with data
 
-  # Extracting feature names
-  rownames <- rownames(copy_df)
-
-  # Return data frame
-  return_df <- cbind(final_df, copy_df)
-  rownames(return_df) <- rownames
-
-
   #-----------------------------------------------------------------------------
   # Plotting
   if (plot == TRUE) {
@@ -567,5 +558,14 @@ isotopeTagging <- function(exp, assay = "Area", ppm = 5, Elements = c("C13"), z 
     print(massSpecPlot(final_df))
   }
 
-  return(return_df)
+  rowData(exp) <- final_df
+  if (filter) exp <- filterIsotopes(exp)
+  return(exp)
+}
+
+#' @title Remove identified isotopes from the experiment
+#' @param exp SummarizedExperiment with identified isotopes
+#' @export
+filterIsotopes <- function(exp){
+  exp[-grep("isotope", rowData(exp)$isotopic_status), ]
 }
