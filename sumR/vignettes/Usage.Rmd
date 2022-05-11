@@ -22,74 +22,25 @@ library(sumR)
 
 First we load up some example data. Here we have 4 injection of which 1 is a blank sample, all with negative polarity. These files have spectra which are combined together and centroided. 
 ```{r files, eval =F}
-# dir <- system.file("extdata", package = "sumR")
-# files <- list.files(dir, pattern = ".*.mzML$", full.names = T)
-# files
-
-dir <- file.path(r"(F:\stem_cell_blank_cell_samples)")
+dir <- file.path(r"(C:\Users/pmaas/Downloads/stem_cell_blank_cell_samples/stem_cell_blank_cell_samples)")
 f <- list.files(dir, full.names = T, pattern = ".mzML")
+f <- f[13:length(f)]
 ```
 
 ## Full pipeline
 
-```{r}
-exp <- peakPicking(f[13:length(f)], doCentroid = T, massDefect = 0.8) %>%
+```{r, eval = F}
+exp <- peakPicking(f, doCentroid = T, massDefect = 0.8) %>%
   binSpectra(fraction = 0.1, npeaks = 0, meanSNR = 0, tolerance = 0.002) %>%
-  binCells(tolerance = 0.002) %>%
-  filterCells() %>%
-  imputation(cores = 4)
+  binCells(tolerance = 0.002, filter = TRUE) %>%
+  imputation(cores = 4, normalize = F) %>%
+  isotopeTagging(assay = "Imputed", plot = FALSE, filter = TRUE) 
 ```
 
-```{r}
-df <- assay(exp, "imputed")
-x <- isotopeTagging(as.data.frame(cbind(mz = rowData(exp)$mz, df)), plot = F)
-exp <- exp[-grep("isotope", x$isotopic_status), ]
-```
-
-
-```{r features, fig.width=12, eval =F}
-data
-df <- feature_processing(data)
-df
-```
-
-
-Here we run the isotope detection algorithm. It adds several columns to our previous data.frame which can be used to filter isotopes from our feature set. 
-
-```{r isotopes, eval = F}
-df <- isotope_tagging(df, ppm =5 ,z=1 )
-```
-```{r normalize}
-df2 <- normalize_features(df)
-
-```
-
-```{r pca, eval =F, fig.width=12}
-
-intensity_df <- df2[, grep("*.mzML$", colnames(df2))]
-pca <- prcomp(intensity_df, center = TRUE, scale. = TRUE)
-if ("ggbiplot" %in% installed.packages()) {
-  ggbiplot::ggbiplot(pca)
-} else {
-  plot(pca$x)
-}
-```
-
-```{r umap, eval = F}
-if ("umap" %in% installed.packages()) {
-  library(umap)
-  library(ggplot2)
-  map <- umap(intensity_df)
-  df = as.data.frame(map$layout)
-  colnames(df) <- c("x", "y")
-  maxes <- as.vector(apply(intensity_df, 1, which.max))
-  col_vec <- c("LOW", "LOW", "UP", "UP", "UP", "UP")
-  df$type <- col_vec[maxes]
-  ggplot(df, aes(x = x, y = y, color = type)) + 
-    geom_point() +
-    ggtitle("Maximum intensity of each feature colored by group")
-}
-
+## Data inspection
+### PCA
+```{r pca, eval = F}
+sumR:::PCA_ind(t(assay(exp, "Imputed")))
 ```
 
 ```{r sessionInfo}
