@@ -7,8 +7,6 @@
 isotopeTagging(data, ppm = 5, Elements = c("C13"), z = 0, plot = TRUE)
 }
 \arguments{
-\item{data}{data.frame,  which contain column named "mz", all other columns will be coerced as intensity}
-
 \item{ppm}{An integer, defining parts per million (ppm) for tolerance (default = 5)}
 
 \item{Elements}{A vector containing the isotopic element of interest (default = c("C13"))}
@@ -16,6 +14,8 @@ isotopeTagging(data, ppm = 5, Elements = c("C13"), z = 0, plot = TRUE)
 \item{z}{An integer, defining charge z of m/z peaks for calculation of real mass. 0 is for auto-detection (default = 0)}
 
 \item{plot}{Logical, returns box plot for isotope and interactive mass spectrometry of detected isotopes (default = TRUE)}
+
+\item{data}{data.frame,  which contain column named "mz", all other columns will be coerced as intensity}
 }
 \description{
 Tags isotopes based on intensity ratio and difference in mass between mono- and isotopic ions

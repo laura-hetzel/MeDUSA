@@ -8,6 +8,7 @@ peakPicking(
   files,
   doCentroid = F,
   massDefect = 0.8,
+  polarity = "-",
   cores = detectCores(logical = F),
   SNR = 0
 )
