@@ -22,20 +22,21 @@ library(sumR)
 
 First we load up some example data. Here we have 4 injection of which 1 is a blank sample, all with negative polarity. These files have spectra which are combined together and centroided. 
 ```{r files, eval =F}
-dir <- file.path(r"(C:\Users/pmaas/Downloads/stem_cell_blank_cell_samples/stem_cell_blank_cell_samples)")
-f <- list.files(dir, full.names = T, pattern = ".mzML")
-f <- f[13:length(f)]
+dir <- file.path(r"(F:/stem_cell_blank_cell_samples)")
 ```
 
 ## Full pipeline
 
 ```{r, eval = F}
-exp <- peakPicking(f, doCentroid = T, massDefect = 0.8) %>%
-  binSpectra(fraction = 0.1, npeaks = 0, meanSNR = 0, tolerance = 0.002) %>%
+exp <- rawToMzml(dir, output = file.path(getwd(), "test2"), rt = c(60, 420)) %>%
+  peakPicking(doCentroid = T, massDefect = 0.8) %>%
+  binSpectra(fraction = 0, npeaks = 0, meanSNR = 0, tolerance = 0.002) %>%
   binCells(tolerance = 0.002, filter = TRUE) %>%
   imputation(cores = 4, normalize = F) %>%
   isotopeTagging(assay = "Imputed", plot = FALSE, filter = TRUE) 
 ```
+
+
 
 ## Data inspection
 ### PCA

@@ -69,7 +69,7 @@ peakPicking <- function(files, doCentroid = F, massDefect = 0.8, polarity = "-",
                         cores = detectCores(logical = F), SNR = 0) {
   cl <- makeCluster(cores)
   clusterExport(cl, varlist = names(sys.frame()))
-  result <- pbapply::pblapply(files, cl = NULL, function(f) {
+  result <- pbapply::pblapply(files, cl = cl, function(f) {
     z <- mzR::openMSfile(f)
     x <- mzR::peaks(z)
     if (doCentroid) {
@@ -82,12 +82,7 @@ peakPicking <- function(files, doCentroid = F, massDefect = 0.8, polarity = "-",
     }
 
     l <- lapply(x, function(spectrum) {
-      tryCatch(
-        {
-          suppressWarnings(pickSpectra(spectrum, SNR))
-        },
-        error = function(err) NULL
-      )
+      tryCatch(suppressWarnings(pickSpectra(spectrum, SNR)), error = function(err) NULL)
     })
 
     non_nulls <- !vapply(l, is.null, logical(1))
@@ -359,7 +354,7 @@ binCells <- function(spectraList, sampleData = NULL,
     snr[i, bins[[i]]$cell] <- bins[[i]]$snr
   }
   SummarizedExperiment(
-    colData = data.frame(names(spectraList)),
+    colData = data.frame(sample = names(spectraList)),
     assays = list(Area = m, SNR = snr),
     rowData = data.frame(mz = as.double(names(bins)))
   ) %>% addSampleData(sampleData) %>% filterCells()

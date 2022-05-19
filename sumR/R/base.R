@@ -19,6 +19,33 @@ read_msdata <- function(path = "data") {
   return(ms_data[order(ms_data$mz), ])
 }
 
+#' @title Convert RAW files to mzML
+#' @param folder
+#' @param outputFolder
+#' @param options
+#' @export
+rawToMzml <- function(folder, output = getwd(), rt = NULL, options = ""){
+
+  options <- paste(options, collapse = " ")
+  files <- list.files(file.path(folder), full.names = T, pattern = "^(?!.*mzML).*")
+  output <- file.path(output)
+  if (!dir.exists(output)) dir.create(output)
+  key <- "Directory\\shell\\Open with MSConvertGUI\\command"
+  reg <- tryCatch(utils::readRegistry(key, "HCR"), error = function(e) NULL)
+  msconvert <- file.path(dirname(sub("\"([^\"]*)\".*", "\\1", reg[[1]])), "msconvert.exe")
+  if (is.null(msconvert)) return(NULL)
+
+  rt <- ifelse(is.null(rt), "", sprintf('--filter "scanTime [%s, %s]"', rt[1], rt[2]))
+
+  pbapply::pblapply(files, function(file){
+    command <- sprintf('"%s" "%s" %s %s -o "%s"',
+                       file.path(msconvert), file, rt, options, output)
+    system(command, show.output.on.console = F)
+  })
+  list.files(folder, full.names = T, pattern = ".mzML")
+}
+
+
 #' @title ppm calculation
 #' @description ppm_calc calculated the parts per million error between two different masses
 #' @param mass1 input from the `align_check` functions
