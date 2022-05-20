@@ -2,7 +2,7 @@
 #' @param exp SummarizedExperiment object
 #' @param data Dataframe with samplenames as rows
 #' @export
-addSampleData <- function(exp, data = NULL){
+addCellData <- function(exp, data = NULL){
   if (is.null(data)) return(exp)
   cols <- rownames(colData(exp))
   data <- data[cols, ]

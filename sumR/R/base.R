@@ -221,3 +221,4 @@ calculate_nominal_mass <- function(formulas) {
     }))
   })
 }
+

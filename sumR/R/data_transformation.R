@@ -4,9 +4,9 @@
 #' @param noise numerical value for the noise level
 #' @param seed global seed for reproducible results
 #' @importFrom stats runif
-data_imputation <- function(data, noise, seed) {
+data_imputation <- function(data, noise, seed=42) {
   set.seed(seed)
-  data[data == 0] <- runif(1, min = 1, max = noise)
+  data[data == 0] <- runif(length(data == 0), min = 1, max = noise)
   return(data)
 }
 

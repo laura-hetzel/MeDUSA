@@ -8,9 +8,13 @@
 #' @return volcano plot
 #' @import ggplot2
 #' @importFrom ggpubr theme_pubr labs_pubr
-volcanoPlot <- function(data, xvalues, yvalues, title) {
+#' @export
+volcanoPlot <- function(exp, test, title = "") {
+  data <- as.data.frame(rowData(exp)[[test]])
+  foldChanges <- rowData(exp)$foldChange[,4]
+  pvalues <- data$p.value
   ggplot(data) +
-    geom_point(aes(x = xvalues, y = -log10(yvalues), colour = significant)) + ## color by significant of fdr <0.1
+    geom_point(aes(x = foldChanges, y = -log10(pvalues), colour = significant)) + ## color by significant of fdr <0.1
     ggtitle(title) +
     xlab("log2 fold change") +
     ylab("-log10 nominal p.value") +
@@ -25,106 +29,110 @@ volcanoPlot <- function(data, xvalues, yvalues, title) {
 }
 
 
-#' Plot PCA
+#' #' Plot PCA
+#' #'
+#' #' @description visualization using either factoMineR and factorextra package
+#' #' or stats and ggplot2 .. click next to show the next plot
+#' #'
+#' #' @param data transposed dataframe with m/z as columns
+#' #' @param method Which method of calculating the PCA should be used.
+#' #' "facto" uses the FactoMineR and factoextra packages. "stats" uses prcomp from
+#' #' the basic stats package and ggpubr.
+#' #' @param classifiers sample groups as factor
+#' #' @export
+#' #' @importFrom FactoMineR PCA
+#' #' @importFrom factoextra get_pca_var fviz_eig fviz_pca_var fviz_pca_ind
+#' #' @importFrom ggpubr ggscatter
+#' #' @importFrom stats prcomp
+#' #' @importFrom ggplot2 geom_hline geom_vline
+#' #' @importFrom dplyr %>%
+#' #' @importFrom graphics par
+#' plot_PCA <- function(data, method = c("facto", "stats"), classifiers) {
+#'   if (method[1] == "facto") {
+#'     res_pca <- PCA(data, graph = FALSE)
 #'
-#' @description visualization using either factoMineR and factorextra package
-#' or stats and ggplot2 .. click next to show the next plot
+#'     ## Visualisation of variance explained (plot the variance against the no of dimension)
+#'     print(fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 100), main = "PCA - scree plot"))
+#'     par(ask = TRUE)
 #'
-#' @param data transposed dataframe with m/z as columns
-#' @param method Which method of calculating the PCA should be used.
-#' "facto" uses the FactoMineR and factoextra packages. "stats" uses prcomp from
-#' the basic stats package and ggpubr.
-#' @param classifiers sample groups as factor
-#' @return
-#' @export
-#' @importFrom FactoMineR PCA
-#' @importFrom factoextra get_pca_var fviz_eig fviz_pca_var fviz_pca_ind
-#' @importFrom ggpubr ggscatter
-#' @importFrom stats prcomp
-#' @importFrom ggplot2 geom_hline geom_vline
-#' @importFrom dplyr %>%
-#' @importFrom graphics par
+#'     ## Extracting results of variables
+#'     var <- get_pca_var(res_pca)
+#'     print(fviz_pca_var(res_pca, col.var = "grey", col.circle = "grey", title = "variables-PCA"))
 #'
-#' @examples
-plot_PCA <- function(data, method = c("facto", "stats"), classifiers) {
-  if (method[1] == "facto") {
-    res_pca <- PCA(data, graph = FALSE)
-
-    ## Visualisation of variance explained (plot the variance against the no of dimension)
-    print(fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 100), main = "PCA - scree plot"))
-    par(ask = TRUE)
-
-    ## Extracting results of variables
-    var <- get_pca_var(res_pca)
-    print(fviz_pca_var(res_pca, col.var = "grey", col.circle = "grey", title = "variables-PCA"))
-
-    ## Plotting the individuals
-    par(ask = TRUE)
-    print(fviz_pca_ind(res_pca,
-      col.ind = "cos2",
-      gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-      repel = TRUE, # Avoid text overlapping (slow if many points)
-      title = "individuals-PCA - names of the sample"
-    ))
-
-    ## plotting the ellipses
-    par(ask = TRUE)
-    fviz_pca_ind(res_pca,
-      geom.ind = "point", # show points only (nbut not "text")
-      col.ind = classifiers, # color by groups
-      palette = "viridis",
-      addEllipses = TRUE, # Concentration ellipses
-      legend.title = "Sample type",
-      title = "PCA samples "
-    )
-  } else if (method[1] == "stats") {
-    ## different way to plot the PCA
-    ## PCA from basic stats
-
-    PCA2 <- prcomp(as.matrix(data), scale. = F) # PCA model using transposed df
-    PCA_scores <- as.data.frame(PCA2$x) %>% dplyr::select(PC1, PC2)
-    PCA_scores$Sample <- classifiers ## we add our classifiers here
-
-    ## plotting the samples and ellipses using ggplot
-    print(fviz_eig(PCA2, addlabels = TRUE, ylim = c(0, 100), main = "PCA -scree plot"))
-    par(ask = TRUE)
-    ggscatter(PCA_scores,
-      x = "PC1", y = "PC2",
-      color = "Sample", shape = "Sample", palette = "aaas",
-      mean.point = TRUE, ellipse = TRUE, title = "PCA Samples"
-    ) +
-      geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
-      geom_vline(xintercept = 0, linetype = "dashed", color = "black")
-  }
-}
+#'     ## Plotting the individuals
+#'     par(ask = TRUE)
+#'     print(fviz_pca_ind(res_pca,
+#'       col.ind = "cos2",
+#'       gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+#'       repel = TRUE, # Avoid text overlapping (slow if many points)
+#'       title = "individuals-PCA - names of the sample"
+#'     ))
+#'
+#'     ## plotting the ellipses
+#'     par(ask = TRUE)
+#'     fviz_pca_ind(res_pca,
+#'       geom.ind = "point", # show points only (nbut not "text")
+#'       col.ind = classifiers, # color by groups
+#'       palette = "viridis",
+#'       addEllipses = TRUE, # Concentration ellipses
+#'       legend.title = "Sample type",
+#'       title = "PCA samples "
+#'     )
+#'   } else if (method[1] == "stats") {
+#'     ## different way to plot the PCA
+#'     ## PCA from basic stats
+#'
+#'     PCA2 <- prcomp(as.matrix(data), scale. = F) # PCA model using transposed df
+#'     PCA_scores <- as.data.frame(PCA2$x) %>% dplyr::select(PC1, PC2)
+#'     PCA_scores$Sample <- classifiers ## we add our classifiers here
+#'
+#'     ## plotting the samples and ellipses using ggplot
+#'     print(fviz_eig(PCA2, addlabels = TRUE, ylim = c(0, 100), main = "PCA -scree plot"))
+#'     par(ask = TRUE)
+#'     ggscatter(PCA_scores,
+#'       x = "PC1", y = "PC2",
+#'       color = "Sample", shape = "Sample", palette = "aaas",
+#'       mean.point = TRUE, ellipse = TRUE, title = "PCA Samples"
+#'     ) +
+#'       geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+#'       geom_vline(xintercept = 0, linetype = "dashed", color = "black")
+#'   }
+#' }
 
 
 #' @title PCA scree plot
 #' @importFrom FactoMineR PCA
 #' @importFrom factoextra fviz_eig
-#' @param data transposed dataframe with m/z as columns
-PCA_scree <- function(data) {
+#' @param exp
+#' @param assay
+#' @export
+screePCA <- function(exp, assay) {
+  data <- t(assay(exp, assay))
   res_pca <- PCA(data, graph = FALSE)
   fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 100), main = "PCA - scree plot")
 }
 
 #' @title PCA variables plot
 #' @importFrom FactoMineR PCA
-#' @importFrom factoextra get_pca_var
 #' @importFrom factoextra fviz_pca_var
-#' @param data transposed dataframe with m/z as columns
-PCA_variables <- function(data) {
+#' @param exp
+#' @param assay
+#' @export
+compoundPCA <- function(exp, assay) {
+  data <- t(assay(exp, assay))
   res_pca <- PCA(data, graph = FALSE)
-  var <- get_pca_var(res_pca)
   fviz_pca_var(res_pca, col.var = "grey", col.circle = "grey", title = "variables-PCA")
 }
 
 
 #' @title PCA individuals plot
+#' @param exp
+#' @param assay
 #' @importFrom FactoMineR PCA
 #' @importFrom factoextra fviz_pca_ind
-#' @param data transposed dataframe with m/z as columns
-PCA_ind <- function(data) {
+#' @export
+samplePCA <- function(exp, assay = 1) {
+  data <- t(assay(exp, assay))
   res_pca <- PCA(data, graph = FALSE)
   fviz_pca_ind(res_pca,
     col.ind = "cos2",
@@ -139,7 +147,10 @@ PCA_ind <- function(data) {
 #' @importFrom factoextra fviz_pca_ind
 #' @param data transposed dataframe with m/z as columns
 #' @param classifiers sample groups as factor
-PCA_ellipse <- function(data, classifiers) {
+#' @export
+PCA_ellipse <- function(exp, classifiers, assay = 1) {
+  data <- t(assay(exp, assay))
+  classifiers <- as.factor(exp[[classifiers]])
   res_pca <- PCA(data, graph = FALSE)
   fviz_pca_ind(res_pca,
     geom.ind = "point", # show points only (nbut not "text")
@@ -159,7 +170,10 @@ PCA_ellipse <- function(data, classifiers) {
 #' @importFrom dplyr %>%
 #' @param classifiers sample groups as factor
 #' @param data transposed dataframe with m/z as columns
-PCA_ellipse_stats <- function(data, classifiers) {
+#' @export
+PCA_ellipse_stats <- function(exp, classifiers, assay = 1) {
+  data <- t(assay(exp, assay))
+  classifiers <- as.factor(exp[[classifiers]])
   PCA2 <- prcomp(as.matrix(data), scale. = F) # PCA model using transposed df
   PCA_scores <- as.data.frame(PCA2$x) %>% dplyr::select(PC1, PC2)
   PCA_scores$Sample <- classifiers ## we add our classifiers here
@@ -180,8 +194,6 @@ PCA_ellipse_stats <- function(data, classifiers) {
 #' @param method method for contribution "median", "mean"
 #' @importFrom mixOmics plsda plotIndiv auroc plotLoadings
 #' @importFrom graphics par
-#'
-#' @examples
 plotPLSDA <- function(data, classifiers, comp, method) {
   plsda <- plsda(data, classifiers)
   ## plotting the samples classifiers with ellipses
@@ -198,7 +210,10 @@ plotPLSDA <- function(data, classifiers, comp, method) {
 #' @importFrom mixOmics plsda plotIndiv
 #' @param data transposed dataframe with m/z as columns
 #' @param classifiers sample groups as factor
-PLSDA_ind <- function(data, classifiers) {
+#' @export
+PLSDA_ind <- function(exp, classifiers, assay = 1) {
+  data <- t(assay(exp, assay))
+  classifiers <- as.factor(exp[[classifiers]])
   plsda <- plsda(data, classifiers)
   ## plotting the samples classifiers with ellipses
   plotIndiv(plsda, ind.names = FALSE, star = TRUE, ellipse = TRUE, legend = TRUE, title = "PLS-DA samples")
@@ -210,7 +225,10 @@ PLSDA_ind <- function(data, classifiers) {
 #' @param data transposed dataframe with m/z as columns
 #' @param classifiers sample groups as factor
 #' @param comp integer value indicating the component of interest from the object (default=1)
-PLSDA_ROC <- function(data, classifiers, comp = 1) {
+#' @export
+PLSDA_ROC <- function(exp, classifiers, assay = 1, comp = 1) {
+  data <- t(assay(exp, assay))
+  classifiers <- as.factor(exp[[classifiers]])
   plsda <- plsda(data, classifiers)
   auroc(plsda, roc.comp = comp, title = "PLS-DA ROC Curve ")
 }
@@ -222,7 +240,10 @@ PLSDA_ROC <- function(data, classifiers, comp = 1) {
 #' @param classifiers sample groups as factor
 #' @param comp integer value indicating the component of interest from the object (default=1)
 #' @param method method for contribution "median" or "mean", default is "median"
-PLSDA_loadings <- function(data, classifiers, comp = 1, method = "median") {
+#' @export
+PLSDA_loadings <- function(exp, classifiers, assay = 1, comp = 1, method = "median") {
+  data <- t(assay(exp, assay))
+  classifiers <- as.factor(exp[[classifiers]])
   plsda <- plsda(data, classifiers)
   plotLoadings(plsda, contrib = "max", method = method, comp = comp, title = "PLS-DA contribution")
 }
@@ -237,7 +258,10 @@ PLSDA_loadings <- function(data, classifiers, comp = 1, method = "median") {
 #' @importFrom superheat superheat
 #' @importFrom viridis mako
 #' @importFrom dplyr %>%
-heatMap <- function(data, classifiers, pretty.order.rows = T, pretty.order.cols = T) {
+#' @export
+heatMap <- function(exp, assay, classifiers, pretty.order.rows = T, pretty.order.cols = T) {
+  data <- t(assay(exp, assay))
+  classifiers <- as.factor(exp[[classifiers]])
   superheat <- data %>% superheat(
     left.label.size = 0.05,
     left.label.text.size = 7,

@@ -4,12 +4,12 @@
 \alias{PCA_ellipse_stats}
 \title{PCA ellipse plot from stats}
 \usage{
-PCA_ellipse_stats(data, classifiers)
+PCA_ellipse_stats(exp, classifiers, assay = 1)
 }
 \arguments{
-\item{data}{transposed dataframe with m/z as columns}
-
 \item{classifiers}{sample groups as factor}
+
+\item{data}{transposed dataframe with m/z as columns}
 }
 \description{
 PCA ellipse plot from stats

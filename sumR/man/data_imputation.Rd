@@ -4,7 +4,7 @@
 \alias{data_imputation}
 \title{data imputation}
 \usage{
-data_imputation(data, noise, seed)
+data_imputation(data, noise, seed = 42)
 }
 \arguments{
 \item{data}{dataframe}

@@ -4,12 +4,12 @@
 \alias{PCA_ellipse}
 \title{PCA ellipse plot}
 \usage{
-PCA_ellipse(data, classifiers)
+PCA_ellipse(exp, classifiers, assay = 1)
 }
 \arguments{
-\item{data}{transposed dataframe with m/z as columns}
-
 \item{classifiers}{sample groups as factor}
+
+\item{data}{transposed dataframe with m/z as columns}
 }
 \description{
 PCA ellipse plot

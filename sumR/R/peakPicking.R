@@ -65,7 +65,7 @@ savgol <- function(y, halfWindowSize = 10L, polynomialOrder = 3L) {
 #' @importFrom dplyr distinct
 #' @importFrom tools file_path_sans_ext
 #' @export
-peakPicking <- function(files, doCentroid = F, massDefect = 0.8, polarity = "-",
+peakPicking <- function(files, doCentroid = T, massDefect = 0.8, polarity = "-",
                         cores = detectCores(logical = F), SNR = 0) {
   cl <- makeCluster(cores)
   clusterExport(cl, varlist = names(sys.frame()))
@@ -323,7 +323,7 @@ binSpectra <- function(peakList, fraction = 0, npeaks = 0,
 #' @param tolerance
 #' @importFrom SummarizedExperiment SummarizedExperiment
 #' @export
-binCells <- function(spectraList, sampleData = NULL,
+binCells <- function(spectraList, cellData = NULL,
                      tolerance = 0.002, filter = TRUE) {
   df <- do.call(rbind, lapply(1:length(spectraList), function(i) {
     df <- spectraList[[i]]
@@ -353,9 +353,12 @@ binCells <- function(spectraList, sampleData = NULL,
     m[i, bins[[i]]$cell] <- bins[[i]]$intensity
     snr[i, bins[[i]]$cell] <- bins[[i]]$snr
   }
-  SummarizedExperiment(
-    colData = data.frame(sample = names(spectraList)),
+
+  exp <- SummarizedExperiment(
+    colData = cellData,
     assays = list(Area = m, SNR = snr),
     rowData = data.frame(mz = as.double(names(bins)))
-  ) %>% addSampleData(sampleData) %>% filterCells()
+  ) %>% filterCells()
+  colnames(exp) <- names(spectraList)
+  exp
 }

@@ -4,14 +4,14 @@
 \alias{PLSDA_ROC}
 \title{PLSDA ROC plot}
 \usage{
-PLSDA_ROC(data, classifiers, comp = 1)
+PLSDA_ROC(exp, classifiers, assay = 1, comp = 1)
 }
 \arguments{
-\item{data}{transposed dataframe with m/z as columns}
-
 \item{classifiers}{sample groups as factor}
 
 \item{comp}{integer value indicating the component of interest from the object (default=1)}
+
+\item{data}{transposed dataframe with m/z as columns}
 }
 \description{
 PLSDA ROC plot

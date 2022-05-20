@@ -4,7 +4,7 @@
 \alias{binCells}
 \title{Bin cells}
 \usage{
-binCells(spectraList, sampleData = NULL, tolerance = 0.002, filter = TRUE)
+binCells(spectraList, cellData = NULL, tolerance = 0.002, filter = TRUE)
 }
 \arguments{
 \item{spectraList}{List of spectra}

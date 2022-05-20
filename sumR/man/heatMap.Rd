@@ -4,16 +4,16 @@
 \alias{heatMap}
 \title{heatmap}
 \usage{
-heatMap(data, classifiers, pretty.order.rows = T, pretty.order.cols = T)
+heatMap(exp, assay, classifiers, pretty.order.rows = T, pretty.order.cols = T)
 }
 \arguments{
-\item{data}{dataframe with m/z as columns}
-
 \item{classifiers}{samples group as factor}
 
 \item{pretty.order.rows}{logical vector the default is TRUE}
 
 \item{pretty.order.cols}{logical vector the default is TRUE}
+
+\item{data}{dataframe with m/z as columns}
 }
 \description{
 heatmap plot of m/z intensities of grouped samples

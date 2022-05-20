@@ -6,7 +6,7 @@
 \usage{
 peakPicking(
   files,
-  doCentroid = F,
+  doCentroid = T,
   massDefect = 0.8,
   polarity = "-",
   cores = detectCores(logical = F),

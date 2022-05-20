@@ -4,16 +4,16 @@
 \alias{PLSDA_loadings}
 \title{PLSDA ROC plot}
 \usage{
-PLSDA_loadings(data, classifiers, comp = 1, method = "median")
+PLSDA_loadings(exp, classifiers, assay = 1, comp = 1, method = "median")
 }
 \arguments{
-\item{data}{transposed dataframe with m/z as columns}
-
 \item{classifiers}{sample groups as factor}
 
 \item{comp}{integer value indicating the component of interest from the object (default=1)}
 
 \item{method}{method for contribution "median" or "mean", default is "median"}
+
+\item{data}{transposed dataframe with m/z as columns}
 }
 \description{
 PLSDA ROC plot
