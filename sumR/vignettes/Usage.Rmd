@@ -59,7 +59,7 @@ exp <- peakPicking(f) %>%
 samplePCA(exp, "Imputed")
 ```
 
-```{r aaa}
+```{r compounds, eval = F}
 compoundPCA(exp, "Imputed")
 ```
 
