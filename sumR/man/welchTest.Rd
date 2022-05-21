@@ -4,7 +4,13 @@
 \alias{welchTest}
 \title{welch t test}
 \usage{
-welchTest(exp, classifiers, assay = 1, threshold = 0.1, corr_method = "fdr")
+welchTest(
+  exp,
+  classifiers = metadata(exp)$phenotype,
+  assay = 1,
+  threshold = 0.1,
+  corr_method = "fdr"
+)
 }
 \arguments{
 \item{threshold}{numerical value for wanted threshold . the default is 0.1}

@@ -133,6 +133,27 @@ condition <- function(mass, intensities, samples, tolerance = 5e-6) {
   return(mean(mass))
 }
 
+#' @title Substract Blanks from SummarizedExperiment
+#' @param exp
+#' @param blankThresh
+#' @param sampleThresh
+#' @param filter
+#' @export
+blankSubstraction <- function(exp, blankThresh = 1, sampleThresh = 1,
+                              filter = FALSE){
+
+  blanks <- exp[, toupper(exp$Type) == 'BLANK']
+  samps <- exp[, toupper(exp$Type) == 'SAMPLE']
+
+  threshold <- rowMedians(assay(blanks, "Area"), na.rm = T) * blankThresh
+  below <- rowSums(assay(samps, "Area") - threshold <= 0, na.rm = TRUE)
+
+  rowData(exp)$blankThres <- threshold
+  rowData(exp)$n_subBlank <- below
+  rowData(exp)$blankPass <- below / ncol(samps) * 100 <= sampleThresh
+  if (filter) exp <- exp[rowData(exp)$blankPass, ]
+  exp
+}
 
 #' @title Background removal
 #' @param dataframe
@@ -221,4 +242,5 @@ calculate_nominal_mass <- function(formulas) {
     }))
   })
 }
+
 

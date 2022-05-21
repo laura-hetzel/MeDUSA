@@ -4,7 +4,7 @@
 \alias{foldChange}
 \title{foldchange for two groups test}
 \usage{
-foldChange(exp, classifiers, assay = 1)
+foldChange(exp, classifiers = metadata(exp)$phenotype, assay = 1)
 }
 \arguments{
 \item{dataframe2}{transposed dataframe with m/z as columns (raw imputed dataframe)}

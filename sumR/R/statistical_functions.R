@@ -29,8 +29,10 @@ shapiroTest <- function(exp, assay = 1, threshold = 0.05) {
 #' @param threshold numerical value for wanted threshold . the default is 0.05
 #' @importFrom rstatix levene_test
 #' @export
-leveneTest <- function(exp, classifiers, assay = 1, threshold = 0.05) {
+leveneTest <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1, threshold = 0.05) {
+  if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   dataframe <- as.data.frame(t(assay(exp, assay)))
+
   classifiers <- as.factor(exp[[classifiers]])
   Test_results <- apply(dataframe, 2, function(x) levene_test(formula = x ~ classifiers, data = dataframe))
   P.values <- unlist(lapply(Test_results, function(x) x$p))
@@ -48,14 +50,15 @@ leveneTest <- function(exp, classifiers, assay = 1, threshold = 0.05) {
 #' @importFrom miscTools colMedians
 #' @importFrom utils combn
 #' @export
-foldChange <- function(exp, classifiers, assay = 1) {
+foldChange <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1) {
+  if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   dataframe2 <- as.data.frame(t(assay(exp, assay)))
   classifiers <- as.factor(exp[[classifiers]])
   Splitted_per_sampletype <- split(dataframe2, classifiers)
   Median_per_group <- do.call(cbind, lapply(Splitted_per_sampletype, function(x) colMedians(as.matrix(x))))
   combs <- combn(colnames(Median_per_group), 2)
   fc <- function(a, b) b / a
-  foldchanges <- apply(combs, 2, function(col_names) fc(Median_per_group[col_names[2]], Median_per_group[col_names[1]]))
+  foldchanges <- apply(combs, 2, function(col_names) fc(Median_per_group[, col_names[2]], Median_per_group[, col_names[1]]))
   dimnames(foldchanges)[[2]] <- apply(combs, 2, paste, collapse = "_")
   foldchanges <- as.data.frame(foldchanges)
   colnames(foldchanges) <- paste("fc", colnames(foldchanges), sep = "_")
@@ -110,8 +113,9 @@ foldChangeGroups <- function(dataframe2, samples) {
 #' @param corr_method character string for correction method . default is "fdr"
 #' @importFrom stats p.adjust t.test
 #' @export
-welchTest <- function(exp, classifiers, assay = 1, threshold = 0.1,
+welchTest <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1, threshold = 0.1,
                       corr_method = "fdr") {
+  if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   dataframe <- as.data.frame(t(assay(exp, assay)))
   classifiers <- as.factor(exp[[classifiers]])
   p.value <- apply(dataframe, 2, function(x) t.test(x ~ classifiers, var.equal = FALSE)$p.value)
@@ -142,8 +146,10 @@ welchTest <- function(exp, classifiers, assay = 1, threshold = 0.1,
 #' @param corr_method character string for correction method . default is "fdr"
 #' @param paired logical vector for paired test .. default paired = FALSE
 #' @importFrom stats p.adjust wilcox.test
-wilcoxTest <- function(exp, classifiers, assay = 1, threshold = 0.1,
+wilcoxTest <- function(exp, classifiers = metadata(exp)$phenotype,
+                       assay = 1, threshold = 0.1,
                        corr_method = "fdr", paired = F) {
+  if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   dataframe <- as.data.frame(t(assay(exp, assay)))
   classifiers <- as.factor(exp[[classifiers]])
 
@@ -176,7 +182,9 @@ wilcoxTest <- function(exp, classifiers, assay = 1, threshold = 0.1,
 #' @param threshold numerical value for wanted threshold . the default is 0.1
 #'
 #' @importFrom stats oneway.test
-welchAnova <- function(exp, classifiers, assay = 1, threshold = 0.1) {
+welchAnova <- function(exp, classifiers = metadata(exp)$phenotype,
+                       assay = 1, threshold = 0.1) {
+  if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   dataframe <- as.data.frame(t(assay(exp, assay)))
   classifiers <- as.factor(exp[[classifiers]])
 
@@ -208,7 +216,9 @@ welchAnova <- function(exp, classifiers, assay = 1, threshold = 0.1) {
 #'
 #' @importFrom stats kruskal.test
 #' @export
-kruskalTest <- function(exp, classifiers, assay = 1, threshold = 0.1) {
+kruskalTest <- function(exp, classifiers = metadata(exp)$phenotype,
+                        assay = 1, threshold = 0.1) {
+  if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   dataframe <- as.data.frame(t(assay(exp, assay)))
   classifiers <- as.factor(exp[[classifiers]])
   p.values <- apply(dataframe, 2, function(x) kruskal.test(x, classifiers)$p.value)
@@ -235,7 +245,9 @@ kruskalTest <- function(exp, classifiers, assay = 1, threshold = 0.1) {
 #'
 #' @importFrom dunn.test dunn.test
 #' @export
-dunnTest <- function(exp, classifiers, assay = 1, threshold = 0.05, comb = 6, method = "bh") {
+dunnTest <- function(exp, classifiers = metadata(exp)$phenotype,
+                     assay = 1, threshold = 0.05, comb = 6, method = "bh") {
+  if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   dataframe <- as.data.frame(t(assay(exp, assay)))
   classifiers <- as.factor(exp[[classifiers]])
 

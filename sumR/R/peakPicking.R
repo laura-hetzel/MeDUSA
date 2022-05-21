@@ -323,7 +323,7 @@ binSpectra <- function(peakList, fraction = 0, npeaks = 0,
 #' @param tolerance
 #' @importFrom SummarizedExperiment SummarizedExperiment
 #' @export
-binCells <- function(spectraList, cellData = NULL,
+binCells <- function(spectraList, cellData = NULL, phenotype = NULL,
                      tolerance = 0.002, filter = TRUE) {
   df <- do.call(rbind, lapply(1:length(spectraList), function(i) {
     df <- spectraList[[i]]
@@ -357,7 +357,8 @@ binCells <- function(spectraList, cellData = NULL,
   exp <- SummarizedExperiment(
     colData = cellData,
     assays = list(Area = m, SNR = snr),
-    rowData = data.frame(mz = as.double(names(bins)))
+    rowData = data.frame(mz = as.double(names(bins))),
+    metadata = list(phenotype = phenotype)
   ) %>% filterCells()
   colnames(exp) <- names(spectraList)
   exp

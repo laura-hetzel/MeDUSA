@@ -22,7 +22,7 @@ library(sumR)
 
 First we load up some example data. Here we have 4 injection of which 1 is a blank sample, all with negative polarity. These files have spectra which are combined together and centroided. 
 ```{r files, eval =F}
-dir <- file.path(r"(F:\stem_cell_blank_cell_samples)")
+dir <- file.path(r"(C:\Users\pmaas\Downloads\stem_cell_blank_cell_samples\stem_cell_blank_cell_samples)")
 ```
 
 ## Full pipeline
@@ -31,30 +31,24 @@ dir <- file.path(r"(F:\stem_cell_blank_cell_samples)")
 exp <- rawToMzml(dir, output = file.path(getwd(), "test2"), rt = c(60, 420))
 ```
 
-```{r eval = F}
-file <- r"(C:\Users\Pascal Maas\Documents\GitHub\sum-r\scripts\2021_09_11_pilot study sampling.xlsx)"
-df <- openxlsx::read.xlsx(file, sheet = 1)
-df
-```
-
 ```{r, eval = F}
-
 
 f <- list.files(dir, full.names = T, pattern = ".mzML")
 type <- rep("SAMPLE", length(f))
 type[grep("blank", basename(f))] <- "BLANK"
 df <- data.frame(Type = type)
 
-
 exp <- peakPicking(f) %>%
-  binSpectra() %>%
-  binCells(cellData = df) %>%
+  binSpectra(npeaks = 5) %>%
+  binCells(cellData = df, phenotype = "Type") %>%
+  blankSubstraction() %>%
   imputation() %>%
-  isotopeTagging(assay = "Imputed") %>%
-  shapiroTest(assay = "Imputed") %>%
-  leveneTest(classifiers = "Type", assay = "Imputed") %>%
-  foldChange(classifiers = "Type", assay = "Imputed") %>%
-  welchTest(classifiers = "Type", assay = "Imputed")
+  isotopeTagging() %>%
+  shapiroTest() %>%
+  leveneTest() %>%
+  welchTest() %>%
+  foldChange() %>%
+  modelRF()
 ```
 
 

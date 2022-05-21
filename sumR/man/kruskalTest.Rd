@@ -4,7 +4,12 @@
 \alias{kruskalTest}
 \title{Kruskal-Wallis test}
 \usage{
-kruskalTest(exp, classifiers, assay = 1, threshold = 0.1)
+kruskalTest(
+  exp,
+  classifiers = metadata(exp)$phenotype,
+  assay = 1,
+  threshold = 0.1
+)
 }
 \arguments{
 \item{threshold}{numerical value for wanted threshold . the default is 0.1}

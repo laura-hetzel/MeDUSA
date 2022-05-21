@@ -132,19 +132,36 @@ filterCells <- function(exp) {
   exp[, colSums(is.na(assay(exp))) != nrow(exp)]
 }
 
+se <- exp
 
+
+setDefaultAssay <- function(exp, default){
+  n <- assayNames(exp)
+  to_replace <- which(n == default)
+  n[to_replace] <- n[1]
+  n[1] <- default
+  assays(exp) <- assays(exp)[n]
+  exp
+}
+
+setDefaultPhenotype <- function(exp, default){
+  metadata(exp)$phenotype <- default
+  exp
+}
 
 #' @importFrom SAVER saver
 #' @importFrom SummarizedExperiment assay<-
 #' @export
 imputation <- function(exp, normalize = TRUE, useAssay = "Area",
-                       saveAssay = "Imputed", cores = 1) {
+                       saveAssay = "Imputed", cores = 1, setDefault = TRUE) {
   df <- as.data.frame(assay(exp, useAssay))
   df[is.na(df)] <- 0
+
   if (!normalize) normalize <- NULL
-  assay(exp, saveAssay) <- saver(df,
+  assay(exp, saveAssay) <- suppressWarnings(suppressMessages(saver(df,
     estimates.only = T, ncores = cores,
     size.factor = normalize
-  )
+  )))
+  if (setDefault) exp <- setDefaultAssay(exp, saveAssay)
   exp
 }

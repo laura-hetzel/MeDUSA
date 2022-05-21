@@ -4,7 +4,12 @@
 \alias{leveneTest}
 \title{levene test}
 \usage{
-leveneTest(exp, classifiers, assay = 1, threshold = 0.05)
+leveneTest(
+  exp,
+  classifiers = metadata(exp)$phenotype,
+  assay = 1,
+  threshold = 0.05
+)
 }
 \arguments{
 \item{classifiers}{a factor vector with the classes of the samples}

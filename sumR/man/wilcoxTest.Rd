@@ -6,7 +6,7 @@
 \usage{
 wilcoxTest(
   exp,
-  classifiers,
+  classifiers = metadata(exp)$phenotype,
   assay = 1,
   threshold = 0.1,
   corr_method = "fdr",

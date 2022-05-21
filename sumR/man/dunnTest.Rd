@@ -6,7 +6,7 @@
 \usage{
 dunnTest(
   exp,
-  classifiers,
+  classifiers = metadata(exp)$phenotype,
   assay = 1,
   threshold = 0.05,
   comb = 6,

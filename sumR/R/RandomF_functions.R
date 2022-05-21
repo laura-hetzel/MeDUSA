@@ -21,6 +21,8 @@ redvar_removal <- function(data, cutoff = 0.75) {
 
 
 
+
+
 ## feature selection
 #' @title feature selection
 #' @description This function select the desired numbers of most imp features for random forest model
@@ -73,13 +75,11 @@ plot_imp_select <- function(feature_select_model) {
   return(plot)
 }
 
-
 #' @title datasplit
 #'
 #' @param data the dataframe with m/z as columns and a sample column named samples
 #' @param split_ratio
 #' @param seed global seed
-#'
 #' @importFrom caTools sample.split
 data_split <- function(seed, data, split_ratio = 0.8) {
   set.seed(seed) ## reproducible results
@@ -317,4 +317,37 @@ permutation.test <- function(training_set, test_set, model, n, class1, class2, s
   plot <- hist(permuted_df$accuracy)
   print(plot)
   return(list(plot, permuted_df))
+}
+
+#' @title Model using RandomForest model
+#' @param exp
+#' @param classifiers
+#' @param assay
+#' @param cv
+#' @param ratio
+#' @importFrom caTools sample.split
+#' @importFrom caret train trainControl
+#' @importFrom stats predict
+#' @export
+modelRF <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1, cv = 5, ratio = 0.8){
+  if (is.null(classifiers)) stop("Cannot perform test without classifiers")
+  data <- assay(exp, assay)
+  samples <- as.factor(exp[[classifiers]])
+  split <- caTools::sample.split(samples, SplitRatio = ratio)
+  metadata(exp)$rf <- list()
+
+  metadata(exp)$rf$train <- colnames(exp)[which(split)]
+  metadata(exp)$rf$test <- colnames(exp)[-which(split)]
+  samps <- metadata(exp)$rf$train
+
+  control <- trainControl(method = "cv", number = cv, savePredictions = "all")
+
+  metadata(exp)$rf$model <- train(x = t(data[, samps]),
+                                  y = as.factor(exp[, samps]$Type), method = "rf",
+                                  trControl = control)
+
+  metadata(exp)$rf$prediction <- predict(metadata(exp)$rf$model,
+                                         newdata = t(data[, metadata(exp)$rf$test]),
+                                         type = "prob")
+  exp
 }
