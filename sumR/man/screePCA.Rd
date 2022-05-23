@@ -4,7 +4,7 @@
 \alias{screePCA}
 \title{PCA scree plot}
 \usage{
-screePCA(exp, assay)
+screePCA(exp, assay = 1)
 }
 \description{
 

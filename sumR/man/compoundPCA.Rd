@@ -4,7 +4,7 @@
 \alias{compoundPCA}
 \title{PCA variables plot}
 \usage{
-compoundPCA(exp, assay)
+compoundPCA(exp, assay = 1)
 }
 \description{
 PCA variables plot

@@ -8,7 +8,7 @@ glmnet_cv_alphachoice(
   training,
   test,
   type.measure,
-  seed,
+  seed = NULL,
   lambda = c("lambda.min", "lambda.1se")
 )
 }

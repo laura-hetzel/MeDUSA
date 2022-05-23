@@ -4,7 +4,13 @@
 \alias{blankSubstraction}
 \title{Substract Blanks from SummarizedExperiment}
 \usage{
-blankSubstraction(exp, blankThresh = 1, sampleThresh = 1, filter = FALSE)
+blankSubstraction(
+  exp,
+  blankThresh = 5,
+  sampleThresh = Inf,
+  filter = TRUE,
+  removeBlanks = TRUE
+)
 }
 \description{
 Substract Blanks from SummarizedExperiment

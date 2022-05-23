@@ -537,7 +537,7 @@ isotopeTagging <- function(exp, assay = "Area", ppm = 5, Elements = c("C13"), z 
 
   # Big merge and printing the number of found isotopes
   big_merge_df <- bigMerge(isotope_valid_df, df, copy_df)
-  print(paste("Number of isotopes found:", length(unique(big_merge_df$id))))
+  #print(paste("Number of isotopes found:", length(unique(big_merge_df$id))))
 
 
 

@@ -69,6 +69,7 @@ peakPicking <- function(files, doCentroid = T, massDefect = 0.8, polarity = "-",
                         cores = detectCores(logical = F), SNR = 0) {
   cl <- makeCluster(cores)
   clusterExport(cl, varlist = names(sys.frame()))
+  samps <- tools::file_path_sans_ext(basename(files))
   result <- pbapply::pblapply(files, cl = cl, function(f) {
     z <- mzR::openMSfile(f)
     x <- mzR::peaks(z)
@@ -94,7 +95,7 @@ peakPicking <- function(files, doCentroid = T, massDefect = 0.8, polarity = "-",
     df <- MassDefectFilter(df, mz_MD_plot = F)
     df[df$MD < massDefect, ]
   })
-  samps <- tools::file_path_sans_ext(basename(files))
+
   stopCluster(cl)
   names(result) <- samps
   result[!vapply(result, is.null, logical(1))]
@@ -209,8 +210,7 @@ cwt_new <- function(ms, scales = NULL, max_scale = 32) {
 
   if (is.null(scales)) {
     scales <- seq(1, ifelse(floor(length(ms) / 16) < max_scale,
-                            floor(length(ms) / 16), max_scale
-    ), 2)
+                            floor(length(ms) / 16), max_scale), 2)
   }
 
   oldLen <- length(ms)

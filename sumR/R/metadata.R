@@ -21,22 +21,18 @@ addFeatureData <- function(exp, data = NULL){
   exp
 }
 
-#' @title Obtain metadata from aliquot names
-#' @param files
-#' @param regex
+#' @title Create metadata from Excel file
+#' @param xlsxFile
+#' @param idxColumn
+#' @param sheet
 #' @export
-metadataFromFile <- function(files, regex = "([0-9]{4}[A-Z]{3}_[0-9]{4})([A-Z]+|)([0-9]+|)_([A-Z])([0-9])"){
-  aliquots <- tools::file_path_sans_ext(basename(files))
-  matches <- regmatches(aliquots, gregexec(regex, aliquots))
-  df <- do.call(rbind, lapply(matches, t))
-  df <- as.data.frame(df)
-  if (ncol(df) != 6) stop("Please check you regex or files, cannot parse")
-  colnames(df) <- c("Aliquot", "Sample", "Type", "CalNo", "Replicate", "Injection")
-  df$Type[df$Type == ""] <- "SAMPLE"
-  df$CalNo[df$CalNo == ""] <- NA
-  df$Replicate <- vapply(df$Replicate, utf8ToInt, numeric(1)) - 64
+metadataFromExcel <- function(xlsxFile, idxColumn, sheet = 1){
+  df <- openxlsx::read.xlsx(xlsxFile, sheet)
+  if (!idxColumn %in% colnames(df)) stop(sprintf("Error reading excel file, could not find column %s", idxColumn))
+  if (any(duplicated(df[, idxColumn]))) stop(sprintf("Non-unique values found in %s", idxColumn))
+
+  rownames(df) <- tools::file_path_sans_ext(basename(df[, idxColumn]))
   df
 }
-
 
 

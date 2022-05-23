@@ -28,6 +28,13 @@ volcanoPlot <- function(exp, test, title = "") {
     labs_pubr()
 }
 
+#' @title Plot Accuracy of Cross Validation
+#' @param exp SummarizedExperiment object
+#' @param modelName Either name of number of the model
+#' @export
+plotCrossValidation <- function(exp, modelName = 1){
+  plot(model(exp, modelName)$model)
+}
 
 #' #' Plot PCA
 #' #'
@@ -106,7 +113,7 @@ volcanoPlot <- function(exp, test, title = "") {
 #' @param exp
 #' @param assay
 #' @export
-screePCA <- function(exp, assay) {
+screePCA <- function(exp, assay = 1) {
   data <- t(assay(exp, assay))
   res_pca <- PCA(data, graph = FALSE)
   fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 100), main = "PCA - scree plot")
@@ -118,7 +125,7 @@ screePCA <- function(exp, assay) {
 #' @param exp
 #' @param assay
 #' @export
-compoundPCA <- function(exp, assay) {
+compoundPCA <- function(exp, assay = 1) {
   data <- t(assay(exp, assay))
   res_pca <- PCA(data, graph = FALSE)
   fviz_pca_var(res_pca, col.var = "grey", col.circle = "grey", title = "variables-PCA")

@@ -4,7 +4,7 @@
 \alias{final_glmnet}
 \title{final glmnet model}
 \usage{
-final_glmnet(training, test, alpha, type.measure, seed, nfolds)
+final_glmnet(training, test, alpha, type.measure, seed = NULL, nfolds = 10)
 }
 \arguments{
 \item{training}{training set}

@@ -16,57 +16,97 @@ knitr::opts_chunk$set(
 
 _This package is under heavy development. Please do not use this package for actual reserach._
 
-```{r setup, eval =F}
-library(sumR)
+```{r setup, eval = T}
+suppressWarnings(suppressPackageStartupMessages(library(sumR)))
 ```
 
 First we load up some example data. Here we have 4 injection of which 1 is a blank sample, all with negative polarity. These files have spectra which are combined together and centroided. 
-```{r files, eval =F}
+```{r files, eval = T}
 dir <- file.path(r"(C:\Users\pmaas\Downloads\stem_cell_blank_cell_samples\stem_cell_blank_cell_samples)")
 ```
 
-## Full pipeline
+## Converting vendor format
+To convert your vendor to mzML, we can use the `rawToMzml` function. 
 
 ```{r eval = F}
-exp <- rawToMzml(dir, output = file.path(getwd(), "test2"), rt = c(60, 420))
+files <- rawToMzml(dir, output = file.path(getwd(), "test2"), rt = c(60, 420))
 ```
 
-```{r, eval = F}
+## Defining Metadata
 
+```{r, eval = T}
+df <- openxlsx::read.xlsx(r"(C:\Users\pmaas\Downloads\2021_09_11_pilot study sampling.xlsx)", 1)
 f <- list.files(dir, full.names = T, pattern = ".mzML")
 type <- rep("SAMPLE", length(f))
 type[grep("blank", basename(f))] <- "BLANK"
-df <- data.frame(Type = type)
 
-exp <- peakPicking(f) %>%
+df2 <- data.frame(File = f, Type = type, Sample.number = as.integer(stringr::str_extract(basename(f), "[0-9]{3}")))
+df <- dplyr::full_join(df, df2, "Sample.number")
+df <- df[!is.na(df$File), ]
+print(head(df))
+```
+
+## Peak picking
+Cells measured using DI-MS can be analyzed using the spectrum-based peak picking. 
+```{r, eval = T}
+exp <- peakPicking(df$File, SNR = 0.5) %>%
   binSpectra(npeaks = 5) %>%
-  binCells(cellData = df, phenotype = "Type") %>%
+  binCells(cellData = df, phenotype = "naïve.vs.differentiated")
+```
+
+## Postprocessing
+
+* Blank substraction
+* Imputation
+* Isotope detection
+* Variable feature filtering
+
+```{r, eval = T}
+exp <- exp %>%
   blankSubstraction() %>%
   imputation() %>%
   isotopeTagging() %>%
+  keepVariableFeatures(top = 100)
+```
+
+## Modelling & Statistics
+
+* Shapiro test for normality
+* Levene test for variance
+* Welch test for significant difference
+* Fold change for log difference
+* Model generation to retrieve feature importance
+
+```{r, eval = T}
+exp <- exp %>%
   shapiroTest() %>%
   leveneTest() %>%
   welchTest() %>%
   foldChange() %>%
-  modelRF()
+  generateModel(modelName = "rf", seed = 42) %>%
+  generateModel(modelName = "glmnet", seed = 42)
 ```
 
 
-
-## Data inspection
-### PCA
-```{r pca, eval = F}
-samplePCA(exp, "Imputed")
+## Model Assessment
+```{r assessment}
+print(model(exp, "rf")$confMatrix)
+print(model(exp, "glmnet")$confMatrix)
 ```
 
-```{r compounds, eval = F}
-compoundPCA(exp, "Imputed")
+## Plot
+```{r pca, eval = T, fig.width=6}
+samplePCA(exp)
+compoundPCA(exp)
+screePCA(exp)
 ```
 
-```{r screePCA, eval = F}
-screePCA(exp, "Imputed")
+```{r CV, eval = T, fig.width=6}
+plotCrossValidation(exp, "rf")
+plotCrossValidation(exp, "glmnet") 
 ```
 
+## SessionInfo
 
 ```{r sessionInfo}
 sessionInfo()

@@ -128,11 +128,10 @@ MD_filter <- function(dataframe, mz_col, a = 0.00112, b = 0.01953) {
 
 #' Filter cells without measurements
 #' @export
-filterCells <- function(exp) {
-  exp[, colSums(is.na(assay(exp))) != nrow(exp)]
+filterCells <- function(exp, assay = 1) {
+  exp[, colSums(is.na(assay(exp, assay))) != nrow(exp) & colSds(assay(exp, assay), na.rm = TRUE) > 0]
 }
 
-se <- exp
 
 
 setDefaultAssay <- function(exp, default){
@@ -158,10 +157,12 @@ imputation <- function(exp, normalize = TRUE, useAssay = "Area",
   df[is.na(df)] <- 0
 
   if (!normalize) normalize <- NULL
-  assay(exp, saveAssay) <- suppressWarnings(suppressMessages(saver(df,
+  new_df <- suppressMessages(suppressWarnings(saver(df,
     estimates.only = T, ncores = cores,
     size.factor = normalize
   )))
+  dimnames(new_df) <- dimnames(assay(exp))
+  assay(exp, saveAssay) <- new_df
   if (setDefault) exp <- setDefaultAssay(exp, saveAssay)
   exp
 }

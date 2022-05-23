@@ -71,6 +71,8 @@ foldChange <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1) {
 }
 
 
+
+
 #' @title foldchange for more than two groups test
 #'
 #' @param dataframe2 transposed dataframe with m/z as columns (raw imputed dataframe)
@@ -126,6 +128,16 @@ welchTest <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1, thr
   colnames(p.results) <- c("p.value", "p.adj", "significant")
   rowData(exp)$welchTest <- p.results
   exp
+}
+
+#' @title Keep the most variable features
+#' @param exp
+#' @param assay
+#' @param top
+#' @export
+keepVariableFeatures <- function(exp, assay = 1, top = 100){
+  vars <- rowSds(assay(exp, assay))
+  exp[rownames(exp)[order(vars, decreasing = TRUE)[1:top]], ]
 }
 
 

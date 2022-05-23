@@ -319,35 +319,76 @@ permutation.test <- function(training_set, test_set, model, n, class1, class2, s
   return(list(plot, permuted_df))
 }
 
+#' @title Get names of models in Experiment
+#' @param exp SummarizedExperiment object
+#' @export
+models <- function(exp){
+  if (!"model" %in% names(metadata(exp))) return(NULL)
+  return(names(metadata(exp)$model))
+}
+
+#' @title Get model in Experiment
+#' @param exp SummarizedExperiment object
+#' @param modelName Name of the model to retrieve
+#' @export
+model <- function(exp, modelName = 1){
+  metadata(exp)$model[[modelName]]
+}
+
+#' @title Set value in model in Experiment
+#' @param exp SummarizedExperiment object
+#' @param modelName Name of the model to adjust
+#' @param value Value to set in the model
+#' @export
+`model<-` <- function(exp, modelName, value){
+  if (!"model" %in% names(metadata(exp))){
+    metadata(exp)$model <- list()
+  }
+  metadata(exp)$model[[modelName]] <- value
+  exp
+}
+
 #' @title Model using RandomForest model
 #' @param exp
 #' @param classifiers
 #' @param assay
 #' @param cv
 #' @param ratio
-#' @importFrom caTools sample.split
-#' @importFrom caret train trainControl
+#' @importFrom caret train createDataPartition trainControl varImp confusionMatrix
 #' @importFrom stats predict
 #' @export
-modelRF <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1, cv = 5, ratio = 0.8){
+generateModel <- function(exp, modelName, classifiers = metadata(exp)$phenotype,
+                        assay = 1, cv = 5, ratio = 0.632, seed = NULL, ...){
   if (is.null(classifiers)) stop("Cannot perform test without classifiers")
+  if (!is.null(seed)) set.seed(seed)
+
   data <- assay(exp, assay)
-  samples <- as.factor(exp[[classifiers]])
-  split <- caTools::sample.split(samples, SplitRatio = ratio)
-  metadata(exp)$rf <- list()
 
-  metadata(exp)$rf$train <- colnames(exp)[which(split)]
-  metadata(exp)$rf$test <- colnames(exp)[-which(split)]
-  samps <- metadata(exp)$rf$train
+  trainIndex <- as.vector(createDataPartition(
+    y = as.factor(exp[[classifiers]]), p = ratio, list = FALSE, times = 1
+  ))
 
-  control <- trainControl(method = "cv", number = cv, savePredictions = "all")
+  modelList <- list()
+  modelList$train <- colnames(exp)[trainIndex]
+  modelList$test <- colnames(exp)[-trainIndex]
 
-  metadata(exp)$rf$model <- train(x = t(data[, samps]),
-                                  y = as.factor(exp[, samps]$Type), method = "rf",
-                                  trControl = control)
+  control <- trainControl(method = "cv", number = cv, savePredictions = "all", preProcOptions = c("center", "scale"))
 
-  metadata(exp)$rf$prediction <- predict(metadata(exp)$rf$model,
-                                         newdata = t(data[, metadata(exp)$rf$test]),
-                                         type = "prob")
+  modelList$model <- train(x = t(data[, modelList$train]),
+                                  y = as.factor(exp[, modelList$train][[classifiers]]),
+                                  method = modelName, trControl = control, ...)
+
+  modelList$prediction <- predict(modelList$model,
+                                  newdata = t(data[, modelList$test]),
+                                  type = "prob")
+
+  modelList$varImp <- varImp(modelList$model)
+
+  x <- modelList$prediction
+  pred <- factor(ifelse(x[,1] > 0.5, colnames(x)[1], colnames(x)[2]))
+  obs <- factor(exp[, modelList$test][[metadata(exp)$phenotype]])
+  modelList$confMatrix <- confusionMatrix(data = pred, reference = obs)
+
+  model(exp, modelName) <- modelList
   exp
 }
