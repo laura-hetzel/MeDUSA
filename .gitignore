@@ -6,3 +6,6 @@
 .Rproj.user
 **/sumR/packrat/lib
 **/sumR/packrat/src
+**/scripts
+**/plots
+*.mzML

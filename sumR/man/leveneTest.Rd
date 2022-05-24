@@ -8,7 +8,8 @@ leveneTest(
   exp,
   classifiers = metadata(exp)$phenotype,
   assay = 1,
-  threshold = 0.05
+  threshold = 0.05,
+  filter = FALSE
 )
 }
 \arguments{

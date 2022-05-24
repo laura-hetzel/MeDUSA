@@ -28,6 +28,55 @@ volcanoPlot <- function(exp, test, title = "") {
     labs_pubr()
 }
 
+#' @title Plot UMAP
+#' @param exp
+#' @param assay
+#' @param doPCA
+#' @param components
+#' @importFrom umap umap
+#' @importFrom stats prcomp
+#' @export
+plotUMAP <- function(exp, assay = 1, components = 20){
+
+  data <- as.matrix(t(assay(exp, assay)))
+  data <- prcomp(data, scale. = T, center = T)$x[,1:components]
+
+  um <- umap(data)$layout
+  colnames(um) <- c("UMAP_1", "UMAP_2")
+  um <- as.data.frame(cbind(um, colData(exp)))
+  ggplot(um, aes(x = UMAP_1, y = UMAP_2,
+                      label = rownames(colData(exp)),
+                      color = .data[[metadata(exp)$phenotype]])) +
+    geom_point() +
+    ggrepel::geom_text_repel() +
+    ggtitle("Umap") +
+    theme_bw()
+}
+
+plotCellSds <- function(exp, assay = 1, top = nrow(exp)){
+  vars <- colSds(as.matrix(assay(exp, assay)), na.rm = T)
+  df <- data.frame(Cell = colnames(exp), Variation = vars)
+  df <- df[order(df$Variation, decreasing = T), ]
+  df <- df[1:top, ]
+  ggplot(df, aes(x = reorder(Cell, -Variation), y = Variation)) +
+    geom_bar(stat = "identity") +
+    xlab("Cell") +
+    ylab("Standard Deviation") +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+}
+
+plotFeatureSds <- function(exp, assay = 1, top = nrow(exp)){
+  vars <- rowSds(as.matrix(assay(exp, assay)), na.rm = T)
+  df <- data.frame(Feature = rownames(exp), Variation = vars)
+  df <- df[order(df$Variation, decreasing = T), ]
+  df <- df[1:top, ]
+  ggplot(df, aes(x = reorder(Feature, -Variation), y = Variation)) +
+    geom_bar(stat = "identity") +
+    xlab("Feature") +
+    ylab("Standard Deviation") +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+}
+
 #' @title Plot Accuracy of Cross Validation
 #' @param exp SummarizedExperiment object
 #' @param modelName Either name of number of the model

@@ -16,13 +16,13 @@ knitr::opts_chunk$set(
 
 _This package is under heavy development. Please do not use this package for actual reserach._
 
-```{r setup, eval = T}
+```{r setup, eval = F}
 suppressWarnings(suppressPackageStartupMessages(library(sumR)))
 ```
 
 First we load up some example data. Here we have 4 injection of which 1 is a blank sample, all with negative polarity. These files have spectra which are combined together and centroided. 
-```{r files, eval = T}
-dir <- file.path(r"(C:\Users\pmaas\Downloads\stem_cell_blank_cell_samples\stem_cell_blank_cell_samples)")
+```{r files, eval = F}
+dir <- file.path(r"(F:\stem_cell_blank_cell_samples)")
 ```
 
 ## Converting vendor format
@@ -34,53 +34,46 @@ files <- rawToMzml(dir, output = file.path(getwd(), "test2"), rt = c(60, 420))
 
 ## Defining Metadata
 
-```{r, eval = T}
-df <- openxlsx::read.xlsx(r"(C:\Users\pmaas\Downloads\2021_09_11_pilot study sampling.xlsx)", 1)
-f <- list.files(dir, full.names = T, pattern = ".mzML")
-type <- rep("SAMPLE", length(f))
-type[grep("blank", basename(f))] <- "BLANK"
-
-df2 <- data.frame(File = f, Type = type, Sample.number = as.integer(stringr::str_extract(basename(f), "[0-9]{3}")))
-df <- dplyr::full_join(df, df2, "Sample.number")
-df <- df[!is.na(df$File), ]
-print(head(df))
+```{r, eval = F}
+df <- read.csv("metadata.csv", row.names = 1)
+df
 ```
 
 ## Peak picking
 Cells measured using DI-MS can be analyzed using the spectrum-based peak picking. 
-```{r, eval = T}
-exp <- peakPicking(df$File, SNR = 0.5) %>%
-  binSpectra(npeaks = 5) %>%
-  binCells(cellData = df, phenotype = "naïve.vs.differentiated")
-```
-
-## Postprocessing
-
-* Blank substraction
-* Imputation
-* Isotope detection
-* Variable feature filtering
-
-```{r, eval = T}
-exp <- exp %>%
+```{r, eval = F}
+exp <- peakPicking(df$File, massWindow = 200, SNR = 0.5, polarity = "+") %>%
+  binSpectra(npeaks = 5, method = "mean") %>%
+  binCells(cellData = df, phenotype = "naïve.vs.differentiated") %>%
   blankSubstraction() %>%
-  imputation() %>%
   isotopeTagging() %>%
-  keepVariableFeatures(top = 100)
+  imputation(method = "noise") %>%
+  setMetadata(polarity = "+")
+  
+
+exp2 <- peakPicking(df$File, massWindow = 200, SNR = 0.5, polarity = "-") %>%
+  binSpectra(npeaks = 5, method = "mean") %>%
+  binCells(cellData = df, phenotype = "naïve.vs.differentiated") %>%
+  blankSubstraction() %>%
+  isotopeTagging() %>%
+  imputation(method = "noise") %>%
+  setMetadata(polarity = "-")
 ```
 
 ## Modelling & Statistics
-
+* Combining polarities
+* Variable feature selection
 * Shapiro test for normality
 * Levene test for variance
 * Welch test for significant difference
 * Fold change for log difference
 * Model generation to retrieve feature importance
 
-```{r, eval = T}
-exp <- exp %>%
-  shapiroTest() %>%
-  leveneTest() %>%
+```{r, eval = F}
+expModel <- combineExperiments(exp, exp2) %>%
+  #keepVariableFeatures(top = 200) %>%
+  shapiroTest() %>% # Just flagging
+  leveneTest(filter = TRUE) %>% # Just flagging
   welchTest() %>%
   foldChange() %>%
   generateModel(modelName = "rf", seed = 42) %>%
@@ -89,21 +82,23 @@ exp <- exp %>%
 
 
 ## Model Assessment
-```{r assessment}
-print(model(exp, "rf")$confMatrix)
-print(model(exp, "glmnet")$confMatrix)
+```{r assessment, eval = F}
+print(model(expModel, "rf")$confMatrix)
+print(model(expModel, "glmnet")$confMatrix)
 ```
 
 ## Plot
-```{r pca, eval = T, fig.width=6}
-samplePCA(exp)
-compoundPCA(exp)
-screePCA(exp)
+```{r pca, eval = F, fig.width=6}
+sumR:::plotFeatureSds(expModel)
+samplePCA(expModel)
+compoundPCA(expModel)
+screePCA(expModel)
+plotUMAP(expModel, components = 30)
 ```
 
-```{r CV, eval = T, fig.width=6}
-plotCrossValidation(exp, "rf")
-plotCrossValidation(exp, "glmnet") 
+```{r CV, eval = F, fig.width=6}
+plotCrossValidation(expModel, "rf")
+plotCrossValidation(expModel, "glmnet") 
 ```
 
 ## SessionInfo

@@ -29,7 +29,8 @@ shapiroTest <- function(exp, assay = 1, threshold = 0.05) {
 #' @param threshold numerical value for wanted threshold . the default is 0.05
 #' @importFrom rstatix levene_test
 #' @export
-leveneTest <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1, threshold = 0.05) {
+leveneTest <- function(exp, classifiers = metadata(exp)$phenotype,
+                       assay = 1, threshold = 0.05, filter = FALSE) {
   if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   dataframe <- as.data.frame(t(assay(exp, assay)))
 
@@ -41,6 +42,7 @@ leveneTest <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1, th
   results <- cbind(P.values, Unequalvariances)
   colnames(results) <- c("p.value", "unequal_variance")
   rowData(exp)$leveneTest <- results
+  if (filter) exp <- exp[results$unequal_variance, ]
   exp
 }
 
@@ -136,7 +138,7 @@ welchTest <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1, thr
 #' @param top
 #' @export
 keepVariableFeatures <- function(exp, assay = 1, top = 100){
-  vars <- rowSds(assay(exp, assay))
+  vars <- rowSds(as.matrix(assay(exp, assay)))
   exp[rownames(exp)[order(vars, decreasing = TRUE)[1:top]], ]
 }
 

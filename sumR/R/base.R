@@ -245,4 +245,26 @@ calculate_nominal_mass <- function(formulas) {
   })
 }
 
+#' @title Combine SummarizedExperiments by row
+#' @param ... Number of SummarizedExperiments
+#' @export
+combineExperiments <- function(...){
+  idx <- Reduce(intersect, lapply(list(...), colnames), init = colnames(list(...)[[1]]))
+
+  exp <- do.call(rbind, lapply(list(...), function(exp){
+    exp <- exp[, idx]
+    if ("polarity" %in% names(metadata(exp))) {
+      rowData(exp)$polarity <- metadata(exp)$polarity
+    }
+    exp
+  }))
+
+  rownames(exp) <- 1:nrow(exp)
+  if ("polarity" %in% colnames(rowData(exp))){
+    rownames(exp) <- paste0(rownames(exp), rowData(exp)$polarity)
+  }
+
+  exp
+}
+
 

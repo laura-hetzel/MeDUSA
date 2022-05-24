@@ -21,6 +21,13 @@ addFeatureData <- function(exp, data = NULL){
   exp
 }
 
+#' @title Set metadata
+#' @export
+setMetadata <- function(exp, ...){
+  metadata(exp) <- c(metadata(exp), list(...))
+  exp
+}
+
 #' @title Create metadata from Excel file
 #' @param xlsxFile
 #' @param idxColumn

@@ -129,7 +129,7 @@ MD_filter <- function(dataframe, mz_col, a = 0.00112, b = 0.01953) {
 #' Filter cells without measurements
 #' @export
 filterCells <- function(exp, assay = 1) {
-  exp[, colSums(is.na(assay(exp, assay))) != nrow(exp) & colSds(assay(exp, assay), na.rm = TRUE) > 0]
+  exp[, colSums(is.na(assay(exp, assay))) != nrow(exp)]
 }
 
 
@@ -143,26 +143,48 @@ setDefaultAssay <- function(exp, default){
   exp
 }
 
+saverImputation <- function(df, cores = 1, normalize = TRUE){
+  if (!normalize) normalize <- NULL
+  suppressMessages(suppressWarnings(
+    saver(df, estimates.only = T, ncores = cores, size.factor = normalize
+  )))
+}
+
 setDefaultPhenotype <- function(exp, default){
   metadata(exp)$phenotype <- default
   exp
 }
 
+#' @title data imputation
+#' @description This function apply data imputation from 1 to selected noise level
+#' @param data dataframe
+#' @param noise numerical value for the noise level
+#' @param seed global seed for reproducible results
+#' @importFrom stats runif
+noiseImputation <- function(data, noise = 100, seed=42) {
+  set.seed(seed)
+  print("noise imputation")
+  data[data == 0] <- runif(sum(data == 0), min = 1, max = noise)
+  return(data)
+}
+
 #' @importFrom SAVER saver
 #' @importFrom SummarizedExperiment assay<-
 #' @export
-imputation <- function(exp, normalize = TRUE, useAssay = "Area",
-                       saveAssay = "Imputed", cores = 1, setDefault = TRUE) {
+imputation <- function(exp, method = "noise", useAssay = "Area",
+                       saveAssay = "Imputed", setDefault = TRUE, ...) {
+  exp <- filterCells(exp)
   df <- as.data.frame(assay(exp, useAssay))
   df[is.na(df)] <- 0
 
-  if (!normalize) normalize <- NULL
-  new_df <- suppressMessages(suppressWarnings(saver(df,
-    estimates.only = T, ncores = cores,
-    size.factor = normalize
-  )))
+  new_df <- switch(method,
+    "saver" = saverImputation(df, ...),
+    "noise" = noiseImputation(df, ...)
+  )
+  print("check")
   dimnames(new_df) <- dimnames(assay(exp))
   assay(exp, saveAssay) <- new_df
   if (setDefault) exp <- setDefaultAssay(exp, saveAssay)
   exp
+
 }

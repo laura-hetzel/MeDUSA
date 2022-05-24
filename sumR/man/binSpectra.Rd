@@ -4,7 +4,14 @@
 \alias{binSpectra}
 \title{Bin spectra with similar mass ranges}
 \usage{
-binSpectra(peakList, fraction = 0, npeaks = 0, meanSNR = 0, tolerance = 0.002)
+binSpectra(
+  peakList,
+  fraction = 0,
+  npeaks = 0,
+  method = "sum",
+  meanSNR = 0,
+  tolerance = 0.002
+)
 }
 \description{
 Bin spectra with similar mass ranges
