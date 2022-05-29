@@ -137,7 +137,7 @@ welchTest <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1, thr
 #' @param assay
 #' @param top
 #' @export
-keepVariableFeatures <- function(exp, assay = 1, top = 100){
+keepVariableFeatures <- function(exp, assay = 1, top = nrow(exp)){
   vars <- rowSds(as.matrix(assay(exp, assay)))
   exp[rownames(exp)[order(vars, decreasing = TRUE)[1:top]], ]
 }

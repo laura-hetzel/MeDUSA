@@ -1,13 +1,13 @@
 #' @title Pick peaks in a spectrum
 #' @importFrom MassSpecWavelet getLocalMaximumCWT getRidge
-pickSpectra <- function(x, SNR = 0) {
+pickSpectra <- function(x, SNR = 0, maxScale = 32, nearbyPeak = TRUE) {
   ms <- as.data.frame(x)
   colnames(ms) <- c("mz", "i")
-  wCoefs <- cbind("0" = ms$i, cwt_new(ms$i))
+  wCoefs <- cbind("0" = ms$i, cwt_new(ms$i, max_scale = maxScale))
   localMax <- MassSpecWavelet::getLocalMaximumCWT(wCoefs)
   ridgeList <- MassSpecWavelet::getRidge(localMax)
   majorPeakInfo <- identifyPeaks(ms$i, ridgeList, wCoefs,
-                                 SNR.Th = SNR, nearbyPeak = TRUE
+                                 SNR.Th = SNR, nearbyPeak = nearbyPeak
   )
 
   df <- cbind(ms[as.vector(majorPeakInfo$allPeakIndex), ],
@@ -16,7 +16,10 @@ pickSpectra <- function(x, SNR = 0) {
               SNR = majorPeakInfo$peakSNR[names(majorPeakInfo$allPeakIndex)]
   )
   colnames(df) <- make.names(colnames(df), unique = T)
+
   df[df$SNR >= SNR, ]
+  # new
+  #df[df$i / df$Noise >= SNR, ]
 }
 
 centroid <- function(spectrum, halfWindowSize = 2L) {
@@ -65,7 +68,7 @@ savgol <- function(y, halfWindowSize = 10L, polynomialOrder = 3L) {
 #' @importFrom dplyr distinct
 #' @importFrom tools file_path_sans_ext
 #' @export
-peakPicking <- function(files, massDefect = 0.8, polarity = NULL,
+peakPicking <- function(files, massDefect = TRUE, polarity = NULL, method = c("ind", "comb"),
                         massWindow = Inf, cores = detectCores(logical = F), SNR = 0) {
   cl <- makeCluster(cores)
   clusterExport(cl, varlist = names(sys.frame()))
@@ -82,11 +85,16 @@ peakPicking <- function(files, massDefect = 0.8, polarity = NULL,
       scans <- scans & polarity_filter
     }
 
-    x <- lapply(setNames(x[scans], df[scans, ]$retentionTime), centroid)
-
+    if (method[1] == "comb"){
+      s <- split(which(scans), c(1, cumprod(diff(which(scans)))))
+      x <- lapply(s, function(z) centroid(do.call(rbind, x[z])))
+    } else {
+      x <- lapply(setNames(x[scans], df[scans, ]$retentionTime), centroid)
+    }
 
     l <- lapply(x, function(spectrum) {
-      tryCatch(suppressWarnings(pickSpectra(spectrum, SNR)), error = function(err) NULL)
+      tryCatch(suppressWarnings(pickSpectra(spectrum, SNR)),
+               error = function(err) NULL)
     })
 
     non_nulls <- !vapply(l, is.null, logical(1))
@@ -95,8 +103,8 @@ peakPicking <- function(files, massDefect = 0.8, polarity = NULL,
     df <- dplyr::distinct(df[df$Value > 0, ])
     if (nrow(df) == 0) return(NULL)
     rownames(df) <- 1:nrow(df)
-    df <- MassDefectFilter(df, mz_MD_plot = F)
-    df[df$MD < massDefect, ]
+    if (massDefect) df <- filterMassDefect(df)
+    df
   })
 
   stopCluster(cl)
@@ -164,10 +172,8 @@ identifyPeaks <- function(ms, ridgeList, wCoefs, scales = as.numeric(colnames(wC
   nMz <- nrow(wCoefs)
   for (k in 1:length(ridgeList)) {
     ind.k <- mzInd[k]
-    start.k <- ifelse(ind.k - winSize.noise < 1, 1, ind.k -
-                        winSize.noise)
-    end.k <- ifelse(ind.k + winSize.noise > nMz, nMz, ind.k +
-                      winSize.noise)
+    start.k <- max(1, ind.k - winSize.noise)
+    end.k <- min(nMz, ind.k + winSize.noise)
 
     noiseLevel.k <- quantile(noise[start.k:end.k], probs = 0.95)
     if (noiseLevel.k < minNoiseLevel) {

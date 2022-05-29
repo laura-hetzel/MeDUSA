@@ -267,4 +267,16 @@ combineExperiments <- function(...){
   exp
 }
 
+#' @title Variable Importance of models
+#' @param exp SummarizedExperiment with model(s)
+#' @param modelName name of the model
+#' @export
+varImportance <- function(exp, modelName = 1){
+  df <- as.data.frame(model(exp, modelName)$varImp$importance)
+  df$Compound <- rownames(df)
+  df <- df[order(df$Overall, decreasing = TRUE), c("Compound", "Overall")]
+  rownames(df) <- 1:nrow(df)
+  df
+}
+
 

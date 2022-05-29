@@ -6,8 +6,9 @@
 \usage{
 peakPicking(
   files,
-  massDefect = 0.8,
+  massDefect = TRUE,
   polarity = NULL,
+  method = c("ind", "comb"),
   massWindow = Inf,
   cores = detectCores(logical = F),
   SNR = 0
