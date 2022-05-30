@@ -38,7 +38,7 @@ metadataFromExcel <- function(xlsxFile, idxColumn, sheet = 1){
   if (!idxColumn %in% colnames(df)) stop(sprintf("Error reading excel file, could not find column %s", idxColumn))
   if (any(duplicated(df[, idxColumn]))) stop(sprintf("Non-unique values found in %s", idxColumn))
 
-  rownames(df) <- tools::file_path_sans_ext(basename(df[, idxColumn]))
+  rownames(df) <- df[, idxColumn]
   df
 }
 

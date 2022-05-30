@@ -132,7 +132,17 @@ filterCells <- function(exp, assay = 1) {
   exp[, colSums(is.na(assay(exp, assay))) != nrow(exp)]
 }
 
+peakFilter <- function(peaks, SNR = 0, intensity = 0){
+  res <- lapply(peaks, function(x) x[x$SNR >= SNR & x$i >= intensity, ])
+  attributes(res) <- attributes(peaks)
+  res
+}
 
+spectraFilter <- function(spectra, npeaks = 0, intensity = 0, SNR = 0){
+  res <- lapply(spectra, function(x) x[x$SNR >= SNR & x$i >= intensity & x$npeaks >= npeaks, ])
+  attributes(res) <- attributes(spectra)
+  res
+}
 
 setDefaultAssay <- function(exp, default){
   n <- assayNames(exp)
@@ -163,7 +173,6 @@ setDefaultPhenotype <- function(exp, default){
 #' @importFrom stats runif
 noiseImputation <- function(data, noise = 100, seed=42) {
   set.seed(seed)
-  print("noise imputation")
   data[data == 0] <- runif(sum(data == 0), min = 1, max = noise)
   return(data)
 }
@@ -181,7 +190,6 @@ imputation <- function(exp, method = "noise", useAssay = "Area",
     "saver" = saverImputation(df, ...),
     "noise" = noiseImputation(df, ...)
   )
-  print("check")
   dimnames(new_df) <- dimnames(assay(exp))
   assay(exp, saveAssay) <- new_df
   if (setDefault) exp <- setDefaultAssay(exp, saveAssay)

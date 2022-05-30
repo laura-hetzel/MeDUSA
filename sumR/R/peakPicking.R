@@ -1,13 +1,13 @@
 #' @title Pick peaks in a spectrum
 #' @importFrom MassSpecWavelet getLocalMaximumCWT getRidge
-pickSpectra <- function(x, SNR = 0, maxScale = 32, nearbyPeak = TRUE) {
+pickSpectra <- function(x, SNR = 0, maxScale = 32, intAsSig = FALSE) {
   ms <- as.data.frame(x)
   colnames(ms) <- c("mz", "i")
   wCoefs <- cbind("0" = ms$i, cwt_new(ms$i, max_scale = maxScale))
   localMax <- MassSpecWavelet::getLocalMaximumCWT(wCoefs)
   ridgeList <- MassSpecWavelet::getRidge(localMax)
   majorPeakInfo <- identifyPeaks(ms$i, ridgeList, wCoefs,
-                                 SNR.Th = SNR, nearbyPeak = nearbyPeak
+                                 SNR.Th = SNR, nearbyPeak = TRUE
   )
 
   df <- cbind(ms[as.vector(majorPeakInfo$allPeakIndex), ],
@@ -17,9 +17,9 @@ pickSpectra <- function(x, SNR = 0, maxScale = 32, nearbyPeak = TRUE) {
   )
   colnames(df) <- make.names(colnames(df), unique = T)
 
-  df[df$SNR >= SNR, ]
   # new
-  #df[df$i / df$Noise >= SNR, ]
+ # if (intAsSig) df$SNR <- df$i / df$Noise
+  df[df$SNR >= SNR, ]
 }
 
 centroid <- function(spectrum, halfWindowSize = 2L) {
@@ -61,6 +61,27 @@ savgol <- function(y, halfWindowSize = 10L, polynomialOrder = 3L) {
   sav.filter(y, hws = halfWindowSize, coef = coef(m = halfWindowSize, k = polynomialOrder))
 }
 
+formatScans <- function(f, massWindow, polarity, combineSpectra){
+  z <- mzR::openMSfile(f)
+  x <- mzR::peaks(z)
+  df <- mzR::header(z)
+
+  scans <- abs(df$scanWindowUpperLimit - df$scanWindowLowerLimit) <= massWindow
+  if (!is.null(polarity)) {
+    polarity_filter <- grepl("FTMS - p NSI", df$filterString)
+    if (polarity == "+") polarity_filter <- !polarity_filter
+    scans <- scans & polarity_filter
+  }
+
+  if (combineSpectra & !is.infinite(massWindow)) {
+    s <- split(which(scans), c(1, cumprod(diff(which(scans)))))
+    x <- lapply(s, function(z) centroid(do.call(rbind, x[z])))
+  } else {
+    x <- lapply(setNames(x[scans], df[scans, ]$retentionTime), centroid)
+  }
+  x
+}
+
 #' @title Perform peak picking
 #' @importFrom pbapply pblapply
 #' @importFrom parallel detectCores makeCluster clusterExport stopCluster
@@ -68,48 +89,43 @@ savgol <- function(y, halfWindowSize = 10L, polynomialOrder = 3L) {
 #' @importFrom dplyr distinct
 #' @importFrom tools file_path_sans_ext
 #' @export
-peakPicking <- function(files, massDefect = TRUE, polarity = NULL, method = c("ind", "comb"),
-                        massWindow = Inf, cores = detectCores(logical = F), SNR = 0) {
+peakPicking <- function(files, massDefect = TRUE, polarity = NULL, combineSpectra = FALSE,
+                        intensityAsSignal = FALSE, massWindow = Inf,
+                        cores = detectCores(logical = F), SNR = 0) {
   cl <- makeCluster(cores)
   clusterExport(cl, varlist = names(sys.frame()))
   samps <- tools::file_path_sans_ext(basename(files))
   result <- pbapply::pblapply(files, cl = cl, function(f) {
-    z <- mzR::openMSfile(f)
-    x <- mzR::peaks(z)
-    df <- mzR::header(z)
-
-    scans <- abs(df$scanWindowUpperLimit - df$scanWindowLowerLimit) <= massWindow
-    if (!is.null(polarity)){
-      polarity_filter <- grepl("FTMS - p NSI", df$filterString)
-      if (polarity == "+") polarity_filter <- !polarity_filter
-      scans <- scans & polarity_filter
-    }
-
-    if (method[1] == "comb"){
-      s <- split(which(scans), c(1, cumprod(diff(which(scans)))))
-      x <- lapply(s, function(z) centroid(do.call(rbind, x[z])))
-    } else {
-      x <- lapply(setNames(x[scans], df[scans, ]$retentionTime), centroid)
-    }
+    x <- sumR:::formatScans(f, massWindow, polarity, combineSpectra)
 
     l <- lapply(x, function(spectrum) {
-      tryCatch(suppressWarnings(pickSpectra(spectrum, SNR)),
+      tryCatch(suppressWarnings(pickSpectra(spectrum, SNR, intAsSig = intensityAsSignal)),
                error = function(err) NULL)
     })
 
     non_nulls <- !vapply(l, is.null, logical(1))
     l <- l[non_nulls]
     df <- data.frame(scan = rep(which(non_nulls), sapply(l, nrow)), do.call(rbind, l))
+    #if (!intensityAsSignal) df <- df[df$Value > 0, ]
+
     df <- dplyr::distinct(df[df$Value > 0, ])
     if (nrow(df) == 0) return(NULL)
     rownames(df) <- 1:nrow(df)
-    if (massDefect) df <- filterMassDefect(df)
+    if (massDefect) df <- MassDefectFilter(df, F)
+
     df
   })
 
   stopCluster(cl)
   names(result) <- samps
-  result[!vapply(result, is.null, logical(1))]
+  result <- result[!vapply(result, is.null, logical(1))]
+  attr(result, "polarity") <- polarity
+  attr(result, "massWindow") <- massWindow
+  attr(result, "combineSpectra") <- combineSpectra
+  attr(result, "SNR") <- SNR
+  attr(result, "Files") <- files
+  result
+
 }
 
 identifyPeaks <- function(ms, ridgeList, wCoefs, scales = as.numeric(colnames(wCoefs)),
@@ -313,13 +329,22 @@ doBinning <- function(spectra, split = "scan", tolerance = 0.002) {
 binSpectra <- function(peakList, fraction = 0, npeaks = 0, method = "sum",
                        meanSNR = 0, tolerance = 0.002) {
   pbapply::pblapply(peakList, function(spectra) {
-    df <- do.call(rbind, doBinning(spectra, split = "scan", tolerance))
+    df_list <- sumR:::doBinning(spectra, split = "scan",
+                                tolerance = tolerance)
+    df <- do.call(rbind, df_list)
     df <- df[order(df$mz), ]
+    df$oldmz <- spectra$mz[order(spectra$mz)]
+
+    df$mzdiff <- df$mz - df$oldmz
+    df <- df[order(rownames(df)), ]
+
     bins <- split.data.frame(df, df$mz)
     df <- data.frame(
       mz = unique(df$mz), npeaks = sapply(bins, nrow),
       i = sapply(bins, function(x) switch(method, "sum" = sum(x$i), "mean" = mean(x$i))),
-      SNR = sapply(bins, function(x) mean(x$snr))
+      SNR = sapply(bins, function(x) mean(x$snr)),
+      mzmin = sapply(bins, function(x) min(x$mzdiff)),
+      mzmax = sapply(bins, function(x) max(x$mzdiff))
     )
     rownames(df) <- 1:nrow(df)
     df[df$npeaks >= (fraction * length(unique(spectra$scan))) &
@@ -346,10 +371,16 @@ binCells <- function(spectraList, cellData = NULL, phenotype = NULL,
   df$mz <- round(df$mz, 4)
 
   df_list <- doBinning(df, split = "cell", tolerance = tolerance)
-  df <- data.frame(do.call(rbind, df_list),
-                   cell = rep(names(df_list), sapply(df_list, nrow))
-  )
 
+
+  df2 <- do.call(rbind, df_list)
+  df2 <- df2[order(df2$mz), ]
+  df2$oldmz <- df$mz[order(df$mz)]
+  df2$mzdiff <- df2$mz - df2$oldmz
+  df2 <- df2[order(rownames(df2)), ]
+
+
+  df <- data.frame(df2, cell = rep(names(df_list), sapply(df_list, nrow)))
   bins <- split.data.frame(df, df$mz)
 
   m <- matrix(NA, nrow = length(bins), ncol = length(df_list))
@@ -368,10 +399,16 @@ binCells <- function(spectraList, cellData = NULL, phenotype = NULL,
   m <- cbind(m, matrix(NA, nrow = nrow(m), ncol = length(missing),dimnames = list(rownames(m), missing)))
   snr <- cbind(snr, matrix(NA, nrow = nrow(snr), ncol = length(missing), dimnames = list(rownames(snr), missing)))
 
-  SummarizedExperiment(
-    colData = cellData[colnames(m), ],
+
+  se <- SummarizedExperiment(
     assays = list(Area = m, SNR = snr),
-    rowData = data.frame(mz = as.double(names(bins))),
+    rowData = DataFrame(mz = as.double(names(bins)),
+                         mzmin = sapply(bins, function(x) min(x$mzdiff)),
+                         mzmax = sapply(bins, function(x) max(x$mzdiff))
+    ),
     metadata = list(phenotype = phenotype)
   )
+  if (!is.null(cellData)) colData(se) <- DataFrame(cellData[colnames(m), ])
+  se
 }
+

@@ -8,7 +8,8 @@ peakPicking(
   files,
   massDefect = TRUE,
   polarity = NULL,
-  method = c("ind", "comb"),
+  combineSpectra = FALSE,
+  intensityAsSignal = FALSE,
   massWindow = Inf,
   cores = detectCores(logical = F),
   SNR = 0

@@ -41,23 +41,49 @@ df
 
 ## Peak picking
 Cells measured using DI-MS can be analyzed using the spectrum-based peak picking. 
-```{r, eval = F}
-exp <- peakPicking(df$File, massWindow = 200, SNR = 0.5, polarity = "+") %>%
-  binSpectra(npeaks = 5, method = "mean") %>%
-  binCells(cellData = df, phenotype = "naïve.vs.differentiated") %>%
-  blankSubstraction() %>%
-  isotopeTagging() %>%
-  imputation(method = "noise") %>%
-  setMetadata(polarity = "+")
-  
 
-exp2 <- peakPicking(df$File, massWindow = 200, SNR = 0.5, polarity = "-") %>%
-  binSpectra(npeaks = 5, method = "mean") %>%
-  binCells(cellData = df, phenotype = "naïve.vs.differentiated") %>%
-  blankSubstraction() %>%
+```{r peakPicking, eval = F}
+peaks <- peakPicking(list.files(dir, pattern = ".mzML", full.names = T),
+                     massDefect = F, massWindow = 200, polarity = "-")
+```
+
+```{r peakPlot, eval = F}
+filteredPeaks <- peakFilter(peaks, SNR = 1, intensity = 1e4)
+plotSpectrumPeaks(filteredPeaks, file = 1, scan = 2)
+plotSpectrumPeaks(filteredPeaks, file = 14, scan = 4)
+noisePlot(filteredPeaks, file = 1)
+plotCellPeaks(filteredPeaks, file = 1)
+```
+
+
+
+
+## Spectra Alignment
+
+```{r eval = F}
+spectra <- binSpectra(peaks, npeaks = 5, method = "mean", tolerance = 1e-4)
+```
+
+
+```{r eval = F}
+plotSpectraShift(spectra, 30)
+```
+
+## Cell Alignment
+
+```{r eval = F}
+cells <- binCells(spectra, cellData = df, phenotype = "phenotype", tolerance = 1e-4)
+```
+
+```{r eval = F}
+plotCellShift(cells)
+```
+
+```{r, eval = F}
+exp <- blankSubstraction(cells) %>%
   isotopeTagging() %>%
-  imputation(method = "noise") %>%
-  setMetadata(polarity = "-")
+  imputation(method = "noise")
+ # setMetadata(polarity = "+")
 ```
 
 ## Modelling & Statistics
@@ -70,8 +96,9 @@ exp2 <- peakPicking(df$File, massWindow = 200, SNR = 0.5, polarity = "-") %>%
 * Model generation to retrieve feature importance
 
 ```{r, eval = F}
-expModel <- combineExperiments(exp, exp2) %>%
+expModel <- #combineExperiments(exp, exp2) %>%
   #keepVariableFeatures(top = 200) %>%
+  exp %>%
   shapiroTest() %>% # Just flagging
   leveneTest(filter = TRUE) %>% # Just flagging
   welchTest() %>%
