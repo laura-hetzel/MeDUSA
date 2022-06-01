@@ -1,7 +1,6 @@
 #' @title Plot spectrum peaks
 #' @export
-plotSpectrumPeaks <- function(peaks, file = 1, scan = 1, SNR = 0){
-  peaks <- peakFilter(peaks, SNR)
+spectrumPlot <- function(peaks, file = 1, scan = 1){
   file <- attr(peaks, "Files")[file]
   df <- as.data.frame(sumR:::formatScans(file,
                                          attr(peaks, "massWindow"),
@@ -41,17 +40,17 @@ noisePlot <- function(peaks, file = 1){
 
 #' @title plotCellPeaks
 #' @export
-plotCellPeaks <- function(peaks, file = 1){
+cellPlot <- function(peaks, file = 1){
   ggplot(peaks[[file]], aes(x = mz, y = scan, size = SNR)) +
     geom_density_2d_filled() +
     geom_point(shape = 18) +
     theme_minimal()
 }
 
-#' @title plotSpectraShift
+#' @title spectraShiftPlot
 #' @export
-plotSpectraShift <- function(spectraList, whichSpectrum = 1){
-  ggplot(as.data.frame(spectraList[[whichSpectrum]])) +
+spectraShiftPlot <- function(spectraList, file = 1){
+  ggplot(as.data.frame(spectraList[[file]])) +
     geom_segment(aes(x = mzmin, xend = mzmax, y = mz, yend = mz), arrow = arrow(length = unit(2, "mm"))) +
     geom_segment(aes(x = mzmax, xend = mzmin, y = mz, yend = mz), arrow = arrow(length = unit(2, "mm"))) +
     xlab("mz Shift")

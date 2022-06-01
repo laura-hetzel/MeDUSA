@@ -44,13 +44,15 @@ plotUMAP <- function(exp, assay = 1, components = 20){
   um <- umap(data)$layout
   colnames(um) <- c("UMAP_1", "UMAP_2")
   um <- as.data.frame(cbind(um, colData(exp)))
-  ggplot(um, aes(x = UMAP_1, y = UMAP_2,
+  suppressWarnings(
+    ggplot(um, aes(x = UMAP_1, y = UMAP_2,
                       label = rownames(colData(exp)),
                       color = .data[[metadata(exp)$phenotype]])) +
     geom_point() +
     ggrepel::geom_text_repel() +
     ggtitle("Umap") +
     theme_bw()
+  )
 }
 
 plotCellSds <- function(exp, assay = 1, top = nrow(exp)){
@@ -65,6 +67,8 @@ plotCellSds <- function(exp, assay = 1, top = nrow(exp)){
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 }
 
+#' @title Plot the standard deviations
+#' @export
 plotFeatureSds <- function(exp, assay = 1, top = nrow(exp)){
   vars <- rowSds(as.matrix(assay(exp, assay)), na.rm = T)
   df <- data.frame(Feature = rownames(exp), Variation = vars)
@@ -190,12 +194,12 @@ compoundPCA <- function(exp, assay = 1) {
 samplePCA <- function(exp, assay = 1) {
   data <- t(assay(exp, assay))
   res_pca <- PCA(data, graph = FALSE)
-  fviz_pca_ind(res_pca,
+  suppressWarnings(fviz_pca_ind(res_pca,
     col.ind = "cos2",
     gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
     repel = TRUE, # Avoid text overlapping (slow if many points)
     title = "individuals-PCA - names of the sample"
-  )
+  ))
 }
 
 #' @title PCA ellipse plot

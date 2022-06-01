@@ -9,10 +9,8 @@ peakPicking(
   massDefect = TRUE,
   polarity = NULL,
   combineSpectra = FALSE,
-  intensityAsSignal = FALSE,
   massWindow = Inf,
-  cores = detectCores(logical = F),
-  SNR = 0
+  cores = detectCores(logical = F)
 )
 }
 \description{

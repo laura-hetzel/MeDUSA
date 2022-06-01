@@ -1,6 +1,6 @@
 #' @title Pick peaks in a spectrum
 #' @importFrom MassSpecWavelet getLocalMaximumCWT getRidge
-pickSpectra <- function(x, SNR = 0, maxScale = 32, intAsSig = FALSE) {
+pickSpectra <- function(x, SNR = 0, maxScale = 32) {
   ms <- as.data.frame(x)
   colnames(ms) <- c("mz", "i")
   wCoefs <- cbind("0" = ms$i, cwt_new(ms$i, max_scale = maxScale))
@@ -89,9 +89,10 @@ formatScans <- function(f, massWindow, polarity, combineSpectra){
 #' @importFrom dplyr distinct
 #' @importFrom tools file_path_sans_ext
 #' @export
-peakPicking <- function(files, massDefect = TRUE, polarity = NULL, combineSpectra = FALSE,
-                        intensityAsSignal = FALSE, massWindow = Inf,
-                        cores = detectCores(logical = F), SNR = 0) {
+peakPicking <- function(files, massDefect = TRUE, polarity = NULL,
+                        combineSpectra = FALSE,
+                        massWindow = Inf,
+                        cores = detectCores(logical = F)) {
   cl <- makeCluster(cores)
   clusterExport(cl, varlist = names(sys.frame()))
   samps <- tools::file_path_sans_ext(basename(files))
@@ -99,14 +100,13 @@ peakPicking <- function(files, massDefect = TRUE, polarity = NULL, combineSpectr
     x <- sumR:::formatScans(f, massWindow, polarity, combineSpectra)
 
     l <- lapply(x, function(spectrum) {
-      tryCatch(suppressWarnings(pickSpectra(spectrum, SNR, intAsSig = intensityAsSignal)),
+      tryCatch(suppressWarnings(pickSpectra(spectrum)),
                error = function(err) NULL)
     })
 
     non_nulls <- !vapply(l, is.null, logical(1))
     l <- l[non_nulls]
     df <- data.frame(scan = rep(which(non_nulls), sapply(l, nrow)), do.call(rbind, l))
-    #if (!intensityAsSignal) df <- df[df$Value > 0, ]
 
     df <- dplyr::distinct(df[df$Value > 0, ])
     if (nrow(df) == 0) return(NULL)
@@ -122,7 +122,6 @@ peakPicking <- function(files, massDefect = TRUE, polarity = NULL, combineSpectr
   attr(result, "polarity") <- polarity
   attr(result, "massWindow") <- massWindow
   attr(result, "combineSpectra") <- combineSpectra
-  attr(result, "SNR") <- SNR
   attr(result, "Files") <- files
   result
 
@@ -326,18 +325,21 @@ doBinning <- function(spectra, split = "scan", tolerance = 0.002) {
 #' @param tolerance
 #' @importFrom pbapply pblapply
 #' @export
-binSpectra <- function(peakList, fraction = 0, npeaks = 0, method = "sum",
+spectraBinning <- function(peakList, fraction = 0, npeaks = 0, method = "sum",
                        meanSNR = 0, tolerance = 0.002) {
   pbapply::pblapply(peakList, function(spectra) {
+    if (nrow(spectra) == 0) return(NULL)
     df_list <- sumR:::doBinning(spectra, split = "scan",
                                 tolerance = tolerance)
+
     df <- do.call(rbind, df_list)
+    if (nrow(df) == 0) return(NULL)
+
     df <- df[order(df$mz), ]
     df$oldmz <- spectra$mz[order(spectra$mz)]
 
     df$mzdiff <- df$mz - df$oldmz
     df <- df[order(rownames(df)), ]
-
     bins <- split.data.frame(df, df$mz)
     df <- data.frame(
       mz = unique(df$mz), npeaks = sapply(bins, nrow),
@@ -346,6 +348,7 @@ binSpectra <- function(peakList, fraction = 0, npeaks = 0, method = "sum",
       mzmin = sapply(bins, function(x) min(x$mzdiff)),
       mzmax = sapply(bins, function(x) max(x$mzdiff))
     )
+
     rownames(df) <- 1:nrow(df)
     df[df$npeaks >= (fraction * length(unique(spectra$scan))) &
          df$SNR >= meanSNR & df$npeaks > npeaks, ]
@@ -357,13 +360,13 @@ binSpectra <- function(peakList, fraction = 0, npeaks = 0, method = "sum",
 #' @param tolerance
 #' @importFrom SummarizedExperiment SummarizedExperiment
 #' @export
-binCells <- function(spectraList, cellData = NULL, phenotype = NULL,
+cellBinning <- function(spectraList, cellData = NULL, phenotype = NULL,
                      tolerance = 0.002, filter = TRUE) {
   df <- do.call(rbind, lapply(1:length(spectraList), function(i) {
     df <- spectraList[[i]]
-    if (nrow(df) == 0) {
-      return(NULL)
-    }
+    if (is.null(df)) return(NULL)
+    if (nrow(df) == 0) return(NULL)
+
     df$rt <- -1
     df$cell <- names(spectraList)[i]
     df

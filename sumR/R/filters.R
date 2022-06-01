@@ -132,12 +132,16 @@ filterCells <- function(exp, assay = 1) {
   exp[, colSums(is.na(assay(exp, assay))) != nrow(exp)]
 }
 
+#' @title filter peaks
+#' @export
 peakFilter <- function(peaks, SNR = 0, intensity = 0){
   res <- lapply(peaks, function(x) x[x$SNR >= SNR & x$i >= intensity, ])
   attributes(res) <- attributes(peaks)
   res
 }
 
+#' @title filter spectra
+#' @export
 spectraFilter <- function(spectra, npeaks = 0, intensity = 0, SNR = 0){
   res <- lapply(spectra, function(x) x[x$SNR >= SNR & x$i >= intensity & x$npeaks >= npeaks, ])
   attributes(res) <- attributes(spectra)
@@ -196,3 +200,20 @@ imputation <- function(exp, method = "noise", useAssay = "Area",
   exp
 
 }
+
+#' @title Fragment Filter
+#' @export
+fragmentFilter <- function(exp, assay = 1, method = "pearson", corr = 0.99){
+  corrs <- cor(t(assay(exp, assay)), method = method)
+  max_corr <- vapply(1:nrow(corrs), function(i) max(corrs[i, -i]), double(1))
+  exp[max_corr < corr, ]
+}
+
+#' @title Feature filter
+#' @export
+featureFilter <- function(exp, assay = "Area", nCells = 0, pCells = 0){
+  nFeats <- as.double(apply(assay(exp, assay), 1, function(x) sum(!is.na(x))))
+  pFeats <- nFeats / ncol(exp)
+  exp[nFeats >= nCells & pFeats >= pCells, ]
+}
+
