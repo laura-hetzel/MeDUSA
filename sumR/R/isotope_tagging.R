@@ -479,7 +479,7 @@ massSpecPlot <- function(final_df) {
 #' @importFrom dplyr distinct select %>%
 #' @usage isotopeTagging(data, ppm = 5, Elements = c("C13"), z = 0, plot = TRUE)
 #' @export
-isotopeTagging <- function(exp, assay = "Area", ppm = 5, Elements = c("C13"), z = 0, plot = TRUE, filter = TRUE) {
+isotopeTagging <- function(exp, assay = "Area", ppm = 5, Elements = c("C13"), z = 0, plot = FALSE, filter = TRUE) {
   data <- as.data.frame(cbind(mz = rowData(exp)$mz, assay(exp, assay)))
   #-----------------------------------------------------------------------------
   # Check for input arguments
@@ -537,7 +537,7 @@ isotopeTagging <- function(exp, assay = "Area", ppm = 5, Elements = c("C13"), z 
 
   # Big merge and printing the number of found isotopes
   big_merge_df <- bigMerge(isotope_valid_df, df, copy_df)
-  print(paste("Number of isotopes found:", length(unique(big_merge_df$id))))
+  #print(paste("Number of isotopes found:", length(unique(big_merge_df$id))))
 
 
 

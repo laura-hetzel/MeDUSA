@@ -6,10 +6,11 @@
 \usage{
 peakPicking(
   files,
-  doCentroid = F,
-  massDefect = 0.8,
-  cores = detectCores(logical = F),
-  SNR = 0
+  massDefect = TRUE,
+  polarity = NULL,
+  combineSpectra = FALSE,
+  massWindow = Inf,
+  cores = detectCores(logical = F)
 )
 }
 \description{

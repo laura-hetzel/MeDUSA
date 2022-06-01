@@ -1,3 +1,8 @@
+# sumR 0.3.0
+* Updated pipeline with statistical tests and models
+* Added blank filter
+* Added option in metadata to define the default phenotype for modelling
+
 # sumR 0.2.0
 * Added peak picking strategy using individual spectra
 * Added manual centroiding during reading of mzML

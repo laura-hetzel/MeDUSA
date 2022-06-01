@@ -4,16 +4,16 @@
 \alias{volcanoPlot}
 \title{Volcano plot}
 \usage{
-volcanoPlot(data, xvalues, yvalues, title)
+volcanoPlot(exp, test, title = "")
 }
 \arguments{
+\item{title}{title of the plot}
+
 \item{data}{dataframe result from statistical tests within the sumR package with significant column (true or false)}
 
 \item{xvalues}{log2 folchange between two groups column}
 
 \item{yvalues}{nominal p value column}
-
-\item{title}{title of the plot}
 }
 \value{
 volcano plot

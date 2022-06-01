@@ -4,12 +4,12 @@
 \alias{PLSDA_ind}
 \title{PLSDA individual plot}
 \usage{
-PLSDA_ind(data, classifiers)
+PLSDA_ind(exp, classifiers, assay = 1)
 }
 \arguments{
-\item{data}{transposed dataframe with m/z as columns}
-
 \item{classifiers}{sample groups as factor}
+
+\item{data}{transposed dataframe with m/z as columns}
 }
 \description{
 PLSDA individual plot

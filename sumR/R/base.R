@@ -19,6 +19,33 @@ read_msdata <- function(path = "data") {
   return(ms_data[order(ms_data$mz), ])
 }
 
+#' @title Convert RAW files to mzML
+#' @param folder
+#' @param outputFolder
+#' @param options
+#' @export
+rawToMzml <- function(folder, output = getwd(), rt = NULL, options = ""){
+
+  options <- paste(options, collapse = " ")
+  files <- list.files(file.path(folder), full.names = T, pattern = "^(?!.*mzML).*")
+  output <- file.path(output)
+  if (!dir.exists(output)) dir.create(output)
+  key <- "Directory\\shell\\Open with MSConvertGUI\\command"
+  reg <- tryCatch(utils::readRegistry(key, "HCR"), error = function(e) NULL)
+  msconvert <- file.path(dirname(sub("\"([^\"]*)\".*", "\\1", reg[[1]])), "msconvert.exe")
+  if (is.null(msconvert)) return(NULL)
+
+  rt <- ifelse(is.null(rt), "", sprintf('--filter "scanTime [%s, %s]"', rt[1], rt[2]))
+
+  pbapply::pblapply(files, function(file){
+    command <- sprintf('"%s" "%s" %s %s -o "%s"',
+                       file.path(msconvert), file, rt, options, output)
+    system(command, show.output.on.console = F)
+  })
+  list.files(folder, full.names = T, pattern = ".mzML")
+}
+
+
 #' @title ppm calculation
 #' @description ppm_calc calculated the parts per million error between two different masses
 #' @param mass1 input from the `align_check` functions
@@ -106,6 +133,29 @@ condition <- function(mass, intensities, samples, tolerance = 5e-6) {
   return(mean(mass))
 }
 
+#' @title Substract Blanks from SummarizedExperiment
+#' @param exp
+#' @param blankThresh
+#' @param sampleThresh
+#' @param filter
+#' @export
+blankSubstraction <- function(exp, blankThresh = 5, sampleThresh = Inf,
+                              filter = TRUE, removeBlanks = TRUE){
+
+  blanks <- exp[, toupper(exp$Type) == 'BLANK']
+  samps <- exp[, toupper(exp$Type) == 'SAMPLE']
+
+  threshold <- rowMedians(assay(blanks, "Area"), na.rm = TRUE) * blankThresh
+  below <- rowSums(assay(samps, "Area") - threshold <= 0, na.rm = TRUE) <= sampleThresh
+
+  rowData(exp)$blankThresh <- threshold
+  rowData(exp)$blankPass <- below
+
+  if (filter) exp <- exp[which(rowData(exp)$blankPass), ]
+  if (removeBlanks) exp <- exp[, toupper(exp$Type) != "BLANK"]
+
+  filterCells(exp)
+}
 
 #' @title Background removal
 #' @param dataframe
@@ -194,3 +244,39 @@ calculate_nominal_mass <- function(formulas) {
     }))
   })
 }
+
+#' @title Combine SummarizedExperiments by row
+#' @param ... Number of SummarizedExperiments
+#' @export
+combineExperiments <- function(...){
+  idx <- Reduce(intersect, lapply(list(...), colnames), init = colnames(list(...)[[1]]))
+
+  exp <- do.call(rbind, lapply(list(...), function(exp){
+    exp <- exp[, idx]
+    if ("polarity" %in% names(metadata(exp))) {
+      rowData(exp)$polarity <- metadata(exp)$polarity
+    }
+    exp
+  }))
+
+  rownames(exp) <- 1:nrow(exp)
+  if ("polarity" %in% colnames(rowData(exp))){
+    rownames(exp) <- paste0(rownames(exp), rowData(exp)$polarity)
+  }
+
+  exp
+}
+
+#' @title Variable Importance of models
+#' @param exp SummarizedExperiment with model(s)
+#' @param modelName name of the model
+#' @export
+varImportance <- function(exp, modelName = 1){
+  df <- as.data.frame(model(exp, modelName)$varImp$importance)
+  df$Compound <- rownames(df)
+  df <- df[order(df$Overall, decreasing = TRUE), c("Compound", "Overall")]
+  rownames(df) <- 1:nrow(df)
+  df
+}
+
+

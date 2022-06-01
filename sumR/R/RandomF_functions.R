@@ -21,6 +21,8 @@ redvar_removal <- function(data, cutoff = 0.75) {
 
 
 
+
+
 ## feature selection
 #' @title feature selection
 #' @description This function select the desired numbers of most imp features for random forest model
@@ -73,13 +75,11 @@ plot_imp_select <- function(feature_select_model) {
   return(plot)
 }
 
-
 #' @title datasplit
 #'
 #' @param data the dataframe with m/z as columns and a sample column named samples
 #' @param split_ratio
 #' @param seed global seed
-#'
 #' @importFrom caTools sample.split
 data_split <- function(seed, data, split_ratio = 0.8) {
   set.seed(seed) ## reproducible results
@@ -317,4 +317,78 @@ permutation.test <- function(training_set, test_set, model, n, class1, class2, s
   plot <- hist(permuted_df$accuracy)
   print(plot)
   return(list(plot, permuted_df))
+}
+
+#' @title Get names of models in Experiment
+#' @param exp SummarizedExperiment object
+#' @export
+models <- function(exp){
+  if (!"model" %in% names(metadata(exp))) return(NULL)
+  return(names(metadata(exp)$model))
+}
+
+#' @title Get model in Experiment
+#' @param exp SummarizedExperiment object
+#' @param modelName Name of the model to retrieve
+#' @export
+model <- function(exp, modelName = 1){
+  metadata(exp)$model[[modelName]]
+}
+
+#' @title Set value in model in Experiment
+#' @param exp SummarizedExperiment object
+#' @param modelName Name of the model to adjust
+#' @param value Value to set in the model
+#' @export
+`model<-` <- function(exp, modelName, value){
+  if (!"model" %in% names(metadata(exp))){
+    metadata(exp)$model <- list()
+  }
+  metadata(exp)$model[[modelName]] <- value
+  exp
+}
+
+#' @title Model using RandomForest model
+#' @param exp
+#' @param classifiers
+#' @param assay
+#' @param cv
+#' @param ratio
+#' @importFrom caret train createDataPartition trainControl varImp confusionMatrix
+#' @importFrom stats predict
+#' @export
+generateModel <- function(exp, modelName, classifiers = metadata(exp)$phenotype,
+                        assay = 1, cv = 5, ratio = 0.632, seed = NULL, ...){
+  if (is.null(classifiers)) stop("Cannot perform test without classifiers")
+  if (!is.null(seed)) set.seed(seed)
+
+  data <- assay(exp, assay)
+
+  trainIndex <- as.vector(createDataPartition(
+    y = as.factor(exp[[classifiers]]), p = ratio, list = FALSE, times = 1
+  ))
+
+  modelList <- list()
+  modelList$train <- colnames(exp)[trainIndex]
+  modelList$test <- colnames(exp)[-trainIndex]
+
+  control <- trainControl(method = "cv", number = cv, savePredictions = "all", preProcOptions = c("center", "scale"))
+
+  modelList$model <- train(x = t(data[, modelList$train]),
+                                  y = as.factor(exp[, modelList$train][[classifiers]]),
+                                  method = modelName, trControl = control, ...)
+
+  modelList$prediction <- predict(modelList$model,
+                                  newdata = t(data[, modelList$test]),
+                                  type = "prob")
+
+  modelList$varImp <- varImp(modelList$model)
+
+  x <- modelList$prediction
+  pred <- factor(ifelse(x[,1] > 0.5, colnames(x)[1], colnames(x)[2]))
+  obs <- factor(exp[, modelList$test][[metadata(exp)$phenotype]])
+  modelList$confMatrix <- confusionMatrix(data = pred, reference = obs)
+
+  model(exp, modelName) <- modelList
+  exp
 }

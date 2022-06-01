@@ -4,7 +4,7 @@
 \alias{filterCells}
 \title{Filter cells without measurements}
 \usage{
-filterCells(exp)
+filterCells(exp, assay = 1)
 }
 \description{
 Filter cells without measurements

@@ -80,3 +80,7 @@ MassDefectFilter <- function(dataframe, mz_MD_plot = TRUE) {
   }
   return(filtered_df_exp)
 }
+
+filterMassDefect <- function(df){
+  df[df$mz %% 1 <= (0.00112 * df$mz + 0.01953), ]
+}

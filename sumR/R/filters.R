@@ -128,23 +128,92 @@ MD_filter <- function(dataframe, mz_col, a = 0.00112, b = 0.01953) {
 
 #' Filter cells without measurements
 #' @export
-filterCells <- function(exp) {
-  exp[, colSums(is.na(assay(exp))) != nrow(exp)]
+filterCells <- function(exp, assay = 1) {
+  exp[, colSums(is.na(assay(exp, assay))) != nrow(exp)]
 }
 
+#' @title filter peaks
+#' @export
+peakFilter <- function(peaks, SNR = 0, intensity = 0){
+  res <- lapply(peaks, function(x) x[x$SNR >= SNR & x$i >= intensity, ])
+  attributes(res) <- attributes(peaks)
+  res
+}
 
+#' @title filter spectra
+#' @export
+spectraFilter <- function(spectra, npeaks = 0, intensity = 0, SNR = 0){
+  res <- lapply(spectra, function(x) x[x$SNR >= SNR & x$i >= intensity & x$npeaks >= npeaks, ])
+  attributes(res) <- attributes(spectra)
+  res
+}
+
+setDefaultAssay <- function(exp, default){
+  n <- assayNames(exp)
+  to_replace <- which(n == default)
+  n[to_replace] <- n[1]
+  n[1] <- default
+  assays(exp) <- assays(exp)[n]
+  exp
+}
+
+saverImputation <- function(df, cores = 1, normalize = TRUE, ...){
+  if (!normalize) normalize <- NULL
+  suppressMessages(suppressWarnings(
+    saver(df, estimates.only = T, ncores = cores, size.factor = normalize
+  )))
+}
+
+setDefaultPhenotype <- function(exp, default){
+  metadata(exp)$phenotype <- default
+  exp
+}
+
+#' @title data imputation
+#' @description This function apply data imputation from 1 to selected noise level
+#' @param data dataframe
+#' @param noise numerical value for the noise level
+#' @param seed global seed for reproducible results
+#' @importFrom stats runif
+noiseImputation <- function(data, noise = 100, seed=42, ...) {
+  set.seed(seed)
+  data[data == 0] <- runif(sum(data == 0), min = 1, max = noise)
+  return(data)
+}
 
 #' @importFrom SAVER saver
 #' @importFrom SummarizedExperiment assay<-
 #' @export
-imputation <- function(exp, normalize = TRUE, useAssay = "Area",
-                       saveAssay = "Imputed", cores = 1) {
+imputation <- function(exp, method = "noise", useAssay = "Area",
+                       saveAssay = "Imputed", setDefault = TRUE, ...) {
+  exp <- filterCells(exp)
   df <- as.data.frame(assay(exp, useAssay))
   df[is.na(df)] <- 0
-  if (!normalize) normalize <- NULL
-  assay(exp, saveAssay) <- saver(df,
-    estimates.only = T, ncores = cores,
-    size.factor = normalize
+
+  new_df <- switch(method,
+    "saver" = saverImputation(df, ...),
+    "noise" = noiseImputation(df, ...)
   )
+  dimnames(new_df) <- dimnames(assay(exp))
+  assay(exp, saveAssay) <- new_df
+  if (setDefault) exp <- setDefaultAssay(exp, saveAssay)
   exp
+
 }
+
+#' @title Fragment Filter
+#' @export
+fragmentFilter <- function(exp, assay = 1, method = "pearson", corr = 0.99){
+  corrs <- cor(t(assay(exp, assay)), method = method)
+  max_corr <- vapply(1:nrow(corrs), function(i) max(corrs[i, -i]), double(1))
+  exp[max_corr < corr, ]
+}
+
+#' @title Feature filter
+#' @export
+featureFilter <- function(exp, assay = "Area", nCells = 0, pCells = 0){
+  nFeats <- as.double(apply(assay(exp, assay), 1, function(x) sum(!is.na(x))))
+  pFeats <- nFeats / ncol(exp)
+  exp[nFeats >= nCells & pFeats >= pCells, ]
+}
+
