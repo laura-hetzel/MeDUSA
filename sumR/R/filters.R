@@ -157,7 +157,7 @@ setDefaultAssay <- function(exp, default){
   exp
 }
 
-saverImputation <- function(df, cores = 1, normalize = TRUE){
+saverImputation <- function(df, cores = 1, normalize = TRUE, ...){
   if (!normalize) normalize <- NULL
   suppressMessages(suppressWarnings(
     saver(df, estimates.only = T, ncores = cores, size.factor = normalize
@@ -175,7 +175,7 @@ setDefaultPhenotype <- function(exp, default){
 #' @param noise numerical value for the noise level
 #' @param seed global seed for reproducible results
 #' @importFrom stats runif
-noiseImputation <- function(data, noise = 100, seed=42) {
+noiseImputation <- function(data, noise = 100, seed=42, ...) {
   set.seed(seed)
   data[data == 0] <- runif(sum(data == 0), min = 1, max = noise)
   return(data)

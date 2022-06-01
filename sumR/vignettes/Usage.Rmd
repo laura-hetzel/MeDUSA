@@ -11,61 +11,85 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.width=7, 
-  fig.height=4,
+  fig.width = 7, 
+  fig.height = 4,
   eval = T
 )
 
 ```
 
-_This package is under heavy development and therefore is subject to change._
+*This package is under heavy development and therefore is subject to change.*
 
 ## Introduction in sumR
-`sumR` (**S**ingle cell **U**ntargeted **M**etabolomics in **R**) is an R package designed for the analysis of single cell untargeted metabolomics. Due to their small volume and other challenges, conventional LC-MS strategies aren't suitable. This document functions as a showcase of a pipeline in `sumR`.   
 
-## Preprocessing
+![](images/sumr.png)
+
+`sumR` (**s**ingle cell **u**ntargeted **m**etabolomics in **R**) is an R package designed for the analysis of single cell untargeted metabolomics. Due to their small volume and other challenges, conventional LC-MS strategies aren't suitable. This document functions as a showcase of a pipeline in `sumR`.
+
+## Pre-processing
+
+sumR starts by pre-processing the raw data to features using peak picking and alignment stages. While a peak is defined as a m/z -- intensity combination, features are defined as peaks that have been aligned across samples. This allows us to compare samples, filter possible contaminants and perform statistical modelling. Consequently, features are defined using a min -- max m/z range across samples. Be aware that due to the acquisition method, sumR does not consider retention time of samples.
+
+To start a sumR pipeline, we load the package.
 
 ```{r setupEcho, echo = T, eval = F}
 library(sumR)
 ```
 
-```{r setup, echo = F}
+```{r setup, echo = F, include=FALSE}
 suppressWarnings(suppressPackageStartupMessages(library(sumR)))
 ```
 
-## Defining file location
-First we load up some data. Each of the files in this folder is a single cell or a blank sample. 
-```{r files, eval = F}
+Next, we set the directory where our data is located. The path to the directory needs to be the full path, which can be assured with the `file.path()` function. In case of .mzML files in this directory, we can get the path to those files with the `list.files()` function.
+
+```{r files}
 dir <- file.path(r"(F:\stem_cell_blank_cell_samples)")
+files <- list.files(path = dir, pattern = ".mzML$", full.names = TRUE)
 ```
 
-## Converting vendor format
-To convert your vendor to mzML, we can use the `rawToMzml` function. 
+### Converting vendor format (optional)
+
+For sumR to analyze data, the data must be in the `.mzML` format. In case you have vendor-format files, you can use the `rawToMzml` function to convert them to mzML. This requires Proteowizard to be installed on your system, which you can find [here](https://proteowizard.sourceforge.io/).
+
+the rawToMzml function requires an input directory (like we defined above) and an output folder to store the mzML files. It is recommended to use an empty or non-existing folder to ensure the output folder only contains mzML files. The function returns the file paths of the newly created mzML files.
 
 ```{r eval = F}
-files <- rawToMzml(dir, output = file.path(getwd(), "test2"), rt = c(60, 420))
+files <- rawToMzml(dir, output = file.path(getwd(), "test2"))
 ```
 
-## Defining Metadata
+### Defining Metadata
 
-```{r metadata}
+To make use of the full pipeline, it is mandatory to supply a `data.frame` of metadata. To ensure proper integration, ensure that the row names are equal to the base name of the file, without file extension. E.g. a file called `sample001.mzML` would translate into `sample001` as a proper row name. This name is matched to the data file names to match data with the supplied metadata.
+
+Columns may contain metadata about each of the samples/cells. Here we prepared metadata with two additional columns: `Sample.number` and `phenotype`. The former contains the number of each cell, while the latter contains the cell differentiation status. We will use this phenotype during modelling after post-processing. The table below shows the contents of the metadata.
+
+```{r metadata, eval = T}
 df <- read.csv("metadata.csv", row.names = 1)
 ```
 
-## Spectrum-based Peak picking
-Cells measured using DI-MS can be analyzed using the spectrum-based peak picking. This approach uses Wavelet peak picking as described by [P Du, et al. 2006](https://doi.org/10.1093/bioinformatics/btl355). Here, we'll start with processing scans with negative polarity, as given by the "-" value for the parameter `polarity`. 
-
-```{r peakPicking}
-peaks <- peakPicking(df$File, massDefect = FALSE,
-                     massWindow = 200, polarity = "-")
+```{r metadata2, eval = T, echo = F}
+knitr::kable(head(df), caption = "Start of the metadata file") 
+knitr::kable(tail(df), caption = "End of the metadata file")
 ```
 
-### Inspecting results
-We can inspect the results by using three different type of plots. 
+### Spectrum-based Peak picking
 
-* `spectrumPlot()` plots the spectrum given a file number and scan number. It will show identified signals as dots, the smallest wavelet and the estimated noise level. 
-* `noisePlot()` plots the estimated noise levels across all scans of a given file. Since the noise level is estimated based on intensity levels, the plot also serves as an indicator for the overall intensity drift
-* `cellPlot()` plots the identified signals as dots over all scans with the SNR as scale for the size of the dots. This plot gives an indication for all signals identified in a file. This is combined with a density plot to indicate the amount of peaks found in a mass-scan range.
+Cells measured using DI-MS can be analyzed using spectrum-based peak picking. This approach uses Wavelet peak picking as described by [P Du, et al. 2006](https://doi.org/10.1093/bioinformatics/btl355). Here, we'll start with processing scans with negative polarity, as given by the "-" value for the parameter `polarity`. the `peackPicking()` function requires a vector of file locations and offers some optional parameters. If `massDefect` is set to `TRUE`, each found m/z is checked for potential salt clusters and other non-biological compounds. `massWindow` acts as a filter for scan windows in e.g. fractional scans. The value set here is the maximum m/z window taken for a scan.
+
+`peakPicking()` returns a list of dataframes with found peaks in each given file.
+
+```{r peakPicking}
+peaks <- peakPicking(files, massDefect = FALSE, massWindow = 200, polarity = "-")
+```
+
+#### Inspecting results
+
+We can inspect the peaks by using three different type of plots.
+
+-   `spectrumPlot()` plots the spectrum given a file number and scan number. It will show identified signals as dots, the smallest wavelet and the estimated noise level.
+-   `noisePlot()` plots the estimated noise levels across all scans of a given file. Since the noise level is estimated based on intensity levels, the plot also serves as an indicator for the overall intensity drift
+-   `cellPlot()` plots the identified signals as dots over all scans with the SNR as scale for the size of the dots. This plot gives an indication for all signals identified in a file. This is combined with a density plot to indicate the amount of peaks found in a mass-scan range.
+
 ```{r plots}
 spectrumPlot(peaks, file = 14, scan = 2)
 noisePlot(peaks, file = 14)
@@ -73,7 +97,9 @@ cellPlot(peaks, file = 14)
 ```
 
 ### Filtering Signals
-Using the plots for inspection, we can filter the peaks based on minimum SNR and/or intensity values. Here we pick an SNR of 1 and minimum intensity of 1.000. 
+
+Using the plots for inspection, we can filter the peaks based on minimum SNR and/or intensity values. Here we pick an SNR of 1 and minimum intensity of 1.000.
+
 ```{r peakPlot}
 peakFilter(peaks, SNR = 0.3, intensity = 1e3) %>%
   spectrumPlot(file = 14, scan = 2)
@@ -81,41 +107,54 @@ peakFilter(peaks, SNR = 0.3, intensity = 1e3) %>%
 peakFilter(peaks, SNR = 0.3, intensity = 1e3) %>%
   cellPlot(file = 14)
 ```
+
 Next, we use these settings to filter our peaks. This function returns a similar list-object as `peakPicking()`, thus we override the previous variable `peaks`.
+
 ```{r peakFilter}
 peaks <- peakFilter(peaks, SNR = 0.3, intensity = 1e3)
 ```
 
-## Spectra Alignment
-After we've detected our peaks, we need to find which peaks should be considered equal across spectra within a cell. We use the function `spectraBinning()` to bin masses with a given `tolerance`. Since we're using direct injection, we cannot use chromatography to identify compounds. However, we do expect to find compounds multiple times across scans. This is adjusted using the `npeaks` parameter. Lastly, we can either use "sum" or "mean" for the intensities in the same bin, given by the parameter `method`.   
+### Spectra Alignment
+
+After we've detected our peaks, we need to find which peaks should be considered equal across spectra within a cell. We use the function `spectraBinning()` to bin masses with a given `tolerance`. Since we're using direct injection, we cannot use chromatography to identify compounds. However, we do expect to find compounds multiple times across scans. This is adjusted using the `npeaks` parameter. Lastly, we can either use "sum" or "mean" for the intensities in the same bin, given by the parameter `method`.
+
 ```{r spectraBinning}
 spectra <- spectraBinning(peaks, npeaks = 10, method = "sum", tolerance = 1e-5)
 ```
 
-### Inspecting Spectra Shifts
+#### Inspecting Spectra Shifts
+
 To inspect if the binning did not over-correct, we can use the function `spectraShiftPlot()`. It shows the difference between the original mass and the mass shift after alignment. Changing the parameters `npeaks` and `tolerance` of the `spectraBinning()` function will affect the mass shift.
+
 ```{r spectraShift}
 spectraShiftPlot(spectra, file = 14)
 ```
 
-## Cell Alignment
-After the spectra within cells are aligned, we repeat the alignment between cells. Our arguments are similar to `spectraBinning()`, however, here a `SummarizedExperiment` object is constructed and will be used throughout the pipeline. You can read more about interacting with a SummarizedExperiment object [here](https://bioconductor.org/help/course-materials/2019/BSS2019/04_Practical_CoreApproachesInBioconductor.html).  
+### Cell Alignment
+
+After the spectra within cells are aligned, we repeat the alignment between cells. Our arguments are similar to `spectraBinning()`, however, here a `SummarizedExperiment` object is constructed and will be used throughout the pipeline. You can read more about interacting with a SummarizedExperiment object [here](https://bioconductor.org/help/course-materials/2019/BSS2019/04_Practical_CoreApproachesInBioconductor.html).
+
 ```{r cellBinning}
 exp <- cellBinning(spectra, cellData = df, phenotype = "phenotype", tolerance = 1e-5)
 exp
 ```
 
-### Inspecting Cell Shifts
-Similarly to spectra, we can inspect the mass shift between cells. 
+#### Inspecting Cell Shifts
+
+Similarly to spectra, we can inspect the mass shift between cells.
+
 ```{r cellShift}
 plotCellShift(exp)
 ```
 
 ## Post-processing
-Now that we've extracted peaks with potential compounds, we need to post-process the data in order to remove any contaminants, isotopes, adducts, and/or other artifacts. Due to the low cell volume, we are restricted from using pooled QCs. However, we can use Blanks and/or Lab QCs.
+
+Now that we've extracted features from our data, we need to post-process the data in order to remove any contaminants, isotopes, adducts, and/or other artifacts. Due to the low cell volume, we are restricted from using pooled QCs. However, we can use Blanks and/or Lab QCs.
 
 ### Blank substracton
+
 When Blank samples are measured, these can be used to filter any features. `blankThresh` indicates the fold-change needed to exceed for a sample to be kept. By default, samples must have an intensity of at least 5x higher than the blank samples in order to be kept. This ensures that noise peaks are removed. The `sampleThresh` parameter determines the number of samples that can be below the blank threshold in order to be retained. With the default, any number of samples may be below the blank threshold, thus no features will be removed. Setting the parameter `filter` to TRUE will remove any features that have `sampleThresh` samples below the `blankThresh` fold change. Setting this parameter will not remove any features. To remove the blank samples, set the `removeBlanks` parameter to TRUE (the default)
+
 ```{r Blanks}
 exp <- blankSubstraction(exp, blankThresh = 5, sampleThresh = Inf,
                               filter = TRUE, removeBlanks = TRUE)
@@ -123,37 +162,47 @@ exp
 ```
 
 ### Feature filter
+
 While drop-out is a real phenomenon, one strategy may be to remove features that occur in only a few cells. `featureFilter()` allows for filtering features based on non-`NA` values. The parameter `nCells` can be set to an integer determining the minimum number of non-`NA` values for each feature. Similarly, the parameter `pCells` does the same, but based on a percentage (as a ratio). Here we only keep features that occur in at least 1% of the cells.
+
 ```{r featureFilter}
 exp <- featureFilter(exp, pCells = 0.01)
 exp
 ```
 
 ### Isotope identification
-When interested in novel compounds, isotopes and adducts are a source of unwanted features. The function `isotopeTagging()` can detect isotopes using known ratios of mass and intensities of atoms. Here we remove them from the object by setting `filter = TRUE`. 
+
+When interested in novel compounds, isotopes and adducts are a source of unwanted features. The function `isotopeTagging()` can detect isotopes using known ratios of mass and intensities of atoms. Here we remove them from the object by setting `filter = TRUE`.
+
 ```{r isotopes}
 exp <- isotopeTagging(exp, filter = TRUE)
 exp
 ```
 
 ### Missing value imputation
-Due to the dropout effect, single cell datasets will contain over 50% of NA values which will need to be imputed for statistical analysis. `sumR` currently has two methods for imputation, determined by the parameter `method`. This parameter can either be set to `"noise"` or `"saver"`. The former is a noise-based random imputation method. It will generate a random number between 1 and the value of `noise`, which defaults to 100. The saver method is model-based that assumes a poisson distribution and will generate values that are similar to highly correlated cells.   
+
+Due to the dropout effect, single cell datasets will contain over 50% of NA values which will need to be imputed for statistical analysis. `sumR` currently has two methods for imputation, determined by the parameter `method`. This parameter can either be set to `"noise"` or `"saver"`. The former is a noise-based random imputation method. It will generate a random number between 1 and the value of `noise`, which defaults to 100. The saver method is model-based that assumes a poisson distribution and will generate values that are similar to highly correlated cells.
+
 ```{r imoputation}
 exp <- imputation(exp, method = "noise", noise = 100, seed = 42)
 exp
 ```
 
 ### Fragment filtering
-Another source of unwanted features is fragmented features. These are features that show highly correlated intensity values and are generally removed during post-processing. Here we use the function `fragmentFilter()` to remove highly correlated features. The threshold of correlation can be determined by the parameter `corr`, which is set here at 99% using a fraction. 
+
+Another source of unwanted features is fragmented features. These are features that show highly correlated intensity values and are generally removed during post-processing. Here we use the function `fragmentFilter()` to remove highly correlated features. The threshold of correlation can be determined by the parameter `corr`, which is set here at 99.9% using a fraction. This is higher as common correlation thresholds due to the large number of imputated values, which results in highly correlated features.
+
 ```{r fragments}
-exp <- fragmentFilter(exp, corr = 0.995)
+exp <- fragmentFilter(exp, corr = 0.999)
 exp
 ```
 
 ## Processing pipeline
+
 We can combine the process in a pipeline using the 'pipe' notation of the `dplyr` package. Here we are using the same settings as the previous steps except for positive polarity instead of negative polarity.
+
 ```{r pipeline}
-exp2 <- peakPicking(df$File, massDefect = TRUE, massWindow = 200, polarity = "+") %>%
+exp2 <- peakPicking(files, massDefect = FALSE, massWindow = 200, polarity = "+") %>%
   peakFilter(SNR = 1, intensity = 1e3) %>%
   spectraBinning(npeaks = 10, method = "sum", tolerance = 1e-5) %>%
   cellBinning(cellData = df, phenotype = "phenotype", tolerance = 1e-5) %>%
@@ -161,22 +210,28 @@ exp2 <- peakPicking(df$File, massDefect = TRUE, massWindow = 200, polarity = "+"
   featureFilter(pCells = 0.01) %>%
   isotopeTagging(filter = TRUE) %>%
   imputation(method = "noise") %>%
-  fragmentFilter(corr = 0.995)
+  fragmentFilter(corr = 0.999)
 exp2
 ```
 
 ## Modelling & Statistics
-`sumR` contains supports building models to determine phenotypes that might be discriminatory.The package includes several univariate tests, as well as multivariate tests using models in the excellent `caret` package. Finally we can inspect the results using PCA, UMAP and other plots. 
+
+`sumR` contains supports building models to determine phenotypes that might be discriminatory.The package includes several univariate tests, as well as multivariate tests using models in the excellent `caret` package. Finally we can inspect the results using PCA, UMAP and other plots.
 
 ### Combining experiments
-Before we start modelling, we combine the features found in both polarities with the `combineExperiments()` function. This function takes in any number of `SummarizedExperiment` objects with the assumption of equal 'colData'. The function combines these objects row-wise, essentially adding features together and returns a new SummarizedExperiment object.   
+
+Before we start modelling, we combine the features found in both polarities with the `combineExperiments()` function. This function takes in any number of `SummarizedExperiment` objects with the assumption of equal 'colData'. The function combines these objects row-wise, essentially adding features together and returns a new SummarizedExperiment object.
+
 ```{r comb}
 expModel <- combineExperiments(exp, exp2)
 expModel
 ```
 
+
 ### Univariate statistical tests
-sumR supports the shapiro-wilk test for normality, levene test for difference in variance between groups, and welch T-test for significant difference testing between groups. These tests will test the features (row-wise), not samples. Finally, while not a statistical test, the fold change between the given phenotype can be calculated.
+
+sumR supports the shapiro-wilk test for normality, levene test for difference in variance between groups, and welch T-test for significant difference testing between groups. These tests will test the features (row-wise), not samples. Finally, while not a statistical test, the fold change between the given phenotype can be calculated. 
+
 ```{r statTests}
 expModel <- expModel %>%
   shapiroTest() %>%
@@ -188,15 +243,19 @@ expModel
 ```
 
 ### Filter non-variable features
-Due to the drop-out effect, a large amount of values need to be imputed. Generally, this causes these features to have a low variance and consequently a low impact on models. With the function `keepVariableFeatures()` we can subset the found features based on their variance. Using the `top` parameter, we can select the top __N__ features with the most variance. Here we select the 50 features with most variance. Using the `plotFeatureSds()` function we can inspect the standard deviation of each feature in a barplot.
+
+Due to the drop-out effect, a large amount of values need to be imputed. Generally, this causes these features to have a low variance and consequently a low impact on models. With the function `keepVariableFeatures()` we can subset the found features based on their variance. Using the `top` parameter, we can select the top **N** features with the most variance. Here we select the 200 features with most variance. Using the `plotFeatureSds()` function we can inspect the standard deviation of each feature in a barplot.
+
 ```{r variableFeatures}
-expModel <- keepVariableFeatures(expModel, top = 100)
+expModel <- keepVariableFeatures(expModel, top = 50)
 plotFeatureSds(expModel)
 ```
 
 
 ### Data inspection using PCA & UMAP
-The results can be inspected using several plot types. `samplePCA()` is a function that plots a Principle Components Analysis (PCA) on the samples. In contrast, the `compoundPCA()` function plots a PCA for the compounds instead. Next, the `screePCA()` function plots a barplot with the variance explained for each Principle Component (PC). Finally, we can use the `plotUMAP()` function to plot a UMAP after doing a PCA first. This function takes in the number of PCs to construct the UMAP. 
+
+The results can be inspected using several plot types. `samplePCA()` is a function that plots a Principle Components Analysis (PCA) on the samples. In contrast, the `compoundPCA()` function plots a PCA for the compounds instead. Next, the `screePCA()` function plots a barplot with the variance explained for each Principle Component (PC). Finally, we can use the `plotUMAP()` function to plot a UMAP after doing a PCA first. This function takes in the number of PCs to construct the UMAP.
+
 ```{r pcaPlots}
 samplePCA(expModel)
 compoundPCA(expModel)
@@ -205,14 +264,14 @@ plotUMAP(expModel, components = 20)
 ```
 
 ### Model generation
+
 As stated before, sumR utilizes the [caret package](https://topepo.github.io/caret/) to generate models. The 'Available Models' section in the caret documentation indicates which models are available (you may need to install dependencies for some models). The `generateModel()` function has the following workflow:
 
-* Data partitioning in a train/test set
-* Set the train control with scaling and centering
-* Perform training with cross-validation
-* Predict on the partitioned test set  
-* Produce a confusion matrix and determine important variables
-
+-   Data partitioning in a train/test set
+-   Set the train control with scaling and centering
+-   Perform training with cross-validation
+-   Predict on the partitioned test set\
+-   Produce a confusion matrix and determine important variables
 
 ```{r models}
 expModel <- expModel %>%
@@ -223,20 +282,25 @@ expModel <- expModel %>%
 Models are stored in the metadata of the SummarizedExperiment and can be accessed by either the `model()` function or with `metadata(exp)$model`.
 
 ### Model Assessment
-Using the `model()` function, information about a given model can be accessed. It will return a list with the following entries: `train`, `test`, `model`, `prediction`, `varImp`, and `confMatrix`. These can be used to assess the quality of the model for the given phenotype. Here we are printing the confusion matrix. 
+
+Using the `model()` function, information about a given model can be accessed. It will return a list with the following entries: `train`, `test`, `model`, `prediction`, `varImp`, and `confMatrix`. These can be used to assess the quality of the model for the given phenotype. Here we are printing the confusion matrix.
+
 ```{r assessment}
 print(model(expModel, "rf")$confMatrix)
 print(model(expModel, "glmnet")$confMatrix)
 ```
 
 ### Cross validation
+
 We can also inspect the performance of each model by plotting the accuracy during cross validation. This is done by the `plotCrossValidation()` function with a given model name.
+
 ```{r CV}
 plotCrossValidation(expModel, "rf")
 plotCrossValidation(expModel, "glmnet") 
 ```
 
 # SessionInfo
+
 ```{r sessionInfo}
 sessionInfo()
 ```

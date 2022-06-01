@@ -4,7 +4,7 @@
 \alias{noiseImputation}
 \title{data imputation}
 \usage{
-noiseImputation(data, noise = 100, seed = 42)
+noiseImputation(data, noise = 100, seed = 42, ...)
 }
 \arguments{
 \item{data}{dataframe}
