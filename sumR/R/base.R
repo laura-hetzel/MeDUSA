@@ -27,7 +27,8 @@ read_msdata <- function(path = "data") {
 rawToMzml <- function(folder, output = getwd(), rt = NULL, options = ""){
 
   options <- paste(options, collapse = " ")
-  files <- list.files(file.path(folder), full.names = T, pattern = "^(?!.*mzML).*")
+  files <- list.files(file.path(folder), full.names = T)
+  files <- files[grep(".mzML$", files, invert = T)]
   output <- file.path(output)
   if (!dir.exists(output)) dir.create(output)
   key <- "Directory\\shell\\Open with MSConvertGUI\\command"
@@ -42,7 +43,7 @@ rawToMzml <- function(folder, output = getwd(), rt = NULL, options = ""){
                        file.path(msconvert), file, rt, options, output)
     system(command, show.output.on.console = F)
   })
-  list.files(folder, full.names = T, pattern = ".mzML")
+  list.files(file.path(output), full.names = T, pattern = ".mzML")
 }
 
 
