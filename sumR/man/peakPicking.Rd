@@ -10,6 +10,7 @@ peakPicking(
   polarity = NULL,
   combineSpectra = FALSE,
   massWindow = Inf,
+  noiseWindow = 0.1,
   cores = detectCores(logical = F)
 )
 }

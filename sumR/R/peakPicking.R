@@ -1,12 +1,13 @@
 #' @title Pick peaks in a spectrum
 #' @importFrom MassSpecWavelet getLocalMaximumCWT getRidge
-pickSpectra <- function(x, SNR = 0, maxScale = 32) {
+pickSpectra <- function(x, SNR = 0, maxScale = 32, noiseWindow = 0.1) {
   ms <- as.data.frame(x)
   colnames(ms) <- c("mz", "i")
+  winSize.noise <- (max(ms$mz) - min(ms$mz)) * noiseWindow
   wCoefs <- cbind("0" = ms$i, cwt_new(ms$i, max_scale = maxScale))
   localMax <- MassSpecWavelet::getLocalMaximumCWT(wCoefs)
   ridgeList <- MassSpecWavelet::getRidge(localMax)
-  majorPeakInfo <- identifyPeaks(ms$i, ridgeList, wCoefs,
+  majorPeakInfo <- identifyPeaks(ms$i, ridgeList, wCoefs, winSize.noise = winSize.noise,
                                  SNR.Th = SNR, nearbyPeak = TRUE
   )
 
@@ -90,8 +91,7 @@ formatScans <- function(f, massWindow, polarity, combineSpectra){
 #' @importFrom tools file_path_sans_ext
 #' @export
 peakPicking <- function(files, massDefect = TRUE, polarity = NULL,
-                        combineSpectra = FALSE,
-                        massWindow = Inf,
+                        combineSpectra = FALSE, massWindow = Inf, noiseWindow = 0.1,
                         cores = detectCores(logical = F)) {
   cl <- makeCluster(cores)
   clusterExport(cl, varlist = names(sys.frame()))
@@ -100,7 +100,7 @@ peakPicking <- function(files, massDefect = TRUE, polarity = NULL,
     x <- sumR:::formatScans(f, massWindow, polarity, combineSpectra)
 
     l <- lapply(x, function(spectrum) {
-      tryCatch(suppressWarnings(pickSpectra(spectrum)),
+      tryCatch(suppressWarnings(pickSpectra(spectrum, noiseWindow = noiseWindow)),
                error = function(err) NULL)
     })
 
@@ -129,7 +129,7 @@ peakPicking <- function(files, massDefect = TRUE, polarity = NULL,
 
 identifyPeaks <- function(ms, ridgeList, wCoefs, scales = as.numeric(colnames(wCoefs)),
                           SNR.Th = 3, peakScaleRange = 5, ridgeLength = 32, nearbyPeak = FALSE,
-                          nearbyWinSize = 100, winSize.noise = 500, SNR.method = "quantile",
+                          nearbyWinSize = 100, winSize.noise = 50, SNR.method = "quantile",
                           minNoiseLevel = 0.001) {
   if (ridgeLength > max(scales)) ridgeLength <- max(scales)
   peakScaleRange <- scales[scales >= peakScaleRange]
