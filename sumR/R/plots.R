@@ -35,6 +35,7 @@ volcanoPlot <- function(exp, test, title = "") {
 #' @param components
 #' @importFrom umap umap
 #' @importFrom stats prcomp
+#' @importFrom ggrepel geom_text_repel
 #' @export
 plotUMAP <- function(exp, assay = 1, components = 20){
 
@@ -49,7 +50,7 @@ plotUMAP <- function(exp, assay = 1, components = 20){
                       label = rownames(colData(exp)),
                       color = .data[[metadata(exp)$phenotype]])) +
     geom_point() +
-    ggrepel::geom_text_repel() +
+    geom_text_repel() +
     ggtitle("Umap") +
     theme_bw()
   )

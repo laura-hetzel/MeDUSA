@@ -159,9 +159,15 @@ setDefaultAssay <- function(exp, default){
 
 saverImputation <- function(df, cores = 1, normalize = TRUE, ...){
   if (!normalize) normalize <- NULL
-  suppressMessages(suppressWarnings(
-    saver(df, estimates.only = T, ncores = cores, size.factor = normalize
-  )))
+  if (!"SAVER" %in% installed.packages()) {
+    warning("Please install the package 'SAVER' before using this imputation")
+  } else {
+    df <- suppressMessages(suppressWarnings(
+      SAVER::saver(df, estimates.only = T, ncores = cores, size.factor = normalize
+      )))
+  }
+  df
+
 }
 
 setDefaultPhenotype <- function(exp, default){
@@ -181,7 +187,7 @@ noiseImputation <- function(data, noise = 100, seed=42, ...) {
   return(data)
 }
 
-#' @importFrom SAVER saver
+#' @title Impute missing values
 #' @importFrom SummarizedExperiment assay<-
 #' @export
 imputation <- function(exp, method = "noise", useAssay = "Area",

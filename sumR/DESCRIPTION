@@ -1,6 +1,6 @@
 Type: Package
 Package: sumR
-Title: Package for analysis of DI-MS data.
+Title: Package for analysis of single cell DI-MS data
 Version: 0.3.0
 Authors@R: c(
     person("Alida", "Kindt", , "a.s.d.kindt@lacdr.leidenuniv.nl", role = c("aut", "cre")),
@@ -28,19 +28,17 @@ Imports:
     dunn.test,
     factoextra,
     FactoMineR,
-    GenomeInfoDbData,
     GGally,
     ggplot2,
     ggpubr,
+    ggrepel,
     glmnet,
     graphics,
-    IMIFA,
-    lattice,
-    logging,
     MassSpecWavelet,
     miscTools,
     mixOmics,
     mzR,
+    openxlsx,
     parallel,
     pbapply,
     PeriodicTable,
@@ -52,7 +50,6 @@ Imports:
     Rdisop,
     Rdpack,
     rstatix,
-    sqldf,
     stringr,
     superheat,
     tibble,

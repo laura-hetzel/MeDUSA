@@ -97,7 +97,7 @@ peakPicking <- function(files, massDefect = TRUE, polarity = NULL,
   clusterExport(cl, varlist = names(sys.frame()))
   samps <- tools::file_path_sans_ext(basename(files))
   result <- pbapply::pblapply(files, cl = cl, function(f) {
-    x <- sumR:::formatScans(f, massWindow, polarity, combineSpectra)
+    x <- formatScans(f, massWindow, polarity, combineSpectra)
 
     l <- lapply(x, function(spectrum) {
       tryCatch(suppressWarnings(pickSpectra(spectrum, noiseWindow = noiseWindow)),
@@ -329,7 +329,7 @@ spectraBinning <- function(peakList, fraction = 0, npeaks = 0, method = "sum",
                        meanSNR = 0, tolerance = 0.002) {
   pbapply::pblapply(peakList, function(spectra) {
     if (nrow(spectra) == 0) return(NULL)
-    df_list <- sumR:::doBinning(spectra, split = "scan",
+    df_list <- doBinning(spectra, split = "scan",
                                 tolerance = tolerance)
 
     df <- do.call(rbind, df_list)

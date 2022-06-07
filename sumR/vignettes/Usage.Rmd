@@ -1,7 +1,6 @@
 ---
 title: "Usage"
 output: rmarkdown::html_vignette
-bibliography: references.bib
 vignette: >
   %\VignetteIndexEntry{Usage}
   %\VignetteEngine{knitr::rmarkdown}
@@ -9,6 +8,7 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+# bibliography: references.bib
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",

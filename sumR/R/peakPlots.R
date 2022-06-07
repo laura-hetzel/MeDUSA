@@ -2,13 +2,11 @@
 #' @export
 spectrumPlot <- function(peaks, file = 1, scan = 1){
   file <- attr(peaks, "Files")[file]
-  df <- as.data.frame(sumR:::formatScans(file,
-                                         attr(peaks, "massWindow"),
-                                         attr(peaks, "polarity"),
-                                         attr(peaks, "combineSpectra"))[[scan]])
+  df <- as.data.frame(formatScans(file, attr(peaks, "massWindow"),
+                       attr(peaks, "polarity"), attr(peaks, "combineSpectra"))[[scan]])
 
   colnames(df) <- c("mz", "i")
-  wCoefs <- cbind("0" = df$i, sumR:::cwt_new(df$i))
+  wCoefs <- cbind("0" = df$i, cwt_new(df$i))
 
   stacked <- stack(wCoefs)
   stacked$mz <- df[stacked$row, "mz"]
