@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
   comment = "#>",
   fig.width = 7, 
   fig.height = 4,
-  eval = T
+  eval = F
 )
 
 ```
@@ -120,7 +120,7 @@ peaks <- peakFilter(peaks, SNR = 0.5, intensity = 1e3)
 After we've detected our peaks, we need to find which peaks should be considered equal across spectra within a cell. We use the function `spectraBinning()` to bin masses with a given `tolerance`. Since we're using direct injection, we cannot use chromatography to identify compounds. However, we do expect to find compounds multiple times across scans. This is adjusted using the `npeaks` parameter. Lastly, we can either use "sum" or "mean" for the intensities in the same bin, given by the parameter `method`.
 
 ```{r spectraBinning}
-spectra <- spectraBinning(peaks, npeaks = 5, method = "sum", tolerance = 1e-3)
+spectra <- spectraBinning(peaks, npeaks = 5, method = "sum", tolerance = 0.002)
 ```
 
 #### Inspecting Spectra Shifts
@@ -136,7 +136,7 @@ spectraShiftPlot(spectra, file = 14)
 After the spectra within cells are aligned, we repeat the alignment between cells. Our arguments are similar to `spectraBinning()`, however, here a `SummarizedExperiment` object is constructed and will be used throughout the pipeline. You can read more about interacting with a SummarizedExperiment object [here](https://bioconductor.org/help/course-materials/2019/BSS2019/04_Practical_CoreApproachesInBioconductor.html).
 
 ```{r cellBinning}
-exp <- cellBinning(spectra, cellData = df, phenotype = "phenotype", tolerance = 1e-5)
+exp <- cellBinning(spectra, cellData = df, phenotype = "phenotype", tolerance = 0.002)
 exp
 ```
 
@@ -145,7 +145,7 @@ exp
 Similarly to spectra, we can inspect the mass shift between cells.
 
 ```{r cellShift}
-plotCellShift(exp)
+cellShiftPlot(exp)
 ```
 
 ## Post-processing
@@ -185,7 +185,7 @@ exp
 Due to the dropout effect, single cell datasets will contain over 50% of NA values which will need to be imputed for statistical analysis. `sumR` currently has two methods for imputation, determined by the parameter `method`. This parameter can either be set to `"noise"` or `"saver"`. The former is a noise-based random imputation method. It will generate a random number between 1 and the value of `noise`, which defaults to 100. The saver method is model-based that assumes a poisson distribution and will generate values that are similar to highly correlated cells.
 
 ```{r imoputation}
-exp <- imputation(exp, method = "noise", noise = 100, seed = 42)
+exp <- imputation(exp, method = "noise", noise = 1000, seed = 42)
 exp
 ```
 
@@ -194,8 +194,8 @@ exp
 Another source of unwanted features is fragmented features. These are features that show highly correlated intensity values and are generally removed during post-processing. Here we use the function `fragmentFilter()` to remove highly correlated features. The threshold of correlation can be determined by the parameter `corr`, which is set here at 99.9% using a fraction. This is higher as common correlation thresholds due to the large number of imputated values, which results in highly correlated features.
 
 ```{r fragments}
-exp <- fragmentFilter(exp, corr = 0.999)
-exp
+#exp <- fragmentFilter(exp, corr = 0.999)
+#exp
 ```
 
 ## Processing pipeline
@@ -205,13 +205,13 @@ We can combine the process in a pipeline using the 'pipe' notation of the `dplyr
 ```{r pipeline}
 exp2 <- peakPicking(files, massDefect = FALSE, massWindow = 200, polarity = "+") %>%
   peakFilter(SNR = 0.5, intensity = 1e3) %>%
-  spectraBinning(npeaks = 10, method = "sum", tolerance = 1e-5) %>%
-  cellBinning(cellData = df, phenotype = "phenotype", tolerance = 1e-5) %>%
+  spectraBinning(npeaks = 5, method = "sum", tolerance = 0.002) %>%
+  cellBinning(cellData = df, phenotype = "phenotype", tolerance = 0.002) %>%
   blankSubstraction(sampleThresh = 1) %>%
-  #featureFilter(pCells = 0.01) %>%
-  isotopeTagging(filter = TRUE) %>%
+  featureFilter(pCells = 0.01) %>%
+  #isotopeTagging(filter = TRUE) %>%
   imputation(method = "noise") #%>%
-  #fragmentFilter(corr = 0.999)
+ # fragmentFilter(corr = 0.999)
 exp2
 ```
 

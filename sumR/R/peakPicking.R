@@ -402,12 +402,12 @@ cellBinning <- function(spectraList, cellData = NULL, phenotype = NULL,
   m <- cbind(m, matrix(NA, nrow = nrow(m), ncol = length(missing),dimnames = list(rownames(m), missing)))
   snr <- cbind(snr, matrix(NA, nrow = nrow(snr), ncol = length(missing), dimnames = list(rownames(snr), missing)))
 
-
+  mzs <- as.double(names(bins))
   se <- SummarizedExperiment(
     assays = list(Area = m, SNR = snr),
-    rowData = DataFrame(mz = as.double(names(bins)),
-                         mzmin = sapply(bins, function(x) min(x$mzdiff)),
-                         mzmax = sapply(bins, function(x) max(x$mzdiff))
+    rowData = DataFrame(mz = mzs,
+                         mzmin = mzs + sapply(bins, function(x) min(x$mzdiff)),
+                         mzmax = mzs + sapply(bins, function(x) max(x$mzdiff))
     ),
     metadata = list(phenotype = phenotype)
   )

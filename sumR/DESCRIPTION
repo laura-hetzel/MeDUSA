@@ -28,6 +28,7 @@ Imports:
     dunn.test,
     factoextra,
     FactoMineR,
+    GenomeInfoDbData,
     GGally,
     ggplot2,
     ggpubr,
@@ -51,7 +52,6 @@ Imports:
     Rdisop,
     Rdpack,
     rstatix,
-    SAVER,
     sqldf,
     stringr,
     superheat,
@@ -63,7 +63,8 @@ Imports:
 Suggests: 
     knitr,
     rmarkdown,
-    testthat
+    testthat,
+    SAVER
 VignetteBuilder: 
     knitr
 RdMacros: 
