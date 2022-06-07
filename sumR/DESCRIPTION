@@ -57,6 +57,7 @@ Imports:
     superheat,
     tibble,
     tidyr,
+    umap,
     usedist,
     utils,
     viridis
