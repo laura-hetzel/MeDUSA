@@ -67,7 +67,8 @@ plot_mz_MD <- function(MD_df, MD_df_filtered) {
 #' @importFrom stats na.omit
 #' @importFrom utils read.delim
 #' @export
-MassDefectFilter <- function(dataframe, mz_MD_plot = TRUE) {
+MassDefectFilter <- function(cells, mz_MD_plot = TRUE) {
+  dataframe <- rowData(cells)
   # calculate the MD for all compounds
   md_df_exp <- mass_defect_calculation(dataframe)
   # make filtered list experimental data
@@ -78,7 +79,9 @@ MassDefectFilter <- function(dataframe, mz_MD_plot = TRUE) {
   if (mz_MD_plot == T) {
     plot_mz_MD(md_df_exp, filtered_df_exp)
   }
-  return(filtered_df_exp)
+  cells <- cells[rownames(filtered_df_exp), ]
+  rowData(cells) <- filtered_df_exp
+  cells
 }
 
 filterMassDefect <- function(df){

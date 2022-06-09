@@ -1,4 +1,7 @@
 #' @title Plot spectrum peaks
+#' @param peaks
+#' @param file
+#' @param scan
 #' @export
 spectrumPlot <- function(peaks, file = 1, scan = 1){
   file <- attr(peaks, "Files")[file]
@@ -27,6 +30,8 @@ spectrumPlot <- function(peaks, file = 1, scan = 1){
 }
 
 #' @title noisePlot
+#' @param peaks
+#' @param file
 #' @export
 noisePlot <- function(peaks, file = 1){
   result <- dplyr::distinct(peaks[[file]][,c("scan", "Noise")])
@@ -37,6 +42,8 @@ noisePlot <- function(peaks, file = 1){
 
 
 #' @title plotCellPeaks
+#' @param peaks
+#' @param file
 #' @export
 cellPlot <- function(peaks, file = 1){
   ggplot(peaks[[file]], aes(x = mz, y = scan, size = SNR)) +
@@ -46,6 +53,8 @@ cellPlot <- function(peaks, file = 1){
 }
 
 #' @title spectraShiftPlot
+#' @param spectraList
+#' @param file
 #' @export
 spectraShiftPlot <- function(spectraList, file = 1){
   ggplot(as.data.frame(spectraList[[file]])) +
@@ -56,6 +65,7 @@ spectraShiftPlot <- function(spectraList, file = 1){
 
 
 #' @title cellShiftPlot
+#' @param exp
 #' @export
 cellShiftPlot <- function(exp) {
   df <- as.data.frame(rowData(exp))
@@ -70,6 +80,10 @@ cellShiftPlot <- function(exp) {
 }
 
 #' @title Plot feature coverage when adding cells
+#' @param cells
+#' @param assay
+#' @param by
+#' @param seed
 #' @export
 featureCovPlot <- function(cells, assay = 1, by = 5, seed = 42){
   set.seed(seed)
@@ -80,11 +94,20 @@ featureCovPlot <- function(cells, assay = 1, by = 5, seed = 42){
     nrow(m) - sum(rowSums(is.na(m)) == ncol(m))
   }, double(1))
   df <- data.frame(Cells = is, Features = feats)
+  loess_fit <- loess(Features ~ Cells, df)
+  df2 <- as.data.frame(predict(loess_fit))
+  df2$Cells <- df$Cells
+  colnames(df2) <- c("Features", "Cells")
+
   ggplot(df, aes(x = Cells, y = Features)) +
-    geom_line()
+    geom_line(aes(colour = "Features")) +
+    geom_line(data = df2, aes(colour = "Trend")) +
+    labs(colour = "Line Type")
 }
 
 #' @title Plot features per cell
+#' @param cells
+#' @param assay
 #' @export
 featureCellPlot <- function(cells, assay = "Area"){
   df <- as.data.frame(stack(colSums(!is.na(assay(cells, assay)))))
@@ -92,4 +115,26 @@ featureCellPlot <- function(cells, assay = "Area"){
   df$Cell <- 1:nrow(df)
   colnames(df)[1] <- "Features"
   ggplot(df, aes(y = Features, x = Cell)) + geom_bar(stat = "identity")
+}
+
+#' @title Plot feature spectra
+#' @param cells
+#' @param feature
+#' @param file
+#' @importFrom plot3D scatter3D
+#' @export
+plotRawFeature <- function(cells, feature, file){
+  library(plot3D)
+  xmin <- rowData(cells)$mzmin[feature]
+  xmax <- rowData(cells)$mzmax[feature]
+
+  x <- formatScans(file, 200, "+", F)
+  x2 <- do.call(rbind, lapply(x, function(df){
+    df[df[,1] >= xmin & df[,1] <= xmax, ]
+  }))
+  if (nrow(x2) == 0) return(NULL)
+  scatter3D(x = x2[, 1], y = 1:nrow(x2), z = x2[, 2], theta = 45, phi = 10,
+            bty = "g",  type = "h", ylab = "Scan",
+            xlab = "mz", zlab = "i",
+            ticktype = "detailed", pch = 19, cex = .5)
 }

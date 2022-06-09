@@ -47,8 +47,6 @@ bgFilter <- function(dataframe, limit = 2.5, blank_regex = "blank", sample_regex
   # ahmeds notes: Need to review this later, maybe replace swap with map_dfc function
 }
 
-
-
 #' MD filter
 #'
 #' @description filters data based on Mass Defect
@@ -148,6 +146,11 @@ spectraFilter <- function(spectra, npeaks = 0, intensity = 0, SNR = 0){
   res
 }
 
+setDefaultPhenotype <- function(exp, default){
+  metadata(exp)$phenotype <- default
+  exp
+}
+
 setDefaultAssay <- function(exp, default){
   n <- assayNames(exp)
   to_replace <- which(n == default)
@@ -158,6 +161,7 @@ setDefaultAssay <- function(exp, default){
 }
 
 saverImputation <- function(df, cores = 1, normalize = TRUE, ...){
+  df[is.na(df)] <- 0
   if (!normalize) normalize <- NULL
   if (!"SAVER" %in% installed.packages()) {
     warning("Please install the package 'SAVER' before using this imputation")
@@ -170,9 +174,22 @@ saverImputation <- function(df, cores = 1, normalize = TRUE, ...){
 
 }
 
-setDefaultPhenotype <- function(exp, default){
-  metadata(exp)$phenotype <- default
-  exp
+magicImputation <- function(df, ...){
+  df[is.na(df)] <- 0
+  if ("Rmagic" %in% installed.packages()) {
+    if (Rmagic::pymagic_is_available()) {
+      df <- t(Rmagic::magic(t(df))$result)
+    }
+  }
+
+  df
+}
+
+rfImputation <- function(df, ...){
+  if ("pmp" %in% installed.packages()) {
+    df <- pmp::mv_imputation(df, method = "rf")
+  }
+  df
 }
 
 #' @title data imputation
@@ -183,7 +200,7 @@ setDefaultPhenotype <- function(exp, default){
 #' @importFrom stats runif
 noiseImputation <- function(data, noise = 100, seed=42, ...) {
   set.seed(seed)
-  data[data == 0] <- runif(sum(data == 0), min = 1, max = noise)
+  data[is.na(data)] <- runif(sum(data == 0), min = 1, max = noise)
   return(data)
 }
 
@@ -194,10 +211,11 @@ imputation <- function(exp, method = "noise", useAssay = "Area",
                        saveAssay = "Imputed", setDefault = TRUE, ...) {
   exp <- filterCells(exp)
   df <- as.data.frame(assay(exp, useAssay))
-  df[is.na(df)] <- 0
 
   new_df <- switch(method,
     "saver" = saverImputation(df, ...),
+    "magic" = magicImputation(df, ...),
+    "rf" = rfImputation(df, ...),
     "noise" = noiseImputation(df, ...)
   )
   dimnames(new_df) <- dimnames(assay(exp))
@@ -218,8 +236,12 @@ fragmentFilter <- function(exp, assay = 1, method = "pearson", corr = 0.99){
 #' @title Feature filter
 #' @export
 featureFilter <- function(exp, assay = "Area", nCells = 0, pCells = 0){
-  nFeats <- as.double(apply(assay(exp, assay), 1, function(x) sum(!is.na(x))))
-  pFeats <- nFeats / ncol(exp)
-  exp[nFeats >= nCells & pFeats >= pCells, ]
+  to_take <- do.call(intersect, lapply(unique(exp$phenotype), function(split){
+    sub <- exp[, exp$phenotype == split]
+    nFeats <- as.double(apply(assay(sub, assay), 1, function(x) sum(!is.na(x))))
+    pFeats <- nFeats / ncol(sub)
+    which(nFeats >= nCells & pFeats >= pCells)
+  }))
+  exp[to_take, ]
 }
 

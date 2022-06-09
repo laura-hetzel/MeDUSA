@@ -4,12 +4,12 @@
 \alias{MassDefectFilter}
 \title{Mass defect filter pipeline}
 \usage{
-MassDefectFilter(dataframe, mz_MD_plot = TRUE)
+MassDefectFilter(cells, mz_MD_plot = TRUE)
 }
 \arguments{
-\item{dataframe}{containing the data, intensities and mz}
-
 \item{mz_MD_plot}{logical variable deciding if plot is wanted per default set to TRUE}
+
+\item{dataframe}{containing the data, intensities and mz}
 }
 \description{
 Mass defect filter pipeline

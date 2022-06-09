@@ -42,6 +42,7 @@ Imports:
     parallel,
     pbapply,
     PeriodicTable,
+    plot3D,
     plotly,
     plyr,
     pROC,

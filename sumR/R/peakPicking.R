@@ -67,7 +67,15 @@ formatScans <- function(f, massWindow, polarity, combineSpectra){
   x <- mzR::peaks(z)
   df <- mzR::header(z)
 
-  scans <- abs(df$scanWindowUpperLimit - df$scanWindowLowerLimit) <= massWindow
+  range <- abs(df$scanWindowUpperLimit - df$scanWindowLowerLimit)
+  if (length(massWindow) == 2){
+    scans <- range >= massWindow[1] & range <= massWindow[2]
+  } else if (length(massWindow) == 1){
+    scans <- range == massWindow
+  } else {
+    stop("Wrong length of massWindow")
+  }
+
   if (!is.null(polarity)) {
     polarity_filter <- grepl("FTMS - p NSI", df$filterString)
     if (polarity == "+") polarity_filter <- !polarity_filter
@@ -90,8 +98,8 @@ formatScans <- function(f, massWindow, polarity, combineSpectra){
 #' @importFrom dplyr distinct
 #' @importFrom tools file_path_sans_ext
 #' @export
-peakPicking <- function(files, massDefect = TRUE, polarity = NULL,
-                        combineSpectra = FALSE, massWindow = Inf, noiseWindow = 0.1,
+peakPicking <- function(files, polarity = NULL,
+                        combineSpectra = FALSE, massWindow = c(0, Inf), noiseWindow = 0.1,
                         cores = detectCores(logical = F)) {
   cl <- makeCluster(cores)
   clusterExport(cl, varlist = names(sys.frame()))
@@ -111,8 +119,6 @@ peakPicking <- function(files, massDefect = TRUE, polarity = NULL,
     df <- dplyr::distinct(df[df$Value > 0, ])
     if (nrow(df) == 0) return(NULL)
     rownames(df) <- 1:nrow(df)
-    if (massDefect) df <- MassDefectFilter(df, F)
-
     df
   })
 
