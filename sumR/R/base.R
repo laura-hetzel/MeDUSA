@@ -7,7 +7,7 @@
 #' @importFrom utils read.table
 #' @importFrom stats setNames
 read_msdata <- function(path = "data") {
-  files <- list.files(path = "data", full.names = T)
+  files <- list.files(path, full.names = T)
   file_names <- str_remove(string = files, pattern = ".txt")
   file_list <- lapply(setNames(files, file_names), function(x) {
     read.table(x, col.names = c("mz", "intensity"))
@@ -19,165 +19,32 @@ read_msdata <- function(path = "data") {
   return(ms_data[order(ms_data$mz), ])
 }
 
-
-#' @title Read DIMS data from an mzML file
-#' @param mzml Path to a mzml file. If omitted,
-#' the package example will be used
-#' @importFrom MSnbase readMSData
-#' @examples
-#' read_mzml()
+#' @title Convert RAW files to mzML
+#' @param folder
+#' @param outputFolder
+#' @param options
 #' @export
-#' @return XCMS object with spectra
-read_mzml <- function(mzml = NULL){
-  if (is.null(mzml)) {
-    dir <- system.file("extdata", package = "sumR")
-    mzml <- list.files(dir, pattern = ".*negative.*.mzML$", full.names = T)
-  }
-  tryCatch({
-    pd <- data.frame(sampleNames = mzml, class = "sample", group = "UP")
-    blanks <- grep("Blank", mzml)
-    pd$class[blanks] <- "blank"
-    pd$group[grep(".*LOW.*", mzml)] <- "LOW"
-    data <- MSnbase::readMSData(mzml, mode = "onDisk",
-                                pdata = new("NAnnotatedDataFrame", pd))
-    return(data)
-  }, error = function(x){
-    stop("Cannot parse the given file, not recognized as a proper .mzML file")
+rawToMzml <- function(folder, output = getwd(), rt = NULL, options = ""){
+
+  options <- paste(options, collapse = " ")
+  files <- list.files(file.path(folder), full.names = T, pattern = "^(?!.*mzML).*")
+  output <- file.path(output)
+  if (!dir.exists(output)) dir.create(output)
+  key <- "Directory\\shell\\Open with MSConvertGUI\\command"
+  reg <- tryCatch(utils::readRegistry(key, "HCR"), error = function(e) NULL)
+  msconvert <- file.path(dirname(sub("\"([^\"]*)\".*", "\\1", reg[[1]])), "msconvert.exe")
+  if (is.null(msconvert)) return(NULL)
+
+  rt <- ifelse(is.null(rt), "", sprintf('--filter "scanTime [%s, %s]"', rt[1], rt[2]))
+
+  pbapply::pblapply(files, function(file){
+    command <- sprintf('"%s" "%s" %s %s -o "%s"',
+                       file.path(msconvert), file, rt, options, output)
+    system(command, show.output.on.console = F)
   })
+  list.files(folder, full.names = T, pattern = ".mzML")
 }
 
-#' @title Combine spectra and centroid
-#' @param data XCMS object
-#' @importFrom tools file_path_sans_ext
-#' @importFrom xcms smooth pickPeaks
-#' @importFrom utils getFromNamespace
-#' @importFrom magrittr %>%
-#' @import MSnbase
-#' @export
-combine_spectra_centroid <- function(data){
-  combineSpectra <- utils::getFromNamespace("combineSpectra", "MSnbase")
-  list_data <- split(data, f = data@featureData@data$polarity)
-  names(list_data) <- c("negative", "positive")
-  sapply(names(list_data), function(polarity){
-    mzml <- data@phenoData@data$sampleNames
-    file <- sprintf("%s_centroided_%s.mzML",
-                    basename(tools::file_path_sans_ext(mzml)),
-                    polarity)
-    if (file.exists(file)) {
-      file.remove(file)
-    }
-
-    list_data[[polarity]] %>%
-      combineSpectra(method = function(x){
-        meanMzInts(x, intensityFun = combine_intensity)#base::max)
-      }) %>%
-      smooth() %>%
-      pickPeaks() %>%
-      writeMSData(file)
-    file
-  })
-}
-
-
-#' Title
-#'
-#' @param x
-#'
-#' @return
-#' @export
-#'
-#' @examples
-combine_intensity <- function(x){
-  m <- mean(x[x > 0])
-  ifelse(is.nan(m), 0, m)
-}
-
-#' @param data
-#'
-#' @param plot_md
-#'
-#' @title DIMS pipeline
-#' @importFrom xcms MSWParam findChromPeaks groupChromPeaks MzClustParam
-#' fillChromPeaks FillChromPeaksParam chromPeaks
-#' @importFrom pbapply pblapply
-#' @importFrom logging loginfo
-#' @examples
-#' dims_pipeline(read_mzml())
-#' @export
-dims_pipeline <- function(data, plot_md = FALSE){
-  suppressWarnings({
-    loginfo("Running DIMS pipeline")
-    groups <- seq_len(nrow(data@featureData))
-    per_injection <- split(data, f = groups)
-    loginfo(sprintf("Identifying peaks in %s spectra", length(groups)))
-
-    params <- xcms::MSWParam(SNR.method = "data.mean", winSize.noise = 500)
-    data <- do.call(c, pblapply(per_injection, cl = 1, function(inj){
-      dat <-  suppressMessages(xcms::findChromPeaks(inj, param = params))
-      # Filter using exclusing list
-      df <- as.data.frame(xcms::chromPeaks(dat))
-      df <- MassDefectFilter(df[,c(1,2,3)], plot_md)
-      # filter the peaks using the md
-      # xcms::filterChromPeaks(dat)
-      dat
-    }))
-
-
-    clust_param <- xcms::MzClustParam(sampleGroups = groups)
-    data <- xcms::groupChromPeaks(data, param = clust_param)
-    data <- fillChromPeaks(data, param = FillChromPeaksParam())
-    loginfo("DIMS pipeline complete")
-  })
-  data
-}
-
-
-
-#' @title Process features obtained from XCMS
-#'
-#' @param data XCMS object with grouped peaks
-#' @param impute_method
-#' @param remove_blanks Should blank samples be removed?
-#'
-#' @importFrom xcms featureValues featureDefinitions
-#' @importFrom pmp filter_peaks_by_blank mv_imputation
-#' @importFrom Biobase pData
-#' @examples
-#' data <- dims_pipeline(read_mzml())
-#' feature_processing(data)
-#' @export
-feature_processing <- function(data, impute_method = "knn", remove_blanks = TRUE){
-  intensity_df <- featureValues(data)
-  classes <- Biobase::pData(data)$class
-
-  intensity_df <- filter_peaks_by_blank(intensity_df, fold_change = 3,
-                        classes = classes,
-                        blank_label = "blank",
-                        remove_samples = remove_blanks)
-
-  intensity_df <- mv_imputation(df = intensity_df, method = "knn")
-
-  mz <- xcms::featureDefinitions(data)[rownames(intensity_df), ]$mzmed
-  df <- cbind(mz = mz, intensity_df)
-  as.data.frame(df)
-}
-
-#' @title Normalize intensity dataframe
-#' @param intensity_df Dataframe with intensities. Can contain isotope information
-#' @importFrom  pmp pqn_normalisation glog_transformation
-#' @export
-normalize_features <- function(intensity_df){
-  others <- intensity_df[, grep("*.mzML$", colnames(intensity_df), invert = T)]
-  intensity_df <- intensity_df[, grep("*.mzML$", colnames(intensity_df))]
-
-  intensity_df <- pqn_normalisation(df = intensity_df,
-                                    classes = colnames(intensity_df),
-                                    qc_label = "all")
-  intensity_df <- glog_transformation(df = intensity_df,
-                                      classes = colnames(intensity_df),
-                                      qc_label = colnames(intensity_df))
-  as.data.frame(cbind(intensity_df, others))
-}
 
 #' @title ppm calculation
 #' @description ppm_calc calculated the parts per million error between two different masses
@@ -194,7 +61,7 @@ ppm_calc <- function(mass1, mass2) {
 #' @export
 align_check <- function(aligned_peaks) {
   odd_ind_fn <- seq(3, length(aligned_peaks$mz), 2)
-  even_ind_fn <- seq(2, length(aligned_peaks$mz),2)
+  even_ind_fn <- seq(2, length(aligned_peaks$mz), 2)
   ppm_err_fn <- data.frame("ppm_error" = ppm_calc(aligned_peaks$mz[even_ind_fn], aligned_peaks$mz[odd_ind_fn]))
   return(ppm_err_fn)
 }
@@ -203,7 +70,7 @@ align_check <- function(aligned_peaks) {
 #' @param ppm_err_fn dataframe obtained from `align_check`
 #' @importFrom ggplot2 ggplot
 #' @export
-ppm_err_plot <- function(ppm_err_fn){
+ppm_err_plot <- function(ppm_err_fn) {
   ppm_err_plot_fn <- ggplot(ppm_err_fn, aes(x = ppm_error)) +
     geom_boxplot() +
     ggtitle("ppm error boxplot") +
@@ -227,7 +94,7 @@ ppm_err_plot <- function(ppm_err_fn){
 #' @importFrom ggplot2 ggplot
 #' @export
 bin_align_check_process <- function(aligned_peaks, summary_errors = F,
-                          boxplot = F, xcoords = c(-50, 0)){
+                                    boxplot = F, xcoords = c(-50, 0)) {
   check <- align_check(aligned_peaks)
   x <- 2
   if (summary_errors | boxplot == T) {
@@ -260,33 +127,44 @@ condition <- function(mass, intensities, samples, tolerance = 5e-6) {
   if (anyDuplicated(samples)) {
     return(NA)
   }
-  if (any(abs(mass - mean(mass))/mean(mass) > tolerance)) {
+  if (any(abs(mass - mean(mass)) / mean(mass) > tolerance)) {
     return(NA)
   }
   return(mean(mass))
 }
 
-#' Background removal
-#'
-#' @param dataframe
-#' @param filter_type
-#' @param blank_thresh
-#' @param nsamples_thresh
-#' @param blank_regx
-#' @param filtered_df
-#'
-#' @return
+#' @title Substract Blanks from SummarizedExperiment
+#' @param exp
+#' @param blankThresh
+#' @param sampleThresh
+#' @param filter
+#' @export
+blankSubstraction <- function(exp, blankThresh = 5, sampleThresh = Inf,
+                              filter = TRUE, removeBlanks = TRUE){
 
-#'
+  blanks <- exp[, toupper(exp$Type) == 'BLANK']
+  samps <- exp[, toupper(exp$Type) == 'SAMPLE']
+
+  threshold <- rowMedians(assay(blanks, "Area"), na.rm = TRUE) * blankThresh
+  below <- rowSums(assay(samps, "Area") - threshold <= 0, na.rm = TRUE) <= sampleThresh
+
+  rowData(exp)$blankThresh <- threshold
+  rowData(exp)$blankPass <- below
+
+  if (filter) exp <- exp[which(rowData(exp)$blankPass), ]
+  if (removeBlanks) exp <- exp[, toupper(exp$Type) != "BLANK"]
+
+  filterCells(exp)
+}
+
+#' @title Background removal
 #' @param dataframe
 #' @param filter_type
 #' @param blank_thresh
 #' @param nsamples_thresh
 #' @param blank_regx
 #' @param filtered_df
-#'
-#' @examples
-#' @importFrom dplyr select contains if_else filter
+#' @importFrom dplyr select contains if_else
 #' @export
 blank_subtraction <- function(dataframe, filter_type = "median",
                               blank_thresh = 1, nsamples_thresh = 1,
@@ -308,17 +186,18 @@ blank_subtraction <- function(dataframe, filter_type = "median",
   ## or failed
   for (i in seq_len(nrow(samples))) {
     below_thresh <- sum(samples[i, seq_len(ncol(samples))] <=
-                          blanks$threshold[i])
+      blanks$threshold[i])
     boundary <- below_thresh / ncol(samples) * 100 >= nsamples_thresh
     samples$index[i] <- if_else(boundary, "blank_fail", "blank_pass")
   }
 
   ## Dataframe that only displays the passed values, filtering out failed values
-  filtered_samples <- filter(samples, index == "blank_pass")
+
+  filtered_samples <- samples[samples$index == "blank_pass", ]
   ## Prints the number of passed values
-  print_pass <- nrow(filter(samples, index == "blank_pass"))
+  print_pass <- sum(samples == "blank_pass")
   ## Prints the number of failed values
-  print_fail <- nrow(filter(samples, index == "blank_fail"))
+  print_fail <- sum(samples == "blank_fail")
 
   if (filtered_df == TRUE) {
     ## Makes the function return a list with a dataframe containing m/z
@@ -347,11 +226,12 @@ blank_subtraction <- function(dataframe, filter_type = "median",
 #' @param formulas formulas in string format like 'c6h12o6'
 #' @importFrom stringr str_extract_all
 #' @importFrom PeriodicTable mass
-calculate_nominal_mass <- function(formulas){
-  sapply(formulas, function(formula){
+calculate_nominal_mass <- function(formulas) {
+  sapply(formulas, function(formula) {
     vec <- as.vector(str_extract_all(formula, "([A-Za-z][[:digit:]]+|[A-Z][a-z]{0,1})",
-                                     simplify = T))
-    sum(sapply(vec, function(comb){
+      simplify = T
+    ))
+    sum(sapply(vec, function(comb) {
       if (!grepl("[[:digit:]]", comb)) {
         atom <- comb
         mult <- 1
@@ -364,3 +244,39 @@ calculate_nominal_mass <- function(formulas){
     }))
   })
 }
+
+#' @title Combine SummarizedExperiments by row
+#' @param ... Number of SummarizedExperiments
+#' @export
+combineExperiments <- function(...){
+  idx <- Reduce(intersect, lapply(list(...), colnames), init = colnames(list(...)[[1]]))
+
+  exp <- do.call(rbind, lapply(list(...), function(exp){
+    exp <- exp[, idx]
+    if ("polarity" %in% names(metadata(exp))) {
+      rowData(exp)$polarity <- metadata(exp)$polarity
+    }
+    exp
+  }))
+
+  rownames(exp) <- 1:nrow(exp)
+  if ("polarity" %in% colnames(rowData(exp))){
+    rownames(exp) <- paste0(rownames(exp), rowData(exp)$polarity)
+  }
+
+  exp
+}
+
+#' @title Variable Importance of models
+#' @param exp SummarizedExperiment with model(s)
+#' @param modelName name of the model
+#' @export
+varImportance <- function(exp, modelName = 1){
+  df <- as.data.frame(model(exp, modelName)$varImp$importance)
+  df$Compound <- rownames(df)
+  df <- df[order(df$Overall, decreasing = TRUE), c("Compound", "Overall")]
+  rownames(df) <- 1:nrow(df)
+  df
+}
+
+

@@ -13,16 +13,15 @@
 #'
 #' @importFrom usedist dist_make
 #' @importFrom densityClust densityClust
-#' @importFrom dplyr filter
+#' @importFrom dplyr filter pull
 #' @importFrom stats as.dist
-#' @importFrom dplyr pull
-#' @importFrom magrittr %>%
+#' @importFrom dplyr %>%
 mydensityClust_1 <- function(data, mz_min, mz_max, dc) {
 
   # pre-processing for densityClust()
 
   # subset mz for testing
-  tmz <- filter(data, mz >= mz_min & mz <= mz_max) %>% pull(mz)
+  tmz <- dplyr::filter(data, mz >= mz_min & mz <= mz_max) %>% dplyr::pull(mz)
 
   # calculate the distance (in ppm) between each mz and put them in a data frame
   dist_matrix <- as.dist(abs(dist_make(as.matrix(tmz), ppm_calc)), diag = TRUE)
@@ -50,14 +49,12 @@ mydensityClust_1 <- function(data, mz_min, mz_max, dc) {
 #' @export
 #'
 #' @examples
-#' @importFrom dplyr mutate
-#' @importFrom dplyr filter
-#' @importFrom magrittr %>%
+#' @importFrom dplyr mutate filter %>%
 getclusteredData <- function(data, mzClust, mz_min, mz_max) {
   ## this is a function that takes the results of the densityClust() function
   ## from densityClust package, outputs the data with rho & delta
 
-  #cluster <- mzClust$clusters
+  # cluster <- mzClust$clusters
 
   # find the index for sub-setting
   # ind <- which(data$mz >= mz_min)
@@ -67,8 +64,10 @@ getclusteredData <- function(data, mzClust, mz_min, mz_max) {
 
   df <- data %>%
     filter(mz >= mz_min & mz <= mz_max) %>%
-    mutate(rho = mzClust$rho,
-           delte = mzClust$delta)
+    mutate(
+      rho = mzClust$rho,
+      delte = mzClust$delta
+    )
 
   # # sub-setting
   # df <- data[ind1:ind2,]
@@ -139,7 +138,7 @@ cluster_align <- function(bin_element) {
     return(aligned_data)
   }
 
-  mzClust <- mydensityClust(msdata, mz_start, mz_end,  dc = 5) #_1 or _2 ???
+  mzClust <- mydensityClust(msdata, mz_start, mz_end, dc = 5) # _1 or _2 ???
 
   ## get the clustered results
   clusteredData <- getclusteredData(msdata, mzClust, mz_start, mz_end)
@@ -175,7 +174,7 @@ cluster_align <- function(bin_element) {
       if (is.logical(v) == FALSE) {
         v2fix <- vector()
         for (i in seq_along(v)) {
-          #j <- v[i]
+          # j <- v[i]
           indexes <- which(clusteredData$cluster == v[i])
           mz1 <- clusteredData$mz[indexes]
           mz2 <- clusteredData$mz[indexes - 1]
@@ -199,8 +198,9 @@ cluster_align <- function(bin_element) {
 
     # align the mz based on the clustering results and store them in alignedData
     alignedData <- aggregate(clusteredData$mz,
-                             by = list(cluster = clusteredData$cluster),
-                             mean)
+      by = list(cluster = clusteredData$cluster),
+      mean
+    )
     colnames(alignedData) <- c("cluster", "mz")
     alignedData <- alignedData[order(alignedData$mz), ]
 
@@ -210,13 +210,13 @@ cluster_align <- function(bin_element) {
       if (!is.na(clusteredData$cluster[i])) {
         indexes <- which(clusteredData$cluster[i] == alignedData$cluster)
         clusteredData$aligned[i] <- alignedData$mz[indexes]
-      } else{
+      } else {
         clusteredData$aligned[i] <- clusteredData$mz[i]
       }
     }
   }
 
-  #put the orphans back to the clusteredData
+  # put the orphans back to the clusteredData
   orphans$cluster <- rep(0, nrow(orphans))
   orphans$aligned <- orphans$mz
   clusteredData <- rbind(clusteredData, orphans)
@@ -226,14 +226,18 @@ cluster_align <- function(bin_element) {
   clusteredData <- subset(clusteredData, select = -c(rho, delta))
 
   ## transform the data format back to the initial
-  nulldata <- data.frame(mz = rep(0, sample_num),
-                         sample = file_names,
-                         intensity = rep(0, sample_num),
-                         cluster = rep(0, sample_num),
-                         aligned = rep(0, sample_num))
+  nulldata <- data.frame(
+    mz = rep(0, sample_num),
+    sample = file_names,
+    intensity = rep(0, sample_num),
+    cluster = rep(0, sample_num),
+    aligned = rep(0, sample_num)
+  )
   ttmpData <- rbind(nulldata, clusteredData)
-  ttmpData <- ttmpData %>% pivot_wider(names_from = sample,
-                                       values_from = intensity)
+  ttmpData <- ttmpData %>% pivot_wider(
+    names_from = sample,
+    values_from = intensity
+  )
   ttmpData[is.na(ttmpData)] <- 0
 
   ## Remove the null data
@@ -247,7 +251,8 @@ cluster_align <- function(bin_element) {
   # dplyr::summarize(across(.fns = max))
 
   # merge the rows with same alignedmz
-  aligned_data <- tmpData %>% group_by(aligned) %>%
+  aligned_data <- tmpData %>%
+    group_by(aligned) %>%
     summarize(across(.fns = max))
 
   return(aligned_data)
@@ -294,11 +299,11 @@ mydensityClust_2 <- function(data, mz_min, mz_max, dc) {
   # inspect clustering attributes to define thresholds
   # dc(cutoff distance): a radium within which the density will be calculated
   tmzClust <- densityClust(dist = distMatrix, dc = dc, gaussian = FALSE)
-  #plot(tmzClust)
+  # plot(tmzClust)
 
 
   # find clusters by assigned parameters
-  #mzClust <- findClusters(tmzClust, rho=r, delta=d)
+  # mzClust <- findClusters(tmzClust, rho=r, delta=d)
 
   return(tmzClust)
 }

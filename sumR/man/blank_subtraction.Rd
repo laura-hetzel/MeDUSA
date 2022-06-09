@@ -13,12 +13,6 @@ blank_subtraction(
   filtered_df = FALSE
 )
 }
-\arguments{
-\item{filtered_df}{}
-}
-\value{
-
-}
 \description{
 Background removal
 }

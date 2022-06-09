@@ -10,8 +10,6 @@ data_split(seed, data, split_ratio = 0.8)
 \item{seed}{global seed}
 
 \item{data}{the dataframe with m/z as columns and a sample column named samples}
-
-\item{split_ratio}{}
 }
 \description{
 datasplit

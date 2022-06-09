@@ -4,12 +4,10 @@
 \alias{data_transform}
 \title{data transformation}
 \usage{
-data_transform(data, centering = F)
+data_transform(data)
 }
 \arguments{
 \item{data}{dataframe}
-
-\item{centering}{}
 }
 \description{
 This function apply data transformation using log2 and pareto scale
