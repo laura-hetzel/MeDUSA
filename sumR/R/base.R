@@ -19,6 +19,46 @@ read_msdata <- function(path = "data") {
   return(ms_data[order(ms_data$mz), ])
 }
 
+#' @title Function specfic for formatting aliquots in BMFL format
+#' @param df Dataframe of metadata
+bmflAliquots <- function(df){
+  if (ncol(df) != 8) {
+    colnames(df) <- c("Aliquot", "Sample", "Type", "CalNo", "Replicate", "Injection")
+    df <- cbind(data.frame(Path = df$Aliquot), df)
+    df$Collection <- NA
+    df$SubCollection <- NA
+  } else {
+    colnames(df) <- c("Path", "Collection", "Aliquot", "Sample", "Type", "CalNo", "Replicate", "Injection")
+  }
+  df$Path <- paste0(df$Path, ".mzML")
+  df$Type[df$Type == ""] <- "SAMPLE"
+
+  count <- stringr::str_count(df$Collection, "/") + 1
+  collectionDf <- stringr::str_split_fixed(df$Collection, "/", count)
+  df$SubCollection <- collectionDf[ncol(collectionDf)]
+  df$Collection <- paste0(collectionDf[, -ncol(collectionDf)], collapse = "/")
+  df[df == ""] <- NA
+  rownames(df) <- df$Aliquot
+  df
+}
+
+#' @title Receive metadata from aliquot names
+#' @param aliquots
+#' @param regex
+#' @param type
+#' @param columns
+#' @export
+metadataFromAliquots <- function(aliquots, regex = "([0-9]{4}[A-Z]{3}_[0-9]{4})([A-Z]+|)([0-9]+|)_([A-Z])([0-9])",
+                                 type = "BMFL", columns = NULL){
+  if (any(grepl("/", aliquots))) {
+    regex <- paste0("(.*)/(", regex, ")")
+  }
+  matches <- regmatches(aliquots, gregexec(regex, aliquots))
+  df <- as.data.frame(do.call(rbind, lapply(matches, t)))
+  if (type == "BMFL") df <- bmflAliquots(df)
+  df
+}
+
 #' @title Convert RAW files to mzML
 #' @param folder
 #' @param outputFolder
