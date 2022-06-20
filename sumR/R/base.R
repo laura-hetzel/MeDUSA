@@ -81,7 +81,7 @@ rawToMzml <- function(folder, output = getwd(), rt = NULL, options = ""){
   pbapply::pblapply(files, function(file){
     command <- sprintf('"%s" "%s" %s %s -o "%s"',
                        file.path(msconvert), file, rt, options, output)
-    system(command, show.output.on.console = F)
+    system(command)
   })
   list.files(file.path(output), full.names = T, pattern = ".mzML")
 }
