@@ -42,7 +42,6 @@ Imports:
     parallel,
     pbapply,
     PeriodicTable,
-    plot3D,
     plotly,
     plyr,
     pROC,
@@ -60,6 +59,7 @@ Imports:
     utils,
     viridis
 Suggests: 
+    plot3D,
     knitr,
     rmarkdown,
     testthat,

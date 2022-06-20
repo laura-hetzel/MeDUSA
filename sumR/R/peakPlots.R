@@ -121,10 +121,8 @@ featureCellPlot <- function(cells, assay = "Area"){
 #' @param cells
 #' @param feature
 #' @param file
-#' @importFrom plot3D scatter3D
 #' @export
 plotRawFeature <- function(cells, feature, file){
-  library(plot3D)
   xmin <- rowData(cells)$mzmin[feature]
   xmax <- rowData(cells)$mzmax[feature]
 
@@ -133,7 +131,7 @@ plotRawFeature <- function(cells, feature, file){
     df[df[,1] >= xmin & df[,1] <= xmax, ]
   }))
   if (nrow(x2) == 0) return(NULL)
-  scatter3D(x = x2[, 1], y = 1:nrow(x2), z = x2[, 2], theta = 45, phi = 10,
+  plot3D::scatter3D(x = x2[, 1], y = 1:nrow(x2), z = x2[, 2], theta = 45, phi = 10,
             bty = "g",  type = "h", ylab = "Scan",
             xlab = "mz", zlab = "i",
             ticktype = "detailed", pch = 19, cex = .5)
