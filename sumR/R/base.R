@@ -74,7 +74,7 @@ rawToMzml <- function(folder, output = getwd(), rt = NULL, options = ""){
   key <- "Directory\\shell\\Open with MSConvertGUI\\command"
   reg <- tryCatch(utils::readRegistry(key, "HCR"), error = function(e) NULL)
   msconvert <- file.path(dirname(sub("\"([^\"]*)\".*", "\\1", reg[[1]])), "msconvert.exe")
-  if (is.null(msconvert)) return(NULL)
+  if (!grepl("msconvert", msconvert)) msconvert <- "msconvert"
 
   rt <- ifelse(is.null(rt), "", sprintf('--filter "scanTime [%s, %s]"', rt[1], rt[2]))
 
