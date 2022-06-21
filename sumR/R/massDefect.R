@@ -1,4 +1,5 @@
-#' @title Mass defect calculation function
+#' @title Mass defect (MD) calculation
+#' @description here a simplified MD, the mass' decimal number
 #' @param dataframe data frame containing experimental data
 #' @export
 mass_defect_calculation <- function(dataframe) {
@@ -7,8 +8,8 @@ mass_defect_calculation <- function(dataframe) {
   return(dataframe)
 }
 
-#' @title Defining Mass Defect filter
-#' @description  the theoretical maximum Mass Defect of human metabolites
+#' @title Defining MD cut-off
+#' @description the theoretical maximum MD of human metabolites
 #' is used to calculate this cut off
 #' @param filter_df obtained from the HMDB using `mass_defect_calculation`
 #' @export
@@ -17,11 +18,12 @@ make_filter_list <- function(filter_df) {
   return(filter_df)
 }
 
-#' @title Filtering the data by  mass defect
+
+#' @title Filtering the data by MD cut-off and inclusion list
 #' @param MD_df obtained from from the HMDB using `mass_defect_calculation`
 #' @param filter_df obtained from the `make_filter_list`
-#' @param incl_list (optional) path to inclusion list obtained from
-#' user input or use of default inclusion list (McMillan et al., 2016)
+#' @param incl_list path to inclusion list obtained from user input
+#' or use of default inclusion list (McMillan et al., 2016)
 #' @param mass_accuracy (optional) obtained from user input or use of
 #' default value set to 0.01
 #' @importFrom utils read.delim
@@ -31,7 +33,6 @@ MD_filter <- function(MD_df, filter_df,
                       ),
                       mass_accuracy = 0.01) {
   incl_list <- read.delim(file = incl_list, sep = "\t")
-  # if in the input data inclusion list is put to yes it is included here
   incl_list_filtered <- incl_list[which(incl_list$inclusion == "y"), ]
   # compare compounds from inclusion list to the data
   cmp <- function(MD_df, incl_list_filtered, cutoff = mass_accuracy) {
@@ -46,7 +47,7 @@ MD_filter <- function(MD_df, filter_df,
   return(filter_df)
 }
 
-#' @title Plotting of the data - m/z vs. MD
+#' @title Plotting of the filtered data - m/z vs. MD
 #' @param MD_df data frame obtained from the experimental data using `mass_defect_calculation`
 #' @param MD_df_filtered data frame obtained from the experimental data using `MD_filter`
 #' @export
@@ -78,9 +79,4 @@ MassDefectFilter <- function(dataframe, mz_MD_plot = TRUE) {
   if (mz_MD_plot == T) {
     plot_mz_MD(md_df_exp, filtered_df_exp)
   }
-  return(filtered_df_exp)
-}
 
-filterMassDefect <- function(df){
-  df[df$mz %% 1 <= (0.00112 * df$mz + 0.01953), ]
-}

@@ -132,14 +132,16 @@ binPeaks <- function(df_list, tolerance = 5e-6) {
 #' @description the code iterates over the data as long as
 #' the number of bins changes, when the number of bins
 #' doesn't change anymore iterations stop, maximal number
-#' of iterations is set to 15
+#' of iterations is set to 8
 #' Also, plotting the decrease of the bins
 #' @importFrom plyr join_all
 #' @importFrom tidyr pivot_wider
 #' @param df_list list of dataframes obtained from `binPeaks`
-#' @param max_align value obtained from user input or use of default value 8
-#' @param bin_plot logical value obtained from user input per default set to FALSE
-#' decides if the line plot showing the reduction of the bins per iteration is shown
+#' @param max_align value obtained from user input or use of
+#' default value 8
+#' @param bin_plot logical value deciding if plot is created
+#' obtained from user input per default set to FALSE, line
+#' plot shows reduction of bins per iteration
 #' @export
 iteration <- function(df_list, max_align = 8, bin_plot = F) {
   count <- 0L
