@@ -9,8 +9,9 @@ MD_filter(dataframe, mz_col, a = 0.00112, b = 0.01953)
 MD_filter(
   MD_df,
   filter_df,
-  incl_list = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt", package =
-    "sumR"),
+  incl_list = FALSE,
+  incl_list_path = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt", package
+    = "sumR"),
   mass_accuracy = 0.01
 )
 }
@@ -19,7 +20,10 @@ MD_filter(
 
 \item{filter_df}{obtained from the `make_filter_list`}
 
-\item{incl_list}{path to inclusion list obtained from user input
+\item{incl_list}{(optional) logical value from user input, default set
+to FALSE, decides if inclusion list is used or not}
+
+\item{incl_list_path}{(optional)path to inclusion list obtained from user input
 or use of default inclusion list (McMillan et al., 2016)}
 
 \item{mass_accuracy}{(optional) obtained from user input or use of

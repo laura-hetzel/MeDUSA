@@ -1,3 +1,22 @@
+#' @title Deletion of unwanted samples
+#' @description binning dependency 1
+#' delete any duplication of a samples
+#' delete any sample that is kicked out by the tolerance
+#' @param mass obtained from the input files
+#' @param intensities obtained from the input files
+#' @param samples obtained from the input files
+#' @param tolerance (optional) obtained from the user input,
+#' default value 5e-6
+condition <- function(mass, intensities, samples, tolerance = 5e-6) {
+  if (anyDuplicated(samples)) {
+    return(NA)
+  }
+  if (any(abs(mass - mean(mass)) / mean(mass) > tolerance)) {
+    return(NA)
+  }
+  return(mean(mass))
+}
+
 #' @title Setting of the bin boundaries
 #' @description binning dependency 2
 #' @param mass obtained from the input files

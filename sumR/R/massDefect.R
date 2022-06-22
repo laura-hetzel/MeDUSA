@@ -22,26 +22,34 @@ make_filter_list <- function(filter_df) {
 #' @title Filtering the data by MD cut-off and inclusion list
 #' @param MD_df obtained from from the HMDB using `mass_defect_calculation`
 #' @param filter_df obtained from the `make_filter_list`
-#' @param incl_list path to inclusion list obtained from user input
+#' @param incl_list (optional) logical value from user input, default set
+#' to FALSE, decides if inclusion list is used or not
+#' @param incl_list_path (optional)path to inclusion list obtained from user input
 #' or use of default inclusion list (McMillan et al., 2016)
 #' @param mass_accuracy (optional) obtained from user input or use of
 #' default value set to 0.01
 #' @importFrom utils read.delim
-MD_filter <- function(MD_df, filter_df,
-                      incl_list = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt",
-                        package = "sumR"),mass_accuracy = 0.01) {
-  incl_list <- read.delim(file = incl_list, sep = "\t")
-  incl_list_filtered <- incl_list[which(incl_list$inclusion == "y"), ]
-  # compare compounds from inclusion list to the data
-  cmp <- function(MD_df, incl_list_filtered, cutoff = mass_accuracy) {
-    abs(incl_list_filtered - MD_df) <= cutoff
+MD_filter <- function(MD_df, filter_df, incl_list = FALSE,
+                      incl_list_path = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt",
+                      package = "sumR"), mass_accuracy = 0.01) {
+  if (incl_list == T) {
+    incl_list <- read.delim(file = incl_list_path, sep = "\t")
+    incl_list_filtered <- incl_list[which(incl_list$inclusion == "y"), ]
+    # compare compounds from inclusion list to the data
+    cmp <- function(MD_df, incl_list_filtered, cutoff = mass_accuracy) {
+      abs(incl_list_filtered - MD_df) <= cutoff
+    }
+    # assign comparable values a logical TRUE value
+    match <- which(outer(incl_list_filtered$mz, MD_df$mz, cmp), arr.ind = TRUE)
+    # return row names of TRUE rows
+    filtered_rows <- rownames(MD_df)[as.numeric(levels(factor(match[, 2])))]
+    # keep rows in MD_df if m/z defect is less than or equal to fitted value
+    # OR value is in inclusion list
+    filter_df <- MD_df[which((MD_df$MD <= filter_df$mz) | rownames(MD_df) %in% filtered_rows), ]
   }
-  # assign comparable values a logical TRUE value
-  match <- which(outer(incl_list_filtered$mz, MD_df$mz, cmp), arr.ind = TRUE)
-  # return row names of TRUE rows
-  filtered_rows <- rownames(MD_df)[as.numeric(levels(factor(match[, 2])))]
-  # keep rows in MD_df if m/z defect is less than or equal to fitted value OR value is in inclusion list
-  filter_df <- MD_df[which((MD_df$MD <= filter_df$mz) | rownames(MD_df) %in% filtered_rows), ]
+  else {
+    filter_df <- MD_df[which(MD_df$MD <= filter_df$mz)]
+  }
   return(filter_df)
 }
 

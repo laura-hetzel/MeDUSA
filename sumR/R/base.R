@@ -47,7 +47,8 @@ rawToMzml <- function(folder, output = getwd(), rt = NULL, options = ""){
 
 
 #' @title ppm calculation
-#' @description ppm_calc calculated the parts per million error between two different masses
+#' @description ppm_calc calculated the parts per million
+#' error between two different masses
 #' @param mass1 input from the `align_check` functions
 #' @param mass2 input from the `align_check` functions
 ppm_calc <- function(mass1, mass2) {
@@ -57,7 +58,10 @@ ppm_calc <- function(mass1, mass2) {
 
 
 #' @title alignment check
-#' @param aligned_peaks dataframe of aligned peaks obtained iteration function
+#' @description uses the ppm_calc function to check
+#' ppm error of aligned peaks, alignment quality control
+#' @param aligned_peaks dataframe of aligned peaks
+#' obtained from `iteration`
 #' @export
 align_check <- function(aligned_peaks) {
   odd_ind_fn <- seq(3, length(aligned_peaks$mz), 2)
@@ -66,10 +70,9 @@ align_check <- function(aligned_peaks) {
   return(ppm_err_fn)
 }
 
-#' @title Boxplot of the ppm errors
+#' @title Boxplot of the ppm errors (aligned data)
 #' @param ppm_err_fn dataframe obtained from `align_check`
 #' @importFrom ggplot2 ggplot
-#' @export
 ppm_err_plot <- function(ppm_err_fn) {
   ppm_err_plot_fn <- ggplot(ppm_err_fn, aes(x = ppm_error)) +
     geom_boxplot() +
@@ -78,22 +81,25 @@ ppm_err_plot <- function(ppm_err_fn) {
   return(ppm_err_plot_fn)
 }
 
-#' @title Checking the results of the alignment with boxplot output if desired
-#' @description here the user can choose what kind of analysis they want to have on
-#' their alignment, check_process makes sure that all the m/z values are aligned/binned
-#' correctly, check_process takes a data frame of peaks with mz column as an argument,
-#' and the coordinates for the plot to be zoomed in on, as an optional argument
-#' check_process outputs either a dataframe (1) or a list of two to three elements:
+#' @title Alignment analysis (optional boxplot)
+#' @description various kinds of analysis are possible,
+#' check_binning ensures m/z values are correctly aligned/binned,
+#' check_binning outputs either a dataframe (1) or
+#' a list of two to three elements:
 #' 1- Dataframe of 1 column containing the ppm error values
 #' 2- (optional)table of summary stats of ppm error values
-#' 3- (optional)- boxplot of the ppm erro values with xcoords zoomed in to -50,0 (default)
+#' 3- (optional)- boxplot of the ppm error values
+#' with xcoords zoomed in to -50,0 (default)
 #' @param aligned_peaks dataframe obtained from `iteration`
-#' @param summary_errors logical value obtained from user input per default set to FALSE
-#' @param boxplot logical value obtained from user input per default set to FALSE
-#' @param xcoords vector obtained from user input or use of default value c(-50, 0)
+#' @param summary_errors (optional)logical value obtained from
+#' user input per default set to FALSE
+#' @param boxplot (optional) logical value obtained from user
+#' input per default set to FALSE
+#' @param xcoords (optional) vector defining zoom on boxplot
+#' obtained from user input or use of default value c(-50, 0)
 #' @importFrom ggplot2 ggplot
 #' @export
-bin_align_check_process <- function(aligned_peaks, summary_errors = F,
+check_binning <- function(aligned_peaks, summary_errors = F,
                                     boxplot = F, xcoords = c(-50, 0)) {
   check <- align_check(aligned_peaks)
   x <- 2
@@ -112,25 +118,6 @@ bin_align_check_process <- function(aligned_peaks, summary_errors = F,
     check[[x]] <- error_plot
   }
   return(check)
-}
-
-
-#' @title Deletion of unwanted samples
-#' @description binning dependency 1
-#' delete any duplication of a samples
-#' delete any sample that is kicked out by the tolerance
-#' @param mass obtained from the input files
-#' @param intensities obtained from the input files
-#' @param samples obtained from the input files
-#' @param tolerance obtained from the user input or use of default value 5e-6
-condition <- function(mass, intensities, samples, tolerance = 5e-6) {
-  if (anyDuplicated(samples)) {
-    return(NA)
-  }
-  if (any(abs(mass - mean(mass)) / mean(mass) > tolerance)) {
-    return(NA)
-  }
-  return(mean(mass))
 }
 
 #' @title Substract Blanks from SummarizedExperiment
