@@ -24,17 +24,20 @@ make_filter_list <- function(filter_df) {
 #' @param filter_df obtained from the `make_filter_list`
 #' @param incl_list (optional) logical value from user input, default set
 #' to FALSE, decides if inclusion list is used or not
-#' @param incl_list_path (optional)path to inclusion list obtained from user input
-#' or use of default inclusion list (McMillan et al., 2016)
-#' @param mass_accuracy (optional) obtained from user input or use of
-#' default value set to 0.01
+#' @param incl_list_path (optional, use only if incl_list = T)path to
+#' inclusion list obtained from user input or use of default inclusion
+#' list (McMillan et al., 2016)
+#' @param mass_accuracy (optional, use only if incl_list = T) obtained
+#' from user input or use of default value set to 0.01
 #' @importFrom utils read.delim
-MD_filter <- function(MD_df, filter_df, incl_list = FALSE,
+MD_filter <- function(MD_df, filter_df, incl_list,
                       incl_list_path = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt",
-                      package = "sumR"), mass_accuracy = 0.01) {
+                                                                                package = "sumR"),
+                      mass_accuracy) {
   if (incl_list == T) {
-    incl_list <- read.delim(file = incl_list_path, sep = "\t")
-    incl_list_filtered <- incl_list[which(incl_list$inclusion == "y"), ]
+    list <- read.delim(file = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt",
+                                          package = "sumR"), sep = "\t")
+    incl_list_filtered <- list[which(list$inclusion == "y"), ]
     # compare compounds from inclusion list to the data
     cmp <- function(MD_df, incl_list_filtered, cutoff = mass_accuracy) {
       abs(incl_list_filtered - MD_df) <= cutoff
@@ -43,14 +46,14 @@ MD_filter <- function(MD_df, filter_df, incl_list = FALSE,
     match <- which(outer(incl_list_filtered$mz, MD_df$mz, cmp), arr.ind = TRUE)
     # return row names of TRUE rows
     filtered_rows <- rownames(MD_df)[as.numeric(levels(factor(match[, 2])))]
-    # keep rows in MD_df if m/z defect is less than or equal to fitted value
-    # OR value is in inclusion list
-    filter_df <- MD_df[which((MD_df$MD <= filter_df$mz) | rownames(MD_df) %in% filtered_rows), ]
+    ## keep rows in MD_df if m/z defect is less than or equal to fitted value
+    ## OR value is in inclusion list
+    filtered_df <- MD_df[which((MD_df$MD <= filter_df$mz) | rownames(MD_df) %in% filtered_rows), ]
   }
   else {
-    filter_df <- MD_df[which(MD_df$MD <= filter_df$mz)]
+    filtered_df <- MD_df[which(MD_df$MD <= filter_df$mz), ]
   }
-  return(filter_df)
+  return(filtered_df)
 }
 
 #' @title Plotting of the filtered data - m/z vs. MD
@@ -70,19 +73,25 @@ plot_mz_MD <- function(MD_df, MD_df_filtered) {
 
 #' @title Mass defect filter pipeline
 #' @param dataframe containing the data, intensities and mz
-#' @param mz_MD_plot logical variable deciding if plot is wanted per default set to TRUE
+#' @param mz_MD_plot logical variable deciding if plot is
+#' wanted per default set to TRUE
 #' @importFrom stats na.omit
 #' @importFrom utils read.delim
 #' @export
-MassDefectFilter <- function(dataframe, mz_MD_plot = TRUE) {
+MassDefectFilter <- function(dataframe, mz_MD_plot = TRUE, incl_list = F,
+                             incl_list_path = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt",
+                                                          package = "sumR"),
+                             mass_accuracy = 0.01 ) {
   # calculate the MD for all compounds
-  md_df_exp <- mass_defect_calculation(dataframe)
+  md_df <- mass_defect_calculation(dataframe)
   # make filtered list experimental data
-  filter_list_exp <- make_filter_list(md_df_exp)
+  filter_list <- make_filter_list(md_df)
   # filter experimental data
-  filtered_df_exp <- MD_filter(md_df_exp, filter_list_exp)
+  filtered_df <- MD_filter(MD_df = md_df, filter_df = filter_list,
+                               incl_list = incl_list, mass_accuracy = mass_accuracy,
+                               incl_list_path = incl_list_path)
   # plotting
   if (mz_MD_plot == T) {
-    plot_mz_MD(md_df_exp, filtered_df_exp)
+    plot_mz_MD(md_df, filtered_df)
   }}
 
