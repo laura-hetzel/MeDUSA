@@ -2,7 +2,7 @@
 % Please edit documentation in R/massDefect.R
 \name{plot_mz_MD}
 \alias{plot_mz_MD}
-\title{Plotting of the data - m/z vs. MD}
+\title{Plotting of the filtered data - m/z vs. MD}
 \usage{
 plot_mz_MD(MD_df, MD_df_filtered)
 }
@@ -12,5 +12,5 @@ plot_mz_MD(MD_df, MD_df_filtered)
 \item{MD_df_filtered}{data frame obtained from the experimental data using `MD_filter`}
 }
 \description{
-Plotting of the data - m/z vs. MD
+Plotting of the filtered data - m/z vs. MD
 }

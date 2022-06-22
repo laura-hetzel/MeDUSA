@@ -14,7 +14,7 @@ sumR Package
 Authors:
 \itemize{
   \item Ahmed Ali \email{ali@lacdr.leidenuniv.nl}
-  \item Klara Blaschitz
+  \item Klara klara.blaschitz@outlook.com Blaschitz (\href{https://orcid.org/0000-0001-5059-4730}{ORCID})
   \item Pascal Maas \email{p.maas@lacdr.leidenuniv.nl} (\href{https://orcid.org/0000-0001-9379-6041}{ORCID})
   \item Eman Muhammad
   \item Merys Valdez \email{m.e.valdez@lacdr.leidenuniv.nl}

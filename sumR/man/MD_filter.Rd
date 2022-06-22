@@ -19,8 +19,8 @@ MD_filter(
 
 \item{filter_df}{obtained from the `make_filter_list`}
 
-\item{incl_list}{(optional) path to inclusion list obtained from
-user input or use of default inclusion list (McMillan et al., 2016)}
+\item{incl_list}{path to inclusion list obtained from user input
+or use of default inclusion list (McMillan et al., 2016)}
 
 \item{mass_accuracy}{(optional) obtained from user input or use of
 default value set to 0.01}

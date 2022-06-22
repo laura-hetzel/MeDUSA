@@ -29,9 +29,7 @@ make_filter_list <- function(filter_df) {
 #' @importFrom utils read.delim
 MD_filter <- function(MD_df, filter_df,
                       incl_list = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt",
-                        package = "sumR"
-                      ),
-                      mass_accuracy = 0.01) {
+                        package = "sumR"),mass_accuracy = 0.01) {
   incl_list <- read.delim(file = incl_list, sep = "\t")
   incl_list_filtered <- incl_list[which(incl_list$inclusion == "y"), ]
   # compare compounds from inclusion list to the data
@@ -78,5 +76,5 @@ MassDefectFilter <- function(dataframe, mz_MD_plot = TRUE) {
   # plotting
   if (mz_MD_plot == T) {
     plot_mz_MD(md_df_exp, filtered_df_exp)
-  }
+  }}
 

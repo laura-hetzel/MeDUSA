@@ -5,7 +5,8 @@ Version: 0.3.0
 Authors@R: c(
     person("Alida", "Kindt", , "a.s.d.kindt@lacdr.leidenuniv.nl", role = c("aut", "cre")),
     person("Ahmed", "Ali", , "ali@lacdr.leidenuniv.nl", role = "aut"),
-    person("Klara", "Blaschitz", role = "aut"),
+    person("Klara", "Blaschitz", role = "aut", "klara.blaschitz@outlook.com",
+           comment = c(ORCID = "0000-0001-5059-4730")),
     person("Pascal", "Maas", , "p.maas@lacdr.leidenuniv.nl", role = "aut",
            comment = c(ORCID = "0000-0001-9379-6041")),
     person("Eman", "Muhammad", role = "aut"),
@@ -59,6 +60,7 @@ Imports:
     tidyr,
     usedist,
     utils,
+    umap,
     viridis
 Suggests: 
     knitr,
@@ -71,4 +73,4 @@ RdMacros:
 biocViews:
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
