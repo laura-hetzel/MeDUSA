@@ -47,8 +47,8 @@ rawToMzml <- function(folder, output = getwd(), rt = NULL, options = ""){
 
 
 #' @title ppm calculation
-#' @description ppm_calc calculated the parts per million
-#' error between two different masses
+#' @description ppm_calc calculates the parts per million
+#' error between two adjacent masses
 #' @param mass1 input from the `align_check` functions
 #' @param mass2 input from the `align_check` functions
 ppm_calc <- function(mass1, mass2) {
@@ -57,9 +57,9 @@ ppm_calc <- function(mass1, mass2) {
 }
 
 
-#' @title alignment check
+#' @title alignment quality control
 #' @description uses the ppm_calc function to check
-#' ppm error of aligned peaks, alignment quality control
+#' ppm error of aligned peaks
 #' @param aligned_peaks dataframe of aligned peaks
 #' obtained from `iteration`
 #' @export
@@ -70,7 +70,7 @@ align_check <- function(aligned_peaks) {
   return(ppm_err_fn)
 }
 
-#' @title Boxplot of the ppm errors (aligned data)
+#' @title Boxplot of the ppm errors
 #' @param ppm_err_fn dataframe obtained from `align_check`
 #' @importFrom ggplot2 ggplot
 ppm_err_plot <- function(ppm_err_fn) {
@@ -81,22 +81,24 @@ ppm_err_plot <- function(ppm_err_fn) {
   return(ppm_err_plot_fn)
 }
 
-#' @title Alignment analysis (optional boxplot)
-#' @description various kinds of analysis are possible,
+#' @title Alignment analysis (optional summary & boxplot of ppm errors)
+#' @description various kinds of visualizations are possible,
 #' check_binning ensures m/z values are correctly aligned/binned,
 #' check_binning outputs either a dataframe (1) or
 #' a list of two to three elements:
 #' 1- Dataframe of 1 column containing the ppm error values
 #' 2- (optional)table of summary stats of ppm error values
-#' 3- (optional)- boxplot of the ppm error values
-#' with xcoords zoomed in to -50,0 (default)
+#' 3- (optional)boxplot of the ppm error values with xcoords
+#' zoomed in to -50,0 (default)
+#' decide via logical (optional) values which results are
+#' created, if there is no input only 1 will be created
 #' @param aligned_peaks dataframe obtained from `iteration`
 #' @param summary_errors (optional)logical value obtained from
-#' user input per default set to FALSE
+#' user input, per default set to FALSE
 #' @param boxplot (optional) logical value obtained from user
-#' input per default set to FALSE
+#' input, per default set to FALSE
 #' @param xcoords (optional) vector defining zoom on boxplot
-#' obtained from user input or use of default value c(-50, 0)
+#' obtained from user input, default value set to c(-50, 0)
 #' @importFrom ggplot2 ggplot
 #' @export
 check_binning <- function(aligned_peaks, summary_errors = F,
