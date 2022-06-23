@@ -5,8 +5,9 @@ Version: 0.3.0
 Authors@R: c(
     person("Alida", "Kindt", , "a.s.d.kindt@lacdr.leidenuniv.nl", role = c("aut", "cre")),
     person("Ahmed", "Ali", , "ali@lacdr.leidenuniv.nl", role = "aut",
-            comment = c(ORCID = "0000-0003-2157-4399")),
-    person("Klara", "Blaschitz", role = "aut"),
+    comment = c(ORCID = "0000-0003-2157-4399")),
+    person("Klara", "Blaschitz", role = "aut", "klara.blaschitz@outlook.com",
+           comment = c(ORCID = "0000-0001-5059-4730")),
     person("Pascal", "Maas", , "p.maas@lacdr.leidenuniv.nl", role = "aut",
            comment = c(ORCID = "0000-0001-9379-6041")),
     person("Eman", "Muhammad", role = "aut"),
@@ -32,14 +33,15 @@ Imports:
     GGally,
     ggplot2,
     ggpubr,
-    ggrepel,
     glmnet,
     graphics,
+    IMIFA,
+    lattice,
+    logging,
     MassSpecWavelet,
     miscTools,
     mixOmics,
     mzR,
-    openxlsx,
     parallel,
     pbapply,
     PeriodicTable,
@@ -51,20 +53,20 @@ Imports:
     Rdisop,
     Rdpack,
     rstatix,
+    SAVER,
+    sqldf,
     stringr,
     superheat,
     tibble,
     tidyr,
-    umap,
     usedist,
     utils,
+    umap,
     viridis
 Suggests: 
-    plot3D,
     knitr,
     rmarkdown,
-    testthat,
-    SAVER
+    testthat
 VignetteBuilder: 
     knitr
 RdMacros: 
@@ -72,4 +74,4 @@ RdMacros:
 biocViews:
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
