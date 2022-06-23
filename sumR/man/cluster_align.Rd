@@ -9,9 +9,6 @@ cluster_align(bin_element)
 \arguments{
 \item{bin_element}{}
 }
-\value{
-
-}
 \description{
 Title
 }
