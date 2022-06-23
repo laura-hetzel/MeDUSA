@@ -4,12 +4,20 @@
 \alias{MassDefectFilter}
 \title{Mass defect filter pipeline}
 \usage{
-MassDefectFilter(cells, mz_MD_plot = TRUE)
+MassDefectFilter(
+  dataframe,
+  mz_MD_plot = TRUE,
+  incl_list = F,
+  incl_list_path = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt", package
+    = "sumR"),
+  mass_accuracy = 0.01
+)
 }
 \arguments{
-\item{mz_MD_plot}{logical variable deciding if plot is wanted per default set to TRUE}
-
 \item{dataframe}{containing the data, intensities and mz}
+
+\item{mz_MD_plot}{logical variable deciding if plot is
+wanted per default set to TRUE}
 }
 \description{
 Mass defect filter pipeline
