@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{ppm_err_plot}
 \alias{ppm_err_plot}
-\title{Boxplot of the ppm errors (aligned data)}
+\title{Boxplot of the ppm errors}
 \usage{
 ppm_err_plot(ppm_err_fn)
 }
@@ -10,5 +10,5 @@ ppm_err_plot(ppm_err_fn)
 \item{ppm_err_fn}{dataframe obtained from `align_check`}
 }
 \description{
-Boxplot of the ppm errors (aligned data)
+Boxplot of the ppm errors
 }

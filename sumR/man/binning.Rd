@@ -13,7 +13,8 @@ binning(mass, intensities, samples, tolerance = 5e-06)
 
 \item{samples}{obtained from the input files}
 
-\item{tolerance}{obtained from the user input or use of default value 5e-6}
+\item{tolerance}{(optional) obtained from the user input,
+default value set to 5e-6}
 }
 \description{
 binning dependency 2

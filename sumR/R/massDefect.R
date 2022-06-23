@@ -25,7 +25,7 @@ make_filter_list <- function(filter_df) {
 #' to FALSE, decides if inclusion list is used or not
 #' @param incl_list_path (optional, use only if incl_list = T)path to
 #' inclusion list obtained from user input, default inclusion list from
-#' (McMillan et al., 2016)
+#' \insertRef{mcmillan_renaud_gloor_reid_sumarah_2016}{sumR}
 #' @param mass_accuracy (optional, use only if incl_list = T) obtained
 #' from user input, default value set to 0.01
 #' @importFrom utils read.delim

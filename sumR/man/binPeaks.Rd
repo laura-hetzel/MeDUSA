@@ -9,8 +9,9 @@ binPeaks(df_list, tolerance = 5e-06)
 \arguments{
 \item{df_list}{list of dataframes obtained from the input files}
 
-\item{tolerance}{obtained from the user input or use of default value 5e-6}
+\item{tolerance}{(optional) obtained from the user input,
+default value set to 5e-6}
 }
 \description{
-binPeaks function! This needs the two functions above
+sorting peaks into bins, relies on binning dependencies 1&2
 }

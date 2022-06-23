@@ -17,7 +17,7 @@ MassDefectFilter(
 \item{dataframe}{containing the data, intensities and mz}
 
 \item{mz_MD_plot}{logical variable deciding if plot is
-wanted per default set to TRUE}
+created per default set to TRUE}
 }
 \description{
 Mass defect filter pipeline

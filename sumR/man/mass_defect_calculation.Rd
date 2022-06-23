@@ -7,8 +7,9 @@
 mass_defect_calculation(dataframe)
 }
 \arguments{
-\item{dataframe}{data frame containing experimental data}
+\item{dataframe}{data frame containing experimental data
+df must contain an mz column}
 }
 \description{
-here a simplified MD, the mass' decimal number
+here a simplified MD, decimal number of the mass
 }
