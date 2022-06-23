@@ -2,7 +2,7 @@
 % Please edit documentation in R/massDefect.R
 \name{make_filter_list}
 \alias{make_filter_list}
-\title{Defining MD cut-off}
+\title{Defining Mass Defect filter}
 \usage{
 make_filter_list(filter_df)
 }
@@ -10,6 +10,6 @@ make_filter_list(filter_df)
 \item{filter_df}{obtained from the HMDB using `mass_defect_calculation`}
 }
 \description{
-the theoretical maximum MD of human metabolites
+the theoretical maximum Mass Defect of human metabolites
 is used to calculate this cut off
 }

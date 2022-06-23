@@ -1,5 +1,4 @@
-#' @title Mass defect (MD) calculation
-#' @description here a simplified MD, the mass' decimal number
+#' @title Mass defect calculation function
 #' @param dataframe data frame containing experimental data
 #' @export
 mass_defect_calculation <- function(dataframe) {
@@ -8,8 +7,8 @@ mass_defect_calculation <- function(dataframe) {
   return(dataframe)
 }
 
-#' @title Defining MD cut-off
-#' @description the theoretical maximum MD of human metabolites
+#' @title Defining Mass Defect filter
+#' @description  the theoretical maximum Mass Defect of human metabolites
 #' is used to calculate this cut off
 #' @param filter_df obtained from the HMDB using `mass_defect_calculation`
 #' @export
@@ -18,45 +17,36 @@ make_filter_list <- function(filter_df) {
   return(filter_df)
 }
 
-
-#' @title Filtering the data by MD cut-off and inclusion list
+#' @title Filtering the data by  mass defect
 #' @param MD_df obtained from from the HMDB using `mass_defect_calculation`
 #' @param filter_df obtained from the `make_filter_list`
-#' @param incl_list (optional) logical value from user input, default set
-#' to FALSE, decides if inclusion list is used or not
-#' @param incl_list_path (optional, use only if incl_list = T)path to
-#' inclusion list obtained from user input or use of default inclusion
-#' list (McMillan et al., 2016)
-#' @param mass_accuracy (optional, use only if incl_list = T) obtained
-#' from user input or use of default value set to 0.01
+#' @param incl_list (optional) path to inclusion list obtained from
+#' user input or use of default inclusion list (McMillan et al., 2016)
+#' @param mass_accuracy (optional) obtained from user input or use of
+#' default value set to 0.01
 #' @importFrom utils read.delim
-MD_filter <- function(MD_df, filter_df, incl_list,
-                      incl_list_path = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt",
-                                                                                package = "sumR"),
-                      mass_accuracy) {
-  if (incl_list == T) {
-    list <- read.delim(file = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt",
-                                          package = "sumR"), sep = "\t")
-    incl_list_filtered <- list[which(list$inclusion == "y"), ]
-    # compare compounds from inclusion list to the data
-    cmp <- function(MD_df, incl_list_filtered, cutoff = mass_accuracy) {
-      abs(incl_list_filtered - MD_df) <= cutoff
-    }
-    # assign comparable values a logical TRUE value
-    match <- which(outer(incl_list_filtered$mz, MD_df$mz, cmp), arr.ind = TRUE)
-    # return row names of TRUE rows
-    filtered_rows <- rownames(MD_df)[as.numeric(levels(factor(match[, 2])))]
-    ## keep rows in MD_df if m/z defect is less than or equal to fitted value
-    ## OR value is in inclusion list
-    filtered_df <- MD_df[which((MD_df$MD <= filter_df$mz) | rownames(MD_df) %in% filtered_rows), ]
+MD_filter <- function(MD_df, filter_df,
+                      incl_list = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt",
+                        package = "sumR"
+                      ),
+                      mass_accuracy = 0.01) {
+  incl_list <- read.delim(file = incl_list, sep = "\t")
+  # if in the input data inclusion list is put to yes it is included here
+  incl_list_filtered <- incl_list[which(incl_list$inclusion == "y"), ]
+  # compare compounds from inclusion list to the data
+  cmp <- function(MD_df, incl_list_filtered, cutoff = mass_accuracy) {
+    abs(incl_list_filtered - MD_df) <= cutoff
   }
-  else {
-    filtered_df <- MD_df[which(MD_df$MD <= filter_df$mz), ]
-  }
-  return(filtered_df)
+  # assign comparable values a logical TRUE value
+  match <- which(outer(incl_list_filtered$mz, MD_df$mz, cmp), arr.ind = TRUE)
+  # return row names of TRUE rows
+  filtered_rows <- rownames(MD_df)[as.numeric(levels(factor(match[, 2])))]
+  # keep rows in MD_df if m/z defect is less than or equal to fitted value OR value is in inclusion list
+  filter_df <- MD_df[which((MD_df$MD <= filter_df$mz) | rownames(MD_df) %in% filtered_rows), ]
+  return(filter_df)
 }
 
-#' @title Plotting of the filtered data - m/z vs. MD
+#' @title Plotting of the data - m/z vs. MD
 #' @param MD_df data frame obtained from the experimental data using `mass_defect_calculation`
 #' @param MD_df_filtered data frame obtained from the experimental data using `MD_filter`
 #' @export
@@ -73,25 +63,27 @@ plot_mz_MD <- function(MD_df, MD_df_filtered) {
 
 #' @title Mass defect filter pipeline
 #' @param dataframe containing the data, intensities and mz
-#' @param mz_MD_plot logical variable deciding if plot is
-#' wanted per default set to TRUE
+#' @param mz_MD_plot logical variable deciding if plot is wanted per default set to TRUE
 #' @importFrom stats na.omit
 #' @importFrom utils read.delim
 #' @export
-MassDefectFilter <- function(dataframe, mz_MD_plot = TRUE, incl_list = F,
-                             incl_list_path = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt",
-                                                          package = "sumR"),
-                             mass_accuracy = 0.01 ) {
+MassDefectFilter <- function(cells, mz_MD_plot = TRUE) {
+  dataframe <- rowData(cells)
   # calculate the MD for all compounds
-  md_df <- mass_defect_calculation(dataframe)
+  md_df_exp <- mass_defect_calculation(dataframe)
   # make filtered list experimental data
-  filter_list <- make_filter_list(md_df)
+  filter_list_exp <- make_filter_list(md_df_exp)
   # filter experimental data
-  filtered_df <- MD_filter(MD_df = md_df, filter_df = filter_list,
-                               incl_list = incl_list, mass_accuracy = mass_accuracy,
-                               incl_list_path = incl_list_path)
+  filtered_df_exp <- MD_filter(md_df_exp, filter_list_exp)
   # plotting
   if (mz_MD_plot == T) {
-    plot_mz_MD(md_df, filtered_df)
-  }}
+    plot_mz_MD(md_df_exp, filtered_df_exp)
+  }
+  cells <- cells[rownames(filtered_df_exp), ]
+  rowData(cells) <- filtered_df_exp
+  cells
+}
 
+filterMassDefect <- function(df){
+  df[df$mz %% 1 <= (0.00112 * df$mz + 0.01953), ]
+}

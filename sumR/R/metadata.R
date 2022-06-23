@@ -32,9 +32,10 @@ setMetadata <- function(exp, ...){
 #' @param xlsxFile
 #' @param idxColumn
 #' @param sheet
+#' @importFrom openxlsx read.xlsx
 #' @export
 metadataFromExcel <- function(xlsxFile, idxColumn, sheet = 1){
-  df <- openxlsx::read.xlsx(xlsxFile, sheet)
+  df <- read.xlsx(xlsxFile, sheet)
   if (!idxColumn %in% colnames(df)) stop(sprintf("Error reading excel file, could not find column %s", idxColumn))
   if (any(duplicated(df[, idxColumn]))) stop(sprintf("Non-unique values found in %s", idxColumn))
 

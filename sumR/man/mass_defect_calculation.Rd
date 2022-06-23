@@ -2,7 +2,7 @@
 % Please edit documentation in R/massDefect.R
 \name{mass_defect_calculation}
 \alias{mass_defect_calculation}
-\title{Mass defect (MD) calculation}
+\title{Mass defect calculation function}
 \usage{
 mass_defect_calculation(dataframe)
 }
@@ -10,5 +10,5 @@ mass_defect_calculation(dataframe)
 \item{dataframe}{data frame containing experimental data}
 }
 \description{
-here a simplified MD, the mass' decimal number
+Mass defect calculation function
 }

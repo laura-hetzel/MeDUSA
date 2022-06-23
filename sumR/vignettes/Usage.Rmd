@@ -8,6 +8,7 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+# bibliography: references.bib
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -43,7 +44,7 @@ suppressWarnings(suppressPackageStartupMessages(library(sumR)))
 Next, we set the directory where our data is located. The path to the directory needs to be the full path, which can be assured with the `file.path()` function. In case of .mzML files in this directory, we can get the path to those files with the `list.files()` function.
 
 ```{r files}
-dir <- file.path(r"(F:\stem_cell_blank_cell_samples)")
+dir <- file.path(r"(C:\Users\pmaas\stem_cells\mzml)")
 files <- list.files(path = dir, pattern = ".mzML$", full.names = TRUE)
 ```
 
@@ -53,15 +54,15 @@ For sumR to analyze data, the data must be in the `.mzML` format. In case you ha
 
 the rawToMzml function requires an input directory (like we defined above) and an output folder to store the mzML files. It is recommended to use an empty or non-existing folder to ensure the output folder only contains mzML files. The function returns the file paths of the newly created mzML files.
 
-```{r eval = F}
-files <- rawToMzml(dir, output = file.path(getwd(), "test2"))
+```{r convert}
+files <- rawToMzml(dir, output = file.path(r"(C:\Users\pmaas\stem_cells\mzml)"))
 ```
 
 ### Defining Metadata
 
 To make use of the full pipeline, it is mandatory to supply a `data.frame` of metadata. To ensure proper integration, ensure that the row names are equal to the base name of the file, without file extension. E.g. a file called `sample001.mzML` would translate into `sample001` as a proper row name. This name is matched to the data file names to match data with the supplied metadata.
 
-Columns may contain metadata about each of the samples/cells. Here we prepared metadata with two additional columns: `Sample.number` and `phenotype`. The former contains the number of each cell, while the latter contains the cell differentiation status. We will use this phenotype during modelling after post-processing. The table below shows the contents of the metadata.
+Columns may contain metadata about each of the samples/cells. Here we prepared metadata with three additional columns: `Sample.number`, `phenotype`, and `Type`. The first column contains the number of each cell, the second contains the cell differentiation status and the third columns contains the sample type, here either `SAMPLE` or `BLANK`. We will use this phenotype during modelling after post-processing. The table below shows the contents of the metadata.
 
 ```{r metadata, eval = T}
 df <- read.csv("metadata.csv", row.names = 1)
@@ -74,12 +75,13 @@ knitr::kable(tail(df), caption = "End of the metadata file")
 
 ### Spectrum-based Peak picking
 
-Cells measured using DI-MS can be analyzed using spectrum-based peak picking. This approach uses Wavelet peak picking as described by [P Du, et al. 2006](https://doi.org/10.1093/bioinformatics/btl355). Here, we'll start with processing scans with negative polarity, as given by the "-" value for the parameter `polarity`. the `peackPicking()` function requires a vector of file locations and offers some optional parameters. If `massDefect` is set to `TRUE`, each found m/z is checked for potential salt clusters and other non-biological compounds. `massWindow` acts as a filter for scan windows in e.g. fractional scans. The value set here is the maximum m/z window taken for a scan.
+Cells measured using DI-MS can be analyzed using spectrum-based peak picking. This approach uses Wavelet peak picking as described by [P Du, et al. 2006](https://doi.org/10.1093/bioinformatics/btl355). Here, we'll start with processing scans with negative polarity, as given by the "-" value for the parameter `polarity`. the `peackPicking()` function requires a vector of file locations and offers some optional parameters. `massWindow` acts as a filter for scan windows in e.g. fractional scans. The value set here is the maximum m/z window taken for a scan.
 
 `peakPicking()` returns a list of dataframes with found peaks in each given file.
 
 ```{r peakPicking}
-peaks <- peakPicking(files, massDefect = FALSE, massWindow = 200, polarity = "-")
+peaks <- peakPicking(files, massWindow = c(100, 200), 
+                     noiseWindow = 0.1, polarity = "-")
 ```
 
 #### Inspecting results
@@ -91,7 +93,7 @@ We can inspect the peaks by using three different type of plots.
 -   `cellPlot()` plots the identified signals as dots over all scans with the SNR as scale for the size of the dots. This plot gives an indication for all signals identified in a file. This is combined with a density plot to indicate the amount of peaks found in a mass-scan range.
 
 ```{r plots}
-spectrumPlot(peaks, file = 14, scan = 2)
+spectrumPlot(peaks, file = 1, scan = 7)
 noisePlot(peaks, file = 14)
 cellPlot(peaks, file = 14)
 ```
@@ -101,17 +103,17 @@ cellPlot(peaks, file = 14)
 Using the plots for inspection, we can filter the peaks based on minimum SNR and/or intensity values. Here we pick an SNR of 1 and minimum intensity of 1.000.
 
 ```{r peakPlot}
-peakFilter(peaks, SNR = 0.3, intensity = 1e3) %>%
+peakFilter(peaks, SNR = 0.5, intensity = 1e3) %>%
   spectrumPlot(file = 14, scan = 2)
 
-peakFilter(peaks, SNR = 0.3, intensity = 1e3) %>%
+peakFilter(peaks, SNR = 0.5, intensity = 1e3) %>%
   cellPlot(file = 14)
 ```
 
 Next, we use these settings to filter our peaks. This function returns a similar list-object as `peakPicking()`, thus we override the previous variable `peaks`.
 
 ```{r peakFilter}
-peaks <- peakFilter(peaks, SNR = 0.3, intensity = 1e3)
+peaks <- peakFilter(peaks, SNR = 0.5, intensity = 1e3)
 ```
 
 ### Spectra Alignment
@@ -119,7 +121,7 @@ peaks <- peakFilter(peaks, SNR = 0.3, intensity = 1e3)
 After we've detected our peaks, we need to find which peaks should be considered equal across spectra within a cell. We use the function `spectraBinning()` to bin masses with a given `tolerance`. Since we're using direct injection, we cannot use chromatography to identify compounds. However, we do expect to find compounds multiple times across scans. This is adjusted using the `npeaks` parameter. Lastly, we can either use "sum" or "mean" for the intensities in the same bin, given by the parameter `method`.
 
 ```{r spectraBinning}
-spectra <- spectraBinning(peaks, npeaks = 10, method = "sum", tolerance = 1e-5)
+spectra <- spectraBinning(peaks, npeaks = 5, method = "sum", tolerance = 1e-5)
 ```
 
 #### Inspecting Spectra Shifts
@@ -144,7 +146,7 @@ exp
 Similarly to spectra, we can inspect the mass shift between cells.
 
 ```{r cellShift}
-plotCellShift(exp)
+cellShiftPlot(exp)
 ```
 
 ## Post-processing
@@ -156,13 +158,18 @@ Now that we've extracted features from our data, we need to post-process the dat
 When Blank samples are measured, these can be used to filter any features. `blankThresh` indicates the fold-change needed to exceed for a sample to be kept. By default, samples must have an intensity of at least 5x higher than the blank samples in order to be kept. This ensures that noise peaks are removed. The `sampleThresh` parameter determines the number of samples that can be below the blank threshold in order to be retained. With the default, any number of samples may be below the blank threshold, thus no features will be removed. Setting the parameter `filter` to TRUE will remove any features that have `sampleThresh` samples below the `blankThresh` fold change. Setting this parameter will not remove any features. To remove the blank samples, set the `removeBlanks` parameter to TRUE (the default)
 
 ```{r Blanks}
-exp <- blankSubstraction(exp, blankThresh = 5, sampleThresh = Inf,
+exp <- blankSubstraction(exp, blankThresh = 5, sampleThresh = 5,
                               filter = TRUE, removeBlanks = TRUE)
 exp
 ```
 
-### Feature filter
+### Mass Defect Filter
+Each found m/z is checked for potential salt clusters and other non-biological compounds.
+```{r}
+exp <- MassDefectFilter(exp)
+```
 
+### Feature filter
 While drop-out is a real phenomenon, one strategy may be to remove features that occur in only a few cells. `featureFilter()` allows for filtering features based on non-`NA` values. The parameter `nCells` can be set to an integer determining the minimum number of non-`NA` values for each feature. Similarly, the parameter `pCells` does the same, but based on a percentage (as a ratio). Here we only keep features that occur in at least 1% of the cells.
 
 ```{r featureFilter}
@@ -184,7 +191,7 @@ exp
 Due to the dropout effect, single cell datasets will contain over 50% of NA values which will need to be imputed for statistical analysis. `sumR` currently has two methods for imputation, determined by the parameter `method`. This parameter can either be set to `"noise"` or `"saver"`. The former is a noise-based random imputation method. It will generate a random number between 1 and the value of `noise`, which defaults to 100. The saver method is model-based that assumes a poisson distribution and will generate values that are similar to highly correlated cells.
 
 ```{r imoputation}
-exp <- imputation(exp, method = "noise", noise = 100, seed = 42)
+exp <- imputation(exp, method = "magic", noise = 1000, seed = 42)
 exp
 ```
 
@@ -193,8 +200,8 @@ exp
 Another source of unwanted features is fragmented features. These are features that show highly correlated intensity values and are generally removed during post-processing. Here we use the function `fragmentFilter()` to remove highly correlated features. The threshold of correlation can be determined by the parameter `corr`, which is set here at 99.9% using a fraction. This is higher as common correlation thresholds due to the large number of imputated values, which results in highly correlated features.
 
 ```{r fragments}
-exp <- fragmentFilter(exp, corr = 0.999)
-exp
+#exp <- fragmentFilter(exp, corr = 0.999)
+#exp
 ```
 
 ## Processing pipeline
@@ -202,15 +209,16 @@ exp
 We can combine the process in a pipeline using the 'pipe' notation of the `dplyr` package. Here we are using the same settings as the previous steps except for positive polarity instead of negative polarity.
 
 ```{r pipeline}
-exp2 <- peakPicking(files, massDefect = FALSE, massWindow = 200, polarity = "+") %>%
-  peakFilter(SNR = 1, intensity = 1e3) %>%
-  spectraBinning(npeaks = 10, method = "sum", tolerance = 1e-5) %>%
+exp2 <- peakPicking(files, massWindow = c(100, 200), polarity = "+") %>%
+  peakFilter(SNR = 0.5, intensity = 1e3) %>%
+  spectraBinning(npeaks = 5, method = "sum", tolerance = 1e-5) %>%
   cellBinning(cellData = df, phenotype = "phenotype", tolerance = 1e-5) %>%
-  blankSubstraction() %>%
+  blankSubstraction(sampleThresh = 5) %>%
+  MassDefectFilter() %>%
   featureFilter(pCells = 0.01) %>%
   isotopeTagging(filter = TRUE) %>%
-  imputation(method = "noise") %>%
-  fragmentFilter(corr = 0.999)
+  imputation(method = "rf") #%>%
+ # fragmentFilter(corr = 0.999)
 exp2
 ```
 
@@ -247,7 +255,7 @@ expModel
 Due to the drop-out effect, a large amount of values need to be imputed. Generally, this causes these features to have a low variance and consequently a low impact on models. With the function `keepVariableFeatures()` we can subset the found features based on their variance. Using the `top` parameter, we can select the top **N** features with the most variance. Here we select the 200 features with most variance. Using the `plotFeatureSds()` function we can inspect the standard deviation of each feature in a barplot.
 
 ```{r variableFeatures}
-expModel <- keepVariableFeatures(expModel, top = 50)
+expModel <- keepVariableFeatures(expModel, top = 250)
 plotFeatureSds(expModel)
 ```
 

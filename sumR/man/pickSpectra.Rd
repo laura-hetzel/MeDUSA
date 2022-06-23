@@ -4,7 +4,7 @@
 \alias{pickSpectra}
 \title{Pick peaks in a spectrum}
 \usage{
-pickSpectra(x, SNR = 0, maxScale = 32)
+pickSpectra(x, SNR = 0, maxScale = 32, noiseWindow = 0.1)
 }
 \description{
 Pick peaks in a spectrum

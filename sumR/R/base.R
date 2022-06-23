@@ -19,6 +19,46 @@ read_msdata <- function(path = "data") {
   return(ms_data[order(ms_data$mz), ])
 }
 
+#' @title Function specfic for formatting aliquots in BMFL format
+#' @param df Dataframe of metadata
+bmflAliquots <- function(df){
+  if (ncol(df) != 8) {
+    colnames(df) <- c("Aliquot", "Sample", "Type", "CalNo", "Replicate", "Injection")
+    df <- cbind(data.frame(Path = df$Aliquot), df)
+    df$Collection <- NA
+    df$SubCollection <- NA
+  } else {
+    colnames(df) <- c("Path", "Collection", "Aliquot", "Sample", "Type", "CalNo", "Replicate", "Injection")
+  }
+  df$Path <- paste0(df$Path, ".mzML")
+  df$Type[df$Type == ""] <- "SAMPLE"
+
+  count <- stringr::str_count(df$Collection, "/") + 1
+  collectionDf <- stringr::str_split_fixed(df$Collection, "/", count)
+  df$SubCollection <- collectionDf[ncol(collectionDf)]
+  df$Collection <- paste0(collectionDf[, -ncol(collectionDf)], collapse = "/")
+  df[df == ""] <- NA
+  rownames(df) <- df$Aliquot
+  df
+}
+
+#' @title Receive metadata from aliquot names
+#' @param aliquots
+#' @param regex
+#' @param type
+#' @param columns
+#' @export
+metadataFromAliquots <- function(aliquots, regex = "([0-9]{4}[A-Z]{3}_[0-9]{4})([A-Z]+|)([0-9]+|)_([A-Z])([0-9])",
+                                 type = "BMFL", columns = NULL){
+  if (any(grepl("/", aliquots))) {
+    regex <- paste0("(.*)/(", regex, ")")
+  }
+  matches <- regmatches(aliquots, gregexec(regex, aliquots))
+  df <- as.data.frame(do.call(rbind, lapply(matches, t)))
+  if (type == "BMFL") df <- bmflAliquots(df)
+  df
+}
+
 #' @title Convert RAW files to mzML
 #' @param folder
 #' @param outputFolder
@@ -27,28 +67,28 @@ read_msdata <- function(path = "data") {
 rawToMzml <- function(folder, output = getwd(), rt = NULL, options = ""){
 
   options <- paste(options, collapse = " ")
-  files <- list.files(file.path(folder), full.names = T, pattern = "^(?!.*mzML).*")
+  files <- list.files(file.path(folder), full.names = T)
+  files <- files[grep(".mzML$", files, invert = T)]
   output <- file.path(output)
   if (!dir.exists(output)) dir.create(output)
   key <- "Directory\\shell\\Open with MSConvertGUI\\command"
   reg <- tryCatch(utils::readRegistry(key, "HCR"), error = function(e) NULL)
   msconvert <- file.path(dirname(sub("\"([^\"]*)\".*", "\\1", reg[[1]])), "msconvert.exe")
-  if (is.null(msconvert)) return(NULL)
+  if (!grepl("msconvert", msconvert)) msconvert <- "msconvert"
 
   rt <- ifelse(is.null(rt), "", sprintf('--filter "scanTime [%s, %s]"', rt[1], rt[2]))
 
   pbapply::pblapply(files, function(file){
     command <- sprintf('"%s" "%s" %s %s -o "%s"',
                        file.path(msconvert), file, rt, options, output)
-    system(command, show.output.on.console = F)
+    system(command)
   })
-  list.files(folder, full.names = T, pattern = ".mzML")
+  list.files(file.path(output), full.names = T, pattern = ".mzML")
 }
 
 
 #' @title ppm calculation
-#' @description ppm_calc calculated the parts per million
-#' error between two different masses
+#' @description ppm_calc calculated the parts per million error between two different masses
 #' @param mass1 input from the `align_check` functions
 #' @param mass2 input from the `align_check` functions
 ppm_calc <- function(mass1, mass2) {
@@ -58,10 +98,7 @@ ppm_calc <- function(mass1, mass2) {
 
 
 #' @title alignment check
-#' @description uses the ppm_calc function to check
-#' ppm error of aligned peaks, alignment quality control
-#' @param aligned_peaks dataframe of aligned peaks
-#' obtained from `iteration`
+#' @param aligned_peaks dataframe of aligned peaks obtained iteration function
 #' @export
 align_check <- function(aligned_peaks) {
   odd_ind_fn <- seq(3, length(aligned_peaks$mz), 2)
@@ -70,9 +107,10 @@ align_check <- function(aligned_peaks) {
   return(ppm_err_fn)
 }
 
-#' @title Boxplot of the ppm errors (aligned data)
+#' @title Boxplot of the ppm errors
 #' @param ppm_err_fn dataframe obtained from `align_check`
 #' @importFrom ggplot2 ggplot
+#' @export
 ppm_err_plot <- function(ppm_err_fn) {
   ppm_err_plot_fn <- ggplot(ppm_err_fn, aes(x = ppm_error)) +
     geom_boxplot() +
@@ -81,25 +119,22 @@ ppm_err_plot <- function(ppm_err_fn) {
   return(ppm_err_plot_fn)
 }
 
-#' @title Alignment analysis (optional boxplot)
-#' @description various kinds of analysis are possible,
-#' check_binning ensures m/z values are correctly aligned/binned,
-#' check_binning outputs either a dataframe (1) or
-#' a list of two to three elements:
+#' @title Checking the results of the alignment with boxplot output if desired
+#' @description here the user can choose what kind of analysis they want to have on
+#' their alignment, check_process makes sure that all the m/z values are aligned/binned
+#' correctly, check_process takes a data frame of peaks with mz column as an argument,
+#' and the coordinates for the plot to be zoomed in on, as an optional argument
+#' check_process outputs either a dataframe (1) or a list of two to three elements:
 #' 1- Dataframe of 1 column containing the ppm error values
 #' 2- (optional)table of summary stats of ppm error values
-#' 3- (optional)- boxplot of the ppm error values
-#' with xcoords zoomed in to -50,0 (default)
+#' 3- (optional)- boxplot of the ppm erro values with xcoords zoomed in to -50,0 (default)
 #' @param aligned_peaks dataframe obtained from `iteration`
-#' @param summary_errors (optional)logical value obtained from
-#' user input per default set to FALSE
-#' @param boxplot (optional) logical value obtained from user
-#' input per default set to FALSE
-#' @param xcoords (optional) vector defining zoom on boxplot
-#' obtained from user input or use of default value c(-50, 0)
+#' @param summary_errors logical value obtained from user input per default set to FALSE
+#' @param boxplot logical value obtained from user input per default set to FALSE
+#' @param xcoords vector obtained from user input or use of default value c(-50, 0)
 #' @importFrom ggplot2 ggplot
 #' @export
-check_binning <- function(aligned_peaks, summary_errors = F,
+bin_align_check_process <- function(aligned_peaks, summary_errors = F,
                                     boxplot = F, xcoords = c(-50, 0)) {
   check <- align_check(aligned_peaks)
   x <- 2
@@ -118,6 +153,25 @@ check_binning <- function(aligned_peaks, summary_errors = F,
     check[[x]] <- error_plot
   }
   return(check)
+}
+
+
+#' @title Deletion of unwanted samples
+#' @description binning dependency 1
+#' delete any duplication of a samples
+#' delete any sample that is kicked out by the tolerance
+#' @param mass obtained from the input files
+#' @param intensities obtained from the input files
+#' @param samples obtained from the input files
+#' @param tolerance obtained from the user input or use of default value 5e-6
+condition <- function(mass, intensities, samples, tolerance = 5e-6) {
+  if (anyDuplicated(samples)) {
+    return(NA)
+  }
+  if (any(abs(mass - mean(mass)) / mean(mass) > tolerance)) {
+    return(NA)
+  }
+  return(mean(mass))
 }
 
 #' @title Substract Blanks from SummarizedExperiment

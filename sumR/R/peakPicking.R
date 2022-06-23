@@ -1,12 +1,13 @@
 #' @title Pick peaks in a spectrum
 #' @importFrom MassSpecWavelet getLocalMaximumCWT getRidge
-pickSpectra <- function(x, SNR = 0, maxScale = 32) {
+pickSpectra <- function(x, SNR = 0, maxScale = 32, noiseWindow = 0.1) {
   ms <- as.data.frame(x)
   colnames(ms) <- c("mz", "i")
+  winSize.noise <- (max(ms$mz) - min(ms$mz)) * noiseWindow
   wCoefs <- cbind("0" = ms$i, cwt_new(ms$i, max_scale = maxScale))
   localMax <- MassSpecWavelet::getLocalMaximumCWT(wCoefs)
   ridgeList <- MassSpecWavelet::getRidge(localMax)
-  majorPeakInfo <- identifyPeaks(ms$i, ridgeList, wCoefs,
+  majorPeakInfo <- identifyPeaks(ms$i, ridgeList, wCoefs, winSize.noise = winSize.noise,
                                  SNR.Th = SNR, nearbyPeak = TRUE
   )
 
@@ -66,7 +67,15 @@ formatScans <- function(f, massWindow, polarity, combineSpectra){
   x <- mzR::peaks(z)
   df <- mzR::header(z)
 
-  scans <- abs(df$scanWindowUpperLimit - df$scanWindowLowerLimit) <= massWindow
+  range <- abs(df$scanWindowUpperLimit - df$scanWindowLowerLimit)
+  if (length(massWindow) == 2){
+    scans <- range >= massWindow[1] & range <= massWindow[2]
+  } else if (length(massWindow) == 1){
+    scans <- range == massWindow
+  } else {
+    stop("Wrong length of massWindow")
+  }
+
   if (!is.null(polarity)) {
     polarity_filter <- grepl("FTMS - p NSI", df$filterString)
     if (polarity == "+") polarity_filter <- !polarity_filter
@@ -89,18 +98,17 @@ formatScans <- function(f, massWindow, polarity, combineSpectra){
 #' @importFrom dplyr distinct
 #' @importFrom tools file_path_sans_ext
 #' @export
-peakPicking <- function(files, massDefect = TRUE, polarity = NULL,
-                        combineSpectra = FALSE,
-                        massWindow = Inf,
+peakPicking <- function(files, polarity = NULL,
+                        combineSpectra = FALSE, massWindow = c(0, Inf), noiseWindow = 0.1,
                         cores = detectCores(logical = F)) {
   cl <- makeCluster(cores)
   clusterExport(cl, varlist = names(sys.frame()))
   samps <- tools::file_path_sans_ext(basename(files))
   result <- pbapply::pblapply(files, cl = cl, function(f) {
-    x <- sumR:::formatScans(f, massWindow, polarity, combineSpectra)
+    x <- formatScans(f, massWindow, polarity, combineSpectra)
 
     l <- lapply(x, function(spectrum) {
-      tryCatch(suppressWarnings(pickSpectra(spectrum)),
+      tryCatch(suppressWarnings(pickSpectra(spectrum, noiseWindow = noiseWindow)),
                error = function(err) NULL)
     })
 
@@ -111,8 +119,6 @@ peakPicking <- function(files, massDefect = TRUE, polarity = NULL,
     df <- dplyr::distinct(df[df$Value > 0, ])
     if (nrow(df) == 0) return(NULL)
     rownames(df) <- 1:nrow(df)
-    if (massDefect) df <- MassDefectFilter(df, F)
-
     df
   })
 
@@ -129,7 +135,7 @@ peakPicking <- function(files, massDefect = TRUE, polarity = NULL,
 
 identifyPeaks <- function(ms, ridgeList, wCoefs, scales = as.numeric(colnames(wCoefs)),
                           SNR.Th = 3, peakScaleRange = 5, ridgeLength = 32, nearbyPeak = FALSE,
-                          nearbyWinSize = 100, winSize.noise = 500, SNR.method = "quantile",
+                          nearbyWinSize = 100, winSize.noise = 50, SNR.method = "quantile",
                           minNoiseLevel = 0.001) {
   if (ridgeLength > max(scales)) ridgeLength <- max(scales)
   peakScaleRange <- scales[scales >= peakScaleRange]
@@ -329,7 +335,7 @@ spectraBinning <- function(peakList, fraction = 0, npeaks = 0, method = "sum",
                        meanSNR = 0, tolerance = 0.002) {
   pbapply::pblapply(peakList, function(spectra) {
     if (nrow(spectra) == 0) return(NULL)
-    df_list <- sumR:::doBinning(spectra, split = "scan",
+    df_list <- doBinning(spectra, split = "scan",
                                 tolerance = tolerance)
 
     df <- do.call(rbind, df_list)
@@ -402,12 +408,12 @@ cellBinning <- function(spectraList, cellData = NULL, phenotype = NULL,
   m <- cbind(m, matrix(NA, nrow = nrow(m), ncol = length(missing),dimnames = list(rownames(m), missing)))
   snr <- cbind(snr, matrix(NA, nrow = nrow(snr), ncol = length(missing), dimnames = list(rownames(snr), missing)))
 
-
+  mzs <- as.double(names(bins))
   se <- SummarizedExperiment(
     assays = list(Area = m, SNR = snr),
-    rowData = DataFrame(mz = as.double(names(bins)),
-                         mzmin = sapply(bins, function(x) min(x$mzdiff)),
-                         mzmax = sapply(bins, function(x) max(x$mzdiff))
+    rowData = DataFrame(mz = mzs,
+                         mzmin = mzs + sapply(bins, function(x) min(x$mzdiff)),
+                         mzmax = mzs + sapply(bins, function(x) max(x$mzdiff))
     ),
     metadata = list(phenotype = phenotype)
   )
