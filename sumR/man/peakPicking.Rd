@@ -7,7 +7,7 @@
 peakPicking(
   files,
   polarity = NULL,
-  peakPick = TRUE,
+  scaleFactor = 1,
   combineSpectra = FALSE,
   massWindow = c(0, Inf),
   noiseWindow = 0.1,

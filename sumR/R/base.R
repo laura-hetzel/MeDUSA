@@ -258,11 +258,11 @@ groupRowMax <- function(exp, group){
 colBindExperiments <- function(exps, mode = "intersect"){
   compares <- expand.grid(length(exps), length(exps))
 
-  for (i in 1:nrow(compares){
+  for (i in 1:nrow(compares)) {
     first <- compares[i, 1]
     second <- compares[i, 2]
     exps[[first]] <- matchRows(exps[[first]], exps[[second]])
-  })
+  }
 
   exps <- lapply(exps, function(x){
     x[order(rowData(exp)$mz), ]
