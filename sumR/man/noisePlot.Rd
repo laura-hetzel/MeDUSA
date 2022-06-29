@@ -2,10 +2,15 @@
 % Please edit documentation in R/peakPlots.R
 \name{noisePlot}
 \alias{noisePlot}
-\title{noisePlot}
+\title{noisePlot over all spectra}
 \usage{
 noisePlot(peaks, file = 1)
 }
+\arguments{
+\item{peaks}{List of datafres with peak picked data}
+
+\item{file}{File number of the files that were used.}
+}
 \description{
-noisePlot
+noisePlot over all spectra
 }

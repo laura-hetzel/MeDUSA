@@ -28,11 +28,12 @@ model <- function(exp, modelName = 1){
 }
 
 #' @title Model using RandomForest model
-#' @param exp
-#' @param classifiers
-#' @param assay
-#' @param cv
-#' @param ratio
+#' @param exp SummarizedExperiment object
+#' @param classifiers Column name in the colData that represents the classifiers
+#' @param assay Which assay should be used to create a model
+#' @param cv Number of folds to be used for cross validation
+#' @param ratio Train-test split ratio
+#' @param ... Any other parameters for preProcessing
 #' @importFrom caret train createDataPartition trainControl varImp confusionMatrix
 #' @importFrom stats predict
 #' @export

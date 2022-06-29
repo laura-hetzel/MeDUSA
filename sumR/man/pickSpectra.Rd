@@ -4,7 +4,14 @@
 \alias{pickSpectra}
 \title{Pick peaks in a spectrum}
 \usage{
-pickSpectra(x, SNR = 0, maxScale = 32, noiseWindow = 0.1)
+pickSpectra(
+  x,
+  SNR = 0,
+  scales = NULL,
+  maxScale = 32,
+  noiseWindow = 0.1,
+  solventFilter = NULL
+)
 }
 \description{
 Pick peaks in a spectrum

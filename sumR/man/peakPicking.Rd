@@ -7,10 +7,13 @@
 peakPicking(
   files,
   polarity = NULL,
+  peakPick = TRUE,
   combineSpectra = FALSE,
   massWindow = c(0, Inf),
   noiseWindow = 0.1,
-  cores = detectCores(logical = F)
+  scales = NULL,
+  cores = detectCores(logical = F),
+  solventFilter = NULL
 )
 }
 \description{

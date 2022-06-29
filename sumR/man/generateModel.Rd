@@ -15,6 +15,19 @@ generateModel(
   ...
 )
 }
+\arguments{
+\item{exp}{SummarizedExperiment object}
+
+\item{classifiers}{Column name in the colData that represents the classifiers}
+
+\item{assay}{Which assay should be used to create a model}
+
+\item{cv}{Number of folds to be used for cross validation}
+
+\item{ratio}{Train-test split ratio}
+
+\item{...}{Any other parameters for preProcessing}
+}
 \description{
 Model using RandomForest model
 }

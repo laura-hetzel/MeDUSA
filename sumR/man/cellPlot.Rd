@@ -6,6 +6,11 @@
 \usage{
 cellPlot(peaks, file = 1)
 }
+\arguments{
+\item{peaks}{List of datafres with peak picked data}
+
+\item{file}{File number of the files that were used.}
+}
 \description{
 plotCellPeaks
 }

@@ -6,6 +6,9 @@
 \usage{
 spectraShiftPlot(spectraList, file = 1)
 }
+\arguments{
+\item{file}{File number of the files that were used.}
+}
 \description{
 spectraShiftPlot
 }
