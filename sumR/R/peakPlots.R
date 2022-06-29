@@ -1,6 +1,6 @@
 #' @title Plot spectrum peaks
-#' @param peaks
-#' @param file
+#' @param peaks List of datafres with peak picked data
+#' @param file File number of the files that were used.
 #' @param scan
 #' @export
 spectrumPlot <- function(peaks, file = 1, scan = 1){
@@ -29,9 +29,9 @@ spectrumPlot <- function(peaks, file = 1, scan = 1){
   }
 }
 
-#' @title noisePlot
-#' @param peaks
-#' @param file
+#' @title noisePlot over all spectra
+#' @param peaks List of datafres with peak picked data
+#' @param file File number of the files that were used.
 #' @export
 noisePlot <- function(peaks, file = 1){
   result <- dplyr::distinct(peaks[[file]][,c("scan", "Noise")])
@@ -42,8 +42,8 @@ noisePlot <- function(peaks, file = 1){
 
 
 #' @title plotCellPeaks
-#' @param peaks
-#' @param file
+#' @param peaks List of datafres with peak picked data
+#' @param file File number of the files that were used.
 #' @export
 cellPlot <- function(peaks, file = 1){
   ggplot(peaks[[file]], aes(x = mz, y = scan, size = SNR)) +
@@ -54,7 +54,7 @@ cellPlot <- function(peaks, file = 1){
 
 #' @title spectraShiftPlot
 #' @param spectraList
-#' @param file
+#' @param file File number of the files that were used.
 #' @export
 spectraShiftPlot <- function(spectraList, file = 1){
   ggplot(as.data.frame(spectraList[[file]])) +
@@ -120,7 +120,7 @@ featureCellPlot <- function(cells, assay = "Area"){
 #' @title Plot feature spectra
 #' @param cells
 #' @param feature
-#' @param file
+#' @param file File number of the files that were used.
 #' @export
 plotRawFeature <- function(cells, feature, file){
   xmin <- rowData(cells)$mzmin[feature]

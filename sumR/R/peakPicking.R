@@ -1,14 +1,28 @@
 #' @title Pick peaks in a spectrum
 #' @importFrom MassSpecWavelet getLocalMaximumCWT getRidge
-pickSpectra <- function(x, SNR = 0, maxScale = 32, noiseWindow = 0.1) {
+pickSpectra <- function(x, SNR = 0, scales = NULL, maxScale = 32, noiseWindow = 0.1,
+                        solventFilter = NULL, scaleFactor = 1) {
   ms <- as.data.frame(x)
   colnames(ms) <- c("mz", "i")
+  if (!is.null(solventFilter)){
+    solventFilter <- solventFilter[solventFilter$mzmin >= min(ms$mz) & solventFilter$mzmax <= max(ms$mz), ]
+    lowerBound <- solventFilter$mzmin - 0.0003
+    upperBound <- solventFilter$mzmax + 0.0003
+
+    ms$i <- sapply(1:nrow(ms), function(i){
+      check <- any(ms[i, "mz"] >= lowerBound & ms[i, "mz"] <= upperBound)
+      if (check){
+        return(0)
+      }
+      return(ms[i, "i"])
+    })
+  }
   winSize.noise <- (max(ms$mz) - min(ms$mz)) * noiseWindow
-  wCoefs <- cbind("0" = ms$i, cwt_new(ms$i, max_scale = maxScale))
-  localMax <- MassSpecWavelet::getLocalMaximumCWT(wCoefs)
-  ridgeList <- MassSpecWavelet::getRidge(localMax)
+  wCoefs <- cbind("0" = ms$i, cwt_new(ms$i, scales, max_scale = maxScale, scaleFactor = scaleFactor))
+  localMax <- MassSpecWavelet::getLocalMaximumCWT(wCoefs, minWinSize = 0)
+  ridgeList <- MassSpecWavelet::getRidge(localMax, minWinSize = 0)
   majorPeakInfo <- identifyPeaks(ms$i, ridgeList, wCoefs, winSize.noise = winSize.noise,
-                                 SNR.Th = SNR, nearbyPeak = TRUE
+                                 SNR.Th = SNR, nearbyPeak = F, peakScaleRange = 0
   )
 
   df <- cbind(ms[as.vector(majorPeakInfo$allPeakIndex), ],
@@ -17,10 +31,7 @@ pickSpectra <- function(x, SNR = 0, maxScale = 32, noiseWindow = 0.1) {
               SNR = majorPeakInfo$peakSNR[names(majorPeakInfo$allPeakIndex)]
   )
   colnames(df) <- make.names(colnames(df), unique = T)
-
-  # new
- # if (intAsSig) df$SNR <- df$i / df$Noise
-  df[df$SNR >= SNR, ]
+  df
 }
 
 centroid <- function(spectrum, halfWindowSize = 2L) {
@@ -82,7 +93,7 @@ formatScans <- function(f, massWindow, polarity, combineSpectra){
     scans <- scans & polarity_filter
   }
 
-  if (combineSpectra & !is.infinite(massWindow)) {
+  if (combineSpectra & !any(is.infinite(massWindow))) {
     s <- split(which(scans), c(1, cumprod(diff(which(scans)))))
     x <- lapply(s, function(z) centroid(do.call(rbind, x[z])))
   } else {
@@ -98,9 +109,10 @@ formatScans <- function(f, massWindow, polarity, combineSpectra){
 #' @importFrom dplyr distinct
 #' @importFrom tools file_path_sans_ext
 #' @export
-peakPicking <- function(files, polarity = NULL,
-                        combineSpectra = FALSE, massWindow = c(0, Inf), noiseWindow = 0.1,
-                        cores = detectCores(logical = F)) {
+peakPicking <- function(files, polarity = NULL, scaleFactor = 1,
+                        combineSpectra = FALSE, massWindow = c(0, Inf),
+                        noiseWindow = 0.1, scales = NULL,
+                        cores = detectCores(logical = F), solventFilter = NULL) {
   cl <- makeCluster(cores)
   clusterExport(cl, varlist = names(sys.frame()))
   samps <- tools::file_path_sans_ext(basename(files))
@@ -108,16 +120,20 @@ peakPicking <- function(files, polarity = NULL,
     x <- formatScans(f, massWindow, polarity, combineSpectra)
 
     l <- lapply(x, function(spectrum) {
-      tryCatch(suppressWarnings(pickSpectra(spectrum, noiseWindow = noiseWindow)),
-               error = function(err) NULL)
+        tryCatch(suppressWarnings(pickSpectra(spectrum, scales = scales, scaleFactor = scaleFactor,
+                                              noiseWindow = noiseWindow,
+                                              solventFilter = solventFilter)),
+                 error = function(err) NULL)
     })
+
 
     non_nulls <- !vapply(l, is.null, logical(1))
     l <- l[non_nulls]
     df <- data.frame(scan = rep(which(non_nulls), sapply(l, nrow)), do.call(rbind, l))
 
-    df <- dplyr::distinct(df[df$Value > 0, ])
+    df <- dplyr::distinct(df)#[df$Value > 0, ])
     if (nrow(df) == 0) return(NULL)
+    df <- df[order(df$mz), ]
     rownames(df) <- 1:nrow(df)
     df
   })
@@ -187,7 +203,8 @@ identifyPeaks <- function(ms, ridgeList, wCoefs, scales = as.numeric(colnames(wC
     peakCenterInd <- c(peakCenterInd, ridge.i[maxInd.i])
     peakValue <- c(peakValue, ridgeValue.i[maxInd.i])
   }
-  noise <- abs(wCoefs[, "1"])
+  scales <- as.numeric(colnames(wCoefs))
+  noise <- abs(wCoefs[, which.min(scales[scales > 0])]) #"1"])
   peakSNR <- NULL
   peakNoise <- NULL
   nMz <- nrow(wCoefs)
@@ -203,6 +220,8 @@ identifyPeaks <- function(ms, ridgeList, wCoefs, scales = as.numeric(colnames(wC
     peakSNR <- c(peakSNR, peakValue[k] / noiseLevel.k)
     peakNoise <- c(peakNoise, noiseLevel.k)
   }
+
+
   selInd1 <- (scales[ridgeLevel + ridgeLen - 1] >= ridgeLength)
   if (nearbyPeak) {
     selInd1 <- which(selInd1)
@@ -230,8 +249,9 @@ identifyPeaks <- function(ms, ridgeList, wCoefs, scales = as.numeric(colnames(wC
 }
 
 
-cwt_new <- function(ms, scales = NULL, max_scale = 32) {
-  psi_xval <- seq(-8, 8, length = 1024)
+cwt_new <- function(ms, scales = NULL, max_scale = 32, scaleFactor = 1) {
+  val <- 8 / scaleFactor
+  psi_xval <- seq(-val, val, length = 1024 / scaleFactor)
   psi <- (2 / sqrt(3) * pi^(-0.25)) * (1 - psi_xval^2) * exp(-psi_xval^2 / 2)
 
   psi_xval <- psi_xval - psi_xval[1]
@@ -251,8 +271,7 @@ cwt_new <- function(ms, scales = NULL, max_scale = 32) {
 
   len <- length(ms)
 
-  wCoefs <- matrix(0,
-                   ncol = length(scales), nrow = length(ms),
+  wCoefs <- matrix(0, ncol = length(scales), nrow = length(ms),
                    dimnames = list(1:length(ms), scales)
   )
   for (scale.i in scales) {
