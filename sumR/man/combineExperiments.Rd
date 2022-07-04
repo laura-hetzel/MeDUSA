@@ -4,7 +4,7 @@
 \alias{combineExperiments}
 \title{Combine SummarizedExperiments by row}
 \usage{
-combineExperiments(...)
+combineExperiments(direction = "row", mode = "intersect", ...)
 }
 \arguments{
 \item{...}{Number of SummarizedExperiments}

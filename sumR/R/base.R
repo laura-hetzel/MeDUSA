@@ -235,23 +235,63 @@ calculate_nominal_mass <- function(formulas) {
   })
 }
 
-#' @title Combine SummarizedExperiments by row
-#' @param ... Number of SummarizedExperiments
-#' @export
-combineExperiments <- function(...){
-  idx <- Reduce(intersect, lapply(list(...), colnames), init = colnames(list(...)[[1]]))
+rowBindExperiments <- function(exps, mode = "intersect"){
+  idx <- Reduce(intersect, lapply(exps, colnames), init = colnames(exps[[1]]))
 
-  exp <- do.call(rbind, lapply(list(...), function(exp){
-    exp <- exp[, idx]
-    if ("polarity" %in% names(metadata(exp))) {
-      rowData(exp)$polarity <- metadata(exp)$polarity
-    }
-    exp
+  exp <- do.call(rbind, lapply(exps, function(exp){
+    exp[, idx]
   }))
 
   rownames(exp) <- 1:nrow(exp)
-  if ("polarity" %in% colnames(rowData(exp))){
-    rownames(exp) <- paste0(rownames(exp), rowData(exp)$polarity)
+  exp
+}
+
+groupRowMax <- function(exp, group){
+  groups <- unique(exp[[group]])
+  assay <- do.call(cbind, lapply(groups, function(g){
+    rowMaxs(assay(exp[, exp[[group]] == g]), na.rm = T)
+  }))
+
+
+}
+
+colBindExperiments <- function(exps, mode = "intersect"){
+  compares <- expand.grid(length(exps), length(exps))
+
+  for (i in 1:nrow(compares)) {
+    first <- compares[i, 1]
+    second <- compares[i, 2]
+    exps[[first]] <- matchRows(exps[[first]], exps[[second]])
+  }
+
+  exps <- lapply(exps, function(x){
+    x[order(rowData(exp)$mz), ]
+  })
+
+  exp <- do.call(rbind, lapply(exps, colData))
+  exp <- do.call(cbind, lapply(exps, assay))
+  exp
+}
+
+matchRows <- function(exp1, exp2){
+  mzs <- rowData(exp1)$mz
+  exp1[which(vapply(mzs, function(mz){
+    any(mz > rowData(exp2)$mzmin & mz < rowData(exp2)$mzmax)
+  }, logical(1))), ]
+}
+
+
+
+#' @title Combine SummarizedExperiments by row
+#' @param ... Number of SummarizedExperiments
+#' @export
+combineExperiments <- function(direction = "row", mode = "intersect", ...){
+  if (direction == "row") {
+    rowBindExperiments(exps = list(...), mode)
+  } else if (direction == "column") {
+    colBindExperiments(list(...), mode)
+  } else {
+    stop("'direction' must be either 'row' or 'column'.")
   }
 
   exp

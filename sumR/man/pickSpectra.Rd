@@ -10,7 +10,8 @@ pickSpectra(
   scales = NULL,
   maxScale = 32,
   noiseWindow = 0.1,
-  solventFilter = NULL
+  solventFilter = NULL,
+  scaleFactor = 1
 )
 }
 \description{

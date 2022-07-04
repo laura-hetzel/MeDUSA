@@ -9,9 +9,6 @@ mydensityClust_2(data, mz_min, mz_max, dc)
 \arguments{
 \item{dc}{}
 }
-\value{
-
-}
 \description{
 this is the function adapted from the densityClust() function
 of the densityClust package. It returns the rho&delta decision graph and
