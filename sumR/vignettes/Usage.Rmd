@@ -73,6 +73,12 @@ knitr::kable(head(df), caption = "Start of the metadata file")
 knitr::kable(tail(df), caption = "End of the metadata file")
 ```
 
+### Selecting scans
+Due to switching polarity and fragmented scans. we need to create a filter for certain scans.  
+```{r prepareScans}
+fileList <- prepareScans(files, massWindow = c(100, 200), polarity = "+", centroid = F)
+```
+
 ### Spectrum-based Peak picking
 
 Cells measured using DI-MS can be analyzed using spectrum-based peak picking. This approach uses Wavelet peak picking as described by [P Du, et al. 2006](https://doi.org/10.1093/bioinformatics/btl355). Here, we'll start with processing scans with negative polarity, as given by the "-" value for the parameter `polarity`. the `peackPicking()` function requires a vector of file locations and offers some optional parameters. `massWindow` acts as a filter for scan windows in e.g. fractional scans. The value set here is the maximum m/z window taken for a scan.
@@ -80,8 +86,7 @@ Cells measured using DI-MS can be analyzed using spectrum-based peak picking. Th
 `peakPicking()` returns a list of dataframes with found peaks in each given file.
 
 ```{r peakPicking}
-peaks <- peakPicking(files, massWindow = c(100, 200), 
-                     noiseWindow = 0.1, polarity = "-")
+peaks <- peakPicking(files, noiseWindow = 0.1)
 ```
 
 #### Inspecting results
@@ -137,7 +142,7 @@ spectraShiftPlot(spectra, file = 14)
 After the spectra within cells are aligned, we repeat the alignment between cells. Our arguments are similar to `spectraBinning()`, however, here a `SummarizedExperiment` object is constructed and will be used throughout the pipeline. You can read more about interacting with a SummarizedExperiment object [here](https://bioconductor.org/help/course-materials/2019/BSS2019/04_Practical_CoreApproachesInBioconductor.html).
 
 ```{r cellBinning}
-exp <- cellBinning(spectra, cellData = df, phenotype = "phenotype", tolerance = 1e-5)
+exp <- cellBinning(spectra, cellData = df, phenotype = "phenotype", tolerance = 5e-6)
 exp
 ```
 

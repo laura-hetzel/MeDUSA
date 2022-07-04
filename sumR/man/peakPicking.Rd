@@ -5,15 +5,12 @@
 \title{Perform peak picking}
 \usage{
 peakPicking(
-  files,
-  polarity = NULL,
-  peakPick = TRUE,
-  combineSpectra = FALSE,
-  massWindow = c(0, Inf),
+  fileList,
+  maxScale = 32,
   noiseWindow = 0.1,
-  scales = NULL,
-  cores = detectCores(logical = F),
-  solventFilter = NULL
+  cores = 1,
+  solventFilter = NULL,
+  scales = NULL
 )
 }
 \description{

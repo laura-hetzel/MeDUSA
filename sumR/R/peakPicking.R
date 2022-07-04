@@ -1,7 +1,7 @@
 #' @title Pick peaks in a spectrum
 #' @importFrom MassSpecWavelet getLocalMaximumCWT getRidge
 pickSpectra <- function(x, SNR = 0, scales = NULL, maxScale = 32, noiseWindow = 0.1,
-                        solventFilter = NULL, scaleFactor = 1) {
+                        solventFilter = NULL) {
   ms <- as.data.frame(x)
   colnames(ms) <- c("mz", "i")
   if (!is.null(solventFilter)){
@@ -18,7 +18,7 @@ pickSpectra <- function(x, SNR = 0, scales = NULL, maxScale = 32, noiseWindow = 
     })
   }
   winSize.noise <- (max(ms$mz) - min(ms$mz)) * noiseWindow
-  wCoefs <- cbind("0" = ms$i, cwt_new(ms$i, scales, max_scale = maxScale, scaleFactor = scaleFactor))
+  wCoefs <- cbind("0" = ms$i, cwt_new(ms$i, scales, max_scale = maxScale))
   localMax <- MassSpecWavelet::getLocalMaximumCWT(wCoefs, minWinSize = 0)
   ridgeList <- MassSpecWavelet::getRidge(localMax, minWinSize = 0)
   majorPeakInfo <- identifyPeaks(ms$i, ridgeList, wCoefs, winSize.noise = winSize.noise,
@@ -70,36 +70,58 @@ savgol <- function(y, halfWindowSize = 10L, polynomialOrder = 3L) {
     F
   }
 
-  sav.filter(y, hws = halfWindowSize, coef = coef(m = halfWindowSize, k = polynomialOrder))
+  sav.filter(y, hws = halfWindowSize, coef = coef(m = halfWindowSize,
+                                                  k = polynomialOrder))
 }
 
-formatScans <- function(f, massWindow, polarity, combineSpectra){
-  z <- mzR::openMSfile(f)
-  x <- mzR::peaks(z)
-  df <- mzR::header(z)
+#' @title Format scans in files
+#' @param files
+#' @param massWindow
+#' @param polarity
+#' @param combineSpectra
+#' @export
+prepareScans <- function(files, massWindow = c(0, Inf), centroid = TRUE,
+                         polarity = "-", combineSpectra = FALSE){
+  result <- pbapply::pblapply(files, function(f) {
+    z <- mzR::openMSfile(f)
+    x <- mzR::peaks(z)
+    df <- mzR::header(z)
 
-  range <- abs(df$scanWindowUpperLimit - df$scanWindowLowerLimit)
-  if (length(massWindow) == 2){
-    scans <- range >= massWindow[1] & range <= massWindow[2]
-  } else if (length(massWindow) == 1){
-    scans <- range == massWindow
-  } else {
-    stop("Wrong length of massWindow")
-  }
+    range <- abs(df$scanWindowUpperLimit - df$scanWindowLowerLimit)
+    if (length(massWindow) == 2){
+      scans <- range >= massWindow[1] & range <= massWindow[2]
+    } else if (length(massWindow) == 1){
+      scans <- range == massWindow
+    } else {
+      stop("Wrong length of massWindow")
+    }
 
-  if (!is.null(polarity)) {
-    polarity_filter <- grepl("FTMS - p NSI", df$filterString)
-    if (polarity == "+") polarity_filter <- !polarity_filter
-    scans <- scans & polarity_filter
-  }
+    if (!is.null(polarity)) {
+      polarity_filter <- grepl("FTMS - p NSI", df$filterString)
+      if (polarity == "+") polarity_filter <- !polarity_filter
+      scans <- scans & polarity_filter
+    }
 
-  if (combineSpectra & !any(is.infinite(massWindow))) {
-    s <- split(which(scans), c(1, cumprod(diff(which(scans)))))
-    x <- lapply(s, function(z) centroid(do.call(rbind, x[z])))
-  } else {
-    x <- lapply(setNames(x[scans], df[scans, ]$retentionTime), centroid)
-  }
-  x
+    if (combineSpectra & !any(is.infinite(massWindow))) {
+      s <- split(which(scans), c(1, cumprod(diff(which(scans)))))
+      return(lapply(s, function(z){
+        df <- do.call(rbind, x[z])
+        if (centroid) {
+          df <- centroid(df)
+        }
+        df
+      }))
+    }
+    l <- x[scans]
+    if (centroid) l <- lapply(l, centroid)
+    return(l)
+  })
+  attr(result, "polarity") <- polarity
+  attr(result, "massWindow") <- massWindow
+  attr(result, "combineSpectra") <- combineSpectra
+  attr(result, "Files") <- files
+
+  setNames(result, tools::file_path_sans_ext(basename(files)))
 }
 
 #' @title Perform peak picking
@@ -109,44 +131,36 @@ formatScans <- function(f, massWindow, polarity, combineSpectra){
 #' @importFrom dplyr distinct
 #' @importFrom tools file_path_sans_ext
 #' @export
-peakPicking <- function(files, polarity = NULL, scaleFactor = 1,
-                        combineSpectra = FALSE, massWindow = c(0, Inf),
-                        noiseWindow = 0.1, scales = NULL,
-                        cores = detectCores(logical = F), solventFilter = NULL) {
-  cl <- makeCluster(cores)
-  clusterExport(cl, varlist = names(sys.frame()))
-  samps <- tools::file_path_sans_ext(basename(files))
-  result <- pbapply::pblapply(files, cl = cl, function(f) {
-    x <- formatScans(f, massWindow, polarity, combineSpectra)
+peakPicking <- function(fileList, maxScale = 32, noiseWindow = 0.1, cores = 1,
+                        solventFilter = NULL, scales = NULL) {
+  cl <- NULL
+  if (cores > 1) {
+    cl <- makeCluster(cores)
+    clusterExport(cl, varlist = names(sys.frame()))
+  }
 
-    l <- lapply(x, function(spectrum) {
-        tryCatch(suppressWarnings(pickSpectra(spectrum, scales = scales, scaleFactor = scaleFactor,
-                                              noiseWindow = noiseWindow,
-                                              solventFilter = solventFilter)),
-                 error = function(err) NULL)
+  result <- lapply(1:length(fileList), function(i) {
+    logging::loginfo("Peak picking %s", names(fileList)[i])
+    l <- pbapply::pblapply(fileList[[i]], cl = cl, function(spectrum) {
+      tryCatch(suppressWarnings(pickSpectra(spectrum, scales = scales, maxScale = maxScale,
+                                            noiseWindow = noiseWindow,
+                                            solventFilter = solventFilter)),
+               error = function(err) NULL)
     })
-
-
     non_nulls <- !vapply(l, is.null, logical(1))
     l <- l[non_nulls]
     df <- data.frame(scan = rep(which(non_nulls), sapply(l, nrow)), do.call(rbind, l))
 
-    df <- dplyr::distinct(df)#[df$Value > 0, ])
     if (nrow(df) == 0) return(NULL)
     df <- df[order(df$mz), ]
     rownames(df) <- 1:nrow(df)
     df
   })
+  if (!is.null(cl)) stopCluster(cl)
 
-  stopCluster(cl)
-  names(result) <- samps
   result <- result[!vapply(result, is.null, logical(1))]
-  attr(result, "polarity") <- polarity
-  attr(result, "massWindow") <- massWindow
-  attr(result, "combineSpectra") <- combineSpectra
-  attr(result, "Files") <- files
+  attributes(result) <- attributes(fileList)
   result
-
 }
 
 identifyPeaks <- function(ms, ridgeList, wCoefs, scales = as.numeric(colnames(wCoefs)),
@@ -249,9 +263,9 @@ identifyPeaks <- function(ms, ridgeList, wCoefs, scales = as.numeric(colnames(wC
 }
 
 
-cwt_new <- function(ms, scales = NULL, max_scale = 32, scaleFactor = 1) {
-  val <- 8 / scaleFactor
-  psi_xval <- seq(-val, val, length = 1024 / scaleFactor)
+cwt_new <- function(ms, scales = NULL, max_scale = 32) {
+  val <- 8
+  psi_xval <- seq(-val, val, length = 1024)
   psi <- (2 / sqrt(3) * pi^(-0.25)) * (1 - psi_xval^2) * exp(-psi_xval^2 / 2)
 
   psi_xval <- psi_xval - psi_xval[1]
@@ -274,6 +288,7 @@ cwt_new <- function(ms, scales = NULL, max_scale = 32, scaleFactor = 1) {
   wCoefs <- matrix(0, ncol = length(scales), nrow = length(ms),
                    dimnames = list(1:length(ms), scales)
   )
+
   for (scale.i in scales) {
     f <- rep(0, len)
     j <- 1 + floor((0:(scale.i * xmax)) / (scale.i * dxval))
