@@ -5,7 +5,7 @@
 \title{Perform peak picking}
 \usage{
 peakPicking(
-  fileList,
+  files,
   maxScale = 32,
   noiseWindow = 0.1,
   cores = 1,
