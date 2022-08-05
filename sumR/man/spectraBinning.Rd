@@ -4,14 +4,7 @@
 \alias{spectraBinning}
 \title{Bin spectra with similar mass ranges}
 \usage{
-spectraBinning(
-  peakList,
-  fraction = 0,
-  npeaks = 0,
-  method = "sum",
-  meanSNR = 0,
-  tolerance = 0.002
-)
+spectraBinning(fileList, ppm = 5)
 }
 \description{
 Bin spectra with similar mass ranges

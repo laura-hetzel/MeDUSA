@@ -4,13 +4,7 @@
 \alias{cellBinning}
 \title{Bin cells}
 \usage{
-cellBinning(
-  spectraList,
-  cellData = NULL,
-  phenotype = NULL,
-  tolerance = 0.002,
-  filter = TRUE
-)
+cellBinning(spectra, cellData = NULL, phenotype = NULL, ppm = 5)
 }
 \arguments{
 \item{spectraList}{List of spectra}

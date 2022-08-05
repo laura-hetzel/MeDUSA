@@ -127,15 +127,19 @@ MD_filter <- function(dataframe, mz_col, a = 0.00112, b = 0.01953) {
 #' Filter cells without measurements
 #' @export
 filterCells <- function(exp, assay = 1) {
+  if (!validateExperiment(exp)) return(NULL)
   exp[, colSums(is.na(assay(exp, assay))) != nrow(exp)]
 }
 
 #' @title filter peaks
 #' @export
-peakFilter <- function(peaks, SNR = 0, intensity = 0){
-  res <- lapply(peaks, function(x) x[x$SNR >= SNR & x$i >= intensity, ])
-  attributes(res) <- attributes(peaks)
-  res
+peakFilter <- function(fileList, intensity = 0, peakValue = -Inf, snr = 0){
+  lapply(fileList, function(spectra){
+    intensity <- spectra$i >= intensity
+    peakValue <- spectra$i - spectra$Noise > peakValue
+    snr <- spectra$i / spectra$Noise > snr # snr <- (spectrum$i - spectrum$Noise) / spectrum$Noise > snr
+    spectra[intensity & peakValue & snr, ]
+  })
 }
 
 #' @title filter spectra
@@ -146,12 +150,9 @@ spectraFilter <- function(spectra, npeaks = 0, intensity = 0, SNR = 0){
   res
 }
 
-setDefaultPhenotype <- function(exp, default){
-  metadata(exp)$phenotype <- default
-  exp
-}
 
 setDefaultAssay <- function(exp, default){
+  if (!validateExperiment(exp)) return(NULL)
   n <- assayNames(exp)
   to_replace <- which(n == default)
   n[to_replace] <- n[1]
@@ -198,9 +199,9 @@ rfImputation <- function(df, ...){
 #' @param noise numerical value for the noise level
 #' @param seed global seed for reproducible results
 #' @importFrom stats runif
-noiseImputation <- function(data, noise = 100, seed=42, ...) {
+noiseImputation <- function(data, noise = 100, seed = 42, ...) {
   set.seed(seed)
-  data[is.na(data)] <- runif(sum(data == 0), min = 1, max = noise)
+  data[is.na(data)] <- runif(sum(is.na(data)), min = 1, max = noise)
   return(data)
 }
 
@@ -209,6 +210,8 @@ noiseImputation <- function(data, noise = 100, seed=42, ...) {
 #' @export
 imputation <- function(exp, method = "noise", useAssay = "Area",
                        saveAssay = "Imputed", setDefault = TRUE, ...) {
+
+  if (!validateExperiment(exp)) return(NULL)
   exp <- filterCells(exp)
   df <- as.data.frame(assay(exp, useAssay))
 
@@ -227,7 +230,8 @@ imputation <- function(exp, method = "noise", useAssay = "Area",
 
 #' @title Fragment Filter
 #' @export
-fragmentFilter <- function(exp, assay = 1, method = "pearson", corr = 0.99){
+fragmentFilter <- function(exp, assay = 1, method = "spearman", corr = 0.95){
+  if (!validateExperiment(exp)) return(NULL)
   corrs <- cor(t(assay(exp, assay)), method = method)
   max_corr <- vapply(1:nrow(corrs), function(i) max(corrs[i, -i]), double(1))
   exp[max_corr < corr, ]
@@ -236,6 +240,7 @@ fragmentFilter <- function(exp, assay = 1, method = "pearson", corr = 0.99){
 #' @title Feature filter
 #' @export
 featureFilter <- function(exp, assay = "Area", nCells = 0, pCells = 0){
+  if (!validateExperiment(exp)) return(NULL)
   to_take <- do.call(intersect, lapply(unique(exp$phenotype), function(split){
     sub <- exp[, exp$phenotype == split]
     nFeats <- as.double(apply(assay(sub, assay), 1, function(x) sum(!is.na(x))))

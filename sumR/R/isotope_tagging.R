@@ -111,16 +111,16 @@ isotopeMolecules <- function(adducts_matches_int, Elements = c("C13"), ppm = 5, 
   # Initialize Elements
   element_vector <- initializeElements(element_vector)
 
-  # Decompose isotopes
-  isotope_molecules_list <- lapply(1:nrow(adducts_matches_int), function(i) {
+   # Decompose isotopes
+  isotope_molecules_list <- pbapply::pblapply(1:nrow(adducts_matches_int), function(i) {
     masses <- c(adducts_matches_int$mz_mol[i], adducts_matches_int$mz_iso[i])
     intensities <- c(100, ((adducts_matches_int$intensity_iso[i] / adducts_matches_int$intensity_mol[i]) * 100))
-    decomposeIsotopes(masses, intensities, ppm = ppm, z = z, elements = element_vector)
+    decomposeIsotopes(masses, intensities, ppm = ppm, z = z,
+                      elements = element_vector, maxElements = "C99")
   })
 
   return(isotope_molecules_list)
 }
-
 
 
 #----------------------------
@@ -222,7 +222,8 @@ isotopeFinding <- function(data, mz_vector, isotope_df, Elements = c("C13"), ppm
     )
 
     # Adding intensity values for each mz value
-    adducts_matches_int <- addIntensities(data, iso_df)
+    adducts_matches_int <- dplyr::distinct(addIntensities(data, iso_df))
+
 
     # Decompose isotopes
     isotope_molecules_list <- isotopeMolecules(adducts_matches_int, Elements, ppm, z)
@@ -479,7 +480,8 @@ massSpecPlot <- function(final_df) {
 #' @importFrom dplyr distinct select %>%
 #' @usage isotopeTagging(data, ppm = 5, Elements = c("C13"), z = 0, plot = TRUE)
 #' @export
-isotopeTagging <- function(exp, assay = "Area", ppm = 5, Elements = c("C13"), z = 0, plot = FALSE, filter = TRUE) {
+isotopeTagging <- function(exp, assay = 1, ppm = 5, Elements = c("C13"), z = 0, plot = FALSE) {
+  if (!validateExperiment(exp)) return(NULL)
   data <- as.data.frame(cbind(mz = rowData(exp)$mz, assay(exp, assay)))
   #-----------------------------------------------------------------------------
   # Check for input arguments
@@ -558,8 +560,7 @@ isotopeTagging <- function(exp, assay = "Area", ppm = 5, Elements = c("C13"), z 
     print(massSpecPlot(final_df))
   }
 
-  rowData(exp) <- final_df
-  if (filter) exp <- filterIsotopes(exp)
+  rowData(exp) <- cbind(rowData(exp), final_df[, -which(colnames(final_df) == "mz")])
   return(exp)
 }
 

@@ -210,6 +210,8 @@ identifyPeaks <- function(ms, ridgeList, wCoefs, scales = as.numeric(colnames(wC
 }
 
 
+
+
 cwt_new <- function(ms, scales = NULL, max_scale = 32) {
   val <- 8
   psi_xval <- seq(-val, val, length = 1024)

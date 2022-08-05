@@ -1,3 +1,65 @@
+#' @title Load a sumR Experiment from a file
+#' @param path
+#' @export
+loadExperiment <- function(path){
+  tryCatch({
+    exp <- readRDS(path)
+    if (validateExperiment(exp)) {
+      return(exp)
+    }
+    warning("Invalid Experiment, returning NULL")
+    return(NULL)
+  }, error = function(x){
+    message("Error while trying to read the RDS file")
+  })
+}
+
+#' @title Save a sumR Experiment to a file
+#' @param exp
+#' @param path
+#' @export
+saveExperiment <- function(exp, path){
+  path <- file.path(path)
+  if (validateExperiment(exp)) {
+    dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
+    saveRDS(exp, file = path)
+  } else {
+    warning("Invalid Experiment, aborted saving")
+  }
+}
+
+#' @title Validate a sumR Experiment
+#' @param exp
+#' @export
+validateExperiment <- function(exp, checkColData = T){
+  isValid <- all(
+    class(exp) == "SummarizedExperiment",
+    nrow(exp) > 0,
+    ncol(exp) > 0,
+    ifelse(checkColData, "Type" %in% colnames(colData(exp)), TRUE),
+    c("mz", "mzmin", "mzmax", "npeaks", "peakidx") %in% colnames(rowData(exp)),
+    "Area" %in% assayNames(exp)
+  )
+  if (!isValid) warning("Invalid sumR Experiment object")
+  isValid
+}
+
+#' @title Set the phenotype column of a sumR Experiment
+#' @param exp
+#' @param phenotype
+#' @export
+setPhenotype <- function(exp, phenotype){
+
+  if (validateExperiment(exp)) {
+    if (phenotype %in% colnames(colData(exp)) & class(phenotype == "character")) {
+      metadata(exp)$phenotype <- phenotype
+    } else {
+      warning(sprintf("%s not found in colData", phenotype))
+    }
+  }
+  exp
+}
+
 #' @title (LEGACY, use read_mzml instead) Read MS data
 #' @param path path to the file
 #' @return Data.frame with ordered mz values
@@ -29,8 +91,11 @@ rawToMzml <- function(folder, output = getwd(), rt = NULL, options = ""){
   options <- paste(options, collapse = " ")
   files <- list.files(file.path(folder), full.names = T)
   files <- files[!grepl(".mzML$", files)]
+  if (length(files) == 0) stop("No files found to convert")
+
   output <- file.path(output)
-  if (!dir.exists(output)) dir.create(output)
+  if (!dir.exists(output)) dir.create(output, recursive = T, showWarnings = F)
+
   key <- "Directory\\shell\\Open with MSConvertGUI\\command"
   reg <- tryCatch(utils::readRegistry(key, "HCR"), error = function(e) NULL)
   msconvert <- file.path(dirname(sub("\"([^\"]*)\".*", "\\1", reg[[1]])), "msconvert.exe")
@@ -43,7 +108,7 @@ rawToMzml <- function(folder, output = getwd(), rt = NULL, options = ""){
                        file.path(msconvert), file, rt, options, output)
     system(command, show.output.on.console = F)
   })
-  list.files(folder, full.names = T, pattern = ".mzML")
+  list.files(output, full.names = T, pattern = ".mzML")
 }
 
 
@@ -129,19 +194,40 @@ check_binning <- function(aligned_peaks, summary_errors = F,
 #' @param sampleThresh
 #' @param filter
 #' @export
-blankSubstraction <- function(exp, blankThresh = 5, sampleThresh = Inf,
-                              filter = TRUE, removeBlanks = TRUE){
-
+blankSubstraction <- function(exp, blankThresh = 5, nSamples = Inf, removeBlanks = TRUE){
+  if (!validateExperiment(exp)) return(NULL)
   blanks <- exp[, toupper(exp$Type) == 'BLANK']
   samps <- exp[, toupper(exp$Type) == 'SAMPLE']
 
   threshold <- rowMedians(assay(blanks, "Area"), na.rm = TRUE) * blankThresh
-  below <- rowSums(assay(samps, "Area") - threshold <= 0, na.rm = TRUE) <= sampleThresh
+  exp <- exp[rowSums(assay(samps, "Area") - threshold <= 0, na.rm = TRUE) <= nSamples, ]
+
+  if (removeBlanks) exp <- exp[, toupper(exp$Type) != "BLANK"]
+
+  filterCells(exp)
+}
+
+#' @title Substract Blanks from SummarizedExperiment using median
+#' @param exp
+#' @param blankThresh
+#' @param sampleThresh
+#' @param filter
+#' @export
+blankSubstractionMedian <- function(exp, blankThresh = 5, removeBlanks = TRUE){
+  if (!validateExperiment(exp)) return(NULL)
+
+  blanks <- exp[, toupper(exp$Type) == 'BLANK']
+  samps <- exp[, toupper(exp$Type) == 'SAMPLE']
+
+
+  threshold <- rowMedians(assay(blanks, "Area"), na.rm = TRUE) * blankThresh
+  med <- rowMedians(assay(samps, "Area"), na.rm = TRUE)
+  pass <- med >= threshold
 
   rowData(exp)$blankThresh <- threshold
-  rowData(exp)$blankPass <- below
+  rowData(exp)$blankPass <- pass
 
-  if (filter) exp <- exp[which(rowData(exp)$blankPass), ]
+  exp <- exp[which(rowData(exp)$blankPass), ]
   if (removeBlanks) exp <- exp[, toupper(exp$Type) != "BLANK"]
 
   filterCells(exp)
@@ -236,6 +322,8 @@ calculate_nominal_mass <- function(formulas) {
 }
 
 rowBindExperiments <- function(exps, mode = "intersect"){
+  if (!all(sapply(exps, validateExperiment))) return(NULL)
+
   idx <- Reduce(intersect, lapply(exps, colnames), init = colnames(exps[[1]]))
 
   exp <- do.call(rbind, lapply(exps, function(exp){
@@ -285,11 +373,14 @@ matchRows <- function(exp1, exp2){
 #' @title Combine SummarizedExperiments by row
 #' @param ... Number of SummarizedExperiments
 #' @export
-combineExperiments <- function(direction = "row", mode = "intersect", ...){
+combineExperiments <- function(..., direction = "row", mode = "intersect"){
+  exps <- list(...)
+  if (!all(sapply(exps, validateExperiment))) return(NULL)
+
   if (direction == "row") {
-    rowBindExperiments(exps = list(...), mode)
+    exp <- rowBindExperiments(exps, mode)
   } else if (direction == "column") {
-    colBindExperiments(list(...), mode)
+    exp <- colBindExperiments(exps, mode)
   } else {
     stop("'direction' must be either 'row' or 'column'.")
   }
@@ -302,6 +393,8 @@ combineExperiments <- function(direction = "row", mode = "intersect", ...){
 #' @param modelName name of the model
 #' @export
 varImportance <- function(exp, modelName = 1){
+  if (!validateExperiment(exp)) return(NULL)
+
   df <- as.data.frame(model(exp, modelName)$varImp$importance)
   df$Compound <- rownames(df)
   df <- df[order(df$Overall, decreasing = TRUE), c("Compound", "Overall")]

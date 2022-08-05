@@ -79,10 +79,12 @@ plot_mz_MD <- function(MD_df, MD_df_filtered) {
 #' @importFrom stats na.omit
 #' @importFrom utils read.delim
 #' @export
-MassDefectFilter <- function(dataframe, mz_MD_plot = TRUE, incl_list = F,
+massDefectFilter <- function(exp, mz_MD_plot = TRUE, incl_list = F,
                              incl_list_path = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt",
                                                           package = "sumR"),
                              mass_accuracy = 0.01 ) {
+  if (!validateExperiment(exp)) return(NULL)
+  dataframe <- as.data.frame(rowData(exp))
   # calculate the MD for all compounds
   md_df <- mass_defect_calculation(dataframe)
   # make filtered list experimental data
@@ -94,5 +96,10 @@ MassDefectFilter <- function(dataframe, mz_MD_plot = TRUE, incl_list = F,
   # plotting
   if (mz_MD_plot == T) {
     plot_mz_MD(md_df, filtered_df)
-  }}
+  }
+
+  exp <- exp[rownames(filtered_df), ]
+  rowData(exp) <- DataFrame(filtered_df)
+  exp
+}
 

@@ -5,8 +5,17 @@
 #' @param combineSpectra
 #' @export
 prepareFile <- function(file, massWindow = c(0, Inf), centroid = F,
-                        polarity = "-", combineSpectra = FALSE) {
+                        polarity = "-", combineSpectra = FALSE, cl = NULL) {
+  if (!is.null(cl)) {
+    pbo <- pbapply::pboptions(type = "none")
+    on.exit(pbapply::pboptions(pbo), add = TRUE)
+  }
+  file <- file.path(file)
 
+  if (!file.exists(file)) {
+    warning(sprintf("Cannot find file %s", file))
+    return(NULL)
+  }
   z <- mzR::openMSfile(file)
   x <- mzR::peaks(z)
   df <- mzR::header(z)
@@ -29,10 +38,14 @@ prepareFile <- function(file, massWindow = c(0, Inf), centroid = F,
       }
       df
     }))
+  } else {
+    l <- x[scans]
+    if (centroid) {
+      l <- pbapply::pblapply(l, cl = cl, centroid)
+    }
   }
-  l <- x[scans]
-  if (centroid) l <- lapply(l, centroid)
-  l
+  l <- prepareSpectra(l)
+  if (length(l) == 0) l <- list()
   attr(l, "polarity") <- polarity
   attr(l, "massWindow") <- massWindow
   attr(l, "combineSpectra") <- combineSpectra
@@ -44,30 +57,93 @@ prepareFile <- function(file, massWindow = c(0, Inf), centroid = F,
 #' @param files
 #' @param ... see `prepareFile`
 #' @export
-prepareFiles <- function(files, a = 2, ...){
-  result <- pbapply::pblapply(files, function(x) prepareFile(x, ...))
-  setNames(result, tools::file_path_sans_ext(basename(files)))
+extractPeaks <- function(files, cores = 1, ...){
+
+  # Check if mzML files are valid files
+  files <- files[file.exists(files)]
+  files <- files[grep(".mzML", files)]
+
+  if (length(files) == 0) {
+    warning("Cannot find mzML files in given files")
+    return(NULL)
+  }
+
+  # Make cluster if cores > 1
+  cl <- NULL
+  if (cores > 1) {
+    cl <- makeCluster(cores)
+  }
+
+  # Prepare each file
+  result <- pbapply::pblapply(files, function(x) prepareFile(x, cl = cl, ...))
+  if (!is.null(cl)) parallel::stopCluster(cl)
+
+  # Set names of results
+  result <- setNames(result, tools::file_path_sans_ext(basename(files)))
+
+  # Return only spectra with found centroid apexes
+  result[!vapply(result, function(x) is.null(x) | length(x) == 0, logical(1))]
 }
 
 #' @title Format scans in a directory
 #' @param directory
 #' @param ... see `prepareFile`
 #' @export
-prepareBatch <- function(directory, ...){
+extractPeaksBatch <- function(directory, ...){
+
+  # Check if directory exists
+  directory <- dirname(directory)
+  if (!dir.exists(directory)) {
+    warning(sprintf("Cannot find directory %s", directory))
+    return(NULL)
+  }
+
+  # Check if mzML files are found in directory
   files <- list.files(directory, pattern = ".mzML", full.names = T, recursive = F)
-  prepareFiles(files, ...)
+  if (length(files) == 0) {
+    warning(sprintf("Cannot find mzML files in directory %s", directory))
+    return(NULL)
+  }
+
+  # Prepare mzMLs
+  extractPeaks(files, ...)
 }
 
 
 
+calculateNoise <- function(spectrum, centroids, noiseWindow){
+  mzInd <- spectrum[, 1]
+  noise <- cwt_new(spectrum[, 2], scales = 1)
+  minNoiseLevel <- max(noise) * 0.001
+  noise <- abs(noise)
+  nMz <- length(mzInd)
+  winSize.noise <- as.integer(nMz * noiseWindow)
+  sapply(centroids, function(k){
+    ind.k <- mzInd[k]
+    start.k <- max(1, ind.k - winSize.noise)
+    end.k <- min(nMz, ind.k + winSize.noise)
 
+    noiseLevel.k <- quantile(noise[start.k:end.k], probs = 0.95, na.rm = T)
+    if (noiseLevel.k < minNoiseLevel) {
+      noiseLevel.k <- minNoiseLevel
+    }
+    noiseLevel.k
+  })
 
-centroid <- function(spectrum, halfWindowSize = 2L) {
+}
+
+centroid <- function(spectrum, halfWindowSize = 2L, noiseWindow = 0.0001) {
   intensities <- savgol(spectrum[, 2], halfWindowSize)
   intensities[intensities < 0] <- 0
 
   ## find local maxima
-  spectrum[which(diff(diff(intensities) >= 0) < 0) + 1, ]
+  centroids <- which(diff(sign(diff(intensities))) == -2) + 1
+
+  peakNoise <- calculateNoise(spectrum, centroids, noiseWindow)
+  spectrum <- as.data.frame(spectrum[centroids, ])
+  colnames(spectrum) <- c("mz", "i")
+  spectrum$Noise <- peakNoise
+  spectrum
 }
 
 #' @title Apply Savitz-golay filter

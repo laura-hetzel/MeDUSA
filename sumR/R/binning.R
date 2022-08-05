@@ -11,10 +11,11 @@ condition <- function(mass, intensities, samples, tolerance = 5e-6) {
   if (anyDuplicated(samples)) {
     return(NA)
   }
-  if (any(abs(mass - mean(mass)) / mean(mass) > tolerance)) {
+  m <- mean(mass)
+  if (any(abs(mass - m) / m > tolerance)) {
     return(NA)
   }
-  return(mean(mass))
+  return(m)
 }
 
 #' @title Setting of the bin boundaries

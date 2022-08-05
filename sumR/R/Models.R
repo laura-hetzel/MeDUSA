@@ -2,6 +2,8 @@
 #' @param exp SummarizedExperiment object
 #' @export
 models <- function(exp){
+  if (!validateExperiment(exp)) return(NULL)
+
   if (!"model" %in% names(metadata(exp))) return(NULL)
   return(names(metadata(exp)$model))
 }
@@ -11,6 +13,8 @@ models <- function(exp){
 #' @param modelName Name of the model to retrieve
 #' @export
 model <- function(exp, modelName = 1){
+  if (!validateExperiment(exp)) return(NULL)
+
   metadata(exp)$model[[modelName]]
 }
 
@@ -20,6 +24,8 @@ model <- function(exp, modelName = 1){
 #' @param value Value to set in the model
 #' @export
 `model<-` <- function(exp, modelName, value){
+  if (!validateExperiment(exp)) return(NULL)
+
   if (!"model" %in% names(metadata(exp))){
     metadata(exp)$model <- list()
   }
@@ -39,6 +45,8 @@ model <- function(exp, modelName = 1){
 #' @export
 generateModel <- function(exp, modelName, classifiers = metadata(exp)$phenotype,
                           assay = 1, cv = 5, ratio = 0.632, seed = NULL, ...){
+  if (!validateExperiment(exp)) return(NULL)
+
   if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   if (!is.null(seed)) set.seed(seed)
 

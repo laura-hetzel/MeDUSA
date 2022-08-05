@@ -4,7 +4,7 @@
 \alias{spectraShiftPlot}
 \title{spectraShiftPlot}
 \usage{
-spectraShiftPlot(spectraList, file = 1)
+spectraShiftPlot(spectra, sample = 1)
 }
 \arguments{
 \item{file}{File number of the files that were used.}

@@ -4,7 +4,7 @@
 \alias{fragmentFilter}
 \title{Fragment Filter}
 \usage{
-fragmentFilter(exp, assay = 1, method = "pearson", corr = 0.99)
+fragmentFilter(exp, assay = 1, method = "spearman", corr = 0.95)
 }
 \description{
 Fragment Filter

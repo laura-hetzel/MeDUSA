@@ -9,9 +9,6 @@ getclusteredData(data, mzClust, mz_min, mz_max)
 \arguments{
 \item{mz_max}{}
 }
-\value{
-
-}
 \description{
 Title
 }

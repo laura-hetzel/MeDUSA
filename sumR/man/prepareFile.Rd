@@ -9,7 +9,8 @@ prepareFile(
   massWindow = c(0, Inf),
   centroid = F,
   polarity = "-",
-  combineSpectra = FALSE
+  combineSpectra = FALSE,
+  cl = NULL
 )
 }
 \description{
