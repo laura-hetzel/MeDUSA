@@ -136,7 +136,7 @@ spectra <- spectraAlignment(
    ppm = 5, 
    nPeaks = 5
 )
-knitr::kable(head(as.data.frame(spectra)[, -which(colnames(spectra) == "peakidx")]), caption = "Compounds aligned across spectra") 
+knitr::kable(spectra, caption = "Compounds aligned across spectra") 
 
 ```
 
@@ -203,7 +203,7 @@ exp <- imputation(exp, method = "noise", noise = 100, seed = 42)
 When interested in novel compounds, isotopes and adducts are a source of unwanted features. The function `isotopeTagging()` can detect isotopes and adducts using known ratios of mass and intensities of atoms. Calling this function will store detailed results about isotopes and adducts in the `rowData` slot of the object. 
 
 ```{r isotopes}
-exp <- isotopeTagging(exp, plot = T)
+exp <- isotopeTagging(exp)
 ```
 
 ### Fragment filtering
@@ -220,6 +220,7 @@ We can combine the functions of the pre- and post-processing in a pipeline using
 
 ```{r pipeline}
 # Pre-processing
+
 exp2 <- extractPeaks(files, massWindow = c(100, 200), polarity = "+", centroid = T, cores = 16) %>%
   spectraAlignment(method = "binning", ppm = 5, nPeaks = 5) %>%
   cellAlignment(method = "binning", ppm = 5, nCells = 10, cellData = df, phenotype = "Treatment")

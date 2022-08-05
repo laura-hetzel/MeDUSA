@@ -79,7 +79,7 @@ plot_mz_MD <- function(MD_df, MD_df_filtered) {
 #' @importFrom stats na.omit
 #' @importFrom utils read.delim
 #' @export
-massDefectFilter <- function(exp, mz_MD_plot = TRUE, incl_list = F,
+massDefectFilter <- function(exp, plot = FALSE, incl_list = FALSE,
                              incl_list_path = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt",
                                                           package = "sumR"),
                              mass_accuracy = 0.01 ) {
@@ -94,7 +94,7 @@ massDefectFilter <- function(exp, mz_MD_plot = TRUE, incl_list = F,
                                incl_list = incl_list, mass_accuracy = mass_accuracy,
                                incl_list_path = incl_list_path)
   # plotting
-  if (mz_MD_plot == T) {
+  if (plot) {
     plot_mz_MD(md_df, filtered_df)
   }
 

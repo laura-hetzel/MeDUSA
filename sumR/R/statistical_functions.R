@@ -143,11 +143,13 @@ welchTest <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1, thr
 #' @param assay
 #' @param top
 #' @export
-keepVariableFeatures <- function(exp, assay = 1, top = nrow(exp)){
+keepVariableFeatures <- function(exp){
   if (!validateExperiment(exp)) return(NULL)
-  top <- ifelse(top > nrow(exp), nrow(exp), top)
-  vars <- rowSds(as.matrix(assay(exp, assay)))
-  exp[rownames(exp)[order(vars, decreasing = TRUE)[1:top]], ]
+  if (!"leveneTest" %in% colnames(rowData(exp))) {
+    message("'leveneTest' not found in rowData. Please run 'leveneTest' first.")
+    return(exp)
+  }
+  exp[which(rowData(exp)$leveneTest$unequal_variance), ]
 }
 
 

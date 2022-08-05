@@ -9,7 +9,7 @@ generateModel(
   modelName,
   classifiers = metadata(exp)$phenotype,
   assay = 1,
-  cv = 5,
+  folds = 5,
   ratio = 0.632,
   seed = NULL,
   ...
@@ -22,11 +22,11 @@ generateModel(
 
 \item{assay}{Which assay should be used to create a model}
 
-\item{cv}{Number of folds to be used for cross validation}
-
 \item{ratio}{Train-test split ratio}
 
 \item{...}{Any other parameters for preProcessing}
+
+\item{cv}{Number of folds to be used for cross validation}
 }
 \description{
 Model using RandomForest model

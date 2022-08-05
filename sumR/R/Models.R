@@ -44,7 +44,7 @@ model <- function(exp, modelName = 1){
 #' @importFrom stats predict
 #' @export
 generateModel <- function(exp, modelName, classifiers = metadata(exp)$phenotype,
-                          assay = 1, cv = 5, ratio = 0.632, seed = NULL, ...){
+                          assay = 1, folds = 5, ratio = 0.632, seed = NULL, ...){
   if (!validateExperiment(exp)) return(NULL)
 
   if (is.null(classifiers)) stop("Cannot perform test without classifiers")
@@ -60,7 +60,9 @@ generateModel <- function(exp, modelName, classifiers = metadata(exp)$phenotype,
   modelList$train <- colnames(exp)[trainIndex]
   modelList$test <- colnames(exp)[-trainIndex]
 
-  control <- trainControl(method = "cv", number = cv, savePredictions = "all", preProcOptions = c("center", "scale"))
+  control <- trainControl(method = "cv", number = folds,
+                          savePredictions = "all",
+                          preProcOptions = c("center", "scale"))
 
   modelList$model <- train(x = t(data[, modelList$train]),
                            y = as.factor(exp[, modelList$train][[classifiers]]),

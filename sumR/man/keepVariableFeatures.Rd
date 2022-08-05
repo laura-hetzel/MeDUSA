@@ -4,7 +4,7 @@
 \alias{keepVariableFeatures}
 \title{Keep the most variable features}
 \usage{
-keepVariableFeatures(exp, assay = 1, top = nrow(exp))
+keepVariableFeatures(exp)
 }
 \description{
 Keep the most variable features

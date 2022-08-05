@@ -36,16 +36,16 @@ cellPlot <- function(peaks, file = 1){
 #' @param spectraList
 #' @param file File number of the files that were used.
 #' @export
-spectraShiftPlot <- function(spectra, sample = 1){
-  if (is.numeric(sample)){
-    sample <- unique(spectra$sample)[sample]
+spectraShiftPlot <- function(spectra, cell = 1){
+  if (is.numeric(cell)){
+    cell <- unique(spectra$sample)[cell]
   }
 
-  if (!sample %in% spectra$sample) stop(sprintf("Sample %s not found in spectra", sample))
+  if (!cell %in% spectra$sample) stop(sprintf("Cell '%s' not found in spectra", cell))
 
   spectra$mzmax <- spectra$mzmax - spectra$mz
   spectra$mzmin <- spectra$mzmin - spectra$mz
-  ggplot(as.data.frame(spectra[spectra$sample == sample, ])) +
+  ggplot(as.data.frame(spectra[spectra$sample == cell, ])) +
     geom_segment(aes(x = mzmin, xend = mzmax, y = mz, yend = mz), arrow = arrow(length = unit(2, "mm"))) +
     geom_segment(aes(x = mzmax, xend = mzmin, y = mz, yend = mz), arrow = arrow(length = unit(2, "mm"))) +
     xlab("mz Shift")
