@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.width = 7, 
-  fig.height = 4,
+  fig.height = 5,
   eval = F
 )
 
@@ -25,13 +25,13 @@ knitr::opts_chunk$set(
 
 ![](images/sumr.png)
 
-`sumR` (**s**ingle cell **u**ntargeted **m**etabolomics in **R**) is an R package designed for the analysis of single cell untargeted metabolomics datasets. Due to the small volume of cells and other challenges, conventional LC-MS strategies aren't suitable to analyse individual cells. This can be solved by using DI-MS, but brings its own challenges. `sumR` has been designed as a suite of functions that can deal with DI-MS data across many cells. This document functions as a showcase of a pipeline constructed with `sumR` for cells treated with either DMSO or Tamoxifen (TMX).
+`sumR` (**s**ingle cell **u**ntargeted **m**etabolomics in **R**) is an R package designed for the analysis of single cell untargeted metabolomics datasets. Due to the small volume of cells and other challenges, conventional LC-MS strategies aren't suitable to analyse individual cells. This can be solved by using DI-MS, but brings its own challenges. `sumR` has been designed as a suite of functions that can deal with DI-MS data across many cells. This document functions as a showcase of a pipeline constructed with `sumR` for cells treated with either DMSO or Tamoxifen (TMX). You can download the files [here](https://leidenuniv1-my.sharepoint.com/:u:/g/personal/maasp_vuw_leidenuniv_nl/EfWMHgWjx2hAn_pSJEF9QvUBgNThDNKDZEhvtJSvo4_ZcQ?e=LxvAqI) (you must have access using your university account). Extract the files in a folder and use this folder as input directory.
 
 ## Pre-processing
 
-sumR starts by pre-processing the raw data to features by extracting peaks and aligning these across spectra and cells. Unlike LC-MS, here we define a peak as a m/z -- intensity combination, and features as peaks that have been aligned across cells. This allows us to compare cells by e.g. filtering possible contaminants and/or performing statistical modelling. Consequently, features are defined using a min -- max m/z range across cells. Be aware that due to the acquisition method, sumR does not consider retention time of samples.
+sumR starts by pre-processing the raw data to features by extracting peaks and aligning these across spectra and cells. Unlike LC-MS, here we define a peak as a m/z -- intensity combination, and features as peaks that have been aligned across cells. This allows us to compare cells by e.g. filtering possible contaminants and/or performing statistical modelling. Consequently, features are defined using a min -- max m/z range across cells. Be aware that due to the acquisition method, sumR does not consider retention time of samples and will be omitted throughout the workflow.
 
-To start a sumR pipeline, we load the package.
+To start a sumR pipeline, we need to load the package.
 
 ```{r setupEcho, echo = T, eval = F}
 library(sumR)
@@ -50,8 +50,12 @@ After obtaining mzML files, we set the directory where our data is located. The 
 The rawToMzml function requires the defined input directory and an output folder to store the mzML files. It is recommended to use an empty or non-existing folder to ensure the output folder only contains mzML files. The function returns the file paths of the newly created mzML files.
 
 ```{r convert}
-dir <- file.path(r"(F:\Myrthe\raw)")
-files <- rawToMzml(dir, output = file.path(r"(F:\Myrthe\mzml)"))
+# Change this these paths to where you extracted the files and desired output
+input_directory <- r"(F:\Myrthe\raw)"
+output_directory <- r"(F:\Myrthe\mzml)"
+
+dir <- file.path(input_directory)
+files <- rawToMzml(dir, output = file.path(output_directory))
 ```
 
 ### Defining Metadata
@@ -62,7 +66,8 @@ Columns may contain metadata about each of the cells. Here we prepared metadata 
 
 
 ```{r echo = F}
-df <- read.csv("cellData.csv", row.names = 1)
+cellData <- system.file("cellData.csv", package = "sumR")
+df <- read.csv(cellData, row.names = 1)
 knitr::kable(df, caption = "cellData") 
 ```
 
@@ -70,7 +75,7 @@ knitr::kable(df, caption = "cellData")
 
 Peaks can be extracted from the mzML file using the `extractPeaks()` function. This function converts profile-mode data to centroid-mode by doing the following steps:
 
-1.  Extract scans within a massWindow (e.g. a scan of 200-350 dalton has a massWindow of 150 dalton). Defaults to `c(0, Inf)`
+1.  Extract scans within a massWindow (e.g. a scan of 200-350 dalton has a massWindow of 150 dalton). Defaults to `c(0, Inf)` which extracts everything.
 2.  Extract scans of either positive (+) or negative (-) polarity.
 3.  Smooth these scans using a Savitzky-Golay filter
 4.  Centroid by picking local maxima
@@ -80,7 +85,6 @@ By setting `cores` to any value higher than 1, each scan is centroided in parall
 ```{r prepareScans}
 peaks <- extractPeaks(
   files, 
-  massWindow = c(100, 200), 
   polarity = "+", 
   cores = 8
 )
@@ -205,7 +209,7 @@ We can combine the functions of the pre- and post-processing in a pipeline using
 
 ```{r pipeline}
 # Pre-processing
-exp2 <- extractPeaks(files, massWindow = c(100, 200), polarity = "-", cores = 8) %>%
+exp2 <- extractPeaks(files, polarity = "-", cores = 8) %>%
   spectraAlignment(method = "binning", ppm = 5, nPeaks = 5) %>%
   cellAlignment(method = "binning", ppm = 5, nCells = 10, cellData = df, phenotype = "Treatment")
 
