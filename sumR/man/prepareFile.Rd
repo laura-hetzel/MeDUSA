@@ -7,7 +7,7 @@
 prepareFile(
   file,
   massWindow = c(0, Inf),
-  centroid = F,
+  centroid = TRUE,
   polarity = "-",
   combineSpectra = FALSE,
   cl = NULL

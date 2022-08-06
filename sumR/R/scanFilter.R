@@ -4,7 +4,7 @@
 #' @param polarity
 #' @param combineSpectra
 #' @export
-prepareFile <- function(file, massWindow = c(0, Inf), centroid = F,
+prepareFile <- function(file, massWindow = c(0, Inf), centroid = TRUE,
                         polarity = "-", combineSpectra = FALSE, cl = NULL) {
   if (!is.null(cl)) {
     pbo <- pbapply::pboptions(type = "none")
