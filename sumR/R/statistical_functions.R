@@ -8,6 +8,7 @@
 #' @importFrom stats shapiro.test
 #' @export
 shapiroTest <- function(exp, assay = 1, threshold = 0.05) {
+  if (!validateExperiment(exp)) return(NULL)
   dataframe <- as.data.frame(t(assay(exp, assay)))
   Test_results <- apply(dataframe, 2, function(x) shapiro.test(as.numeric(x)))
   P.values <- unlist(lapply(Test_results, function(x) x$p.value))
@@ -31,6 +32,7 @@ shapiroTest <- function(exp, assay = 1, threshold = 0.05) {
 #' @export
 leveneTest <- function(exp, classifiers = metadata(exp)$phenotype,
                        assay = 1, threshold = 0.05, filter = FALSE) {
+  if (!validateExperiment(exp)) return(NULL)
   if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   dataframe <- as.data.frame(t(assay(exp, assay)))
 
@@ -55,6 +57,7 @@ leveneTest <- function(exp, classifiers = metadata(exp)$phenotype,
 #' @importFrom utils combn
 #' @export
 foldChange <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1) {
+  if (!validateExperiment(exp)) return(NULL)
   if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   dataframe2 <- as.data.frame(t(assay(exp, assay)))
   classifiers <- as.factor(exp[[classifiers]])
@@ -121,6 +124,7 @@ foldChangeGroups <- function(dataframe2, samples) {
 #' @export
 welchTest <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1, threshold = 0.1,
                       corr_method = "fdr") {
+  if (!validateExperiment(exp)) return(NULL)
   if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   dataframe <- as.data.frame(t(assay(exp, assay)))
   classifiers <- as.factor(exp[[classifiers]])
@@ -139,10 +143,13 @@ welchTest <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1, thr
 #' @param assay
 #' @param top
 #' @export
-keepVariableFeatures <- function(exp, assay = 1, top = nrow(exp)){
-  top <- ifelse(top > nrow(exp), nrow(exp), top)
-  vars <- rowSds(as.matrix(assay(exp, assay)))
-  exp[rownames(exp)[order(vars, decreasing = TRUE)[1:top]], ]
+keepVariableFeatures <- function(exp){
+  if (!validateExperiment(exp)) return(NULL)
+  if (!"leveneTest" %in% colnames(rowData(exp))) {
+    message("'leveneTest' not found in rowData. Please run 'leveneTest' first.")
+    return(exp)
+  }
+  exp[which(rowData(exp)$leveneTest$unequal_variance), ]
 }
 
 
@@ -166,6 +173,7 @@ keepVariableFeatures <- function(exp, assay = 1, top = nrow(exp)){
 wilcoxTest <- function(exp, classifiers = metadata(exp)$phenotype,
                        assay = 1, threshold = 0.1,
                        corr_method = "fdr", paired = F) {
+  if (!validateExperiment(exp)) return(NULL)
   if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   dataframe <- as.data.frame(t(assay(exp, assay)))
   classifiers <- as.factor(exp[[classifiers]])
@@ -201,6 +209,7 @@ wilcoxTest <- function(exp, classifiers = metadata(exp)$phenotype,
 #' @importFrom stats oneway.test
 welchAnova <- function(exp, classifiers = metadata(exp)$phenotype,
                        assay = 1, threshold = 0.1) {
+  if (!validateExperiment(exp)) return(NULL)
   if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   dataframe <- as.data.frame(t(assay(exp, assay)))
   classifiers <- as.factor(exp[[classifiers]])
@@ -235,6 +244,7 @@ welchAnova <- function(exp, classifiers = metadata(exp)$phenotype,
 #' @export
 kruskalTest <- function(exp, classifiers = metadata(exp)$phenotype,
                         assay = 1, threshold = 0.1) {
+  if (!validateExperiment(exp)) return(NULL)
   if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   dataframe <- as.data.frame(t(assay(exp, assay)))
   classifiers <- as.factor(exp[[classifiers]])
@@ -264,6 +274,7 @@ kruskalTest <- function(exp, classifiers = metadata(exp)$phenotype,
 #' @export
 dunnTest <- function(exp, classifiers = metadata(exp)$phenotype,
                      assay = 1, threshold = 0.05, comb = 6, method = "bh") {
+  if (!validateExperiment(exp)) return(NULL)
   if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   dataframe <- as.data.frame(t(assay(exp, assay)))
   classifiers <- as.factor(exp[[classifiers]])

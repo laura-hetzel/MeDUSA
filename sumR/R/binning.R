@@ -11,10 +11,11 @@ condition <- function(mass, intensities, samples, tolerance = 5e-6) {
   if (anyDuplicated(samples)) {
     return(NA)
   }
-  if (any(abs(mass - mean(mass)) / mean(mass) > tolerance)) {
+  m <- mean(mass)
+  if (any(abs(mass - m) / m > tolerance)) {
     return(NA)
   }
-  return(mean(mass))
+  return(m)
 }
 
 #' @title Setting of the bin boundaries
@@ -22,7 +23,8 @@ condition <- function(mass, intensities, samples, tolerance = 5e-6) {
 #' @param mass obtained from the input files
 #' @param intensities obtained from the input files
 #' @param samples obtained from the input files
-#' @param tolerance obtained from the user input or use of default value 5e-6
+#' @param tolerance (optional) obtained from the user input,
+#' default value set to 5e-6
 binning <- function(mass, intensities, samples, tolerance = 5e-6) {
   n <- length(mass) # number of peaks
   d <- diff(mass) # difference between masses
@@ -87,9 +89,10 @@ binning <- function(mass, intensities, samples, tolerance = 5e-6) {
 }
 
 #' @title Binning of the peaks
-#' @description binPeaks function! This needs the two functions above
+#' @description sorting peaks into bins, relies on binning dependencies 1&2
 #' @param df_list list of dataframes obtained from the input files
-#' @param tolerance obtained from the user input or use of default value 5e-6
+#' @param tolerance (optional) obtained from the user input,
+#' default value set to 5e-6
 binPeaks <- function(df_list, tolerance = 5e-6) {
   nonEmpty <- sapply(df_list, nrow) != 0L # checking if the list is not empty
   samples <- rep.int(
@@ -147,20 +150,21 @@ binPeaks <- function(df_list, tolerance = 5e-6) {
   return(as.list(df_list))
 }
 
-#' @title iterations of the alignment function over the data
-#' @description the code iterates over the data as long as
-#' the number of bins changes, when the number of bins
-#' doesn't change anymore iterations stop, maximal number
-#' of iterations is set to 8
-#' Also, plotting the decrease of the bins
+#' @title Binning iterations
+#' @description the code iterates the binprak function
+#' over the data as long as the number of bins changes,
+#' when the number of bins doesn't change anymore
+#' iterations stop, maximal number of iterations is
+#' set to 8
+#' plot of the bin decrease can be created (optional)
 #' @importFrom plyr join_all
 #' @importFrom tidyr pivot_wider
 #' @param df_list list of dataframes obtained from `binPeaks`
-#' @param max_align value obtained from user input or use of
-#' default value 8
-#' @param bin_plot logical value deciding if plot is created
-#' obtained from user input per default set to FALSE, line
-#' plot shows reduction of bins per iteration
+#' @param max_align (optional) value obtained from user input,
+#' default value set to 8
+#' @param bin_plot (optional) logical value deciding if plot
+#' is created obtained from user input, default set to FALSE,
+#' line plot shows reduction of bins per iteration
 #' @export
 iteration <- function(df_list, max_align = 8, bin_plot = F) {
   count <- 0L

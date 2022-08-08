@@ -6,6 +6,9 @@
 \usage{
 plotRawFeature(cells, feature, file)
 }
+\arguments{
+\item{file}{File number of the files that were used.}
+}
 \description{
 Plot feature spectra
 }

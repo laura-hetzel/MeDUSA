@@ -1,3 +1,8 @@
+# sumR 0.4.0
+* Discarded peakpicking, using centroiding instead
+* Updated alignment methods and outputs
+* Updated vignette
+
 # sumR 0.3.0
 * Updated pipeline with statistical tests and models
 * Added blank filter

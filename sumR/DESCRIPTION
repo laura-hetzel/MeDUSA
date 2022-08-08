@@ -1,7 +1,7 @@
 Type: Package
 Package: sumR
 Title: Package for analysis of single cell DI-MS data
-Version: 0.3.0
+Version: 0.4.0
 Authors@R: c(
     person("Alida", "Kindt", , "a.s.d.kindt@lacdr.leidenuniv.nl", role = c("aut", "cre")),
     person("Ahmed", "Ali", , "ali@lacdr.leidenuniv.nl", role = "aut",
@@ -71,4 +71,4 @@ RdMacros:
 biocViews:
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.1

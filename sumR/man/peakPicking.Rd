@@ -6,11 +6,11 @@
 \usage{
 peakPicking(
   files,
-  polarity = NULL,
-  combineSpectra = FALSE,
-  massWindow = c(0, Inf),
+  maxScale = 32,
   noiseWindow = 0.1,
-  cores = detectCores(logical = F)
+  cores = 1,
+  solventFilter = NULL,
+  scales = NULL
 )
 }
 \description{

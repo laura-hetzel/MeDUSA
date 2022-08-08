@@ -2,6 +2,8 @@
 #' @param exp SummarizedExperiment object
 #' @export
 models <- function(exp){
+  if (!validateExperiment(exp)) return(NULL)
+
   if (!"model" %in% names(metadata(exp))) return(NULL)
   return(names(metadata(exp)$model))
 }
@@ -11,6 +13,8 @@ models <- function(exp){
 #' @param modelName Name of the model to retrieve
 #' @export
 model <- function(exp, modelName = 1){
+  if (!validateExperiment(exp)) return(NULL)
+
   metadata(exp)$model[[modelName]]
 }
 
@@ -20,6 +24,8 @@ model <- function(exp, modelName = 1){
 #' @param value Value to set in the model
 #' @export
 `model<-` <- function(exp, modelName, value){
+  if (!validateExperiment(exp)) return(NULL)
+
   if (!"model" %in% names(metadata(exp))){
     metadata(exp)$model <- list()
   }
@@ -28,16 +34,19 @@ model <- function(exp, modelName = 1){
 }
 
 #' @title Model using RandomForest model
-#' @param exp
-#' @param classifiers
-#' @param assay
-#' @param cv
-#' @param ratio
+#' @param exp SummarizedExperiment object
+#' @param classifiers Column name in the colData that represents the classifiers
+#' @param assay Which assay should be used to create a model
+#' @param cv Number of folds to be used for cross validation
+#' @param ratio Train-test split ratio
+#' @param ... Any other parameters for preProcessing
 #' @importFrom caret train createDataPartition trainControl varImp confusionMatrix
 #' @importFrom stats predict
 #' @export
 generateModel <- function(exp, modelName, classifiers = metadata(exp)$phenotype,
-                          assay = 1, cv = 5, ratio = 0.632, seed = NULL, ...){
+                          assay = 1, folds = 5, ratio = 0.632, seed = NULL, ...){
+  if (!validateExperiment(exp)) return(NULL)
+
   if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   if (!is.null(seed)) set.seed(seed)
 
@@ -51,7 +60,9 @@ generateModel <- function(exp, modelName, classifiers = metadata(exp)$phenotype,
   modelList$train <- colnames(exp)[trainIndex]
   modelList$test <- colnames(exp)[-trainIndex]
 
-  control <- trainControl(method = "cv", number = cv, savePredictions = "all", preProcOptions = c("center", "scale"))
+  control <- trainControl(method = "cv", number = folds,
+                          savePredictions = "all",
+                          preProcOptions = c("center", "scale"))
 
   modelList$model <- train(x = t(data[, modelList$train]),
                            y = as.factor(exp[, modelList$train][[classifiers]]),

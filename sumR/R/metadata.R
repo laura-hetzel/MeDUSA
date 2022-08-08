@@ -3,10 +3,15 @@
 #' @param data Dataframe with samplenames as rows
 #' @export
 addCellData <- function(exp, data = NULL){
+  if (!validateExperiment(exp, checkColData = F)) return(NULL)
+
   if (is.null(data)) return(exp)
   cols <- rownames(colData(exp))
-  data <- data[cols, ]
-  colData(exp) <- data.frame(colData(exp), data)
+  data <- data[cols, , drop = F]
+
+  columns <- c(colnames(colData(exp)), colnames(data))
+  colData(exp) <- DataFrame(colData(exp), data)
+  colnames(colData(exp)) <- columns
   exp
 }
 
@@ -15,6 +20,8 @@ addCellData <- function(exp, data = NULL){
 #' @param data Dataframe with featurenames as rows
 #' @export
 addFeatureData <- function(exp, data = NULL){
+  if (!validateExperiment(exp)) return(NULL)
+
   if (is.null(data)) return(exp)
   data <- data[rownames(exp), ]
   rowData(exp) <- data.frame(rowData(exp), data)
@@ -24,6 +31,8 @@ addFeatureData <- function(exp, data = NULL){
 #' @title Set metadata
 #' @export
 setMetadata <- function(exp, ...){
+  if (!validateExperiment(exp)) return(NULL)
+
   metadata(exp) <- c(metadata(exp), list(...))
   exp
 }

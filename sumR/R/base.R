@@ -1,3 +1,65 @@
+#' @title Load a sumR Experiment from a file
+#' @param path
+#' @export
+loadExperiment <- function(path){
+  tryCatch({
+    exp <- readRDS(path)
+    if (validateExperiment(exp)) {
+      return(exp)
+    }
+    warning("Invalid Experiment, returning NULL")
+    return(NULL)
+  }, error = function(x){
+    message("Error while trying to read the RDS file")
+  })
+}
+
+#' @title Save a sumR Experiment to a file
+#' @param exp
+#' @param path
+#' @export
+saveExperiment <- function(exp, path){
+  path <- file.path(path)
+  if (validateExperiment(exp)) {
+    dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
+    saveRDS(exp, file = path)
+  } else {
+    warning("Invalid Experiment, aborted saving")
+  }
+}
+
+#' @title Validate a sumR Experiment
+#' @param exp
+#' @export
+validateExperiment <- function(exp, checkColData = T){
+  isValid <- all(
+    class(exp) == "SummarizedExperiment",
+    nrow(exp) > 0,
+    ncol(exp) > 0,
+    ifelse(checkColData, "Type" %in% colnames(colData(exp)), TRUE),
+    c("mz", "mzmin", "mzmax", "npeaks", "peakidx") %in% colnames(rowData(exp)),
+    "Area" %in% assayNames(exp)
+  )
+  if (!isValid) warning("Invalid sumR Experiment object")
+  isValid
+}
+
+#' @title Set the phenotype column of a sumR Experiment
+#' @param exp
+#' @param phenotype
+#' @export
+setPhenotype <- function(exp, phenotype){
+
+  if (validateExperiment(exp)) {
+    if (phenotype %in% colnames(colData(exp)) & class(phenotype == "character")) {
+      metadata(exp)$phenotype <- phenotype
+    } else {
+      warning(sprintf("%s not found in colData", phenotype))
+    }
+  }
+  exp
+}
+
 #' @title (LEGACY, use read_mzml instead) Read MS data
 #' @param path path to the file
 #' @return Data.frame with ordered mz values
@@ -27,9 +89,13 @@ read_msdata <- function(path = "data") {
 rawToMzml <- function(folder, output = getwd(), rt = NULL, options = ""){
 
   options <- paste(options, collapse = " ")
-  files <- list.files(file.path(folder), full.names = T, pattern = "^(?!.*mzML).*")
+  files <- list.files(file.path(folder), full.names = T)
+  files <- files[!grepl(".mzML$", files)]
+  if (length(files) == 0) stop("No files found to convert")
+
   output <- file.path(output)
-  if (!dir.exists(output)) dir.create(output)
+  if (!dir.exists(output)) dir.create(output, recursive = T, showWarnings = F)
+
   key <- "Directory\\shell\\Open with MSConvertGUI\\command"
   reg <- tryCatch(utils::readRegistry(key, "HCR"), error = function(e) NULL)
   msconvert <- file.path(dirname(sub("\"([^\"]*)\".*", "\\1", reg[[1]])), "msconvert.exe")
@@ -42,13 +108,13 @@ rawToMzml <- function(folder, output = getwd(), rt = NULL, options = ""){
                        file.path(msconvert), file, rt, options, output)
     system(command, show.output.on.console = F)
   })
-  list.files(folder, full.names = T, pattern = ".mzML")
+  list.files(output, full.names = T, pattern = ".mzML")
 }
 
 
 #' @title ppm calculation
-#' @description ppm_calc calculated the parts per million
-#' error between two different masses
+#' @description ppm_calc calculates the parts per million
+#' error between two adjacent masses
 #' @param mass1 input from the `align_check` functions
 #' @param mass2 input from the `align_check` functions
 ppm_calc <- function(mass1, mass2) {
@@ -57,9 +123,9 @@ ppm_calc <- function(mass1, mass2) {
 }
 
 
-#' @title alignment check
+#' @title alignment quality control
 #' @description uses the ppm_calc function to check
-#' ppm error of aligned peaks, alignment quality control
+#' ppm error of aligned peaks
 #' @param aligned_peaks dataframe of aligned peaks
 #' obtained from `iteration`
 #' @export
@@ -70,7 +136,7 @@ align_check <- function(aligned_peaks) {
   return(ppm_err_fn)
 }
 
-#' @title Boxplot of the ppm errors (aligned data)
+#' @title Boxplot of the ppm errors
 #' @param ppm_err_fn dataframe obtained from `align_check`
 #' @importFrom ggplot2 ggplot
 ppm_err_plot <- function(ppm_err_fn) {
@@ -81,22 +147,24 @@ ppm_err_plot <- function(ppm_err_fn) {
   return(ppm_err_plot_fn)
 }
 
-#' @title Alignment analysis (optional boxplot)
-#' @description various kinds of analysis are possible,
+#' @title Alignment analysis (optional summary & boxplot of ppm errors)
+#' @description various kinds of visualizations are possible,
 #' check_binning ensures m/z values are correctly aligned/binned,
 #' check_binning outputs either a dataframe (1) or
 #' a list of two to three elements:
 #' 1- Dataframe of 1 column containing the ppm error values
 #' 2- (optional)table of summary stats of ppm error values
-#' 3- (optional)- boxplot of the ppm error values
-#' with xcoords zoomed in to -50,0 (default)
+#' 3- (optional)boxplot of the ppm error values with xcoords
+#' zoomed in to -50,0 (default)
+#' decide via logical (optional) values which results are
+#' created, if there is no input only 1 will be created
 #' @param aligned_peaks dataframe obtained from `iteration`
 #' @param summary_errors (optional)logical value obtained from
-#' user input per default set to FALSE
+#' user input, per default set to FALSE
 #' @param boxplot (optional) logical value obtained from user
-#' input per default set to FALSE
+#' input, per default set to FALSE
 #' @param xcoords (optional) vector defining zoom on boxplot
-#' obtained from user input or use of default value c(-50, 0)
+#' obtained from user input, default value set to c(-50, 0)
 #' @importFrom ggplot2 ggplot
 #' @export
 check_binning <- function(aligned_peaks, summary_errors = F,
@@ -126,19 +194,40 @@ check_binning <- function(aligned_peaks, summary_errors = F,
 #' @param sampleThresh
 #' @param filter
 #' @export
-blankSubstraction <- function(exp, blankThresh = 5, sampleThresh = Inf,
-                              filter = TRUE, removeBlanks = TRUE){
-
+blankSubstraction <- function(exp, blankThresh = 5, nSamples = Inf, removeBlanks = TRUE){
+  if (!validateExperiment(exp)) return(NULL)
   blanks <- exp[, toupper(exp$Type) == 'BLANK']
   samps <- exp[, toupper(exp$Type) == 'SAMPLE']
 
   threshold <- rowMedians(assay(blanks, "Area"), na.rm = TRUE) * blankThresh
-  below <- rowSums(assay(samps, "Area") - threshold <= 0, na.rm = TRUE) <= sampleThresh
+  exp <- exp[rowSums(assay(samps, "Area") - threshold <= 0, na.rm = TRUE) <= nSamples, ]
+
+  if (removeBlanks) exp <- exp[, toupper(exp$Type) != "BLANK"]
+
+  filterCells(exp)
+}
+
+#' @title Substract Blanks from SummarizedExperiment using median
+#' @param exp
+#' @param blankThresh
+#' @param sampleThresh
+#' @param filter
+#' @export
+blankSubstractionMedian <- function(exp, blankThresh = 5, removeBlanks = TRUE){
+  if (!validateExperiment(exp)) return(NULL)
+
+  blanks <- exp[, toupper(exp$Type) == 'BLANK']
+  samps <- exp[, toupper(exp$Type) == 'SAMPLE']
+
+
+  threshold <- rowMedians(assay(blanks, "Area"), na.rm = TRUE) * blankThresh
+  med <- rowMedians(assay(samps, "Area"), na.rm = TRUE)
+  pass <- med >= threshold
 
   rowData(exp)$blankThresh <- threshold
-  rowData(exp)$blankPass <- below
+  rowData(exp)$blankPass <- pass
 
-  if (filter) exp <- exp[which(rowData(exp)$blankPass), ]
+  exp <- exp[which(rowData(exp)$blankPass), ]
   if (removeBlanks) exp <- exp[, toupper(exp$Type) != "BLANK"]
 
   filterCells(exp)
@@ -232,23 +321,68 @@ calculate_nominal_mass <- function(formulas) {
   })
 }
 
-#' @title Combine SummarizedExperiments by row
-#' @param ... Number of SummarizedExperiments
-#' @export
-combineExperiments <- function(...){
-  idx <- Reduce(intersect, lapply(list(...), colnames), init = colnames(list(...)[[1]]))
+rowBindExperiments <- function(exps, mode = "intersect"){
+  if (!all(sapply(exps, validateExperiment))) return(NULL)
 
-  exp <- do.call(rbind, lapply(list(...), function(exp){
-    exp <- exp[, idx]
-    if ("polarity" %in% names(metadata(exp))) {
-      rowData(exp)$polarity <- metadata(exp)$polarity
-    }
-    exp
+  idx <- Reduce(intersect, lapply(exps, colnames), init = colnames(exps[[1]]))
+
+  exp <- do.call(rbind, lapply(exps, function(exp){
+    exp[, idx]
   }))
 
   rownames(exp) <- 1:nrow(exp)
-  if ("polarity" %in% colnames(rowData(exp))){
-    rownames(exp) <- paste0(rownames(exp), rowData(exp)$polarity)
+  exp
+}
+
+groupRowMax <- function(exp, group){
+  groups <- unique(exp[[group]])
+  assay <- do.call(cbind, lapply(groups, function(g){
+    rowMaxs(assay(exp[, exp[[group]] == g]), na.rm = T)
+  }))
+
+
+}
+
+colBindExperiments <- function(exps, mode = "intersect"){
+  compares <- expand.grid(length(exps), length(exps))
+
+  for (i in 1:nrow(compares)) {
+    first <- compares[i, 1]
+    second <- compares[i, 2]
+    exps[[first]] <- matchRows(exps[[first]], exps[[second]])
+  }
+
+  exps <- lapply(exps, function(x){
+    x[order(rowData(exp)$mz), ]
+  })
+
+  exp <- do.call(rbind, lapply(exps, colData))
+  exp <- do.call(cbind, lapply(exps, assay))
+  exp
+}
+
+matchRows <- function(exp1, exp2){
+  mzs <- rowData(exp1)$mz
+  exp1[which(vapply(mzs, function(mz){
+    any(mz > rowData(exp2)$mzmin & mz < rowData(exp2)$mzmax)
+  }, logical(1))), ]
+}
+
+
+
+#' @title Combine SummarizedExperiments by row
+#' @param ... Number of SummarizedExperiments
+#' @export
+combineExperiments <- function(..., direction = "row", mode = "intersect"){
+  exps <- list(...)
+  if (!all(sapply(exps, validateExperiment))) return(NULL)
+
+  if (direction == "row") {
+    exp <- rowBindExperiments(exps, mode)
+  } else if (direction == "column") {
+    exp <- colBindExperiments(exps, mode)
+  } else {
+    stop("'direction' must be either 'row' or 'column'.")
   }
 
   exp
@@ -259,6 +393,8 @@ combineExperiments <- function(...){
 #' @param modelName name of the model
 #' @export
 varImportance <- function(exp, modelName = 1){
+  if (!validateExperiment(exp)) return(NULL)
+
   df <- as.data.frame(model(exp, modelName)$varImp$importance)
   df$Compound <- rownames(df)
   df <- df[order(df$Overall, decreasing = TRUE), c("Compound", "Overall")]

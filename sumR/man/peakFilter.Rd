@@ -4,7 +4,7 @@
 \alias{peakFilter}
 \title{filter peaks}
 \usage{
-peakFilter(peaks, SNR = 0, intensity = 0)
+peakFilter(fileList, intensity = 0, peakValue = -Inf, snr = 0)
 }
 \description{
 filter peaks

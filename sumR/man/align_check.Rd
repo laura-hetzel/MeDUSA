@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{align_check}
 \alias{align_check}
-\title{alignment check}
+\title{alignment quality control}
 \usage{
 align_check(aligned_peaks)
 }
@@ -12,5 +12,5 @@ obtained from `iteration`}
 }
 \description{
 uses the ppm_calc function to check
-ppm error of aligned peaks, alignment quality control
+ppm error of aligned peaks
 }

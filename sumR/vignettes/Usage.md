@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.width = 7, 
-  fig.height = 5,
+  fig.height = 4,
   eval = F
 )
 
@@ -25,13 +25,13 @@ knitr::opts_chunk$set(
 
 ![](images/sumr.png)
 
-`sumR` (**s**ingle cell **u**ntargeted **m**etabolomics in **R**) is an R package designed for the analysis of single cell untargeted metabolomics datasets. Due to the small volume of cells and other challenges, conventional LC-MS strategies aren't suitable to analyse individual cells. This can be solved by using DI-MS, but brings its own challenges. `sumR` has been designed as a suite of functions that can deal with DI-MS data across many cells. This document functions as a showcase of a pipeline constructed with `sumR` for cells treated with either DMSO or Tamoxifen (TMX). You can download the files [here](https://leidenuniv1-my.sharepoint.com/:u:/g/personal/maasp_vuw_leidenuniv_nl/EfWMHgWjx2hAn_pSJEF9QvUBgNThDNKDZEhvtJSvo4_ZcQ?e=LxvAqI) (you must have access using your university account). Extract the files in a folder and use this folder as input directory.
+`sumR` (**s**ingle cell **u**ntargeted **m**etabolomics in **R**) is an R package designed for the analysis of single cell untargeted metabolomics datasets. Due to the small volume of cells and other challenges, conventional LC-MS strategies aren't suitable to analyse individual cells. This can be solved by using DI-MS, but brings its own challenges. `sumR` has been designed as a suite of functions that can deal with DI-MS data across many cells. This document functions as a showcase of a pipeline constructed with `sumR`.
 
 ## Pre-processing
 
-sumR starts by pre-processing the raw data to features by extracting peaks and aligning these across spectra and cells. Unlike LC-MS, here we define a peak as a m/z -- intensity combination, and features as peaks that have been aligned across cells. This allows us to compare cells by e.g. filtering possible contaminants and/or performing statistical modelling. Consequently, features are defined using a min -- max m/z range across cells. Be aware that due to the acquisition method, sumR does not consider retention time of samples and will be omitted throughout the workflow.
+sumR starts by pre-processing the raw data to features by extracting peaks and aligning these across spectra and cells. Unlike LC-MS, here we define a peak as a m/z -- intensity combination, and features as peaks that have been aligned across cells. This allows us to compare cells by e.g. filtering possible contaminants and/or performing statistical modelling. Consequently, features are defined using a min -- max m/z range across cells. Be aware that due to the acquisition method, sumR does not consider retention time of samples.
 
-To start a sumR pipeline, we need to load the package.
+To start a sumR pipeline, we load the package.
 
 ```{r setupEcho, echo = T, eval = F}
 library(sumR)
@@ -42,7 +42,6 @@ suppressWarnings(suppressPackageStartupMessages(library(sumR)))
 ```
 
 ### Converting vendor format
-
 SumR requires that the data is in `mzML` file format. In case you have vendor-format files, you can use the `rawToMzml` function to convert the files to mzML files. This function requires Proteowizard to be installed on your system, which you can find [here](https://proteowizard.sourceforge.io/). Alternatively, you can use Proteowizard without sumR to perform the conversion and skip this section.
 
 After obtaining mzML files, we set the directory where our data is located. The path to the directory needs to be the full path, which can be assured with the `file.path()` function.
@@ -50,42 +49,58 @@ After obtaining mzML files, we set the directory where our data is located. The 
 The rawToMzml function requires the defined input directory and an output folder to store the mzML files. It is recommended to use an empty or non-existing folder to ensure the output folder only contains mzML files. The function returns the file paths of the newly created mzML files.
 
 ```{r convert}
-# Change this these paths to where you extracted the files and desired output
-input_directory <- r"(F:\Myrthe\raw)"
-output_directory <- r"(F:\Myrthe\mzml)"
-
-dir <- file.path(input_directory)
-files <- rawToMzml(dir, output = file.path(output_directory))
+dir <- file.path(r"(F:\Myrthe\raw)")
+files <- rawToMzml(dir, output = file.path(r"(F:\Myrthe\mzml)"))
 ```
 
 ### Defining Metadata
 
-To make use of the full pipeline, it is required to supply a data frame of metadata called `cellData`. To ensure proper integration, ensure that the row names are equal to the base name of the file, without file extension. E.g. a file called `sample001.mzML` would translate into `sample001` as a proper row name. This name is matched to the data file names to match data with the supplied cellData.
+To make use of the full pipeline, it is mandatory to supply a `data.frame` of metadata. To ensure proper integration, ensure that the row names are equal to the base name of the file, without file extension. E.g. a file called `sample001.mzML` would translate into `sample001` as a proper row name. This name is matched to the data file names to match data with the supplied metadata.
 
-Columns may contain metadata about each of the cells. Here we prepared metadata with two additional columns: `Type`, and `Treatment`. The first column contains the sample type, here either `SAMPLE` or `BLANK`, the second column if the cell was treated with either DMSO or TMX. We will use the Treatment column as phenotype during modelling after post-processing. The supplied table below shows the contents of the cellData.
+```{r metadata2, eval = T, echo = F}
+# knitr::kable(head(df), caption = "Start of the metadata file") 
+# knitr::kable(tail(df), caption = "End of the metadata file")
+```
+
+Columns may contain metadata about each of the samples/cells. Here we prepared metadata with three additional columns: `Sample.number`, `phenotype`, and `Type`. The first column contains the number of each cell, the second contains the cell differentiation status and the third columns contains the sample type, here either `SAMPLE` or `BLANK`. We will use this phenotype during modelling after post-processing. The table below shows the contents of the metadata.
 
 
-```{r echo = F}
-cellData <- system.file("cellData.csv", package = "sumR")
-df <- read.csv(cellData, row.names = 1)
-knitr::kable(df, caption = "cellData") 
+
+Now that we've extracted features from our data, we need to post-process the data in order to remove any contaminants, isotopes, adducts, and/or other artifacts. Due to the low cell volume, we are restricted from using pooled QCs. However, we can use Blanks and/or Lab QCs.
+
+```{r}
+df <- DataFrame(Type = rep("SAMPLE", length(files)),
+                row.names = tools::file_path_sans_ext(basename(files)))
+df$Type[grep("BLANK", basename(files))] <- "BLANK"
+df$Treatment <- c(
+  rep("DMSO", 7),
+  rep("TMX", 6),
+  "DMSO",
+  rep("TMX", 3),
+  "DMSO",
+  "TMX",
+  rep("DMSO", 9),
+  rep("TMX", 6)
+)
+knitr::kable(head(df), caption = "Start of the cellData metadata") 
 ```
 
 ### Extracting peaks
-
 Peaks can be extracted from the mzML file using the `extractPeaks()` function. This function converts profile-mode data to centroid-mode by doing the following steps:
 
-1.  Extract scans within a massWindow (e.g. a scan of 200-350 dalton has a massWindow of 150 dalton). Defaults to `c(0, Inf)` which extracts everything.
-2.  Extract scans of either positive (+) or negative (-) polarity.
-3.  Smooth these scans using a Savitzky-Golay filter
-4.  Centroid by picking local maxima
+1. Extract scans within a massWindow (e.g. a scan of 200-350 dalton has a massWindow of 150 dalton). Defaults to `c(0, Inf)`
+2. Extract scans of either positive (+) or negative (-) polarity. 
+3. Smooth these scans using a Savitz-Golay filter
+4. Centroid by picking local maxima
 
-By setting `cores` to any value higher than 1, each scan is centroided in parallel using that amount of cores. The function returns a list of data frames, one for each cell.
+By setting `cores` to any value higher than 1, each scan is centroided in parallel using that amount of cores. The function returns a list of data frames, one for each cell. 
 
 ```{r prepareScans}
 peaks <- extractPeaks(
   files, 
+  massWindow = c(100, 200), 
   polarity = "+", 
+  centroid = T, 
   cores = 8
 )
 ```
@@ -106,7 +121,6 @@ peakFilter(peaks, intensity = 1e3) %>%
 ```
 
 To save the peaks with our chosen intensity filter, we can override the results in the `peaks` variable.
-
 ```{r peakFilter}
 peaks <- peakFilter(peaks, intensity = 1e3)
 ```
@@ -122,17 +136,17 @@ spectra <- spectraAlignment(
    ppm = 5, 
    nPeaks = 5
 )
-knitr::kable(head(as.data.frame(spectra)[, -which(colnames(spectra) == "peakidx")]), caption = "Compounds aligned across spectra") 
+knitr::kable(spectra, caption = "Compounds aligned across spectra") 
 
 ```
 
 #### Inspecting Spectra Shifts
-
-To inspect if the alignment did not over-correct, we can use the function `spectraShiftPlot()`. It shows the difference between the original mass and the mass shift after alignment. Changing the parameters `nPeaks` and `ppm` of the `spectraAlignment()` function will affect this mass shift. Since the alignment is based on ppm, we expect this mass shift to increase with increasing masses. The `cell` parameter either takes the cell name as defined in the metadata or the cell number.
+To inspect if the alignment did not over-correct, we can use the function `spectraShiftPlot()`. It shows the difference between the original mass and the mass shift after alignment. Changing the parameters `nPeaks` and `ppm` of the `spectraAlignment()` function will affect this mass shift. Since the alignment is based on ppm, we expect this mass shift to increase with increasing masses. The `cell` parameter either takes the cell name as defined in the metadata or the cell number. 
 
 ```{r spectraShift}
 spectraShiftPlot(spectra, cell = 1)
 ```
+
 
 ### Cell Alignment
 
@@ -153,14 +167,13 @@ exp <- cellAlignment(
 
 #### Inspecting Cell Shifts
 
-We can inspect the mass shift between cells that occured during alignment.
+We can inspect the mass shift between cells that occured during alignment. 
 
 ```{r cellShift}
 cellShiftPlot(exp)
 ```
 
 ## Post-processing
-
 With aligned features across cells, the pre-processing is complete. However, not all aligned features are actually novel compounds. This is due to artifacts, fragments, isotopes, and other non-biological compounds. The following functions are part of the post-processing pipeline in sumR to remove these unwanted features. All these functions are optional (and can be executed in any order), but are recommended for most uses.
 
 ### Blank substracton
@@ -172,9 +185,7 @@ exp <- blankSubstraction(exp, blankThresh = 5, nSamples = 10, removeBlanks = TRU
 ```
 
 ### Mass Defect Filter
-
 As described by [McMillan et al.](10.1186/s13321-016-0156-0), calculating the mass defect can be used to identify potential salt clusters and other non-biological compounds. This is implemented in the `massDefectFilter` which can plot the mass versus mass defect.
-
 ```{r}
 exp <- massDefectFilter(exp, plot = TRUE)
 ```
@@ -189,10 +200,10 @@ exp <- imputation(exp, method = "noise", noise = 100, seed = 42)
 
 ### Isotope identification
 
-When interested in novel compounds, isotopes and adducts are a source of unwanted features. The function `isotopeTagging()` can detect isotopes and adducts using known ratios of mass and intensities of atoms. Calling this function will store detailed results about isotopes and adducts in the `rowData` slot of the object.
+When interested in novel compounds, isotopes and adducts are a source of unwanted features. The function `isotopeTagging()` can detect isotopes and adducts using known ratios of mass and intensities of atoms. Calling this function will store detailed results about isotopes and adducts in the `rowData` slot of the object. 
 
 ```{r isotopes}
-exp <- isotopeTagging(exp, plot = T)
+exp <- isotopeTagging(exp)
 ```
 
 ### Fragment filtering
@@ -209,7 +220,8 @@ We can combine the functions of the pre- and post-processing in a pipeline using
 
 ```{r pipeline}
 # Pre-processing
-exp2 <- extractPeaks(files, polarity = "-", cores = 8) %>%
+
+exp2 <- extractPeaks(files, massWindow = c(100, 200), polarity = "+", centroid = T, cores = 16) %>%
   spectraAlignment(method = "binning", ppm = 5, nPeaks = 5) %>%
   cellAlignment(method = "binning", ppm = 5, nCells = 10, cellData = df, phenotype = "Treatment")
 
@@ -231,13 +243,14 @@ expModel <- combineExperiments(exp, exp2)
 expModel
 ```
 
+
 ## Modelling & Statistics
 
 `sumR` supports building models to determine phenotypes that might be discriminatory. The package includes several univariate tests, as well as multivariate tests using models in the [caret package](https://topepo.github.io/caret/). Finally we can inspect the results using PCA, UMAP and other plots.
 
 ### Univariate statistical tests
 
-sumR supports the shapiro-wilk test for normality, levene test for difference in variance between groups, and welch T-test for significant difference testing between groups. These tests will test the features (row-wise), not samples. Finally, while not a statistical test, the fold change between the given phenotype can be calculated.
+sumR supports the shapiro-wilk test for normality, levene test for difference in variance between groups, and welch T-test for significant difference testing between groups. These tests will test the features (row-wise), not samples. Finally, while not a statistical test, the fold change between the given phenotype can be calculated. 
 
 ```{r statTests}
 expModel <- expModel %>%
@@ -258,6 +271,7 @@ expModel <- keepVariableFeatures(expModel)
 plotFeatureSds(expModel)
 ```
 
+
 ### Data inspection using PCA & UMAP
 
 The results can be inspected using several plot types. `samplePCA()` is a function that plots a Principle Components Analysis (PCA) on the samples. In contrast, the `compoundPCA()` function plots a PCA for the compounds instead. Next, the `screePCA()` function plots a barplot with the variance explained for each Principle Component (PC). Finally, we can use the `plotUMAP()` function to plot a UMAP after doing a PCA first. This function takes in the number of PCs to construct the UMAP.
@@ -273,7 +287,7 @@ plotUMAP(expModel, components = 10)
 
 As stated before, sumR utilizes the caret package to generate models. The 'Available Models' section in the caret documentation indicates which models are available (you may need to install dependencies for some models). The `generateModel()` function has the following workflow:
 
-1.  Data partitioning in a train/test set
+1.   Data partitioning in a train/test set
 2.  Set the train control with scaling and centering
 3.  Perform training with cross-validation
 4.  Predict on the partitioned test set
@@ -281,12 +295,12 @@ As stated before, sumR utilizes the caret package to generate models. The 'Avail
 
 the generateModel function takes in the following parameters:
 
--   exp: The SummarizedExperiment object
--   assay: The assay to use (should be an assay without missing values)
--   modelName: Name of the model to use as defined by `caret`
--   folds: Number of folds to use for cross-validation
--   ratio: Ratio of train-test data split
--   seed: Used for reproducible results
+- exp: The SummarizedExperiment object
+- assay: The assay to use (should be an assay without missing values)
+- modelName: Name of the model to use as defined by `caret`
+- folds: Number of folds to use for cross-validation
+- ratio: Ratio of train-test data split
+- seed: Used for reproducible results
 
 ```{r models}
 expModel <- generateModel(
@@ -299,7 +313,7 @@ expModel <- generateModel(
 ) 
 ```
 
-All generated models are stored in the metadata of the SummarizedExperiment object under `model`.
+All generated models are stored in the metadata of the SummarizedExperiment object under `model`. 
 
 ### Model Assessment
 

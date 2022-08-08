@@ -10,6 +10,8 @@
 #' @importFrom ggpubr theme_pubr labs_pubr
 #' @export
 volcanoPlot <- function(exp, test, title = "") {
+  if (!validateExperiment(exp)) return(NULL)
+
   data <- as.data.frame(rowData(exp)[[test]])
   foldChanges <- rowData(exp)$foldChange[,4]
   pvalues <- data$p.value
@@ -38,6 +40,7 @@ volcanoPlot <- function(exp, test, title = "") {
 #' @importFrom ggrepel geom_text_repel
 #' @export
 plotUMAP <- function(exp, assay = 1, components = 20){
+  if (!validateExperiment(exp)) return(NULL)
 
   data <- as.matrix(t(assay(exp, assay)))
   data <- prcomp(data, scale. = T, center = T)$x[,1:components]
@@ -57,6 +60,8 @@ plotUMAP <- function(exp, assay = 1, components = 20){
 }
 
 plotCellSds <- function(exp, assay = 1, top = nrow(exp)){
+  if (!validateExperiment(exp)) return(NULL)
+
   vars <- colSds(as.matrix(assay(exp, assay)), na.rm = T)
   df <- data.frame(Cell = colnames(exp), Variation = vars)
   df <- df[order(df$Variation, decreasing = T), ]
@@ -71,6 +76,8 @@ plotCellSds <- function(exp, assay = 1, top = nrow(exp)){
 #' @title Plot the standard deviations
 #' @export
 plotFeatureSds <- function(exp, assay = 1, top = nrow(exp)){
+  if (!validateExperiment(exp)) return(NULL)
+
   vars <- rowSds(as.matrix(assay(exp, assay)), na.rm = T)
   df <- data.frame(Feature = rownames(exp), Variation = vars)
   df <- df[order(df$Variation, decreasing = T), ]
@@ -87,6 +94,8 @@ plotFeatureSds <- function(exp, assay = 1, top = nrow(exp)){
 #' @param modelName Either name of number of the model
 #' @export
 plotCrossValidation <- function(exp, modelName = 1){
+  if (!validateExperiment(exp)) return(NULL)
+
   plot(model(exp, modelName)$model)
 }
 
@@ -168,6 +177,8 @@ plotCrossValidation <- function(exp, modelName = 1){
 #' @param assay
 #' @export
 screePCA <- function(exp, assay = 1) {
+  if (!validateExperiment(exp)) return(NULL)
+
   data <- t(assay(exp, assay))
   res_pca <- PCA(data, graph = FALSE)
   fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 100), main = "PCA - scree plot")
@@ -180,6 +191,8 @@ screePCA <- function(exp, assay = 1) {
 #' @param assay
 #' @export
 compoundPCA <- function(exp, assay = 1) {
+  if (!validateExperiment(exp)) return(NULL)
+
   data <- t(assay(exp, assay))
   res_pca <- PCA(data, graph = FALSE)
   fviz_pca_var(res_pca, col.var = "grey", col.circle = "grey", title = "variables-PCA")
@@ -193,6 +206,7 @@ compoundPCA <- function(exp, assay = 1) {
 #' @importFrom factoextra fviz_pca_ind
 #' @export
 samplePCA <- function(exp, assay = 1) {
+  if (!validateExperiment(exp)) return(NULL)
   data <- t(assay(exp, assay))
   res_pca <- PCA(data, graph = FALSE)
   suppressWarnings(fviz_pca_ind(res_pca,
@@ -210,6 +224,7 @@ samplePCA <- function(exp, assay = 1) {
 #' @param classifiers sample groups as factor
 #' @export
 PCA_ellipse <- function(exp, classifiers, assay = 1) {
+  if (!validateExperiment(exp)) return(NULL)
   data <- t(assay(exp, assay))
   classifiers <- as.factor(exp[[classifiers]])
   res_pca <- PCA(data, graph = FALSE)
@@ -233,6 +248,7 @@ PCA_ellipse <- function(exp, classifiers, assay = 1) {
 #' @param data transposed dataframe with m/z as columns
 #' @export
 PCA_ellipse_stats <- function(exp, classifiers, assay = 1) {
+  if (!validateExperiment(exp)) return(NULL)
   data <- t(assay(exp, assay))
   classifiers <- as.factor(exp[[classifiers]])
   PCA2 <- prcomp(as.matrix(data), scale. = F) # PCA model using transposed df
@@ -273,6 +289,7 @@ plotPLSDA <- function(data, classifiers, comp, method) {
 #' @param classifiers sample groups as factor
 #' @export
 PLSDA_ind <- function(exp, classifiers, assay = 1) {
+  if (!validateExperiment(exp)) return(NULL)
   data <- t(assay(exp, assay))
   classifiers <- as.factor(exp[[classifiers]])
   plsda <- plsda(data, classifiers)
@@ -288,6 +305,7 @@ PLSDA_ind <- function(exp, classifiers, assay = 1) {
 #' @param comp integer value indicating the component of interest from the object (default=1)
 #' @export
 PLSDA_ROC <- function(exp, classifiers, assay = 1, comp = 1) {
+  if (!validateExperiment(exp)) return(NULL)
   data <- t(assay(exp, assay))
   classifiers <- as.factor(exp[[classifiers]])
   plsda <- plsda(data, classifiers)
@@ -303,6 +321,7 @@ PLSDA_ROC <- function(exp, classifiers, assay = 1, comp = 1) {
 #' @param method method for contribution "median" or "mean", default is "median"
 #' @export
 PLSDA_loadings <- function(exp, classifiers, assay = 1, comp = 1, method = "median") {
+  if (!validateExperiment(exp)) return(NULL)
   data <- t(assay(exp, assay))
   classifiers <- as.factor(exp[[classifiers]])
   plsda <- plsda(data, classifiers)
@@ -321,6 +340,7 @@ PLSDA_loadings <- function(exp, classifiers, assay = 1, comp = 1, method = "medi
 #' @importFrom dplyr %>%
 #' @export
 heatMap <- function(exp, assay, classifiers, pretty.order.rows = T, pretty.order.cols = T) {
+  if (!validateExperiment(exp)) return(NULL)
   data <- t(assay(exp, assay))
   classifiers <- as.factor(exp[[classifiers]])
   superheat <- data %>% superheat(

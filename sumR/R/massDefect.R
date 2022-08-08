@@ -1,7 +1,7 @@
 #' @title Mass defect (MD) calculation
-#' @description here a simplified MD, the mass' decimal number
+#' @description here a simplified MD, decimal number of the mass
 #' @param dataframe data frame containing experimental data
-#' @export
+#' df must contain an mz column
 mass_defect_calculation <- function(dataframe) {
   MD <- dataframe$mz %% 1
   dataframe$MD <- MD
@@ -12,23 +12,22 @@ mass_defect_calculation <- function(dataframe) {
 #' @description the theoretical maximum MD of human metabolites
 #' is used to calculate this cut off
 #' @param filter_df obtained from the HMDB using `mass_defect_calculation`
-#' @export
 make_filter_list <- function(filter_df) {
   filter_df$mz <- 0.00112 * filter_df$mz + 0.01953
   return(filter_df)
 }
 
 
-#' @title Filtering the data by MD cut-off and inclusion list
+#' @title Filtering the data by MD cut-off,(optional) and inclusion list
 #' @param MD_df obtained from from the HMDB using `mass_defect_calculation`
 #' @param filter_df obtained from the `make_filter_list`
 #' @param incl_list (optional) logical value from user input, default set
 #' to FALSE, decides if inclusion list is used or not
 #' @param incl_list_path (optional, use only if incl_list = T)path to
-#' inclusion list obtained from user input or use of default inclusion
-#' list (McMillan et al., 2016)
+#' inclusion list obtained from user input, default inclusion list from
+#' \insertRef{mcmillan_renaud_gloor_reid_sumarah_2016}{sumR}
 #' @param mass_accuracy (optional, use only if incl_list = T) obtained
-#' from user input or use of default value set to 0.01
+#' from user input, default value set to 0.01
 #' @importFrom utils read.delim
 MD_filter <- function(MD_df, filter_df, incl_list,
                       incl_list_path = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt",
@@ -72,16 +71,20 @@ plot_mz_MD <- function(MD_df, MD_df_filtered) {
 }
 
 #' @title Mass defect filter pipeline
+#' @descritpion uses the mass defect functions to filter
+#' the data with one command
 #' @param dataframe containing the data, intensities and mz
 #' @param mz_MD_plot logical variable deciding if plot is
-#' wanted per default set to TRUE
+#' created per default set to TRUE
 #' @importFrom stats na.omit
 #' @importFrom utils read.delim
 #' @export
-MassDefectFilter <- function(dataframe, mz_MD_plot = TRUE, incl_list = F,
+massDefectFilter <- function(exp, plot = FALSE, incl_list = FALSE,
                              incl_list_path = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt",
                                                           package = "sumR"),
                              mass_accuracy = 0.01 ) {
+  if (!validateExperiment(exp)) return(NULL)
+  dataframe <- as.data.frame(rowData(exp))
   # calculate the MD for all compounds
   md_df <- mass_defect_calculation(dataframe)
   # make filtered list experimental data
@@ -91,7 +94,12 @@ MassDefectFilter <- function(dataframe, mz_MD_plot = TRUE, incl_list = F,
                                incl_list = incl_list, mass_accuracy = mass_accuracy,
                                incl_list_path = incl_list_path)
   # plotting
-  if (mz_MD_plot == T) {
+  if (plot) {
     plot_mz_MD(md_df, filtered_df)
-  }}
+  }
+
+  exp <- exp[rownames(filtered_df), ]
+  rowData(exp) <- DataFrame(filtered_df)
+  exp
+}
 
