@@ -192,7 +192,7 @@ exp <- imputation(exp, method = "noise", noise = 100, seed = 42)
 When interested in novel compounds, isotopes and adducts are a source of unwanted features. The function `isotopeTagging()` can detect isotopes and adducts using known ratios of mass and intensities of atoms. Calling this function will store detailed results about isotopes and adducts in the `rowData` slot of the object.
 
 ```{r isotopes}
-exp <- isotopeTagging(exp, plot = T)
+exp <- isotopeTagging(exp, corr = 0.8)
 ```
 
 ### Fragment filtering
@@ -218,7 +218,7 @@ exp2 <- exp2 %>%
   blankSubstraction(blankThresh = 5, nSamples = 10, removeBlanks = TRUE) %>%
   massDefectFilter() %>%
   imputation(method = "noise", noise = 100, seed = 42) %>%
-  isotopeTagging() %>%
+  isotopeTagging(corr = 0.8) %>%
   fragmentFilter(method = "spearman", corr = 0.95)
 ```
 

@@ -170,6 +170,56 @@ plotCrossValidation <- function(exp, modelName = 1){
 #' }
 
 
+#' @title Plot Principle Component Analysis
+#' @param se SummarizedExperiment object
+#' @param colors optional vector of colors
+#' @param assay Assay to use
+#' @importFrom ggplot2 ggplot aes scale_shape_manual stat_ellipse
+#' @importFrom stats prcomp
+#' @export
+plotPCA <- function(se, assay = 1, group = metadata(se)$phenotype){
+  ratio <- log2(assay(se, assay))
+  aliquots <- apply(ratio, 2, function(x) !all(is.na(x)))
+  ratio <- ratio[, aliquots]
+  se <- se[, aliquots]
+  ratio <- as.data.frame(apply(ratio, 2, function(x) {
+    x[!is.finite(x)] <- min(x[is.finite(x)]) * 0.01
+    x
+  }))
+  aliquots <- vapply(colnames(ratio), function(x) all(!is.infinite(ratio[, x])), logical(1))
+  ratio <- ratio[, aliquots]
+  se <- se[, aliquots]
+
+  pc <- prcomp(t(ratio), retx = T,
+               scale = T, center = T)
+
+  expvar <- (pc$sdev)^2 / sum(pc$sdev^2)
+  pc1name <- sprintf("PC1 (%.1f%%)", expvar[1] * 100)
+  pc2name <- sprintf("PC2 (%.1f%%)", expvar[2] * 100)
+
+  df_pc <- data.frame(
+    PC1 = pc$x[, 1],
+    PC2 = pc$x[, 2],
+    Group = as.factor(se[[group]])
+  )
+
+  ggplot(df_pc, aes(x = .data$PC1, y = .data$PC2, fill = .data$Group,
+                    color = .data$Group)) +
+    geom_point(size = 3, stroke = .2) +
+    xlab(pc1name) +
+    ylab(pc2name) +
+    theme_bw() +
+    ggtitle("Principle Component Analysis")
+}
+
+# df <- data.frame(pvalue = rowData(expModel)$welchTest$p.value,
+#            logfc = rowData(expModel)$foldChange[,4])
+# df$pvalue <- -log10(df$pvalue)
+#
+# library(ggplot2)
+# ggplot(df, aes(x = logfc, y = pvalue)) + geom_point()
+
+
 #' @title PCA scree plot
 #' @importFrom FactoMineR PCA
 #' @importFrom factoextra fviz_eig
@@ -182,6 +232,12 @@ screePCA <- function(exp, assay = 1) {
   data <- t(assay(exp, assay))
   res_pca <- PCA(data, graph = FALSE)
   fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 100), main = "PCA - scree plot")
+}
+
+compoundPCA2 <- function(exp, assay = 1) {
+  pca <- prcomp(t(assay(exp, assay)))
+  sds <- pca$sdev
+
 }
 
 #' @title PCA variables plot

@@ -201,7 +201,8 @@ rfImputation <- function(df, ...){
 #' @importFrom stats runif
 noiseImputation <- function(data, noise = 100, seed = 42, ...) {
   set.seed(seed)
-  data[is.na(data)] <- runif(sum(is.na(data)), min = 1, max = noise)
+  idx <- is.na(data) | data == 0
+  data[idx] <- runif(sum(idx), min = 1, max = noise)
   return(data)
 }
 

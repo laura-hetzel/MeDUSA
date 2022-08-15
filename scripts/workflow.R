@@ -15,25 +15,29 @@ df$Treatment <- c(
   rep("TMX", 6)
 )
 
-exp <- prepareFiles(files, massWindow = c(100, 200), polarity = "+", centroid = T, cores = 16) %>%
-  spectraAlignment(method = "binning", ppm = 5, npeaks = 5) %>%
+
+
+exp <- extractPeaks(files, massWindow = c(100, 200), polarity = "+", centroid = T, cores = 16) %>%
+  spectraAlignment(method = "binning", ppm = 5, nPeaks = 5) %>%
   cellAlignment(method = "binning", ppm = 5, nCells = 10, cellData = df, phenotype = "Treatment") %>%
   blankSubstraction(blankThresh = 5, nSamples = 10, removeBlanks = TRUE) %>%
-  massDefectFilter(mz_MD_plot = F) %>%
+  massDefectFilter() %>%
   imputation(method = "noise", noise = 100, seed = 42) %>%
-  fragmentFilter(corr = 0.95, method = "spearman") #%>%
-  #isotopeTagging()
+  isotopeTagging(corr = 0.8) %>%
+  fragmentFilter(corr = 0.95, method = "spearman")
 
-exp
 
-exp2 <- prepareFiles(files, massWindow = c(100, 200), polarity = "-", centroid = T, cores = 16) %>%
+
+
+exp2 <- extractPeaks(files, massWindow = c(100, 200), polarity = "-", centroid = T, cores = 16) %>%
   spectraAlignment(method = "binning", ppm = 5, npeaks = 5) %>%
   cellAlignment(method = "binning", ppm = 5, ncells = 10, cellData = df, phenotype = "Treatment")  %>%
   blankSubstraction(blankThresh = 5, nSamples = 10, removeBlanks = TRUE) %>%
-  massDefectFilter(mz_MD_plot = F) %>%
+  massDefectFilter() %>%
   imputation(method = "noise", noise = 100, seed = 42) %>%
-  fragmentFilter(corr = 0.95, method = "spearman") #%>%
-  #isotopeTagging()
+  isotopeTagging(corr = 0.8) %>%
+  fragmentFilter(corr = 0.95, method = "spearman")
+
 
 exp3 <- combineExperiments(exp, exp2)
 
@@ -42,38 +46,6 @@ exp3 <- exp3 %>%
   leveneTest() %>%
   welchTest() %>%
   foldChange()
-
-
-
-exp2
-exp
-
-m <- as.matrix(assay(exp2))
-n <- 6
-cors <- sapply(1:nrow(m)[-n], function(i){
-  cor(m[n,], m[i,])
-})
-rowData(exp2[cors > 0.8,])
-
-assay(exp2[cors > 0.8,])
-cors <- cor(t(m), y = t(m), method = "spearman")
-df <- stack(cors)
-df <- df[df$value > 0.8, ]
-df <- df[as.integer(df$row) < as.integer(df$col), ]
-
-mzs <- rowData(exp2)$mz
-diff <- mzs[as.integer(df$col)] - mzs[as.integer(df$row)]
-df <- df[diff < 1.1 & diff > 1, ]
-df
-i <- 4
-assay(exp2[c(as.integer(df$row[i]), as.integer(df$col[i])), ])
-
-exp2
-
-l <- Rdisop::decomposeMass(x, ppm = 5, maxisotopes = 5, maxElements = "C10")
-l
-
-rowData(exp)
 
 
 metadata(exp3)$phenotype <- "Treatment"
@@ -87,7 +59,7 @@ exp3 <- leveneTest(exp3)
 exp3 <- exp3[rowData(exp3)$leveneTest$unequal_variance, ]
 exp3
 
-exp3 <- keepVariableFeatures(exp3, top = 100)
+exp3 <- keepVariableFeatures(exp3)
 
 samplePCA(exp3)
 
