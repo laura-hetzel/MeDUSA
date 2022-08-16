@@ -123,8 +123,7 @@ validatePeak <- function(peakDf){
     all(c("polarity", "massWindow", "combineSpectra", "Files") %in% names(att)),
     any(c("-", "+") %in% att$polarity),
     any(c(TRUE, FALSE) %in% att$combineSpectra),
-    length(att$Files) == 1,
-    file.exists(att$Files)
+    length(att$Files) == 1
   )
 }
 
