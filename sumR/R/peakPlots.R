@@ -2,11 +2,13 @@
 #' @param peaks List of datafres with peak picked data
 #' @param file File number of the files that were used.
 #' @param scan
+#' @importFrom ggplot2 .data
 #' @export
 spectrumPlot <- function(peaks, file = 1, scan = 1){
   df <- peaks[[file]]
   df <- df[df$scan == unique(df$scan)[scan], ]
-  ggplot(df, aes(x = mz, y = i)) + geom_segment(aes(x = mz, y = 0, yend = i, xend = mz))
+  ggplot(df, aes(x = .data$mz, y = .data$i)) +
+    geom_segment(aes(x = .data$mz, y = 0, yend = .data$i, xend = .data$mz))
 }
 
 #' @title noisePlot over all spectra

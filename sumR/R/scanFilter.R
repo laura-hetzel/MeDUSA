@@ -237,7 +237,6 @@ centroid <- function(spectrum, halfWindowSize = 2L, noiseWindow = 0.0001) {
 #' @param y Vector of intensities
 #' @param halfWindowSize
 #' @param polynomialOrder
-#' @importFrom stats filter
 #' @noRd
 savgol <- function(y, halfWindowSize = 2L, polynomialOrder = 3L) {
 

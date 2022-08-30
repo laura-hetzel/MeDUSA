@@ -20,6 +20,7 @@ License: GPL (>= 3)
 Depends: 
     R (>= 4.0),
     dplyr,
+    ggplot2,
     SummarizedExperiment
 Imports: 
     caret,
@@ -30,7 +31,6 @@ Imports:
     factoextra,
     FactoMineR,
     GGally,
-    ggplot2,
     ggpubr,
     ggrepel,
     graphics,
