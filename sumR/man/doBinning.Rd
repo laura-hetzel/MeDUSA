@@ -17,6 +17,10 @@ Defaults to "scan"}
 \item{ppm}{How much can masses deviate from the mean of the bin?
 Defaults to 5 ppm}
 }
+\value{
+A list of spectra with the masses replaced by the mean of the
+associated bin
+}
 \description{
 This is an adapted form of Maldiquants binning function.
 }

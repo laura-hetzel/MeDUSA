@@ -15,3 +15,9 @@ Defaults to 5 ppm}
 \description{
 Group spectra using clustering
 }
+\details{
+Binning is a form of alignment that groups together masses
+within a given tolerance. Due to measurements errors in mass spectrometry,
+binning is necessary to determine which mass intensities belong to
+the same peak.
+}

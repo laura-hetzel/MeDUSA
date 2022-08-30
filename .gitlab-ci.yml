@@ -1,35 +1,77 @@
-# source: https://www.r-bloggers.com/2018/08/gitlab-ci-for-r-package-development/
+# The Docker image that will be used to build your app
+image: yufree/xcms
+# Functions that should be executed before the build script is run
 
-image: rocker/tidyverse
 
-stages:
-  - setup
-  - check
-  - test
-
-before_script:
-  - apt-get update
-  - apt install -y libcurl4-openssl-dev libssl-dev libxml2-dev libxslt-dev
-  - apt install -y libnetcdf-dev libxt-dev qpdf build-essential libglpk40 libgsl-dev
+variables:
+  GIT_DEPTH: 10
+  REPO_NAME: "https://packagemanager.rstudio.com/all/__linux__/focal/latest"
+  R_LIBS: "ci/lib"
 
 cache:
-  key: one-key-to-rule-them-all
+  key: global-cache
   paths:
-    - sumR/cache
+      - ${R_LIBS}
 
-setup:
-  stage: setup
-  script:
-    - R -e 'source("ci.R"); ci_setup()'
+stages:
+  - build
+  - test
+  - pages
 
-check:
-  stage: check
+before_script:
+  - Rscript -e 'install.packages("remotes")'
+  - Rscript -e 'install.packages("rcmdcheck")'
+  - Rscript -e 'remotes::install_local("sumR", upgrade = "never")'
+  - Rscript -e 'remotes::install_cran(c("pkgdown"), upgrade = "never")'
+  - mkdir public
+
+building:
+  stage: build
   script:
-    - R -e 'source("ci.R"); ci_check()'
+    - apt-get update -qq && apt-get install -y libharfbuzz-dev libfribidi-dev
+    - echo "Library path for packages :" $R_LIBS
+    - mkdir -p $R_LIBS
+    - Rscript -e 'install.packages("remotes")'
+    - Rscript -e 'install.packages("rcmdcheck")'
+    - Rscript -e 'remotes::install_local("sumR", upgrade = "never")'
+    - R -e 'rcmdcheck::rcmdcheck("sumR", args = c("--no-manual", "--as-cran"), error_on = "error", check_dir = "check")'
+
+# To have the coverage percentage appear as a gitlab badge follow these
+# instructions:
+# https://docs.gitlab.com/ee/user/project/pipelines/settings.html#test-coverage-parsing
+# The coverage parsing string is
+# Coverage: \d+\.\d+
 
 coverage:
-  stage: test
-  script:
-    - R -e 'source("ci.R"); ci_coverage()'
-  coverage: '/.*Coverage: (.*)/'
+    stage: test
+    allow_failure: true
+    when: on_success
+    only:
+        - main
+        - production
+    script:
+        - cd sumR
+        - Rscript -e 'remotes::install_local(upgrade = "never")'
+        - Rscript -e 'remotes::install_cran(c("covr", "DT"), upgrade = "never")'
+        - Rscript -e 'covr::gitlab(quiet = FALSE)'
+    artifacts:
+        paths:
+            - public
+        expire_in: 30 days
 
+# To produce a code coverage report as a GitLab page see
+# https://about.gitlab.com/2016/11/03/publish-code-coverage-report-with-gitlab-pages/
+
+
+pages:
+  script:
+    - Rscript -e 'pkgdown::build_site("sumR")'
+    - cp -r sumR/docs/* public
+  artifacts:
+    paths:
+      # The folder that contains the files to be exposed at the Page URL
+      - public
+  rules:
+    # This ensures that only pushes to the default branch will trigger
+    # a pages deploy
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH

@@ -12,6 +12,9 @@ spectraBinning(spectraList, ppm = 5)
 \item{ppm}{How much can masses deviate from the mean of the bin?
 Defaults to 5 ppm}
 }
+\value{
+DataFrame object from S4Vectors containing aligned spectra
+}
 \description{
 Bin spectra with similar mass ranges
 }
