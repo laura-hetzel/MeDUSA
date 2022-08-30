@@ -38,10 +38,6 @@ To start a sumR pipeline, we need to load the package.
 library(sumR)
 ```
 
-```{r setup, echo = F, include=FALSE}
-suppressWarnings(suppressPackageStartupMessages(library(sumR)))
-```
-
 ### Converting vendor format
 
 SumR requires that the data is in `mzML` file format. In case you have vendor 
