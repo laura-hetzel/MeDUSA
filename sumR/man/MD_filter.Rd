@@ -24,8 +24,7 @@ MD_filter(
 to FALSE, decides if inclusion list is used or not}
 
 \item{incl_list_path}{(optional, use only if incl_list = T)path to
-inclusion list obtained from user input, default inclusion list from
-\insertRef{mcmillan_renaud_gloor_reid_sumarah_2016}{sumR}}
+inclusion list obtained from user input, default inclusion list from}
 
 \item{mass_accuracy}{(optional, use only if incl_list = T) obtained
 from user input, default value set to 0.01}
