@@ -32,8 +32,10 @@ spectra <- spectraAlignment(peaks,
                             method = "binning",
                             ppm = 5,
                             nPeaks = 5)
-knitr::kable(head(as.data.frame(spectra)[, -which(colnames(spectra) == "peakidx")]), caption = "Compounds aligned across spectra")
+```
 
+```{r showAlignment, echo = FALSE}
+knitr::kable(head(as.data.frame(spectra)[, -which(colnames(spectra) == "peakidx")]), caption = "Compounds aligned across spectra")
 ```
 
 #### Inspecting Spectra Shifts

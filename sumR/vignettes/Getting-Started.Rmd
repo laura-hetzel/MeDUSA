@@ -59,10 +59,11 @@ function returns the file paths of the newly created mzML files.
 ```{r convert}
 # Change this these paths to where you extracted the files and desired output
 input_directory <- r"(F:\Myrthe\raw)"
-output_directory <- r"(F:\Myrthe\mzml)"
+output_directory <- r"(F:\Myrthe\sub)"
 
 dir <- file.path(input_directory)
-files <- rawToMzml(dir, output = file.path(output_directory))
+output <- file.path(output_directory)
+files <- rawToMzml(dir, output = output)
 ```
 
 ### Defining Metadata

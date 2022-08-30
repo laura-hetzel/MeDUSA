@@ -42,3 +42,17 @@ compounds in the cells. Therefore, it is recommended to only perform
 centroiding and remove the solution-originating peaks afterwards using
 filtering.
 }
+\examples{
+# Define files
+folder <- system.file("cells", package = "sumR")
+files <- list.files(folder, full.names = TRUE)[seq_len(4)]
+
+# Extract Peaks
+extractPeaks(files, polarity = "-")
+
+# Extract Peaks in parallel
+extractPeaks(files, polarity = "-", cores = 4)
+
+# Extract Peaks of positive polarity
+extractPeaks(files, polarity = "+")
+}

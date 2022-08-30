@@ -5,7 +5,7 @@
 #' @export
 spectrumPlot <- function(peaks, file = 1, scan = 1){
   df <- peaks[[file]]
-  df <- df[df$scan == scan, ]
+  df <- df[df$scan == unique(df$scan)[scan], ]
   ggplot(df, aes(x = mz, y = i)) + geom_segment(aes(x = mz, y = 0, yend = i, xend = mz))
 }
 

@@ -35,6 +35,7 @@ pickSpectrum <- function(x, SNR = 0, scales = NULL, maxScale = 32, noiseWindow =
 #' @title Perform peak picking of a single file
 #' @importFrom pbapply pblapply
 #' @export
+#'
 peakPickFile <- function(file = NULL, scales = c(1,4,9), noiseWindow = 0.1,
                          spectra = NULL, ...){
 

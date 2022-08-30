@@ -24,21 +24,14 @@
 #' @importFrom pbapply pblapply
 #' @export
 doCentroid <- function(peaks, scans = seq_len(length(x)),
-                       combineSpectra = FALSE){
+                       combineSpectra = FALSE, cl = NULL){
   if (combineSpectra) {
     s <- split(which(scans), c(1, cumprod(diff(which(scans)))))
     l <- lapply(s, function(z) {
-      df <- do.call(rbind, peaks[z])
-      if (centroid) {
-        df <- centroid(df)
-      }
-      df
+      centroid(do.call(rbind, peaks[z]))
     })
   } else {
-    l <- peaks[scans]
-    if (centroid) {
-      l <- pbapply::pblapply(l, cl = cl, centroid)
-    }
+    l <- pbapply::pblapply(peaks[scans], cl = cl, centroid)
   }
   formatSpectra(l)
 }
@@ -103,7 +96,7 @@ centroidFile <- function(file, massWindow = c(0, Inf), polarity = "-",
     scans <- scans & polarity_filter
   }
 
-  l <- doCentroid(peaks(z), scans)
+  l <- doCentroid(peaks(z), scans, combineSpectra = combineSpectra, cl = cl)
   if (length(l) == 0) l <- list()
   attr(l, "polarity") <- polarity
   attr(l, "massWindow") <- massWindow
@@ -124,6 +117,19 @@ centroidFile <- function(file, massWindow = c(0, Inf), polarity = "-",
 #' @returns A list of data.frames, each obtained from `centroidFile`. The names
 #' of the list are set to the basename of each file provided in `files`
 #' @export
+#' @examples
+#' # Define files
+#' folder <- system.file("cells", package = "sumR")
+#' files <- list.files(folder, full.names = TRUE)[seq_len(4)]
+#'
+#' # Extract Peaks
+#' extractPeaks(files, polarity = "-")
+#'
+#' # Extract Peaks in parallel
+#' extractPeaks(files, polarity = "-", cores = 4)
+#'
+#' # Extract Peaks of positive polarity
+#' extractPeaks(files, polarity = "+")
 extractPeaks <- function(files, cores = 1, ...){
   files <- file.path(files)
   # Check if mzML files are valid files
@@ -213,6 +219,7 @@ calculateNoise <- function(spectrum, centroids, noiseWindow){
 #' @param noiseWindow
 #' @noRd
 centroid <- function(spectrum, halfWindowSize = 2L, noiseWindow = 0.0001) {
+  if (nrow(spectrum) == 0) return(NULL)
   intensities <- savgol(spectrum[, 2], halfWindowSize)
   intensities[intensities < 0] <- 0
 

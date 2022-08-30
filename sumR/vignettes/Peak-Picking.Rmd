@@ -1,5 +1,5 @@
 ---
-title: "Peak Picking"
+title: "Extract Peaks"
 author:
 - name: Pascal Maas
   affiliation: >
@@ -13,14 +13,25 @@ output:
       theme: united
       highlight: tango
 vignette: >
-  %\VignetteIndexEntry{Peak Picking}
+  %\VignetteIndexEntry{Extract Peaks}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE)
 suppressPackageStartupMessages(library(sumR))
+```
+
+### Defining files
+For this example article a subset of 8 cells (4 samples, 4 blanks) within a mass
+window of 250 - 300 and a retention time of 5 - 25 seconds has been selected.
+We can define the files as follows:
+
+```{r files}
+folder <- system.file("cells", package = "sumR")
+files <- list.files(folder, full.names = TRUE)
+files
 ```
 
 ### Extracting peaks
@@ -37,8 +48,8 @@ By setting `cores` to any value higher than 1, each scan is centroided in parall
 ```{r prepareScans}
 peaks <- extractPeaks(
   files, 
-  polarity = "+", 
-  cores = 8
+  polarity = "+",
+  cores = 4
 )
 ```
 
@@ -53,12 +64,16 @@ spectrumPlot(peaks, file = 1, scan = 1)
 After inspection, we can filter noisy peaks by a minimum intensity value using the `peakFilter()` function. It returns a similar list of data frames, but only peaks with at least the given intensity are kept. We can view the difference by plotting the results in a `spectrumPlot`:
 
 ```{r peakPlot}
-peakFilter(peaks, intensity = 1e3) %>%
+peakFilter(peaks, intensity = 1e5) %>%
   spectrumPlot(file = 1, scan = 1)
 ```
 
 To save the peaks with our chosen intensity filter, we can override the results in the `peaks` variable.
 
 ```{r peakFilter}
-peaks <- peakFilter(peaks, intensity = 1e3)
+peaks <- peakFilter(peaks, intensity = 1e5)
+```
+
+```{r showAlignment, echo = FALSE}
+knitr::kable(head(peaks[[1]]), caption = sprintf("Peaks found in %s", names(peaks)[1]))
 ```

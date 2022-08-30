@@ -4,7 +4,12 @@
 \alias{doCentroid}
 \title{Perform centroiding of scans in peaks}
 \usage{
-doCentroid(peaks, scans = seq_len(length(x)), combineSpectra = FALSE)
+doCentroid(
+  peaks,
+  scans = seq_len(length(x)),
+  combineSpectra = FALSE,
+  cl = NULL
+)
 }
 \arguments{
 \item{peaks}{List of dataframes, usually obtained from `peaks()` of the

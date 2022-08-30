@@ -20,12 +20,13 @@ doBinning <- function(spectra, split = "scan", ppm = 5) {
   }
 
   # checking if the list is not empty
-  nonEmpty <- vapply(spectra, nrow, integer(1)) != 0L
+  nonEmpty <- as.vector(vapply(spectra, nrow, integer(1)) != 0L)
   samples <- rep.int(seq_along(spectra), vapply(spectra, nrow, double(1)))
+  specs <- spectra[nonEmpty]
 
-  specs <- mass[nonEmpty]
   mass <- unname(unlist(lapply(specs, function(x) as.double(x$mz))))
   intensities <- unlist(lapply(specs, function(x) as.double(x$i)))
+
 
   # sort vector based on masses lowest to highest
   s <- sort.int(mass, index.return = TRUE)
