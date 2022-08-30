@@ -60,9 +60,19 @@ files <- rawToMzml(dir, output = file.path(output_directory))
 
 ### Defining Metadata
 
-To make use of the full pipeline, it is required to supply a data frame of metadata called `cellData`. To ensure proper integration, ensure that the row names are equal to the base name of the file, without file extension. E.g. a file called `sample001.mzML` would translate into `sample001` as a proper row name. This name is matched to the data file names to match data with the supplied cellData.
+To make use of the full pipeline, it is required to supply a data frame of 
+metadata called `cellData`. To ensure proper integration, ensure that the row 
+names are equal to the base name of the file, without file extension. E.g. a 
+file called `sample001.mzML` would translate into `sample001` as a proper row 
+name. This name is matched to the data file names to match data with the 
+supplied cellData.
 
-Columns may contain metadata about each of the cells. Here we prepared metadata with two additional columns: `Type`, and `Treatment`. The first column contains the sample type, here either `SAMPLE` or `BLANK`, the second column if the cell was treated with either DMSO or TMX. We will use the Treatment column as phenotype during modelling after post-processing. The supplied table below shows the contents of the cellData.
+Columns may contain metadata about each of the cells. Here we prepared metadata 
+with two additional columns: `Type`, and `Treatment`. The first column contains 
+the sample type, here either `SAMPLE` or `BLANK`, the second column if the cell 
+was treated with either DMSO or TMX. We will use the Treatment column as 
+phenotype during modelling after post-processing. The supplied table below 
+shows the contents of the cellData.
 
 
 ```{r echo = F}
@@ -116,13 +126,11 @@ peaks <- peakFilter(peaks, intensity = 1e3)
 After we've detected our peaks, we need to identify which peaks should be considered equal across spectra within a cell. We use the function `spectraAlignment()` to align masses with a given `ppm` (Defaults to `5`). Alignment can be done using either the `binning` (default), `clustering`, or `density` method. While chromatography cannot be used to identify compounds, we do expect to find a compound multiple times across scans. This is adjusted using the `nPeaks` parameter. Here, we set the value of nPeaks to `5` to discard peaks that are likely to be false positives and should not be considered novel compounds:
 
 ```{r spectraAlignment}
-spectra <- spectraAlignment(
-   peaks, 
-   method = "binning", 
-   ppm = 5, 
-   nPeaks = 5
-)
-knitr::kable(head(as.data.frame(spectra)[, -which(colnames(spectra) == "peakidx")]), caption = "Compounds aligned across spectra") 
+spectra <- spectraAlignment(peaks,
+                            method = "binning",
+                            ppm = 5,
+                            nPeaks = 5)
+knitr::kable(head(as.data.frame(spectra)[, -which(colnames(spectra) == "peakidx")]), caption = "Compounds aligned across spectra")
 
 ```
 

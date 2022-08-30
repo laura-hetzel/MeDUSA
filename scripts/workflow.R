@@ -15,6 +15,36 @@ df$Treatment <- c(
   rep("TMX", 6)
 )
 
+exp2 <- extractPeaks(files, massWindow = c(100, 200), polarity = "-", centroid = T, cores = 16) %>%
+  spectraAlignment(method = "binning", ppm = 5, nPeaks = 5) %>%
+  cellAlignment(method = "binning", ppm = 5, nCells = 10, cellData = df, phenotype = "Treatment")
+
+saveRDS(exp2, file = 'Aligned_negative.RDS')
+
+saveRDS(massDefectFilter(exp), file = "Mass_defect_positve.RDS")
+saveRDS(massDefectFilter(exp2), file = "Mass_defect_negative.RDS")
+saveRDS(massDefectFilter(exp[, exp$Treatment == "DMSO"]), file = "Mass_defect_positive_DMSO.RDS")
+saveRDS(massDefectFilter(exp[, exp$Treatment == "TMX"]), file = "Mass_defect_positive_TMX.RDS")
+
+saveRDS(massDefectFilter(exp2[, exp2$Treatment == "DMSO"]), file = "Mass_defect_negative_DMSO.RDS")
+saveRDS(massDefectFilter(exp2[, exp2$Treatment == "TMX"]), file = "Mass_defect_negative_TMX.RDS")
+
+saveRDS(massDefectFilter(exp[, exp$Type == "BLANK"]), file = "Mass_defect_positive_BLANK.RDS")
+saveRDS(massDefectFilter(exp[, exp$Type == "SAMPLE"]), file = "Mass_defect_positive_SAMPLE.RDS")
+
+saveRDS(massDefectFilter(exp2[, exp2$Type == "BLANK"]), file = "Mass_defect_negative_BLANK.RDS")
+saveRDS(massDefectFilter(exp2[, exp2$Type == "SAMPLE"]), file = "Mass_defect_negative_SAMPLE.RDS")
+
+library(sumR)
+exp <- readRDS("../Aligned_positive.RDS")
+exp <- exp[, exp$Type == "BLANK"]
+print(exp)
+exp <- exp[rowSums(is.na(assay(exp))) != ncol(exp), ]
+print(exp)
+
+
+
+filterCells(exp)
 
 
 exp <- extractPeaks(files, massWindow = c(100, 200), polarity = "+", centroid = T, cores = 16) %>%

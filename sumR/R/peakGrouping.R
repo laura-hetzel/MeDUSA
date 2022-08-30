@@ -1,25 +1,34 @@
-doBinning <- function(spectra, split = "scan", tolerance = 0.002) {
-  if (class(spectra) == "data.frame") spectra <- split.data.frame(spectra, spectra[, split])
+#' @title Bin masses of spectra
+#' @description This is an adapted form of Maldiquants binning function.
+#' @details Binning is a form of alignment that groups together masses
+#' within a given tolerance. Due to measurements errors in mass spectrometry,
+#' binning is necessary to determine which mass intensities belong to
+#' the same peak.
+#' @param spectra a data.frame or list of data.frames containing centroided
+#' spectra.
+#' @param split In case of a data.frame in `spectra`, which column should
+#' be used to indicate different scans on which the alignment should occur?
+#' Defaults to "scan"
+#' @param ppm How much can masses deviate from the mean of the bin?
+#' Defaults to 5 ppm
+#' @returns A list of spectra with the masses replaced by the mean of the
+#' associated bin
+doBinning <- function(spectra, split = "scan", ppm = 5) {
+  tolerance <- ppm * 1e-6
+  if (class(spectra) == "data.frame") {
+    spectra <- split.data.frame(spectra, spectra[, split])
+  }
 
-  nonEmpty <- sapply(spectra, nrow) != 0L # checking if the list is not empty
-  samples <- rep.int(
-    seq_along(spectra),
-    sapply(spectra, nrow)
-  )
+  # checking if the list is not empty
+  nonEmpty <- vapply(spectra, nrow, integer(1)) != 0L
+  samples <- rep.int(seq_along(spectra), vapply(spectra, nrow, double(1)))
 
-  mass <- unname(unlist((lapply(
-    spectra[nonEmpty],
-    function(x) as.double(x$mz)
-  )),
-  recursive = FALSE, use.names = FALSE
-  ))
-  intensities <- unlist(lapply(
-    spectra[nonEmpty],
-    function(x) as.double(x$i)
-  ),
-  recursive = FALSE, use.names = FALSE
-  )
-  s <- sort.int(mass, index.return = TRUE) # sort vector based on masses lowest to highest
+  specs <- mass[nonEmpty]
+  mass <- unname(unlist(lapply(specs, function(x) as.double(x$mz))))
+  intensities <- unlist(lapply(specs, function(x) as.double(x$i)))
+
+  # sort vector based on masses lowest to highest
+  s <- sort.int(mass, index.return = TRUE)
   mass <- s$x
   intensities <- intensities[s$ix]
   samples <- samples[s$ix]
@@ -29,44 +38,33 @@ doBinning <- function(spectra, split = "scan", tolerance = 0.002) {
     samples = samples, tolerance = tolerance
   )
 
-  s <- sort.int(mass, index.return = TRUE) # sort results into mass lowest to highest
+  # sort results into mass lowest to highest
+  s <- sort.int(mass, index.return = TRUE)
   mass <- s$x
   intensities <- intensities[s$ix]
   samples <- samples[s$ix]
   lIdx <- split(seq_along(mass), samples)
 
-  spectra[nonEmpty] <- mapply(FUN = function(p, i) { # reassigning of the new masses
-    p <- NULL
-    p$mz <- mass[i]
-    p$intensity <- intensities[i]
-    as.data.frame(p)
-  }, p = spectra[nonEmpty], i = lIdx, MoreArgs = NULL, SIMPLIFY = FALSE, USE.NAMES = FALSE)
+  spectra[nonEmpty] <- mapply(p = spectra[nonEmpty], i = lIdx, function(p, i) {
+    data.frame(mz = mass[i], intensity = intensities[i])
+  }, SIMPLIFY = FALSE, USE.NAMES = FALSE)
   spectra
 }
 
-prepareSpectra <- function(spectra){
-  non_nulls <- !vapply(spectra, is.null, logical(1))
-  spectra <- spectra[non_nulls]
-  df <- data.frame(scan = rep(which(non_nulls), sapply(spectra, nrow)), do.call(rbind, spectra))
-  if (nrow(df) == 0) return(NULL)
-  df
-}
-
 #' @title Bin spectra with similar mass ranges
-#' @param peakList
-#' @param fraction
-#' @param npeaks
-#' @param meanSNR
-#' @param tolerance
+#' @param spectraList List of spectra to be binned
+#' @param ppm How much can masses deviate from the mean of the bin?
+#' Defaults to 5 ppm
+#' @inherit doBinning details
+#' @returns DataFrame object from S4Vectors containing aligned spectra
 #' @importFrom pbapply pblapply
 #' @export
-spectraBinning <- function(fileList, ppm = 5) {
-  ppm <- ppm * 1e-6
-  prepareCells(pbapply::pblapply(fileList, function(spectra){
+spectraBinning <- function(spectraList, ppm = 5) {
+  prepareCells(pbapply::pblapply(spectraList, function(spectra){
     if (is.null(spectra)) return(NULL)
     n <- length(unique(spectra$scan))
     groups <- rep(1, n)
-    df_list <- doBinning(spectra, split = "scan", tolerance = ppm)
+    df_list <- doBinning(spectra, split = "scan", ppm = ppm)
     df <- do.call(rbind, df_list)
     rownames(df) <- 1:nrow(df)
 
@@ -82,13 +80,23 @@ spectraBinning <- function(fileList, ppm = 5) {
     )
     res$peakidx <- lapply(bins, function(x) as.integer(rownames(x)))
     res$i <- vapply(res$peakidx, function(idx) sum(spectra$i[idx]), double(1))
-    res$noise <- vapply(res$peakidx, function(idx) sum(spectra$Noise[idx]), double(1))
+    res$noise <- vapply(res$peakidx, function(idx){
+      sum(spectra$Noise[idx])
+    }, double(1))
     res
   }))
 }
 
-spectraClustering <- function(fileList, ppm = 5){
-  prepareCells(pbapply::pblapply(fileList, function(l) {
+#' @title Group spectra using clustering
+#' @param spectraList List of spectra to be binned
+#' @param ppm How much can masses deviate from the mean of the cluster?
+#' Defaults to 5 ppm
+#' @inherit spectraBinning details
+#' @importFrom pbapply pblapply
+#' @importFrom S4Vectors DataFrame
+#' @export
+spectraClustering <- function(spectraList, ppm = 5){
+  prepareCells(pbapply::pblapply(spectraList, function(l) {
     df <- prepareSpectra(l)
     if (is.null(df)) return(NULL)
 
@@ -102,18 +110,25 @@ spectraClustering <- function(fileList, ppm = 5){
     res$peakidx <- peaks$peakIndex
 
     res$i <- vapply(res$peakidx, function(idx) sum(df$i[idx]), double(1))
-    res$noise <- vapply(res$peakidx, function(idx) sum(df$Noise[idx]), double(1))
+    res$noise <- vapply(res$peakidx, function(idx){
+      sum(df$Noise[idx])
+    }, double(1))
     res[, -grep("rt|X1", colnames(res))]
   }))
 }
 
-
+#' @title Perform a function without message or output
+#' @param x function to be executed
+#' @noRd
 quiet <- function(x) {
   sink(tempfile())
   on.exit(sink())
   invisible(force(x))
 }
 
+#' @title Validate if a centroided data.frame is valid to use with binning
+#' @param peakDf data.frame with scan, mz, i, and Noise columns.
+#' @noRd
 validatePeak <- function(peakDf){
   att <- attributes(peakDf)
   all(
@@ -127,6 +142,11 @@ validatePeak <- function(peakDf){
   )
 }
 
+#' @title Validate if a list of centroided data.frames is valid to
+#' use with binning
+#' @param peakList list of data.frames, each with scan, mz, i, and
+#' Noise columns.
+#' @noRd
 validatePeaks <- function(peakList){
   all(
     length(names(peakList)) == length(peakList),
@@ -136,14 +156,14 @@ validatePeaks <- function(peakList){
 
 #' @title Group spectra
 #' @export
-spectraAlignment <- function(peaks, method = "binning", ppm = 5, nPeaks = 0, ...){
+spectraAlignment <- function(peaks, method = "binning", ppm = 5, nPeaks = 0){
   if (!validatePeaks(peaks)) {
     warning("Invalid peakList object")
     return(NULL)
   }
   cells <- switch(method,
-         "binning" = spectraBinning(peaks, ppm = ppm,...),
-         "clustering" = spectraClustering(peaks, ppm = ppm, ...),
+         "binning" = spectraBinning(peaks, ppm = ppm),
+         "clustering" = spectraClustering(peaks, ppm = ppm),
          "density" = spectraDensity(peaks, ppm = ppm, ...)
   )
   cells[cells$npeaks >= nPeaks, ]
@@ -166,7 +186,7 @@ validateSpectra <- function(spectraDf){
 #' @title Group cells into SE
 #' @export
 cellAlignment <- function(spectraDf, method = "binning", ppm = 5, nCells = 0,
-                          cellData = NULL, phenotype = NULL, ...){
+                          cellData = NULL, phenotype = NULL){
 
   if (is.null(cellData)) {
     warning("\rNo cellData added, which is needed for postprocessing.\n",
@@ -178,9 +198,8 @@ cellAlignment <- function(spectraDf, method = "binning", ppm = 5, nCells = 0,
     return(NULL)
   }
   cells <- switch(method,
-          "binning" = cellBinning(spectraDf, ppm = ppm, ...),
-          "clustering" = cellClustering(spectraDf, ppm = ppm, ...),
-          "density" = cellDensity(spectraDf, ppm = ppm, ...)
+          "binning" = cellBinning(spectraDf, ppm),
+          "clustering" = cellClustering(spectraDf, ppm),
   )
   if (!is.null(phenotype)) metadata(cells)$phenotype <- phenotype
 
@@ -242,8 +261,7 @@ constructSE <- function(binned, spectra){
 #' @param tolerance
 #' @importFrom SummarizedExperiment SummarizedExperiment
 #' @export
-cellBinning <- function(spectra, cellData = NULL, phenotype = NULL,
-                        ppm = 5) {
+cellBinning <- function(spectra, ppm = 5) {
 
   ppm <- ppm * 1e-6
   df_list <- sumR:::doBinning(as.data.frame(spectra), split = "sample", tolerance = ppm)

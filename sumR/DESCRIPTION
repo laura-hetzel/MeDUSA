@@ -3,12 +3,12 @@ Package: sumR
 Title: Package for analysis of single cell DI-MS data
 Version: 0.4.0
 Authors@R: c(
-    person("Alida", "Kindt", , "a.s.d.kindt@lacdr.leidenuniv.nl", role = c("aut", "cre")),
+    person("Alida", "Kindt", , "a.s.d.kindt@lacdr.leidenuniv.nl", role = "aut"),
     person("Ahmed", "Ali", , "ali@lacdr.leidenuniv.nl", role = "aut",
             comment = c(ORCID = "0000-0003-2157-4399")),
     person("Klara", "Blaschitz", , role = "aut", "klara.blaschitz@outlook.com",
            comment = c(ORCID = "0000-0001-5059-4730")),
-    person("Pascal", "Maas", , "p.maas@lacdr.leidenuniv.nl", role = "aut",
+    person("Pascal", "Maas", , "p.maas@lacdr.leidenuniv.nl", role = c("aut", "cre"),
             comment = c(ORCID = "0000-0001-9379-6041")),
     person("Eman", "Muhammad", role = "aut"),
     person("Merys", "Valdez", , "m.e.valdez@lacdr.leidenuniv.nl", role = "aut"),
