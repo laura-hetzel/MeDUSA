@@ -2,7 +2,8 @@ library(sumR)
 
 # Peak Picking (centroiding)
 files <- list.files(file.path(r"(F:\Myrthe\mzml)"), full.names = T)
-fileList <- prepareFiles(files[1:2], massWindow = c(100, 200), polarity = "+", centroid = T)
+fileList <- extractPeaks(files, massWindow = c(100, 200),
+                         polarity = "+", centroid = T, cores = 16)
 
 file = 1
 scan = 1

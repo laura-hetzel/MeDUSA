@@ -467,6 +467,21 @@ massSpecPlot <- function(final_df) {
 ##############################################
 
 
+reduceByCorrelation <- function(exp, corr = 0.8){
+  m <- as.matrix(assay(exp))
+  cors <- cor(t(m), y = t(m), method = "spearman")
+
+  df <- stack(cors)
+  df <- df[df$value >= corr, ]
+  df <- df[as.integer(df$row) < as.integer(df$col), ]
+
+  mzs <- rowData(exp)$mz
+  diff <- mzs[as.integer(df$col)] - mzs[as.integer(df$row)]
+  df <- df[diff < 1.1 & diff > 1, ]
+
+  exp[unique(c(as.integer(df$row), as.integer(df$col))), ]
+}
+
 #---------------------------------
 # (11) isotopeTagging  function  -
 #---------------------------------
@@ -480,8 +495,12 @@ massSpecPlot <- function(final_df) {
 #' @importFrom dplyr distinct select %>%
 #' @usage isotopeTagging(data, ppm = 5, Elements = c("C13"), z = 0, plot = TRUE)
 #' @export
-isotopeTagging <- function(exp, assay = 1, ppm = 5, Elements = c("C13"), z = 0, plot = FALSE) {
-  if (!validateExperiment(exp)) return(NULL)
+isotopeTagging <- function(se, assay = 1, ppm = 5, corr = 0.8, Elements = c("C13"), z = 0, plot = FALSE) {
+  if (!validateExperiment(se)) return(NULL)
+
+  exp <- reduceByCorrelation(se, corr)
+
+
   data <- as.data.frame(cbind(mz = rowData(exp)$mz, assay(exp, assay)))
   #-----------------------------------------------------------------------------
   # Check for input arguments
@@ -560,8 +579,16 @@ isotopeTagging <- function(exp, assay = 1, ppm = 5, Elements = c("C13"), z = 0, 
     print(massSpecPlot(final_df))
   }
 
-  rowData(exp) <- cbind(rowData(exp), final_df[, -which(colnames(final_df) == "mz")])
-  return(exp)
+  final_df <- final_df[, -which(colnames(final_df) == "mz")]
+  rowData(exp) <- cbind(rowData(exp), final_df)
+  rowData(se)$Isotope <- F
+  rowData(se)$Adduct <- F
+
+  rowData(se[rownames(exp)[!is.na(rowData(exp)$adducts)], ])$Adduct <- T
+  rowData(se[rownames(exp)[!is.na(rowData(exp)$formula)], ])$Isotope <- T
+
+  #se[rownames(exp), ]
+  return(se)
 }
 
 #' @title Remove identified isotopes from the experiment

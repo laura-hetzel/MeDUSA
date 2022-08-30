@@ -7,8 +7,38 @@
 extractPeaks(files, cores = 1, ...)
 }
 \arguments{
-\item{...}{see `prepareFile`}
+\item{files}{A vector of paths to mzML files.}
+
+\item{cores}{Integer value of the number of cores to use. Any value > 1
+indicates a multi-core approach. Defaults to 1.}
+
+\item{...}{
+  Arguments passed on to \code{\link[=centroidFile]{centroidFile}}
+  \describe{
+    \item{\code{massWindow}}{A vector of size 2 with min-max size of mass-windows to be
+used. E.g. A mass-window from 200 to 300 has a mass-window of 100. Defaults
+to c(0, Inf) indicating that all mass-windows should be taken into account}
+    \item{\code{polarity}}{A single character of either "-" (negative) or "+"
+(positive) indicating the polarity to be used. Defaults to "-"}
+    \item{\code{combineSpectra}}{Boolean value, should scans of different masswindows
+be combined into a full-range scan before centroiding? Defaults to `FALSE`}
+  }}
+}
+\value{
+A list of data.frames, each obtained from `centroidFile`. The names
+of the list are set to the basename of each file provided in `files`
 }
 \description{
 Format scans in files
+}
+\details{
+Centroiding is a major part of a typical metabolomics pipeline.
+It reduces the data from a profile-mode dataset drastically, by picking
+the local maxima of profiles after smoothing. While in high-resolution
+datasets peak picking is followed afterwards, for single-cell DI-MS, peak
+picking after centroiding provides sub-optimal results. In many cases, the
+peak picking would find peaks originating from the solution, instead of the
+compounds in the cells. Therefore, it is recommended to only perform
+centroiding and remove the solution-originating peaks afterwards using
+filtering.
 }

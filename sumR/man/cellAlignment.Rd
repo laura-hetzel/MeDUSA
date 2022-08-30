@@ -10,8 +10,7 @@ cellAlignment(
   ppm = 5,
   nCells = 0,
   cellData = NULL,
-  phenotype = NULL,
-  ...
+  phenotype = NULL
 )
 }
 \description{

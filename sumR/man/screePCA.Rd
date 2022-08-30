@@ -7,8 +7,5 @@
 screePCA(exp, assay = 1)
 }
 \description{
-
-}
-\details{
-
+PCA scree plot
 }

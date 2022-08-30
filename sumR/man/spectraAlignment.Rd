@@ -4,7 +4,7 @@
 \alias{spectraAlignment}
 \title{Group spectra}
 \usage{
-spectraAlignment(peaks, method = "binning", ppm = 5, nPeaks = 0, ...)
+spectraAlignment(peaks, method = "binning", ppm = 5, nPeaks = 0)
 }
 \description{
 Group spectra
