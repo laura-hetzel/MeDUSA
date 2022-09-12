@@ -265,7 +265,7 @@ constructSE <- function(binned, spectra){
 cellBinning <- function(spectra, ppm = 5) {
 
   ppm <- ppm * 1e-6
-  df_list <- sumR:::doBinning(as.data.frame(spectra), split = "sample", tolerance = ppm)
+  df_list <- doBinning(as.data.frame(spectra), split = "sample", ppm = ppm)
 
   df <- do.call(rbind, df_list)
   rownames(df) <- 1:nrow(df)
