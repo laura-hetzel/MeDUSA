@@ -47,6 +47,7 @@ Imports:
     plyr,
     purrr,
     randomForest,
+    Rcpp,
     Rdisop,
     Rdpack,
     rstatix,
@@ -69,3 +70,4 @@ biocViews:
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.1
+LinkingTo: Rcpp, RcppArmadillo

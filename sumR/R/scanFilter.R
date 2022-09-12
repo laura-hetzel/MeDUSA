@@ -217,14 +217,20 @@ calculateNoise <- function(spectrum, centroids, noiseWindow){
 #' @param spectrum
 #' @param halfWindowSize
 #' @param noiseWindow
+#' @import Rcpp
+#' @useDynLib
 #' @noRd
 centroid <- function(spectrum, halfWindowSize = 2L, noiseWindow = 0.0001) {
   if (nrow(spectrum) == 0) return(NULL)
-  intensities <- savgol(spectrum[, 2], halfWindowSize)
-  intensities[intensities < 0] <- 0
 
-  ## find local maxima
-  centroids <- which(diff(sign(diff(intensities))) == -2) + 1
+  centroids <- getLocalMaximaC(spectrum[, 2])
+  # } else {
+  #   intensities <- savgol(spectrum[, 2], halfWindowSize)
+  #   intensities[intensities < 0] <- 0
+  #   ## find local maxima
+  #   centroids <- which(diff(sign(diff(intensities))) == -2) + 1
+  # }
+
 
   peakNoise <- calculateNoise(spectrum, centroids, noiseWindow)
   spectrum <- as.data.frame(spectrum[centroids, ])
