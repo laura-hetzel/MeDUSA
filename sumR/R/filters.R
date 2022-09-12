@@ -150,7 +150,9 @@ filterScansByBiomarker <- function(fileList, mass, intensity = 1e5, ppm = 20){
 
       spectra <- spectra[start:end, ]
       scans <- unique(spectra$scan)
-      spectra[spectra$scan %in% scans[2:(length(scans) - 1)], ]
+      spectra <- spectra[spectra$scan %in% scans[2:(length(scans) - 1)], ]
+      rownames(spectra) <- 1:nrow(spectra)
+      spectra
     })
 }
 

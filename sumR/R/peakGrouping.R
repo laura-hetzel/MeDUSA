@@ -15,7 +15,7 @@
 #' associated bin
 doBinning <- function(spectra, split = "scan", ppm = 5) {
   tolerance <- ppm * 1e-6
-  if (class(spectra) == "data.frame") {
+  if (is(spectra, "data.frame")) {
     spectra <- split.data.frame(spectra, spectra[, split])
   }
 
@@ -27,29 +27,24 @@ doBinning <- function(spectra, split = "scan", ppm = 5) {
   mass <- unname(unlist(lapply(specs, function(x) as.double(x$mz))))
   intensities <- unlist(lapply(specs, function(x) as.double(x$i)))
 
-
   # sort vector based on masses lowest to highest
   s <- sort.int(mass, index.return = TRUE)
   mass <- s$x
   intensities <- intensities[s$ix]
   samples <- samples[s$ix]
 
-  mass <- binning(
+  mass2 <- sumR:::binning(
     mass = mass, intensities = intensities,
     samples = samples, tolerance = tolerance
   )
 
-  # sort results into mass lowest to highest
-  s <- sort.int(mass, index.return = TRUE)
-  mass <- s$x
-  intensities <- intensities[s$ix]
-  samples <- samples[s$ix]
-  lIdx <- split(seq_along(mass), samples)
-
-  spectra[nonEmpty] <- mapply(p = spectra[nonEmpty], i = lIdx, function(p, i) {
-    data.frame(mz = mass[i], intensity = intensities[i])
-  }, SIMPLIFY = FALSE, USE.NAMES = FALSE)
-  spectra
+  data.frame(
+    mass = mass,
+    intensities = intensities,
+    samples = samples,
+    peakIdx = as.integer(as.factor(mass2)),
+    order = s$ix
+  )
 }
 
 #' @title Bin spectra with similar mass ranges
@@ -64,27 +59,26 @@ spectraBinning <- function(spectraList, ppm = 5) {
   prepareCells(pbapply::pblapply(spectraList, function(spectra){
     if (is.null(spectra)) return(NULL)
     n <- length(unique(spectra$scan))
-    groups <- rep(1, n)
-    df_list <- doBinning(spectra, split = "scan", ppm = ppm)
-    df <- do.call(rbind, df_list)
-    rownames(df) <- 1:nrow(df)
 
-    df$mzdiff <- df$mz - spectra$mz
-    df <- df[order(df$mz), ]
-    bins <- split.data.frame(df, df$mz)
+    df <- doBinning(spectra, split = "scan", ppm = ppm)
+    df$origId <- rownames(spectra)[df$order]
+    bins <- split.data.frame(df, df$peakIdx)
 
     res <- DataFrame(
-      mzmed = unique(df$mz),
-      mzmin = sapply(bins, function(x) min(x$mz - x$mzdiff)),
-      mzmax = sapply(bins, function(x) max(x$mz - x$mzdiff)),
-      npeaks = sapply(bins, nrow)
+      mzmed = sapply(bins, function(x) median(x$mass)),
+      mzmin = sapply(bins, function(x) min(x$mass)),
+      mzmax = sapply(bins, function(x) max(x$mass)),
+      npeaks = sapply(bins, nrow),
+      i = sapply(bins, function(x) sum(x$intensities))
     )
-    res$peakidx <- lapply(bins, function(x) as.integer(rownames(x)))
-    res$i <- vapply(res$peakidx, function(idx) sum(spectra$i[idx]), double(1))
-    res$noise <- vapply(res$peakidx, function(idx){
-      sum(spectra$Noise[idx])
-    }, double(1))
+    res$fpeaks <- round(res$npeaks / n * length(attr(spectra, "scanranges")), 3)
+    res$ppm <- round((res$mzmax - res$mzmin) / res$mzmed * 1e6, 3)
+    res$peakIdx <- lapply(bins, function(x) x$origId)
     res
+    # res$noise <- vapply(res$peakidx, function(idx){
+    #   sum(spectra$Noise[idx])
+    # }, double(1))
+    # res
   }))
 }
 
@@ -167,7 +161,10 @@ spectraAlignment <- function(peaks, method = "binning", ppm = 5, nPeaks = 0){
          "clustering" = spectraClustering(peaks, ppm = ppm),
          "density" = spectraDensity(peaks, ppm = ppm, ...)
   )
-  cells[cells$npeaks >= nPeaks, ]
+  spectra <- cells[cells$npeaks >= nPeaks, ]
+  spectra <- spectra[order(spectra$mz), ]
+  rownames(spectra) <- 1:nrow(spectra)
+  spectra
 }
 
 validateSpectra <- function(spectraDf){
@@ -175,10 +172,9 @@ validateSpectra <- function(spectraDf){
     class(spectraDf) == "DFrame",
     attr(spectraDf, "package") == "S4Vectors",
     all(c("sample", "mz", "mzmin", "mzmax", "npeaks",
-          "peakidx", "i", "noise") %in% colnames(spectraDf)),
+          "i") %in% colnames(spectraDf)),
     typeof(spectraDf$sample) == "character",
     typeof(spectraDf$mz) == "double",
-    typeof(spectraDf$peakidx) == "list",
     typeof(spectraDf$i) == "double",
     nrow(spectraDf) > 0
   )
@@ -210,7 +206,9 @@ cellAlignment <- function(spectraDf, method = "binning", ppm = 5, nCells = 0,
   }
 
 
-  cells[rowData(cells)$npeaks >= nCells, ]
+  cells <- cells[rowData(cells)$npeaks >= nCells, ]
+  rownames(cells) <- 1:nrow(cells)
+  cells
 }
 
 
@@ -231,26 +229,19 @@ prepareCells <- function(cells){
   DataFrame(df)
 }
 
-constructSE <- function(binned, spectra){
+constructSE <- function(res, spectra){
 
-  groups <- as.integer(as.factor(rep( names(binned$npeaks), binned$npeaks)))
-  spectra <- spectra[unlist(binned$peakidx), ]
-  spectra$group <- groups
-
+  spectra$group <- as.integer(as.factor(rep( names(res$npeaks), res$npeaks)))
   df <- as.data.frame(spectra[, c("sample", "i", "group")])
   intensity <- as.matrix(DataFrame(tidyr::pivot_wider(df, names_from = "sample",
-                                            values_from = "i")[,-1]))
-  dimnames(intensity) <- list(1:nrow(intensity), unique(df$sample))
+                                                      values_from = "i")[,-1]))
 
-  df <- as.data.frame(spectra[, c("sample", "noise", "group")])
-  noise <- as.matrix(DataFrame(tidyr::pivot_wider(df, names_from = "sample",
-                                    values_from = "noise")[,-1]))
-  dimnames(noise) <- list(1:nrow(noise), unique(df$sample))
+  dimnames(intensity) <- list(1:nrow(intensity), unique(df$sample))
 
 
   se <- SummarizedExperiment(
-    assays = list(Area = as.matrix(intensity), Noise = as.matrix(noise)),
-    rowData = DataFrame(binned),
+    assays = list(Area = as.matrix(intensity)),
+    rowData = DataFrame(res),
     colData = DataFrame(row.names = unique(df$sample))
   )
   rownames(se) <- 1:nrow(se)
@@ -263,26 +254,22 @@ constructSE <- function(binned, spectra){
 #' @importFrom SummarizedExperiment SummarizedExperiment
 #' @export
 cellBinning <- function(spectra, ppm = 5) {
-
-  ppm <- ppm * 1e-6
-  df_list <- doBinning(as.data.frame(spectra), split = "sample", ppm = ppm)
-
-  df <- do.call(rbind, df_list)
+  df <- doBinning(as.data.frame(spectra), split = "sample", ppm = ppm)
   rownames(df) <- 1:nrow(df)
-
-  df$mzdiff <- df$mz - spectra$mz
-
-  df <- df[order(df$mz), ]
-  bins <- split.data.frame(df, df$mz)
+  bins <- split.data.frame(df, df$peakIdx)
 
   res <- DataFrame(
-    mz = unique(df$mz),
-    mzmin = sapply(bins, function(x) min(x$mz - x$mzdiff)),
-    mzmax = sapply(bins, function(x) max(x$mz - x$mzdiff)),
-    npeaks = sapply(bins, nrow)
+    mzmed = sapply(bins, function(x) median(x$mass)),
+    mzmin = sapply(bins, function(x) min(x$mass)),
+    mzmax = sapply(bins, function(x) max(x$mass)),
+    npeaks = sapply(bins, nrow),
+    i = sapply(bins, function(x) sum(x$intensities))
   )
 
-  res$peakidx <- lapply(bins, function(x) as.integer(rownames(x)))
+  res$peakIdx <- lapply(bins, rownames)
+  res$sampleIdx <- lapply(bins, `[[`, "samples")
+  res$ppm <- round((res$mzmax - res$mzmin) / res$mzmed * 1e6, 3)
+  res$fsample <- round(res$npeaks / length(unique(spectra$sample)), 3)
 
   return(constructSE(res, spectra))
 }

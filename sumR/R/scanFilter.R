@@ -50,6 +50,7 @@ formatSpectra <- function(spectra){
   scans <- rep(which(non_nulls), vapply(spectra, nrow, integer(1)))
   df <- data.frame(scan = scans, do.call(rbind, spectra))
   if (nrow(df) == 0) return(NULL)
+  rownames(df) <- 1:nrow(df)
   df
 }
 
@@ -103,6 +104,9 @@ centroidFile <- function(file, massWindow = c(0, Inf), polarity = "-",
   attr(l, "combineSpectra") <- combineSpectra
   attr(l, "Files") <- file
   attr(l, "rt") <- df$retentionTime
+  attr(l, "scanranges") <- unique(df$scanWindowLowerLimit)
+
+  # Add the scanranges as attributes for fPeaks during alignment
   l
 }
 
@@ -224,13 +228,12 @@ calculateNoise <- function(spectrum, centroids, noiseWindow){
 centroid <- function(spectrum, halfWindowSize = 2L, noiseWindow = 0.0001) {
   if (nrow(spectrum) == 0) return(NULL)
 
-  centroids <- getLocalMaximaC(spectrum[, 2])
-  # } else {
-  #   intensities <- savgol(spectrum[, 2], halfWindowSize)
-  #   intensities[intensities < 0] <- 0
-  #   ## find local maxima
-  #   centroids <- which(diff(sign(diff(intensities))) == -2) + 1
-  # }
+  #centroids <- getLocalMaximaC(spectrum[, 2])
+  intensities <- savgol(spectrum[, 2], halfWindowSize)
+  intensities[intensities < 0] <- 0
+  ## find local maxima
+  centroids <- which(diff(sign(diff(intensities))) == -2) + 1
+
 
 
   peakNoise <- calculateNoise(spectrum, centroids, noiseWindow)
