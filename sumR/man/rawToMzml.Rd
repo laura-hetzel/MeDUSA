@@ -4,7 +4,7 @@
 \alias{rawToMzml}
 \title{Convert RAW files to mzML}
 \usage{
-rawToMzml(folder, output = getwd(), rt = NULL, options = "")
+rawToMzml(folder, output = getwd(), rt = NULL, options = "--simAsSpectra")
 }
 \description{
 Convert RAW files to mzML

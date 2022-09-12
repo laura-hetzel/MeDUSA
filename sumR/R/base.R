@@ -86,7 +86,7 @@ read_msdata <- function(path = "data") {
 #' @param outputFolder
 #' @param options
 #' @export
-rawToMzml <- function(folder, output = getwd(), rt = NULL, options = ""){
+rawToMzml <- function(folder, output = getwd(), rt = NULL, options = "--simAsSpectra"){
 
   options <- paste(options, collapse = " ")
   files <- list.files(file.path(folder), full.names = T)
