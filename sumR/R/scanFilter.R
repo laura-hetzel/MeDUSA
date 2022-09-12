@@ -102,6 +102,7 @@ centroidFile <- function(file, massWindow = c(0, Inf), polarity = "-",
   attr(l, "massWindow") <- massWindow
   attr(l, "combineSpectra") <- combineSpectra
   attr(l, "Files") <- file
+  attr(l, "rt") <- df$retentionTime
   l
 }
 

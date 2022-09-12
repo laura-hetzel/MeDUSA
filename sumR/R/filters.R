@@ -131,6 +131,29 @@ filterCells <- function(exp, assay = 1) {
   exp[, colSums(is.na(assay(exp, assay))) != nrow(exp)]
 }
 
+#' @title Filter scans based on Biomarkers like oil or solvent
+#' @param fileList List of centroided peaks obtained from `extractPeaks()`
+#' @param mass Biomarker mass to use as identification in the solvent
+#' @param intensity Intensity value that is expected in the solvent
+#' @param ppm Mass error for the biomarker. Defaults to 20
+#' @export
+filterScansByBiomarker <- function(fileList, mass, intensity = 1e5, ppm = 20){
+    minMass <- mass - mass * 1e-6 * ppm
+    maxMass <- mass + mass * 1e-6 * ppm
+    lapply(fileList, function(spectra){
+      solvent_idx <- which(spectra$mz > minMass & spectra$mz < maxMass &
+                             spectra$i > intensity)
+
+      gap <- which.max(diff(solvent_idx))
+      start <- solvent_idx[gap]
+      end <- solvent_idx[gap + 1]
+
+      spectra <- spectra[start:end, ]
+      scans <- unique(spectra$scan)
+      spectra[spectra$scan %in% scans[2:(length(scans) - 1)], ]
+    })
+}
+
 #' @title filter peaks
 #' @export
 peakFilter <- function(fileList, intensity = 0, peakValue = -Inf, snr = 0){
