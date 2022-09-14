@@ -36,8 +36,8 @@ validateExperiment <- function(exp, checkColData = T){
     class(exp) == "SummarizedExperiment",
     nrow(exp) > 0,
     ncol(exp) > 0,
-    ifelse(checkColData, "Type" %in% colnames(colData(exp)), TRUE),
-    c("mz", "mzmin", "mzmax", "npeaks", "peakidx") %in% colnames(rowData(exp)),
+    #ifelse(checkColData, "Type" %in% colnames(colData(exp)), TRUE),
+    #c("mz", "mzmin", "mzmax", "npeaks", "peakidx") %in% colnames(rowData(exp)),
     "Area" %in% assayNames(exp)
   )
   if (!isValid) warning("Invalid sumR Experiment object")
@@ -195,9 +195,9 @@ check_binning <- function(aligned_peaks, summary_errors = F,
 #' @param filter
 #' @export
 blankSubstraction <- function(exp, blankThresh = 5, nSamples = Inf, removeBlanks = TRUE){
-  if (!validateExperiment(exp)) return(NULL)
+  if (!validateExperiment(exp)) return(exp)
   blanks <- exp[, toupper(exp$Type) == 'BLANK']
-  samps <- exp[, toupper(exp$Type) == 'SAMPLE']
+  samps <- exp[, toupper(exp$Type) != 'BLANK']
 
   threshold <- rowMedians(assay(blanks, "Area"), na.rm = TRUE) * blankThresh
   exp <- exp[rowSums(assay(samps, "Area") - threshold <= 0, na.rm = TRUE) <= nSamples, ]
