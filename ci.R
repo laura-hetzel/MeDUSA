@@ -1,4 +1,4 @@
-setwd("mzqualityr")
+setwd("sumR")
 
 install_if_needed <- function(package_to_install){
   if (!package_to_install %in% installed.packages()) {
