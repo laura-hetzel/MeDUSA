@@ -37,19 +37,29 @@ setMetadata <- function(exp, ...){
   exp
 }
 
-#' @title Create metadata from Excel file
-#' @param xlsxFile
-#' @param idxColumn
-#' @param sheet
-#' @importFrom openxlsx read.xlsx
-#' @export
-metadataFromExcel <- function(xlsxFile, idxColumn, sheet = 1){
-  df <- read.xlsx(xlsxFile, sheet)
-  if (!idxColumn %in% colnames(df)) stop(sprintf("Error reading excel file, could not find column %s", idxColumn))
-  if (any(duplicated(df[, idxColumn]))) stop(sprintf("Non-unique values found in %s", idxColumn))
-
-  rownames(df) <- df[, idxColumn]
-  df
+setDefaultAssay <- function(exp, default){
+  if (!validateExperiment(exp)) return(NULL)
+  n <- assayNames(exp)
+  to_replace <- which(n == default)
+  n[to_replace] <- n[1]
+  n[1] <- default
+  assays(exp) <- assays(exp)[n]
+  exp
 }
 
+#' @title Set the phenotype column of a sumR Experiment
+#' @param exp SummarizedExperiment obtained after alignment
+#' @param phenotype Character vector specifying the column in colData to
+#' be used as phenotype
+#' @export
+setPhenotype <- function(exp, phenotype){
 
+  if (validateExperiment(exp)) {
+    if (phenotype %in% colnames(colData(exp)) & is(phenotype, "character")) {
+      metadata(exp)$phenotype <- phenotype
+    } else {
+      warning(sprintf("%s not found in colData", phenotype))
+    }
+  }
+  exp
+}

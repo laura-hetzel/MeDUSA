@@ -2,6 +2,7 @@
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^sumR\.Rproj$
-^packrat/
 ^\.Rprofile$
 ^cache$
+^docs
+_pkgdown.yml

@@ -108,3 +108,10 @@ We can also inspect the performance of each model by plotting the accuracy durin
 ```{r CV}
 plotCrossValidation(expModel, "rf")
 ```
+
+# SessionInfo
+```{r, echo = FALSE}
+if (requireNamespace("devtools", quietly = TRUE)) {
+  devtools::session_info("attached")
+}
+```

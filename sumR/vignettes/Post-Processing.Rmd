@@ -65,3 +65,10 @@ Another source of unwanted features is fragmented compounds. These are features 
 ```{r fragments}
 exp <- fragmentFilter(exp, method = "spearman", corr = 0.95)
 ```
+
+# SessionInfo
+```{r, echo = FALSE}
+if (requireNamespace("devtools", quietly = TRUE)) {
+  devtools::session_info("attached")
+}
+```

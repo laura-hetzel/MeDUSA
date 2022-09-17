@@ -4,7 +4,14 @@
 \alias{MD_filter}
 \title{MD filter}
 \usage{
-MD_filter(dataframe, mz_col, a = 0.00112, b = 0.01953)
+MD_filter(
+  MD_df,
+  filter_df,
+  incl_list,
+  incl_list_path = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt", package =
+    "sumR"),
+  mass_accuracy
+)
 
 MD_filter(
   MD_df,

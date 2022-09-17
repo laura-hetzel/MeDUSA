@@ -4,7 +4,16 @@
 \alias{isotopeFinding}
 \title{Isotope finding}
 \usage{
-isotopeFinding(data, mz_vector, isotope_df, Elements = c("C13"), ppm = 5, z = 0, max_diff_mat, min_diff_mat)
+isotopeFinding(
+  data,
+  mz_vector,
+  isotope_df,
+  Elements = c("C13"),
+  ppm = 5,
+  z = 0,
+  max_diff_mat,
+  min_diff_mat
+)
 }
 \arguments{
 \item{data}{data.frame, with min_error and max_error columns added}

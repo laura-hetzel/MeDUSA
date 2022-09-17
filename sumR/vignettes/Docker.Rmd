@@ -18,8 +18,7 @@ output:
         \usepackage[utf8]{inputenc}
 ---
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = TRUE)
-library(devtools)
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 ```
 
 ## Introduction
@@ -63,6 +62,7 @@ docker run sumR
 
 # SessionInfo
 ```{r, echo = FALSE}
-
-session_info("attached")
+if (requireNamespace("devtools", quietly = TRUE)) {
+  devtools::session_info("attached")
+}
 ```

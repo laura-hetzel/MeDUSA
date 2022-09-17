@@ -1,6 +1,6 @@
 Package: sumR
 Title: Package For Analysis Of Single Cell DI-MS Data
-Version: 0.4.0
+Version: 0.5.0
 Authors@R: c(
     person("Alida", "Kindt", , "a.s.d.kindt@lacdr.leidenuniv.nl", role = "aut"),
     person("Ahmed", "Ali", , "ali@lacdr.leidenuniv.nl", role = "aut",
@@ -21,53 +21,44 @@ Depends:
     R (>= 4.0),
     dplyr,
     ggplot2,
-    SummarizedExperiment
+    mzR,
+    S4Vectors,
+    stats,
+    SummarizedExperiment,
+    utils
 Imports: 
     caret,
-    caTools,
     data.table,
-    densityClust,
     dunn.test,
     factoextra,
     FactoMineR,
     GGally,
     ggpubr,
-    ggrepel,
     graphics,
-    logging,
-    MassSpecWavelet,
-    miscTools,
+    lubridate,
     mixOmics,
-    mzR,
-    openxlsx,
     parallel,
     pbapply,
-    PeriodicTable,
+    pheatmap,
     plotly,
-    plyr,
-    purrr,
     randomForest,
-    Rcpp,
     Rdisop,
-    Rdpack,
     rstatix,
-    SAVER,
-    stringr,
     superheat,
-    tibble,
     tidyr,
-    usedist,
-    utils,
-    umap,
-    viridis
+    umap
 Suggests: 
+    devtools,
     knitr,
+    Rmagic,
     rmarkdown,
-    testthat
+    pmp,
+    SAVER,
+    testthat,
+    xcms
 VignetteBuilder: 
     knitr
 biocViews:
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.1
-LinkingTo: Rcpp, RcppArmadillo

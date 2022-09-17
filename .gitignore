@@ -6,3 +6,6 @@
 .Rproj.user
 .DS*
 **/files
+docs
+sumR.Rcheck
+*.tar.gz

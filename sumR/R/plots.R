@@ -1,3 +1,40 @@
+#' @title Heatmap with colData groups
+#' @param exp SummarizedExperiment object
+#' @param assay Name of the assay or index of the assay to use
+#' @param columns Vector of column names from the colData to use as
+#' groups in the heatmap
+#' @param ... Any other parameters submitted to the `pheatmap` function
+#' @importFrom pheatmap pheatmap
+#' @importFrom SummarizedExperiment rowData colData assay
+#' @export
+pheatmapPlot <- function(exp, assay = 1, columns = NULL,
+                         rows = NULL, ...){
+
+  if (!is.null(rows)) {
+    rows <- as.data.frame(rowData(exp)[, rows, drop = FALSE])
+  }
+
+  if (!is.null(columns)) {
+    columns <- as.data.frame(colData(exp)[, columns, drop = FALSE])
+    columns <- columns[, -which(colnames(columns) == "Datetime")]
+    columns <- columns[, apply(columns, 2, function(x){
+      uniq <- unique(x)
+      length(uniq) > 1 & length(uniq) < length(x)
+    })]
+  }
+
+  m <- assay(exp, assay)
+
+  pheatmap::pheatmap(
+      assay(exp, assay),
+      annotation_col = columns,
+      annotation_row = rows,
+      cluster_rows = NA %in% m,
+      cluster_cols = NA %in% m,
+      ...
+  )
+}
+
 #' Volcano plot
 #'
 #' @param data dataframe result from statistical tests within the sumR package with significant column (true or false)
@@ -37,7 +74,6 @@ volcanoPlot <- function(exp, test, title = "") {
 #' @param components
 #' @importFrom umap umap
 #' @importFrom stats prcomp
-#' @importFrom ggrepel geom_text_repel
 #' @export
 plotUMAP <- function(exp, assay = 1, components = 20){
   if (!validateExperiment(exp)) return(NULL)
@@ -48,15 +84,12 @@ plotUMAP <- function(exp, assay = 1, components = 20){
   um <- umap(data)$layout
   colnames(um) <- c("UMAP_1", "UMAP_2")
   um <- as.data.frame(cbind(um, colData(exp)))
-  suppressWarnings(
-    ggplot(um, aes(x = UMAP_1, y = UMAP_2,
-                      label = rownames(colData(exp)),
-                      color = .data[[metadata(exp)$phenotype]])) +
+  ggplot(um, aes(x = UMAP_1, y = UMAP_2,
+                  label = rownames(colData(exp)),
+                  color = .data[[metadata(exp)$phenotype]])) +
     geom_point() +
-    geom_text_repel() +
     ggtitle("Umap") +
     theme_bw()
-  )
 }
 
 plotCellSds <- function(exp, assay = 1, top = nrow(exp)){
@@ -70,10 +103,11 @@ plotCellSds <- function(exp, assay = 1, top = nrow(exp)){
     geom_bar(stat = "identity") +
     xlab("Cell") +
     ylab("Standard Deviation") +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 }
 
 #' @title Plot the standard deviations
+#' @importFrom stats reorder
 #' @export
 plotFeatureSds <- function(exp, assay = 1, top = nrow(exp)){
   if (!validateExperiment(exp)) return(NULL)
@@ -86,7 +120,7 @@ plotFeatureSds <- function(exp, assay = 1, top = nrow(exp)){
     geom_bar(stat = "identity") +
     xlab("Feature") +
     ylab("Standard Deviation") +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 }
 
 #' @title Plot Accuracy of Cross Validation
@@ -99,75 +133,7 @@ plotCrossValidation <- function(exp, modelName = 1){
   plot(model(exp, modelName)$model)
 }
 
-#' #' Plot PCA
-#' #'
-#' #' @description visualization using either factoMineR and factorextra package
-#' #' or stats and ggplot2 .. click next to show the next plot
-#' #'
-#' #' @param data transposed dataframe with m/z as columns
-#' #' @param method Which method of calculating the PCA should be used.
-#' #' "facto" uses the FactoMineR and factoextra packages. "stats" uses prcomp from
-#' #' the basic stats package and ggpubr.
-#' #' @param classifiers sample groups as factor
-#' #' @export
-#' #' @importFrom FactoMineR PCA
-#' #' @importFrom factoextra get_pca_var fviz_eig fviz_pca_var fviz_pca_ind
-#' #' @importFrom ggpubr ggscatter
-#' #' @importFrom stats prcomp
-#' #' @importFrom ggplot2 geom_hline geom_vline
-#' #' @importFrom dplyr %>%
-#' #' @importFrom graphics par
-#' plot_PCA <- function(data, method = c("facto", "stats"), classifiers) {
-#'   if (method[1] == "facto") {
-#'     res_pca <- PCA(data, graph = FALSE)
-#'
-#'     ## Visualisation of variance explained (plot the variance against the no of dimension)
-#'     print(fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 100), main = "PCA - scree plot"))
-#'     par(ask = TRUE)
-#'
-#'     ## Extracting results of variables
-#'     var <- get_pca_var(res_pca)
-#'     print(fviz_pca_var(res_pca, col.var = "grey", col.circle = "grey", title = "variables-PCA"))
-#'
-#'     ## Plotting the individuals
-#'     par(ask = TRUE)
-#'     print(fviz_pca_ind(res_pca,
-#'       col.ind = "cos2",
-#'       gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-#'       repel = TRUE, # Avoid text overlapping (slow if many points)
-#'       title = "individuals-PCA - names of the sample"
-#'     ))
-#'
-#'     ## plotting the ellipses
-#'     par(ask = TRUE)
-#'     fviz_pca_ind(res_pca,
-#'       geom.ind = "point", # show points only (nbut not "text")
-#'       col.ind = classifiers, # color by groups
-#'       palette = "viridis",
-#'       addEllipses = TRUE, # Concentration ellipses
-#'       legend.title = "Sample type",
-#'       title = "PCA samples "
-#'     )
-#'   } else if (method[1] == "stats") {
-#'     ## different way to plot the PCA
-#'     ## PCA from basic stats
-#'
-#'     PCA2 <- prcomp(as.matrix(data), scale. = F) # PCA model using transposed df
-#'     PCA_scores <- as.data.frame(PCA2$x) %>% dplyr::select(PC1, PC2)
-#'     PCA_scores$Sample <- classifiers ## we add our classifiers here
-#'
-#'     ## plotting the samples and ellipses using ggplot
-#'     print(fviz_eig(PCA2, addlabels = TRUE, ylim = c(0, 100), main = "PCA -scree plot"))
-#'     par(ask = TRUE)
-#'     ggscatter(PCA_scores,
-#'       x = "PC1", y = "PC2",
-#'       color = "Sample", shape = "Sample", palette = "aaas",
-#'       mean.point = TRUE, ellipse = TRUE, title = "PCA Samples"
-#'     ) +
-#'       geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
-#'       geom_vline(xintercept = 0, linetype = "dashed", color = "black")
-#'   }
-#' }
+
 
 
 #' @title Plot Principle Component Analysis
@@ -392,7 +358,6 @@ PLSDA_loadings <- function(exp, classifiers, assay = 1, comp = 1, method = "medi
 #' @param pretty.order.rows logical vector the default is TRUE
 #' @param pretty.order.cols logical vector the default is TRUE
 #' @importFrom superheat superheat
-#' @importFrom viridis mako
 #' @importFrom dplyr %>%
 #' @export
 heatMap <- function(exp, assay, classifiers, pretty.order.rows = T, pretty.order.cols = T) {
@@ -409,7 +374,6 @@ heatMap <- function(exp, assay, classifiers, pretty.order.rows = T, pretty.order
     grid.hline.size = 5,
     grid.vline.size = 3,
     membership.rows = classifiers,
-    heat.pal = viridis::mako(100),
     pretty.order.rows = pretty.order.rows,
     pretty.order.cols = pretty.order.cols,
     scale = F, # scales columns
@@ -499,7 +463,7 @@ RF_CV_plots <- function(roc_all, auc_all, rocfinal, aucfinal) {
   plot(rocfinal, col = "blue", main = paste("final model, AUC:", as.character(round(aucfinal, 3))))
 }
 
-
+#' @title ROC plot
 #' @description plotting ROC curves for any choosen model (final (rocfinal and aucfinal) or
 #' from cross validation model(sepcifiy model number roc_all[[1]] and auc_all[[1]]))
 #' @param roc ROC of desired model
@@ -530,7 +494,7 @@ RandomForestPlots <- function(model, training_set) {
 #' @param model random forest model
 #' @param training_set training set that was used for the random forest model with samples column
 #' @importFrom ggplot2 ggplot geom_label theme_bw ggtitle
-#' @importFrom stats cmdscale
+#' @importFrom stats cmdscale as.dist
 #' @importFrom graphics par
 MDS_plot <- function(model, training_set) {
   distance_matrix <- as.dist(1 - model$proximity)

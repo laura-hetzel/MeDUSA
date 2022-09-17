@@ -48,3 +48,10 @@ We can combine the features found in both polarities with the `combineExperiment
 expModel <- combineExperiments(exp, exp2)
 expModel
 ```
+
+# SessionInfo
+```{r, echo = FALSE}
+if (requireNamespace("devtools", quietly = TRUE)) {
+  devtools::session_info("attached")
+}
+```

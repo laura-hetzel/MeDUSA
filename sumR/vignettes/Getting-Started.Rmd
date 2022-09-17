@@ -88,3 +88,9 @@ df <- read.csv(cellData, row.names = 1)
 knitr::kable(df, caption = "cellData") 
 ```
 
+# SessionInfo
+```{r, echo = FALSE}
+if (requireNamespace("devtools", quietly = TRUE)) {
+  devtools::session_info("attached")
+}
+```

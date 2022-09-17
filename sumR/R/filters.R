@@ -1,58 +1,30 @@
-
-# BG filter done by Amar
-
-#' @title Blank filter to remove background
-#' @description It is used to conduct background removal, it filters a data frame of m/z values and intensities
-#' @param dataframe a data.frame of m/z values and intensities including blank samples
-#' @param limit intensity ratio limit, for example within 150 percent of the blank intensity = 1.5
-#' @param blank_regex regex of blank columns, for example "blank"
-#' @param sample_regex regex of sample columns for example
-#' @usage bgFilter(dataframe, limit = 2.5, blank_regex = "blank", sample_regex = "^d|^ec|qc")
+#' @title Substract Blanks from SummarizedExperiment
+#' @param exp SummarizedExperiment obtained after alignment
+#' @param foldChange Multiplier used for the median blanks. If the Area of
+#' a sample is lower than this threshold, it counts towards the `nSamples`
+#' threshold. (Defaults to 5).
+#' @param sampleThresh Number of samples are allowed to be lower than the
+#' median blank area times the number given for `foldChange`. Defaults to `Inf`,
+#' meaning that no compounds will be removed unless changed.
+#' @param removeBlanks Should samples of the type `BLANK` be removed after the
+#' filter is applied? Defaults to `TRUE`.
 #' @export
-bgFilter <- function(dataframe, limit = 2.5, blank_regex = "blank", sample_regex = "^d|^ec|qc") {
-  ## Extract blank column names
-  blank_cols <- grep(blank_regex, names(dataframe), ignore.case = TRUE)
+blankSubstraction <- function(exp, foldChange = 5, nSamples = Inf,
+                              removeBlanks = TRUE){
+  if (!validateExperiment(exp)) return(exp)
+  blanks <- exp[, toupper(exp$Type) == 'BLANK']
+  samps <- exp[, toupper(exp$Type) != 'BLANK']
 
-  ## Extract sample column names
-  sample_cols <- grep(sample_regex, names(dataframe), ignore.case = TRUE)
+  threshold <- rowMedians(assay(blanks, "Area"), na.rm = TRUE) * foldChange
+  exp <- exp[rowSums(assay(samps, "Area") - threshold <= 0, na.rm = TRUE) <= nSamples, ]
 
-  ## Create new column with intensity means of blank samples
-  dataframe$background <- rowMeans(dataframe[, blank_cols], na.rm = TRUE)
+  if (removeBlanks) exp <- exp[, toupper(exp$Type) != "BLANK"]
 
-  ## Compare sample_cols with the mean, replace them by 0 if they are below
-  ## thresh from what I understand up until now: Sweep creates the Intensity
-  ## Ratio as a summary statistic, which sweeps across the sample columns
-  ## The function across those columns is basically a division by the
-  ## corresponding Background value.
-  ## I'm gettin errors related to: Dimensions of matrix need to be equal to the
-  ## function input data
-  ## https://stackoverflow.com/questions/3444889/how-to-use-the-sweep-function
-
-  ## Make a subset with intensity columns
-  sample_df <- dataframe[, sample_cols]
-
-  ## Filter the intensity columns by conditioning to smaller or equal to limit
-  ## Returns 0 if condition is met
-  sample_df <- as.data.frame(lapply(sample_df, function(i) {
-    ifelse(i / dataframe$background <= limit, 0, i)
-  }))
-
-  # merys : needs to be checked if return is right
-  return(sample_df)
-
-  # dataframe[sample_cols][sweep(dataframe[sample_cols], 1,
-  # dataframe$background, `/`) <= limit] <- 0
-  # result <- dataframe[, -blank_cols]
-  # return(result)
-  # ahmeds notes: Need to review this later, maybe replace swap with map_dfc function
+  filterCells(exp)
 }
 
-#' MD filter
-#'
+#' @title MD filter
 #' @description filters data based on Mass Defect
-#'
-#' @importFrom dplyr mutate select
-#'
 #' @param dataframe is the dataframe on which KM calculations need to be
 #' conducted
 #' @param mz_col is the mass to charge column within the specified dataframe
@@ -60,11 +32,9 @@ bgFilter <- function(dataframe, limit = 2.5, blank_regex = "blank", sample_regex
 #' @param b is the addition value of the linear equation used for data
 #' filtering, both a and b can be calculated using the linear_equation()
 #' function included in this package.
-#'
-#' @usage MD_filter(dataframe, mz_col, a = 0.00112, b = 0.01953)
-#' @export
-#' @importFrom dplyr filter %>%
+#' @importFrom dplyr filter %>% mutate select
 #' @import ggplot2
+#' @export
 MD_filter <- function(dataframe, mz_col, a = 0.00112, b = 0.01953) {
   ## Solves problem of customizable lin. eq as well: In case HMDB updates data
   ## In-function MD calculation
@@ -156,17 +126,6 @@ filterScansByBiomarker <- function(fileList, mass, intensity = 1e5, ppm = 20){
     })
 }
 
-#' @title filter peaks
-#' @export
-peakFilter <- function(fileList, intensity = 0, peakValue = -Inf, snr = 0){
-  lapply(fileList, function(spectra){
-    intensity <- spectra$i >= intensity
-    peakValue <- spectra$i - spectra$Noise > peakValue
-    snr <- spectra$i / spectra$Noise > snr # snr <- (spectrum$i - spectrum$Noise) / spectrum$Noise > snr
-    spectra[intensity & peakValue & snr, ]
-  })
-}
-
 #' @title filter spectra
 #' @export
 spectraFilter <- function(spectra, npeaks = 0, intensity = 0, SNR = 0){
@@ -176,85 +135,8 @@ spectraFilter <- function(spectra, npeaks = 0, intensity = 0, SNR = 0){
 }
 
 
-setDefaultAssay <- function(exp, default){
-  if (!validateExperiment(exp)) return(NULL)
-  n <- assayNames(exp)
-  to_replace <- which(n == default)
-  n[to_replace] <- n[1]
-  n[1] <- default
-  assays(exp) <- assays(exp)[n]
-  exp
-}
-
-saverImputation <- function(df, cores = 1, normalize = TRUE, ...){
-  df[is.na(df)] <- 0
-  if (!normalize) normalize <- NULL
-  if (!"SAVER" %in% installed.packages()) {
-    warning("Please install the package 'SAVER' before using this imputation")
-  } else {
-    df <- suppressMessages(suppressWarnings(
-      SAVER::saver(df, estimates.only = T, ncores = cores, size.factor = normalize
-      )))
-  }
-  df
-
-}
-
-magicImputation <- function(df, ...){
-  df[is.na(df)] <- 0
-  if ("Rmagic" %in% installed.packages()) {
-    if (Rmagic::pymagic_is_available()) {
-      df <- t(Rmagic::magic(t(df))$result)
-    }
-  }
-
-  df
-}
-
-rfImputation <- function(df, ...){
-  if ("pmp" %in% installed.packages()) {
-    df <- pmp::mv_imputation(df, method = "rf")
-  }
-  df
-}
-
-#' @title data imputation
-#' @description This function apply data imputation from 1 to selected noise level
-#' @param data dataframe
-#' @param noise numerical value for the noise level
-#' @param seed global seed for reproducible results
-#' @importFrom stats runif
-noiseImputation <- function(data, noise = 100, seed = 42, ...) {
-  set.seed(seed)
-  idx <- is.na(data) | data == 0
-  data[idx] <- runif(sum(idx), min = 1, max = noise)
-  return(data)
-}
-
-#' @title Impute missing values
-#' @importFrom SummarizedExperiment assay<-
-#' @export
-imputation <- function(exp, method = "noise", useAssay = "Area",
-                       saveAssay = "Imputed", setDefault = TRUE, ...) {
-
-  if (!validateExperiment(exp)) return(NULL)
-  exp <- filterCells(exp)
-  df <- as.data.frame(assay(exp, useAssay))
-
-  new_df <- switch(method,
-    "saver" = saverImputation(df, ...),
-    "magic" = magicImputation(df, ...),
-    "rf" = rfImputation(df, ...),
-    "noise" = noiseImputation(df, ...)
-  )
-  dimnames(new_df) <- dimnames(assay(exp))
-  assay(exp, saveAssay) <- new_df
-  if (setDefault) exp <- setDefaultAssay(exp, saveAssay)
-  exp
-
-}
-
 #' @title Fragment Filter
+#' @importFrom stats cor
 #' @export
 fragmentFilter <- function(exp, assay = 1, method = "spearman", corr = 0.95){
   if (!validateExperiment(exp)) return(NULL)
@@ -274,5 +156,19 @@ featureFilter <- function(exp, assay = "Area", nCells = 0, pCells = 0){
     which(nFeats >= nCells & pFeats >= pCells)
   }))
   exp[to_take, ]
+}
+
+#' @title Keep the most variable features
+#' @param exp
+#' @param assay
+#' @param top
+#' @export
+keepVariableFeatures <- function(exp){
+  if (!validateExperiment(exp)) return(NULL)
+  if (!"leveneTest" %in% colnames(rowData(exp))) {
+    message("'leveneTest' not found in rowData. Please run 'leveneTest' first.")
+    return(exp)
+  }
+  exp[which(rowData(exp)$leveneTest$unequal_variance), ]
 }
 

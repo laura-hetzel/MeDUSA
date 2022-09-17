@@ -1,4 +1,4 @@
-setwd("sumR")
+setwd("mzqualityr")
 
 install_if_needed <- function(package_to_install){
   if (!package_to_install %in% installed.packages()) {
@@ -33,6 +33,6 @@ ci_check <- function(){
 ci_coverage <- function(){
   if (length(list.files(path = "R") > 0)) {
     ci_setup()
-    covr::package_coverage(type = c("tests", "examples"))
+    covr::package_coverage(type = c("tests", "examples"), function_exclusions = "shiny.*")
   }
 }

@@ -70,3 +70,10 @@ We can inspect the mass shift between cells that occured during alignment.
 ```{r cellShift}
 cellShiftPlot(exp)
 ```
+
+# SessionInfo
+```{r, echo = FALSE}
+if (requireNamespace("devtools", quietly = TRUE)) {
+  devtools::session_info("attached")
+}
+```

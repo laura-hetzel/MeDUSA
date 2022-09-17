@@ -76,6 +76,7 @@ cellShiftPlot <- function(exp) {
 #' @param assay
 #' @param by
 #' @param seed
+#' @importFrom stats loess
 #' @export
 featureCovPlot <- function(cells, assay = 1, by = 5, seed = 42){
   set.seed(seed)
@@ -107,24 +108,4 @@ featureCellPlot <- function(cells, assay = "Area"){
   df$Cell <- 1:nrow(df)
   colnames(df)[1] <- "Features"
   ggplot(df, aes(y = Features, x = Cell)) + geom_bar(stat = "identity")
-}
-
-#' @title Plot feature spectra
-#' @param cells
-#' @param feature
-#' @param file File number of the files that were used.
-#' @export
-plotRawFeature <- function(cells, feature, file){
-  xmin <- rowData(cells)$mzmin[feature]
-  xmax <- rowData(cells)$mzmax[feature]
-
-  x <- formatScans(file, 200, "+", F)
-  x2 <- do.call(rbind, lapply(x, function(df){
-    df[df[,1] >= xmin & df[,1] <= xmax, ]
-  }))
-  if (nrow(x2) == 0) return(NULL)
-  plot3D::scatter3D(x = x2[, 1], y = 1:nrow(x2), z = x2[, 2], theta = 45, phi = 10,
-            bty = "g",  type = "h", ylab = "Scan",
-            xlab = "mz", zlab = "i",
-            ticktype = "detailed", pch = 19, cex = .5)
 }

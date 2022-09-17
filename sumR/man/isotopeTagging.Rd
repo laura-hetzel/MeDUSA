@@ -4,19 +4,37 @@
 \alias{isotopeTagging}
 \title{Isotope tagging}
 \usage{
-isotopeTagging(data, ppm = 5, Elements = c("C13"), z = 0, plot = TRUE)
+isotopeTagging(
+  se,
+  assay = 1,
+  ppm = 5,
+  corr = 0.8,
+  Elements = c("C13"),
+  z = 0,
+  plot = FALSE
+)
 }
 \arguments{
-\item{ppm}{An integer, defining parts per million (ppm) for tolerance (default = 5)}
+\item{se}{A SummarizedExperiment object with mz as a column in the rowData.}
 
-\item{Elements}{A vector containing the isotopic element of interest (default = c("C13"))}
+\item{assay}{Name or index of the assay to use for intensity values.
+Defaults to the first assay,}
 
-\item{z}{An integer, defining charge z of m/z peaks for calculation of real mass. 0 is for auto-detection (default = 0)}
+\item{ppm}{An integer, defining parts per million (ppm) for tolerance
+(default = 5)}
 
-\item{plot}{Logical, returns box plot for isotope and interactive mass spectrometry of detected isotopes (default = TRUE)}
+\item{corr}{Correlation threshold used for intensity of compounds to compare.}
 
-\item{data}{data.frame,  which contain column named "mz", all other columns will be coerced as intensity}
+\item{Elements}{A vector containing the isotopic element of interest
+(default = c("C13"))}
+
+\item{z}{An integer, defining charge z of m/z peaks for calculation of real
+mass. 0 is for auto-detection (default = 0)}
+
+\item{plot}{Logical, returns box plot for isotope and interactive mass
+spectrometry of detected isotopes (default = FALSE)}
 }
 \description{
-Tags isotopes based on intensity ratio and difference in mass between mono- and isotopic ions
+Tags isotopes based on intensity ratio and difference in mass
+between mono- and isotopic ions.
 }

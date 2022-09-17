@@ -53,7 +53,6 @@ leveneTest <- function(exp, classifiers = metadata(exp)$phenotype,
 #' @title foldchange for two groups test
 #' @param dataframe2 transposed dataframe with m/z as columns (raw imputed dataframe)
 #' @param samples a factor vector with the classes of the samples
-#' @importFrom miscTools colMedians
 #' @importFrom utils combn
 #' @export
 foldChange <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1) {
@@ -61,8 +60,10 @@ foldChange <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1) {
   if (is.null(classifiers)) stop("Cannot perform test without classifiers")
   dataframe2 <- as.data.frame(t(assay(exp, assay)))
   classifiers <- as.factor(exp[[classifiers]])
-  Splitted_per_sampletype <- split(dataframe2, classifiers)
-  Median_per_group <- do.call(cbind, lapply(Splitted_per_sampletype, function(x) colMedians(as.matrix(x))))
+  Splitted_per_sampletype <- split.data.frame(dataframe2, classifiers)
+  Median_per_group <- do.call(cbind, lapply(Splitted_per_sampletype, function(x){
+    apply(as.matrix(x), 2, median)
+  }))
   combs <- combn(colnames(Median_per_group), 2)
   fc <- function(a, b) b / a
   foldchanges <- apply(combs, 2, function(col_names) fc(Median_per_group[, col_names[2]], Median_per_group[, col_names[1]]))
@@ -84,7 +85,7 @@ foldChange <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1) {
 #'
 #' @param dataframe2 transposed dataframe with m/z as columns (raw imputed dataframe)
 #' @param samples a factor vector with the classes of the samples
-#' @importFrom miscTools colMedians
+#' @importFrom stats median
 #' @importFrom utils combn
 foldChangeGroups <- function(dataframe2, samples) {
   Splitted_per_sampletype <- split(dataframe2, samples)
@@ -97,7 +98,9 @@ foldChangeGroups <- function(dataframe2, samples) {
   colnames(foldchanges) <- paste("fc", colnames(foldchanges), sep = "_")
   log2foldchanges <- log2(foldchanges)
   colnames(log2foldchanges) <- paste("log2", colnames(foldchanges), sep = "")
-  Median_per_group <- lapply(Splitted_per_sampletype, function(x) colMedians(x))
+  Median_per_group <- lapply(Splitted_per_sampletype, function(x){
+    apply(x, 2, median)
+  })
   Median_per_group <- as.data.frame(do.call(cbind, Median_per_group))
   colnames(Median_per_group) <- paste("median", colnames(Median_per_group), sep = "_")
   results <- cbind(Median_per_group, foldchanges, log2foldchanges)
@@ -138,19 +141,7 @@ welchTest <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1, thr
   exp
 }
 
-#' @title Keep the most variable features
-#' @param exp
-#' @param assay
-#' @param top
-#' @export
-keepVariableFeatures <- function(exp){
-  if (!validateExperiment(exp)) return(NULL)
-  if (!"leveneTest" %in% colnames(rowData(exp))) {
-    message("'leveneTest' not found in rowData. Please run 'leveneTest' first.")
-    return(exp)
-  }
-  exp[which(rowData(exp)$leveneTest$unequal_variance), ]
-}
+
 
 
 
@@ -290,15 +281,15 @@ dunnTest <- function(exp, classifiers = metadata(exp)$phenotype,
 }
 
 
+
 #' @title anova-tukey test
 #' @description anova test followed by tukey HSD test as post-hoc
 #' @param df transposed dataframe with m/z as columns
 #' @param classifiers a factor vector with the classes of the samples
-#' @importFrom  purrr map
+#' @importFrom stats TukeyHSD aov
 anova_tukey <- function(df, classifiers) {
-  results <- map_dfr(df,
-    ~ TukeyHSD(aov(. ~ classifiers, data = df))[[1]][, 4],
-    .id = "mz"
-  )
+  results <- do.call(rbind, lapply(seq_len(nrow(df)), function(i){
+    TukeyHSD(aov(. ~ classifiers, data = df[i, ]))[[1]][, 4]
+  }))
   return(results)
 }

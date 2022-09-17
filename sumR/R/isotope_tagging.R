@@ -189,7 +189,6 @@ validListAsDf <- function(isotope_valid_list) {
 #' @param min_diff_mat matrix, with maximum difference between mz pairs
 #' @importFrom data.table fintersect as.data.table
 #' @importFrom dplyr filter
-#' @usage isotopeFinding(data, mz_vector, isotope_df, Elements = c("C13"), ppm = 5, z = 0, max_diff_mat, min_diff_mat)
 isotopeFinding <- function(data, mz_vector, isotope_df, Elements = c("C13"), ppm = 5, z = 0, max_diff_mat, min_diff_mat) {
   # Setting Elements of interest
 
@@ -235,7 +234,8 @@ isotopeFinding <- function(data, mz_vector, isotope_df, Elements = c("C13"), ppm
     isotope_valid_df <- validListAsDf(isotope_valid_list)
 
     # Checking if formula contains "X"- element of interest
-    isotope_valid_df <- isotope_valid_df[grep(isotope_df$Element_notation[i], isotope_valid_df$formula), ]
+    isotope_valid_df <- isotope_valid_df[grep(isotope_df$Element_notation[i],
+                                              isotope_valid_df$formula), ]
 
     # Iterative row-binding for each "X"- element of interest
     return(isotope_valid_df)
@@ -428,7 +428,6 @@ barPlot <- function(final_df) {
 #' @description Gives a interactive graphical representation of the mono-isotopic and isotopic peaks
 #' @param final_df a data.frame of the mono-isotopic and isotopic peaks pair's with id column
 #' @importFrom  plotly plot_ly highlight_key add_markers add_segments  layout rangeslider ggplotly highlight
-#' @usage massSpecPlot(final_df)
 #' @importFrom dplyr %>%
 massSpecPlot <- function(final_df) {
   vis_df <- final_df[!is.na(final_df$isotopic_status), ]
@@ -467,6 +466,10 @@ massSpecPlot <- function(final_df) {
 ##############################################
 
 
+#' @title Reduce the number of checks using correlation
+#' @importFrom stats cor
+#' @importFrom utils stack
+#' @noRd
 reduceByCorrelation <- function(exp, corr = 0.8){
   m <- as.matrix(assay(exp))
   cors <- cor(t(m), y = t(m), method = "spearman")
@@ -486,14 +489,21 @@ reduceByCorrelation <- function(exp, corr = 0.8){
 # (11) isotopeTagging  function  -
 #---------------------------------
 #' @title Isotope tagging
-#' @description Tags isotopes based on intensity ratio and difference in mass between mono- and isotopic ions
-#' @param data data.frame,  which contain column named "mz", all other columns will be coerced as intensity
-#' @param ppm An integer, defining parts per million (ppm) for tolerance (default = 5)
-#' @param z An integer, defining charge z of m/z peaks for calculation of real mass. 0 is for auto-detection (default = 0)
-#' @param Elements A vector containing the isotopic element of interest (default = c("C13"))
-#' @param plot Logical, returns box plot for isotope and interactive mass spectrometry of detected isotopes (default = TRUE)
+#' @description Tags isotopes based on intensity ratio and difference in mass
+#' between mono- and isotopic ions.
+#' @param se A SummarizedExperiment object with mz as a column in the rowData.
+#' @param assay Name or index of the assay to use for intensity values.
+#' Defaults to the first assay,
+#' @param ppm An integer, defining parts per million (ppm) for tolerance
+#' (default = 5)
+#' @param corr Correlation threshold used for intensity of compounds to compare.
+#' @param Elements A vector containing the isotopic element of interest
+#' (default = c("C13"))
+#' @param z An integer, defining charge z of m/z peaks for calculation of real
+#' mass. 0 is for auto-detection (default = 0)
+#' @param plot Logical, returns box plot for isotope and interactive mass
+#' spectrometry of detected isotopes (default = FALSE)
 #' @importFrom dplyr distinct select %>%
-#' @usage isotopeTagging(data, ppm = 5, Elements = c("C13"), z = 0, plot = TRUE)
 #' @export
 isotopeTagging <- function(se, assay = 1, ppm = 5, corr = 0.8, Elements = c("C13"), z = 0, plot = FALSE) {
   if (!validateExperiment(se)) return(NULL)

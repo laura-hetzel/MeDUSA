@@ -49,7 +49,7 @@ By setting `cores` to any value higher than 1, each scan is centroided in parall
 peaks <- extractPeaks(
   files, 
   polarity = "+",
-  cores = 4
+  cores = 1
 )
 ```
 
@@ -59,21 +59,13 @@ We can plot the result of this function using a `spectrumPlot`. This plots the c
 spectrumPlot(peaks, file = 1, scan = 1)
 ```
 
-### Filtering Peaks
-
-After inspection, we can filter noisy peaks by a minimum intensity value using the `peakFilter()` function. It returns a similar list of data frames, but only peaks with at least the given intensity are kept. We can view the difference by plotting the results in a `spectrumPlot`:
-
-```{r peakPlot}
-peakFilter(peaks, intensity = 1e5) %>%
-  spectrumPlot(file = 1, scan = 1)
-```
-
-To save the peaks with our chosen intensity filter, we can override the results in the `peaks` variable.
-
-```{r peakFilter}
-peaks <- peakFilter(peaks, intensity = 1e5)
-```
-
 ```{r showAlignment, echo = FALSE}
 knitr::kable(head(peaks[[1]]), caption = sprintf("Peaks found in %s", names(peaks)[1]))
+```
+
+# SessionInfo
+```{r, echo = FALSE}
+if (requireNamespace("devtools", quietly = TRUE)) {
+  devtools::session_info("attached")
+}
 ```

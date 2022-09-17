@@ -14,8 +14,5 @@ plotPCA(se, assay = 1, group = metadata(se)$phenotype)
 \item{colors}{optional vector of colors}
 }
 \description{
-
-}
-\details{
-
+Plot Principle Component Analysis
 }
