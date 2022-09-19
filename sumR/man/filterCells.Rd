@@ -2,10 +2,24 @@
 % Please edit documentation in R/filters.R
 \name{filterCells}
 \alias{filterCells}
-\title{Filter cells without measurements}
+\title{Filter cells without measurements (only containing NA values)}
 \usage{
 filterCells(exp, assay = 1)
 }
+\arguments{
+\item{exp}{SummarizedExperiment object obtained after alignment}
+
+\item{assay}{The assay to be checked. Defaults to the assay at index 1}
+}
 \description{
-Filter cells without measurements
+Not all cells will contain the same peaks after alignment. For
+peaks that are not found in cells, an \code{NA} value is used instead. This
+function checks if the entire cell does not only contain NAs and remove
+them if so.
+}
+\details{
+During post-processing, several filters may be applied to remove
+either compounds or peaks to reduce false positive hits. In some cases,
+cells with few peaks may not contain any peaks at all. This function
+helps in detecting and removing such cells.
 }

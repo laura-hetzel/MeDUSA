@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{saveExperiment}
 \alias{saveExperiment}
-\title{Save a sumR Experiment to a file}
+\title{Save a sumR SummarizedExperiment to an RDS file}
 \usage{
 saveExperiment(exp, path)
 }
@@ -13,5 +13,16 @@ saveExperiment(exp, path)
 file.}
 }
 \description{
-Save a sumR Experiment to a file
+This is a helper function to store the SummarizedExperiment
+as an RDS file after validation.
+}
+\details{
+Saving an experiment can be useful for multiple purposes,
+including making comparisons and sharing. This function performs a few
+validation checks before it creates the directory of \code{path} if it does not
+exist yet. After creation, the \link{saveRDS} function is used to store a
+compressed file of the SummarizedExperiment to the disk.
+
+Similarly, loading an experiment can be done with the \link{loadExperiment}
+function.
 }

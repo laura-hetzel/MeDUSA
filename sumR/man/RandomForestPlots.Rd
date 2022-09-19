@@ -13,5 +13,7 @@ RandomForestPlots(model, training_set)
 }
 \description{
 random forest plots .. click next to view the next plots
-1. OOB plot 2.important variables plot 3.MDS plot
+\enumerate{
+\item OOB plot 2.important variables plot 3.MDS plot
+}
 }

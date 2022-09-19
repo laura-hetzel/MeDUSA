@@ -13,23 +13,23 @@ doCentroid(
 )
 }
 \arguments{
-\item{peaks}{List of dataframes, usually obtained from `peaks()` of the
-`mzR` package.}
+\item{peaks}{List of dataframes, usually obtained from \code{peaks()} of the
+\code{mzR} package.}
 
 \item{scans}{Vector of indices, which scans should be used for centroiding?
-Defaults to all scans in `peaks`}
+Defaults to all scans in \code{peaks}}
 
 \item{combineSpectra}{Boolean value, should scans of different masswindows
-be combined into a full-range scan before centroiding? Defaults to `FALSE`}
+be combined into a full-range scan before centroiding? Defaults to \code{FALSE}}
 }
 \value{
-data.frame of centroided peaks with the columns `scan`, `mz`, `i`
-and `Noise`
+data.frame of centroided peaks with the columns \code{scan}, \code{mz}, \code{i}
+and \code{Noise}
 }
 \description{
 This function converts profile-mode data into centroided
-data. In case of the use of different mass-windows, the `scans` parameter
-can be set to subset the scans to be used. The parameter `combineSpectra`
+data. In case of the use of different mass-windows, the \code{scans} parameter
+can be set to subset the scans to be used. The parameter \code{combineSpectra}
 can be set to TRUE if you want to combine the multiple mass-windows into
 a single full-range scan.
 }

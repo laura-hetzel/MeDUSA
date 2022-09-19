@@ -16,9 +16,23 @@ e.g. wiff from Sciex.}
 from the vendor-formatted file. Can be used to extract a region of interest.}
 
 \item{options}{Additional options for msConvert. Defaults to
-`--simAsSpectra`. Any options given will overwrite this option, unless it is
+\code{--simAsSpectra}. Any options given will overwrite this option, unless it is
 added to the options.}
 }
+\value{
+A character vector of path(s) to the stored mzML files. These
+are often used as input to \link{extractPeaks}
+}
 \description{
-Convert vendor files to mzML using Proteowizard
+Vendor files obtained with mass spectrometry have their own
+(compressed) file format. This function helps in converting these files
+to the open mzML format. This function requires Proteowizards \strong{msconvert}
+has been installed on your system.
+}
+\details{
+mzML is the most common format for mass spectrometry files. Here,
+using the help of Proteowizards msconvert, vendor-formatted files can be
+converted to mzML. By default, files are stored in the same folder as the
+vendor-formatted files. Additionally, the option \code{--simAsSpectra} is used
+to convert Selected Ion Chromatograms as spectra.
 }

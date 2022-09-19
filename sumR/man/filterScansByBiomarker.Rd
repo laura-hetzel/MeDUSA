@@ -7,7 +7,7 @@
 filterScansByBiomarker(fileList, mass, intensity = 1e+05, ppm = 20)
 }
 \arguments{
-\item{fileList}{List of centroided peaks obtained from `extractPeaks()`}
+\item{fileList}{List of centroided peaks obtained from \code{extractPeaks()}}
 
 \item{mass}{Biomarker mass to use as identification in the solvent}
 
@@ -16,5 +16,15 @@ filterScansByBiomarker(fileList, mass, intensity = 1e+05, ppm = 20)
 \item{ppm}{Mass error for the biomarker. Defaults to 20}
 }
 \description{
-Filter scans based on Biomarkers like oil or solvent
+This function can be used to extract data obtained from the
+"slug" method that is currently in development. It will extract all scans
+after the first mass with intensity > threshold is found and stop when that
+same mass is found again.
+}
+\details{
+The "slug" method results in a total ion chromatogram consisting
+of three parts. The first and last part contain ionization solvent at
+higher concentrations than the second part, which contains the cell
+measurement. By extracting this middle part from the total ion chromatogram,
+the only remaining part is the cell with measurements of interest.
 }

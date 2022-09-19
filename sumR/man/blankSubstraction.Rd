@@ -10,14 +10,14 @@ blankSubstraction(exp, foldChange = 5, nSamples = Inf, removeBlanks = TRUE)
 \item{exp}{SummarizedExperiment obtained after alignment}
 
 \item{foldChange}{Multiplier used for the median blanks. If the Area of
-a sample is lower than this threshold, it counts towards the `nSamples`
+a sample is lower than this threshold, it counts towards the \code{nSamples}
 threshold. (Defaults to 5).}
 
-\item{removeBlanks}{Should samples of the type `BLANK` be removed after the
-filter is applied? Defaults to `TRUE`.}
+\item{removeBlanks}{Should samples of the type \code{BLANK} be removed after the
+filter is applied? Defaults to \code{TRUE}.}
 
 \item{sampleThresh}{Number of samples are allowed to be lower than the
-median blank area times the number given for `foldChange`. Defaults to `Inf`,
+median blank area times the number given for \code{foldChange}. Defaults to \code{Inf},
 meaning that no compounds will be removed unless changed.}
 }
 \description{

@@ -7,11 +7,19 @@
 loadExperiment(path)
 }
 \arguments{
-\item{path}{Character path to the location where the RDS file is stored.}
+\item{path}{Character path to the location where the RDS file will be stored.}
+}
+\value{
+A SummarizedExperiment that was saved during a previous run.
 }
 \description{
 SummarizedExperiments can be saved during any step after
-alignment using the `saveExperiment` function. This function reads the
+alignment using the \code{saveExperiment} function. This function reads the
 resulting RDS file that saveExperiment produces. This allows for saving
 work and continuing it later.
+}
+\details{
+This function (together with \code{saveExperiment}) aids in
+loading/storing experiments at different post-processing stages. It can also
+be shared across users.
 }

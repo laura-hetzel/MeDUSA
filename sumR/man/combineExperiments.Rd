@@ -2,13 +2,28 @@
 % Please edit documentation in R/utils.R
 \name{combineExperiments}
 \alias{combineExperiments}
-\title{Combine SummarizedExperiments by row}
+\title{Combine SummarizedExperiments by row(s)}
 \usage{
 combineExperiments(exps)
 }
 \arguments{
 \item{exps}{A list of SummarizedExperiments to be combined}
 }
+\value{
+A SummarizedExperiment if the experiments supplied are valid.
+Otherwise the list of objects is returned.
+}
 \description{
-Combine SummarizedExperiments by row
+This function intersects 2 or more SummarizedExperiments into
+a single object. This can be used to combine positive and negative polarity
+into one SummarizedExperiment.
+}
+\details{
+While in an experiment, often both polarities are measured, each
+polarity must be analyzed separately. This ensures that peaks aren't aligned
+across polarities. However, before modelling, the polarities should be
+combined in order to find the combination of peaks that are able to
+separate phenotypes. This function can bind two polarities that use the
+same samples together. This acts similarly as \link[base:cbind]{base::rbind}, by binding the
+\link{rowData} and \link{assay}s of the \link{SummarizedExperiment}.
 }

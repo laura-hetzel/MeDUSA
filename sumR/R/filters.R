@@ -23,78 +23,17 @@ blankSubstraction <- function(exp, foldChange = 5, nSamples = Inf,
   filterCells(exp)
 }
 
-#' @title MD filter
-#' @description filters data based on Mass Defect
-#' @param dataframe is the dataframe on which KM calculations need to be
-#' conducted
-#' @param mz_col is the mass to charge column within the specified dataframe
-#' @param a is the coefficient of the linear equation used for data filtering
-#' @param b is the addition value of the linear equation used for data
-#' filtering, both a and b can be calculated using the linear_equation()
-#' function included in this package.
-#' @importFrom dplyr filter %>% mutate select
-#' @import ggplot2
-#' @export
-MD_filter <- function(dataframe, mz_col, a = 0.00112, b = 0.01953) {
-  ## Solves problem of customizable lin. eq as well: In case HMDB updates data
-  ## In-function MD calculation
-  dataframe$MZ <- mz_col
-  ## Either floor() or trunc() can be used for this part.
-  MZR <- trunc(mz_col, digits = 0)
-  dataframe$MD <- MZ - MZR
-  dataframe$MD.limit <- b + a * mz_col
-
-
-  # dataframe <- dataframe %>%
-  #   dplyr::mutate(MD, MZ, MD.limit) %>%
-  #   dplyr::select(MD, MZ, MD.limit)
-
-  ## This approach uses the linear equation to create an additional column and
-  ## based on this column, we will be filtering out data.
-
-  ## Below are in total 3 different plots: 1 of the starting dataframe, the
-  ## second of the filtered dataframe the third is basically added to the first,
-  ## in order to highlight the "to be removed" datapoints as a means of tagging
-  ## them prior to removal.
-
-
-  ## Notice how this is the exact opposite from the "filtered" dataframe below.
-  ## This one filters everything ABOVE the limit, as everything below will be
-  ## kept and we want those datapoints which will be removed, highlighted.
-  ## Not those which will remain.
-  highlight_df <- dataframe %>% filter(MD >= MD.limit)
-
-  ## DO the same for inlcusion list of HMDB, We need to make: 1, Linear eq. 2,
-  ## inclusion list plot 3, metaboshiny. 4, R package.
-
-  MD_plot <- ggplot(data = dataframe, aes(x = MZ, y = MD)) +
-    geom_point() +
-    geom_point(data = highlight_df, aes(x = MZ, y = MD), color = "red") + # I added this one, so the data which will be removed will be highlighted in red.
-    ggtitle(paste("Unfiltered MD data")) # deparse(substitute(dataframe)) if you want to add the dataframe name, acc to St. Ovflw
-  # stat_smooth(method="lm", se=FALSE)-> For linear line through the plot, but may not be necessary to show
-
-
-  # Creating a filtered dataframe:
-  filtered <- dataframe %>%
-    filter(MD <= MD.limit) # As I understood: Basically all are coordinates. The maxima equation basically gives coordinates
-  # for the m/z values (x and MD = y). If it exceeds the equivalent coordinate of Y (which is MD) for the linear equation, it will be filtered.
-
-  MD_plot_2 <- ggplot(data = filtered, aes(x = MZ, y = MD)) + # Filtered is basically the second dataframe, #which subsets datapoints with an Y value (which is the MD), below the linear equation MD...
-    geom_point() +
-    ggtitle(paste("Filtered MD data"))
-  # stat_smooth(method="lm", se=FALSE) -> For linear line through the plot, but may not be necessary to show
-  N_Removed_datapoints <- nrow(dataframe) - nrow(filtered) # To determine the number of peaks removed
-  print(paste("Number of peaks removed:", N_Removed_datapoints))
-  MD_PLOTS <- list(
-    preMD_df = dataframe,
-    postMD_df = filtered,
-    preMD_plot = MD_plot,
-    postMD_plot = MD_plot_2
-  )
-  return(MD_PLOTS)
-}
-
-#' Filter cells without measurements
+#' @title Filter cells without measurements (only containing NA values)
+#' @description Not all cells will contain the same peaks after alignment. For
+#' peaks that are not found in cells, an `NA` value is used instead. This
+#' function checks if the entire cell does not only contain NAs and remove
+#' them if so.
+#' @details During post-processing, several filters may be applied to remove
+#' either compounds or peaks to reduce false positive hits. In some cases,
+#' cells with few peaks may not contain any peaks at all. This function
+#' helps in detecting and removing such cells.
+#' @param exp SummarizedExperiment object obtained after alignment
+#' @param assay The assay to be checked. Defaults to the assay at index 1
 #' @export
 filterCells <- function(exp, assay = 1) {
   if (!validateExperiment(exp)) return(NULL)
@@ -102,6 +41,15 @@ filterCells <- function(exp, assay = 1) {
 }
 
 #' @title Filter scans based on Biomarkers like oil or solvent
+#' @description This function can be used to extract data obtained from the
+#' "slug" method that is currently in development. It will extract all scans
+#' after the first mass with intensity > threshold is found and stop when that
+#' same mass is found again.
+#' @details The "slug" method results in a total ion chromatogram consisting
+#' of three parts. The first and last part contain ionization solvent at
+#' higher concentrations than the second part, which contains the cell
+#' measurement. By extracting this middle part from the total ion chromatogram,
+#' the only remaining part is the cell with measurements of interest.
 #' @param fileList List of centroided peaks obtained from `extractPeaks()`
 #' @param mass Biomarker mass to use as identification in the solvent
 #' @param intensity Intensity value that is expected in the solvent
@@ -126,16 +74,28 @@ filterScansByBiomarker <- function(fileList, mass, intensity = 1e5, ppm = 20){
     })
 }
 
-#' @title filter spectra
-#' @export
-spectraFilter <- function(spectra, npeaks = 0, intensity = 0, SNR = 0){
-  res <- lapply(spectra, function(x) x[x$SNR >= SNR & x$i >= intensity & x$npeaks >= npeaks, ])
-  attributes(res) <- attributes(spectra)
-  res
-}
-
-
-#' @title Fragment Filter
+#' @title Identify and remove fragments from aligned peaks
+#' @description This function finds correlation based on intensities given
+#' in the assay. Peaks that have a higher correlation than the value
+#' given in `corr` will be considered fragments and are removed.
+#' @details Fragments occur in mass spectrometry quite often. Since these
+#' fragments originate from the same compound / metabolite, the resulting
+#' intensities are expected to be very similar. By using either `spearman` or
+#' `pearson` correlation, the correlation between peaks can be calculated
+#' and be removed.
+#'
+#' If a lot of values were originally missing, it is recommended to use
+#' spearman correlation instead of pearson correlation as the latter tends to
+#' give higher correlation values. Spearman correlation uses ranked based
+#' correlation and has shown to give more accurate correlation values when
+#' many values are imputed.
+#' @param exp SummarizedExperiment object obtained after alignment
+#' @param assay Name or index of the assay to use. Defaults to the first
+#' assay (index 1)
+#' @param method One of either "spearman" or "pearson". It is used as method
+#' in the stats `cor` function.
+#' @param corr Minimum correlation for peaks to be considered fragments.
+#' Defaults to 0.95
 #' @importFrom stats cor
 #' @export
 fragmentFilter <- function(exp, assay = 1, method = "spearman", corr = 0.95){
@@ -145,23 +105,37 @@ fragmentFilter <- function(exp, assay = 1, method = "spearman", corr = 0.95){
   exp[max_corr < corr, ]
 }
 
-#' @title Feature filter
+#' @title Remove grouped peaks (features) per phenotype
+#' @param exp SummarizedExperiment obtained after alignment
+#' @param assay Assay to be used, defaults to the assay at index 1
+#' @param nCells Minimum number of cells a feature should be found in. Defaults
+#' to 0, meaning all features are kept.
+#' @param fCells Similar to `nCells` but for fractions instead. Can be used
+#' to remove features that are found in less than half of the cells. Defaults
+#' to 0, meaning all features are kept.
 #' @export
-featureFilter <- function(exp, assay = "Area", nCells = 0, pCells = 0){
+featureFilter <- function(exp, assay = 1, nCells = 0, fCells = 0){
   if (!validateExperiment(exp)) return(NULL)
-  to_take <- do.call(intersect, lapply(unique(exp$phenotype), function(split){
+
+  to_take <- do.call(intersect, lapply(unique(metadata(exp)$phenotype),
+                                       function(split){
     sub <- exp[, exp$phenotype == split]
     nFeats <- as.double(apply(assay(sub, assay), 1, function(x) sum(!is.na(x))))
     pFeats <- nFeats / ncol(sub)
-    which(nFeats >= nCells & pFeats >= pCells)
+    which(nFeats >= nCells & pFeats >= fCells)
   }))
   exp[to_take, ]
 }
 
-#' @title Keep the most variable features
-#' @param exp
-#' @param assay
-#' @param top
+#' @title Keep the most variable features based on Levene Test
+#' @description This function removes features that have similar features
+#' across the given phenotypes and calculated by the function `leveneTest`.
+#' @details When interested in which peaks are significantly different between
+#' groups in the given phenotypes, the leveneTest can be used. Here, only
+#' features are kept where the variance between the groups is significantly
+#' different. This greatly reduces the dataset with often only a few compounds
+#' remaining.
+#' @param exp SummarizedExperiment object after alignment and leveneTest
 #' @export
 keepVariableFeatures <- function(exp){
   if (!validateExperiment(exp)) return(NULL)

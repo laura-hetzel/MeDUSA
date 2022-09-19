@@ -9,8 +9,8 @@ addSampleBlankRatio(exp, assay = 1, typeColumn = "Type")
 \arguments{
 \item{exp}{SummarizedExperiment Object}
 
-\item{typeColumn}{Name of the column in `colData(exp)` that represents
-the sample type and contains at least the values `SAMPLE` and `BLANK`.}
+\item{typeColumn}{Name of the column in \code{colData(exp)} that represents
+the sample type and contains at least the values \code{SAMPLE} and \code{BLANK}.}
 }
 \description{
 Add the Sample/Blank ratio for each compound

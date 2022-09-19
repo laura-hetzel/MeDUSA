@@ -7,9 +7,9 @@
 plot_mz_MD(MD_df, MD_df_filtered)
 }
 \arguments{
-\item{MD_df}{data frame obtained from the experimental data using `mass_defect_calculation`}
+\item{MD_df}{data frame obtained from the experimental data using \code{mass_defect_calculation}}
 
-\item{MD_df_filtered}{data frame obtained from the experimental data using `MD_filter`}
+\item{MD_df_filtered}{data frame obtained from the experimental data using \code{MD_filter}}
 }
 \description{
 Plotting of the filtered data - m/z vs. MD

@@ -12,7 +12,7 @@ check_binning(
 )
 }
 \arguments{
-\item{aligned_peaks}{dataframe obtained from `iteration`}
+\item{aligned_peaks}{dataframe obtained from \code{iteration}}
 
 \item{summary_errors}{(optional)logical value obtained from
 user input, per default set to FALSE}

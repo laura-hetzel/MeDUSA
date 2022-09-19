@@ -11,17 +11,6 @@ spectrumPlot <- function(peaks, file = 1, scan = 1){
     geom_segment(aes(x = .data$mz, y = 0, yend = .data$i, xend = .data$mz))
 }
 
-#' @title noisePlot over all spectra
-#' @param peaks List of datafres with peak picked data
-#' @param file File number of the files that were used.
-#' @export
-noisePlot <- function(peaks, file = 1){
-  result <- dplyr::distinct(peaks[[file]][,c("scan", "Noise")])
-  ggplot(result, aes(x = scan, y = Noise)) +
-    geom_line() +
-    ggplot2::scale_y_log10()
-}
-
 
 #' @title plotCellPeaks
 #' @param peaks List of datafres with peak picked data

@@ -7,7 +7,7 @@
 ppm_err_plot(ppm_err_fn)
 }
 \arguments{
-\item{ppm_err_fn}{dataframe obtained from `align_check`}
+\item{ppm_err_fn}{dataframe obtained from \code{align_check}}
 }
 \description{
 Boxplot of the ppm errors

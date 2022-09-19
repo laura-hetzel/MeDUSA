@@ -68,12 +68,11 @@ extractPeaks <- function(files, cores = 1, ...){
 #' @importFrom pbapply pboptions
 #' @importFrom mzR openMSfile header peaks
 #' @inherit doCentroid details
-#' @export
 parseFile <- function(file, massWindow = c(0, Inf), polarity = "-",
                       combineSpectra = FALSE, cl = NULL) {
   if (!is.null(cl)) {
-    pbo <- pbapply::pboptions(type = "none")
-    on.exit(pbapply::pboptions(pbo), add = TRUE)
+    pbo <- pboptions(type = "none")
+    on.exit(pboptions(pbo), add = TRUE)
   }
   file <- file.path(file)
 
@@ -81,6 +80,7 @@ parseFile <- function(file, massWindow = c(0, Inf), polarity = "-",
     warning(sprintf("Cannot find file %s", file))
     return(NULL)
   }
+
   z <- openMSfile(file)
   df <- header(z)
 
@@ -102,8 +102,6 @@ parseFile <- function(file, massWindow = c(0, Inf), polarity = "-",
   attr(l, "rt") <- df$retentionTime
   attr(l, "scanranges") <- unique(df$scanWindowLowerLimit)
   attr(l, "Datetime") <- mzR::runInfo(z)$startTimeStamp
-
-  # Add the scanranges as attributes for fPeaks during alignment
   l
 }
 
@@ -139,7 +137,7 @@ doCentroid <- function(peaks, rts, scans = seq_len(length(x)),
       centroid(do.call(rbind, peaks[z]))
     })
   } else {
-    l <- pbapply::pblapply(peaks[scans], cl = cl, centroid)
+    l <- pblapply(peaks[scans], cl = cl, centroid)
   }
   formatSpectra(l, rts[scans])
 }

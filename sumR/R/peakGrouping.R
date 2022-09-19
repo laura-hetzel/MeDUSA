@@ -35,8 +35,7 @@ doBinning <- function(spectra, split = "scan", ppm = 5) {
   samples <- samples[s$ix]
   rts <- rts[s$ix]
 
-
-  mass2 <- binning(
+  ids <- binning(
     mass = mass, intensities = intensities,
     samples = samples, tolerance = tolerance
   )
@@ -46,17 +45,18 @@ doBinning <- function(spectra, split = "scan", ppm = 5) {
     rt = rts,
     intensities = intensities,
     samples = samples,
-    peakIdx = as.integer(as.factor(mass2)),
+    peakIdx = as.integer(as.factor(ids)),
     order = s$ix
   )
 }
 
 #' @title Bin spectra with similar mass ranges
+#' @description
+#' @returns DataFrame object from S4Vectors containing aligned spectra
 #' @param spectraList List of spectra to be binned
 #' @param ppm How much can masses deviate from the mean of the bin?
 #' Defaults to 5 ppm
 #' @inherit doBinning details
-#' @returns DataFrame object from S4Vectors containing aligned spectra
 #' @importFrom pbapply pblapply
 #' @export
 spectraBinning <- function(spectraList, ppm = 5) {

@@ -10,7 +10,7 @@ doBinning(spectra, split = "scan", ppm = 5)
 \item{spectra}{a data.frame or list of data.frames containing centroided
 spectra.}
 
-\item{split}{In case of a data.frame in `spectra`, which column should
+\item{split}{In case of a data.frame in \code{spectra}, which column should
 be used to indicate different scans on which the alignment should occur?
 Defaults to "scan"}
 

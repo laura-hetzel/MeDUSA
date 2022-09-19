@@ -7,7 +7,7 @@
 make_filter_list(filter_df)
 }
 \arguments{
-\item{filter_df}{obtained from the HMDB using `mass_defect_calculation`}
+\item{filter_df}{obtained from the HMDB using \code{mass_defect_calculation}}
 }
 \description{
 the theoretical maximum MD of human metabolites

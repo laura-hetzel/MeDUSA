@@ -14,7 +14,7 @@ pheatmapPlot(exp, assay = 1, columns = NULL, rows = NULL, ...)
 \item{columns}{Vector of column names from the colData to use as
 groups in the heatmap}
 
-\item{...}{Any other parameters submitted to the `pheatmap` function}
+\item{...}{Any other parameters submitted to the \code{pheatmap} function}
 }
 \description{
 Heatmap with colData groups

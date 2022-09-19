@@ -23,17 +23,17 @@ to c(0, Inf) indicating that all mass-windows should be taken into account}
 (positive) indicating the polarity to be used. Defaults to "-"}
 
 \item{combineSpectra}{Boolean value, should scans of different masswindows
-be combined into a full-range scan before centroiding? Defaults to `FALSE`}
+be combined into a full-range scan before centroiding? Defaults to \code{FALSE}}
 }
 \value{
-data.frame of centroided peaks with the columns `scan`, `mz`, `i`
-and `Noise`. It also stores the used parameters as attributes of the
+data.frame of centroided peaks with the columns \code{scan}, \code{mz}, \code{i}
+and \code{Noise}. It also stores the used parameters as attributes of the
 data.frame
 }
 \description{
 Centroiding is a vital part of a typical metabolomics workflow.
 This function centroids a given mzML file and returns a dataframe of
-centroided peaks. See `doCentroid` for more information about centroiding.
+centroided peaks. See \code{doCentroid} for more information about centroiding.
 }
 \details{
 Centroiding is a major part of a typical metabolomics pipeline.

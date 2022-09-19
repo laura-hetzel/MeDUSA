@@ -2,10 +2,21 @@
 % Please edit documentation in R/filters.R
 \name{keepVariableFeatures}
 \alias{keepVariableFeatures}
-\title{Keep the most variable features}
+\title{Keep the most variable features based on Levene Test}
 \usage{
 keepVariableFeatures(exp)
 }
+\arguments{
+\item{exp}{SummarizedExperiment object after alignment and leveneTest}
+}
 \description{
-Keep the most variable features
+This function removes features that have similar features
+across the given phenotypes and calculated by the function \code{leveneTest}.
+}
+\details{
+When interested in which peaks are significantly different between
+groups in the given phenotypes, the leveneTest can be used. Here, only
+features are kept where the variance between the groups is significantly
+different. This greatly reduces the dataset with often only a few compounds
+remaining.
 }

@@ -7,9 +7,9 @@
 ppm_calc(mass1, mass2)
 }
 \arguments{
-\item{mass1}{input from the `align_check` functions}
+\item{mass1}{input from the \code{align_check} functions}
 
-\item{mass2}{input from the `align_check` functions}
+\item{mass2}{input from the \code{align_check} functions}
 }
 \description{
 ppm_calc calculates the parts per million

@@ -2,10 +2,22 @@
 % Please edit documentation in R/filters.R
 \name{featureFilter}
 \alias{featureFilter}
-\title{Feature filter}
+\title{Remove grouped peaks (features) per phenotype}
 \usage{
-featureFilter(exp, assay = "Area", nCells = 0, pCells = 0)
+featureFilter(exp, assay = 1, nCells = 0, fCells = 0)
+}
+\arguments{
+\item{exp}{SummarizedExperiment obtained after alignment}
+
+\item{assay}{Assay to be used, defaults to the assay at index 1}
+
+\item{nCells}{Minimum number of cells a feature should be found in. Defaults
+to 0, meaning all features are kept.}
+
+\item{fCells}{Similar to \code{nCells} but for fractions instead. Can be used
+to remove features that are found in less than half of the cells. Defaults
+to 0, meaning all features are kept.}
 }
 \description{
-Feature filter
+Remove grouped peaks (features) per phenotype
 }

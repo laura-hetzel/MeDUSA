@@ -13,5 +13,5 @@ ROC_plot(roc, auc)
 }
 \description{
 plotting ROC curves for any choosen model (final (rocfinal and aucfinal) or
-from cross validation model(sepcifiy model number roc_all[[1]] and auc_all[[1]]))
+from cross validation model(sepcifiy model number roc_all[\link{1}] and auc_all[\link{1}]))
 }

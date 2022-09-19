@@ -22,12 +22,12 @@ to c(0, Inf) indicating that all mass-windows should be taken into account}
     \item{\code{polarity}}{A single character of either "-" (negative) or "+"
 (positive) indicating the polarity to be used. Defaults to "-"}
     \item{\code{combineSpectra}}{Boolean value, should scans of different masswindows
-be combined into a full-range scan before centroiding? Defaults to `FALSE`}
+be combined into a full-range scan before centroiding? Defaults to \code{FALSE}}
   }}
 }
 \value{
-A list of data.frames, each obtained from `parseFile`. The names
-of the list are set to the basename of each file provided in `files`
+A list of data.frames, each obtained from \code{parseFile}. The names
+of the list are set to the basename of each file provided in \code{files}
 }
 \description{
 Extract centroided peaks from mzML files

@@ -8,7 +8,7 @@ align_check(aligned_peaks)
 }
 \arguments{
 \item{aligned_peaks}{dataframe of aligned peaks
-obtained from `iteration`}
+obtained from \code{iteration}}
 }
 \description{
 uses the ppm_calc function to check
