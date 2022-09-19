@@ -9,6 +9,20 @@ models(exp)
 \arguments{
 \item{exp}{SummarizedExperiment object}
 }
+\value{
+Character vector of the names of models created with
+\link{generateModel}.
+}
 \description{
-Get names of models in Experiment
+After modelling, the results are stored in the \link{metadata} slot
+as a list with name \code{model}. However, multiple models can be made and stored
+this way. This function returns the names of models that have been created.
+}
+\details{
+The \code{model} name is a reserved name in sumR, as all models are
+stored in a list with the name \code{model}. Created models and their results like
+cross-validation and variable importances are stored in a sub-list of
+\code{model}. These can be accessed with the \link{model} function, which requires
+a model name or index. This function aids in this process by returning the
+names of all models that have been created with \link{generateModel}.
 }

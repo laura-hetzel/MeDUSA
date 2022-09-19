@@ -1,3 +1,8 @@
+# sumR 0.5.1
+- Added lots of documentation
+- Added example data
+- Moved some functions and refactored some code
+
 # sumR 0.5.0
 * Added rt and ppm info of peaks after alignment
 * Added support for the 'slug-method' using a biomarker and threshold

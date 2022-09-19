@@ -7,7 +7,7 @@
 cellBinning(spectra, ppm = 5)
 }
 \arguments{
-\item{spectraList}{List of spectra}
+\item{spectra}{DataFrame of spectra}
 }
 \description{
 Bin cells

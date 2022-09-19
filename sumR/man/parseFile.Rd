@@ -26,8 +26,8 @@ to c(0, Inf) indicating that all mass-windows should be taken into account}
 be combined into a full-range scan before centroiding? Defaults to \code{FALSE}}
 }
 \value{
-data.frame of centroided peaks with the columns \code{scan}, \code{mz}, \code{i}
-and \code{Noise}. It also stores the used parameters as attributes of the
+data.frame of centroided peaks with the columns \code{scan}, \code{rt},
+\code{mz}, and \code{i}. It also stores the used parameters as attributes of the
 data.frame
 }
 \description{

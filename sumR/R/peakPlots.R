@@ -47,7 +47,7 @@ spectraShiftPlot <- function(spectra, cell = 1){
 #' @param exp
 #' @export
 cellShiftPlot <- function(exp) {
-  if (!validateExperiment(exp, checkColData = F)) return(NULL)
+  if (!validateExperiment(exp)) return(NULL)
 
   df <- as.data.frame(rowData(exp))
   df$mzmin <- df$mzmin - df$mz

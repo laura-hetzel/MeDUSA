@@ -12,5 +12,8 @@ model(exp, modelName = 1)
 \item{modelName}{Name of the model to retrieve}
 }
 \description{
-Get model in Experiment
+After modelling, the results are stored in the \link{metadata} slot
+as a list with name \code{model}. However, multiple models can be made and stored
+this way. This function returns the model information of the given model,
+either by index or name of the model used.
 }

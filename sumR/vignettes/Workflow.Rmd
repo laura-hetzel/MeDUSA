@@ -33,7 +33,7 @@ exp2 <- extractPeaks(files, polarity = "-", cores = 8) %>%
 
 # Post-processing
 exp2 <- exp2 %>%
-  blankSubstraction(blankThresh = 5, nSamples = 10, removeBlanks = TRUE) %>%
+  blankSubstraction(foldChange = 5, nSamples = 10, removeBlanks = TRUE) %>%
   massDefectFilter() %>%
   imputation(method = "noise", noise = 100, seed = 42) %>%
   isotopeTagging(corr = 0.8) %>%

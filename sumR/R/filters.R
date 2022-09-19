@@ -1,4 +1,7 @@
 #' @title Substract Blanks from SummarizedExperiment
+#' @description
+#' @details
+#' @returns
 #' @param exp SummarizedExperiment obtained after alignment
 #' @param foldChange Multiplier used for the median blanks. If the Area of
 #' a sample is lower than this threshold, it counts towards the `nSamples`
@@ -9,6 +12,7 @@
 #' @param removeBlanks Should samples of the type `BLANK` be removed after the
 #' filter is applied? Defaults to `TRUE`.
 #' @export
+#' @examples
 blankSubstraction <- function(exp, foldChange = 5, nSamples = Inf,
                               removeBlanks = TRUE){
   if (!validateExperiment(exp)) return(exp)
@@ -32,9 +36,11 @@ blankSubstraction <- function(exp, foldChange = 5, nSamples = Inf,
 #' either compounds or peaks to reduce false positive hits. In some cases,
 #' cells with few peaks may not contain any peaks at all. This function
 #' helps in detecting and removing such cells.
+#' @returns
 #' @param exp SummarizedExperiment object obtained after alignment
 #' @param assay The assay to be checked. Defaults to the assay at index 1
 #' @export
+#' @examples
 filterCells <- function(exp, assay = 1) {
   if (!validateExperiment(exp)) return(NULL)
   exp[, colSums(is.na(assay(exp, assay))) != nrow(exp)]
@@ -55,6 +61,7 @@ filterCells <- function(exp, assay = 1) {
 #' @param intensity Intensity value that is expected in the solvent
 #' @param ppm Mass error for the biomarker. Defaults to 20
 #' @export
+#' @examples
 filterScansByBiomarker <- function(fileList, mass, intensity = 1e5, ppm = 20){
     minMass <- mass - mass * 1e-6 * ppm
     maxMass <- mass + mass * 1e-6 * ppm
@@ -89,6 +96,7 @@ filterScansByBiomarker <- function(fileList, mass, intensity = 1e5, ppm = 20){
 #' give higher correlation values. Spearman correlation uses ranked based
 #' correlation and has shown to give more accurate correlation values when
 #' many values are imputed.
+#' @returns
 #' @param exp SummarizedExperiment object obtained after alignment
 #' @param assay Name or index of the assay to use. Defaults to the first
 #' assay (index 1)
@@ -98,6 +106,7 @@ filterScansByBiomarker <- function(fileList, mass, intensity = 1e5, ppm = 20){
 #' Defaults to 0.95
 #' @importFrom stats cor
 #' @export
+#' @examples
 fragmentFilter <- function(exp, assay = 1, method = "spearman", corr = 0.95){
   if (!validateExperiment(exp)) return(NULL)
   corrs <- cor(t(assay(exp, assay)), method = method)
@@ -106,6 +115,9 @@ fragmentFilter <- function(exp, assay = 1, method = "spearman", corr = 0.95){
 }
 
 #' @title Remove grouped peaks (features) per phenotype
+#' @description
+#' @details
+#' @returns
 #' @param exp SummarizedExperiment obtained after alignment
 #' @param assay Assay to be used, defaults to the assay at index 1
 #' @param nCells Minimum number of cells a feature should be found in. Defaults
@@ -114,6 +126,7 @@ fragmentFilter <- function(exp, assay = 1, method = "spearman", corr = 0.95){
 #' to remove features that are found in less than half of the cells. Defaults
 #' to 0, meaning all features are kept.
 #' @export
+#' @examples
 featureFilter <- function(exp, assay = 1, nCells = 0, fCells = 0){
   if (!validateExperiment(exp)) return(NULL)
 
@@ -135,8 +148,10 @@ featureFilter <- function(exp, assay = 1, nCells = 0, fCells = 0){
 #' features are kept where the variance between the groups is significantly
 #' different. This greatly reduces the dataset with often only a few compounds
 #' remaining.
+#' @returns
 #' @param exp SummarizedExperiment object after alignment and leveneTest
 #' @export
+#' @examples
 keepVariableFeatures <- function(exp){
   if (!validateExperiment(exp)) return(NULL)
   if (!"leveneTest" %in% colnames(rowData(exp))) {

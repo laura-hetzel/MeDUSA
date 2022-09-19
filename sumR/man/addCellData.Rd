@@ -2,15 +2,45 @@
 % Please edit documentation in R/metadata.R
 \name{addCellData}
 \alias{addCellData}
-\title{Add sample data to the experiment}
+\title{Add cell/sample metadata to the SummarizedExperiment object}
 \usage{
 addCellData(exp, data = NULL)
 }
 \arguments{
-\item{exp}{SummarizedExperiment object}
+\item{exp}{SummarizedExperiment object obtained after alignment.}
 
 \item{data}{Dataframe with samplenames as rows}
 }
+\value{
+SummarizedExperiment with an updated \link{colData} slot.
+}
 \description{
-Add sample data to the experiment
+This function adds the given metadata in \code{data} to the
+\link{colData} slot of the SummarizedExperiment \code{exp}.
+}
+\details{
+Metadata about cells/samples is vital for post-processing. For
+each cell, its type (SAMPLE, BLANK) must be specified in the column \code{Type}
+in order to perform blank filtering. Another column specifiying the
+phenotype of a cell must also be present for statistics and/or modelling. By
+default, the \code{Datetime} of the sample is extracted from the mzML data using
+the \link{extractPeaks} function. The cellData can also be visualized with
+various plots implented in sumR, e.g. \link{pheatmapPlot}.
+
+After setting the cellData, the results can be seen in the \link{colData} slot
+of the SummarizedExperiment.
+}
+\examples{
+# Read data
+data("sumRnegative")
+
+# Read the cellData
+cellData <- read.csv(system.file("cellData.csv", package = "sumR"),
+                     sep = ",", row.names = 1)
+
+# Add the cellData
+sumRnegative <- addCellData(sumRnegative, cellData)
+
+# Show the colData
+colData(sumRnegative)
 }

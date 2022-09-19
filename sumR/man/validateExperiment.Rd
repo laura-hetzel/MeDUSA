@@ -4,11 +4,33 @@
 \alias{validateExperiment}
 \title{Validate a sumR Experiment on rows, columns and assays}
 \usage{
-validateExperiment(exp, checkColData = T)
+validateExperiment(exp)
 }
 \arguments{
 \item{exp}{SummarizedExperiment obtained after alignment}
 }
+\value{
+A boolean value, TRUE for a valid experiment, FALSE otherwise.
+}
 \description{
-Validate a sumR Experiment on rows, columns and assays
+This function validates if the SummarizedExperiment is suitable
+to be used by sumR. While mostly an internal function, it can be used to
+confirm no changes have been made that would break the sumR workflow.
+}
+\details{
+This function checks the following:
+\itemize{
+\item Is the object of class SummarizedExperiment with at least 1 row and column.
+\item Does the experiment contain the assay "Area"
+\item Does the rowData contain the columns "mz" and "rt"
+\item Does the colData contain the column "Datetime"
+}
+
+This function will throw a warning if the experiment is invalid.
+}
+\examples{
+# Read data
+data("sumRnegative")
+
+validateExperiment(sumRnegative)
 }

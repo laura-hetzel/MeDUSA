@@ -7,11 +7,39 @@
 setPhenotype(exp, phenotype)
 }
 \arguments{
-\item{exp}{SummarizedExperiment obtained after alignment}
+\item{exp}{SummarizedExperiment object obtained after alignment}
 
 \item{phenotype}{Character vector specifying the column in colData to
 be used as phenotype}
 }
+\value{
+Updated SummarizedExperiment with the phenotype slot changed to
+the supplied phenotype.
+}
 \description{
-Set the phenotype column of a sumR Experiment
+This function sets the value of \code{metadata(exp)$phenotype} in
+sumR Experiment object after validation.
+}
+\details{
+The \code{phenotype} slot is used during post-processing, statistics,
+and modelling to determine the groups of the \link{colData}. This allows for easy
+processing by setting the phenotype column once. However, in cases of
+multiple phenotypes present, switching the default phenotype may be a valid
+strategy. This function aids in doing so by checking if A) the supplied
+experiment is valid, B) the given phenotype is present as a column in
+\link{colData}, and C) Return the updated experiment.
+}
+\examples{
+# Read data
+data("sumRnegative")
+
+# Read the cellData
+cellData <- read.csv(system.file("cellData.csv", package = "sumR"),
+                     sep = ",", row.names = 1)
+
+# Add the cellData
+sumRnegative <- addCellData(sumRnegative, cellData)
+
+# Set the phenotype
+sumRnegative <- setPhenotype(sumRnegative, "Treatment")
 }

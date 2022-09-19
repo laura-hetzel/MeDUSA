@@ -10,9 +10,12 @@
 #' @param x function to be executed
 #' @noRd
 quiet <- function(x) {
-  sink(tempfile())
-  on.exit(sink())
-  invisible(force(x))
+  suppressWarnings({
+    sink(tempfile())
+    on.exit(sink())
+    invisible(force(x))
+  })
+
 }
 
 #' @title Load a sumR Experiment from a file

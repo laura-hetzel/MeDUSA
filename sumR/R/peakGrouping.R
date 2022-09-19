@@ -50,7 +50,7 @@ doBinning <- function(spectra, split = "scan", ppm = 5) {
   )
 }
 
-#' @title Bin spectra with similar mass ranges
+#' @title Bin spectra with similar masses
 #' @description
 #' @returns DataFrame object from S4Vectors containing aligned spectra
 #' @param spectraList List of spectra to be binned
@@ -119,7 +119,15 @@ spectraClustering <- function(spectraList, ppm = 5){
 }
 
 #' @title Group spectra
+#' @description
+#' @details
+#' @returns
+#' @param peaks
+#' @param method
+#' @param ppm
+#' @param nPeaks
 #' @export
+#' @examples
 spectraAlignment <- function(peaks, method = "binning", ppm = 5, nPeaks = 0){
   if (!validatePeaks(peaks)) {
     warning("Invalid peakList object")
@@ -138,8 +146,18 @@ spectraAlignment <- function(peaks, method = "binning", ppm = 5, nPeaks = 0){
 
 
 #' @title Group cells into SE
+#' @description
+#' @details
+#' @returns
+#' @param spectraDf
+#' @param method
+#' @param ppm
+#' @param nCells
+#' @param cellData
+#' @param phenotype
 #' @importFrom lubridate as_datetime
 #' @export
+#' @examples
 cellAlignment <- function(spectraDf, method = "binning", ppm = 5, nCells = 0,
                           cellData = NULL, phenotype = NULL){
 
@@ -160,7 +178,7 @@ cellAlignment <- function(spectraDf, method = "binning", ppm = 5, nCells = 0,
 
   if (!is.null(cellData)) cells <- addCellData(cells, cellData)
 
-  datetime <- data.frame(Datetime = do.call(rbind, attr(spectra, "Datetime")))
+  datetime <- data.frame(Datetime = do.call(rbind, attr(spectraDf, "Datetime")))
   datetime <- datetime[order(rownames(datetime)), , drop = FALSE]
   cells <- cells[, order(colnames(cells))]
 
@@ -172,21 +190,35 @@ cellAlignment <- function(spectraDf, method = "binning", ppm = 5, nCells = 0,
   cells
 }
 
-
+#' @title Combine spectra into cells
+#' @description
+#' @details
+#' @returns
+#' @param cells
 prepareCells <- function(cells){
   non_nulls <- !vapply(cells, is.null, logical(1))
   cells <- cells[non_nulls]
 
-  df <- data.frame(sample = rep(names(cells), sapply(cells, nrow)), do.call(rbind, cells))
+  df <- data.frame(sample = rep(names(cells), sapply(cells, nrow)),
+                   do.call(rbind, cells))
   if (nrow(df) == 0) return(NULL)
   DataFrame(df)
 }
 
+#' @title Construct a SummarizedExperiment from aligned spectra
+#' @description
+#' @details
+#' @returns
+#' @param res
+#' @param spectra
+#' @importFrom S4Vectors DataFrame
+#' @importFrom tidyr pivot_wider
+#' @importFrom SummarizedExperiment SummarizedExperiment
 constructSE <- function(res, spectra){
 
   spectra$group <- as.integer(as.factor(rep( names(res$npeaks), res$npeaks)))
   df <- as.data.frame(spectra[, c("sample", "i", "group")])
-  intensity <- as.matrix(DataFrame(tidyr::pivot_wider(df, names_from = "sample",
+  intensity <- as.matrix(DataFrame(pivot_wider(df, names_from = "sample",
                                                       values_from = "i")[,-1]))
 
   dimnames(intensity) <- list(1:nrow(intensity), unique(df$sample))
@@ -202,10 +234,14 @@ constructSE <- function(res, spectra){
 }
 
 #' @title Bin cells
-#' @param spectraList List of spectra
-#' @param tolerance
+#' @description
+#' @details
+#' @returns
+#' @param spectra DataFrame of spectra
+#' @param ppm
 #' @importFrom SummarizedExperiment SummarizedExperiment
 #' @export
+#' @examples
 cellBinning <- function(spectra, ppm = 5) {
   df <- doBinning(as.data.frame(spectra), split = "sample", ppm = ppm)
   rownames(df) <- 1:nrow(df)
@@ -229,6 +265,13 @@ cellBinning <- function(spectra, ppm = 5) {
   return(constructSE(res, spectra))
 }
 
+#' @title Cluster cells together
+#' @description
+#' @details
+#' @returns
+#' @param spectra
+#' @param ppm
+#' @importFrom S4Vectors DataFrame
 cellClustering <- function(spectra, ppm = 5){
   if (requireNamespace("xcms", quietly = TRUE)) {
 
@@ -236,7 +279,8 @@ cellClustering <- function(spectra, ppm = 5){
     groups <- rep(1, n)
     peaks <-  quiet(
       xcms::do_groupPeaks_mzClust(as.data.frame(spectra),
-                                  sampleGroups = groups, ppm = ppm,
+                                  sampleGroups = groups,
+                                  ppm = ppm,
                                   minFraction = 0)
     )
 

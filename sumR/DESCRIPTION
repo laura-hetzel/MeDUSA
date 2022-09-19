@@ -1,6 +1,6 @@
 Package: sumR
 Title: Package For Analysis Of Single Cell DI-MS Data
-Version: 0.5.0
+Version: 0.5.1
 Authors@R: c(
     person("Alida", "Kindt", , "a.s.d.kindt@lacdr.leidenuniv.nl", role = "aut"),
     person("Ahmed", "Ali", , "ali@lacdr.leidenuniv.nl", role = "aut",
@@ -36,6 +36,7 @@ Imports:
     ggpubr,
     graphics,
     lubridate,
+    methods,
     mixOmics,
     parallel,
     pbapply,

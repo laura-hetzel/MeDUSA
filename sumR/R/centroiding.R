@@ -1,4 +1,5 @@
 #' @title Extract centroided peaks from mzML files
+#' @description
 #' @param files A vector of paths to mzML files in profile mode to be converted
 #' to centroided mode.
 #' @param cores Integer value of the number of cores to use. Any value > 1
@@ -54,6 +55,10 @@ extractPeaks <- function(files, cores = 1, ...){
 #' @description Centroiding is a vital part of a typical metabolomics workflow.
 #' This function centroids a given mzML file and returns a dataframe of
 #' centroided peaks. See `doCentroid` for more information about centroiding.
+#' @inherit doCentroid details
+#' @returns  data.frame of centroided peaks with the columns `scan`, `rt`,
+#' `mz`, and `i`. It also stores the used parameters as attributes of the
+#' data.frame
 #' @param file A mzML file in profile-mode
 #' @param massWindow A vector of size 2 with min-max size of mass-windows to be
 #' used. E.g. A mass-window from 200 to 300 has a mass-window of 100. Defaults
@@ -62,12 +67,8 @@ extractPeaks <- function(files, cores = 1, ...){
 #' (positive) indicating the polarity to be used. Defaults to "-"
 #' @param combineSpectra Boolean value, should scans of different masswindows
 #' be combined into a full-range scan before centroiding? Defaults to `FALSE`
-#' @returns  data.frame of centroided peaks with the columns `scan`, `mz`, `i`
-#' and `Noise`. It also stores the used parameters as attributes of the
-#' data.frame
 #' @importFrom pbapply pboptions
 #' @importFrom mzR openMSfile header peaks
-#' @inherit doCentroid details
 parseFile <- function(file, massWindow = c(0, Inf), polarity = "-",
                       combineSpectra = FALSE, cl = NULL) {
   if (!is.null(cl)) {
@@ -143,10 +144,12 @@ doCentroid <- function(peaks, rts, scans = seq_len(length(x)),
 }
 
 #' @title Centroid a given spectrum
-#' @param spectrum
-#' @param halfWindowSize
+#' @param spectrum A vector of intensities to smooth and centroid.
+#' @param halfWindowSize The window size used for smoothing divided by 2. A
+#' smaller halfWindowSize will result in a smaller smoothing window. Defaults
+#' to 2.
 #' @noRd
-centroid <- function(spectrum, halfWindowSize = 2L) {
+centroid <- function(spectrum, halfWindowSize = 2) {
   if (nrow(spectrum) == 0) return(NULL)
 
   intensities <- savgol(spectrum[, 2], halfWindowSize)

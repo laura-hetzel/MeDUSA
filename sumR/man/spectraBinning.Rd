@@ -2,7 +2,7 @@
 % Please edit documentation in R/peakGrouping.R
 \name{spectraBinning}
 \alias{spectraBinning}
-\title{Bin spectra with similar mass ranges}
+\title{Bin spectra with similar masses}
 \usage{
 spectraBinning(spectraList, ppm = 5)
 }
@@ -16,7 +16,7 @@ Defaults to 5 ppm}
 DataFrame object from S4Vectors containing aligned spectra
 }
 \description{
-Bin spectra with similar mass ranges
+Bin spectra with similar masses
 }
 \details{
 Binning is a form of alignment that groups together masses
