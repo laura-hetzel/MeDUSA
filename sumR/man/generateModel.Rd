@@ -2,7 +2,7 @@
 % Please edit documentation in R/Models.R
 \name{generateModel}
 \alias{generateModel}
-\title{Model using RandomForest model}
+\title{Model phenotypes using the caret library}
 \usage{
 generateModel(
   exp,
@@ -28,6 +28,24 @@ generateModel(
 
 \item{cv}{Number of folds to be used for cross validation}
 }
+\value{
+SummarizedExperiment with updated model field in the metadata slot.
+}
 \description{
-Model using RandomForest model
+This function trains and tests a given model from the caret
+library to predict phenotypes. This can be used as a multivariate approach
+to determine important differentiating peaks between phenotypes.
+}
+\details{
+Modelling is a multi-variate approach of determining important
+peaks to predict the phenotype(s). Models are created using the \link{caret}
+package. First, a train-test split is made using the given ratio. Next,
+train control is done using a cross-validation approach. Here, the data
+is scaled and centered before training starts. The model used for training
+can be picked from the caret library of classification models. The results
+are stored in the model field of the SummarizedExperiment metadata slot. It
+can be accessed by the \link{model} function.
+}
+\references{
+\href{https://topepo.github.io/caret/}{Caret manual}
 }

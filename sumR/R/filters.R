@@ -148,7 +148,8 @@ featureFilter <- function(exp, assay = 1, nCells = 0, fCells = 0){
 #' features are kept where the variance between the groups is significantly
 #' different. This greatly reduces the dataset with often only a few compounds
 #' remaining.
-#' @returns
+#' @returns A SummarizedExperiment with only compounds that have different
+#' variances across the phenotype given.
 #' @param exp SummarizedExperiment object after alignment and leveneTest
 #' @export
 #' @examples

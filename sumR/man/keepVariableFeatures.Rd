@@ -9,6 +9,10 @@ keepVariableFeatures(exp)
 \arguments{
 \item{exp}{SummarizedExperiment object after alignment and leveneTest}
 }
+\value{
+A SummarizedExperiment with only compounds that have different
+variances across the phenotype given.
+}
 \description{
 This function removes features that have similar features
 across the given phenotypes and calculated by the function \code{leveneTest}.

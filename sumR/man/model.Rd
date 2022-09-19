@@ -7,13 +7,45 @@
 model(exp, modelName = 1)
 }
 \arguments{
-\item{exp}{SummarizedExperiment object}
+\item{exp}{SummarizedExperiment object obtained after post-processing.}
 
-\item{modelName}{Name of the model to retrieve}
+\item{modelName}{Name or index of the model to retrieve. Defaults to \code{1}}
+}
+\value{
+List of various slots to inspect the model. Slots include:
+\itemize{
+\item \strong{train}: Samples that are used as a train set
+\item \strong{test}: Samples that are used as a test set. These won't be taken into
+account during cross-validation to prevent bias. The results from testing the
+model on these samples is stored in the \code{prediction} and \code{confMatrix} slot.
+\item \strong{control}: Settings that were used to train the model, including for
+cross-validation.
+\item \strong{model}: The best model that was picked during cross-validation.
+\item \strong{prediction}: Result of the \link{predict} function on the test dataset.
+\item \strong{varImp}: The variable importance of the model during training. Can be
+used to assess what combination of variables are the best predictors for
+the phenotype. These results can also be retrieved using the \link{varImportance}
+function.
+\item \strong{confMatrix}: Confusion matrix of the predictions of the model on the
+testset. Can be used to assess the performance of the model.
+}
 }
 \description{
-After modelling, the results are stored in the \link{metadata} slot
-as a list with name \code{model}. However, multiple models can be made and stored
-this way. This function returns the model information of the given model,
-either by index or name of the model used.
+After modelling with \link{generateModel}, the results are stored in
+the \link{metadata} slot as a list with name \code{model}. However, multiple models
+can be made and stored this way. This function returns the model information
+of the given model, either by index or name of the model used.
+}
+\details{
+Modelling is a multi-variate approach of determining important
+peaks to predict the phenotype(s). Models are created using the \link{caret}
+package. First, a train-test split is made using the given ratio. Next,
+train control is done using a cross-validation approach. Here, the data
+is scaled and centered before training starts. The model used for training
+can be picked from the caret library of classification models. The results
+are stored in the model field of the SummarizedExperiment metadata slot. It
+can be accessed by the \link{model} function.
+}
+\seealso{
+\link{generateModel}, \link{varImportance}, \link{models}
 }

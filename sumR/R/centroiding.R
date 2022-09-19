@@ -144,6 +144,8 @@ doCentroid <- function(peaks, rts, scans = seq_len(length(x)),
 }
 
 #' @title Centroid a given spectrum
+#' @returns A vector with the local maxima found in the smooth `spectrum`
+#' vector
 #' @param spectrum A vector of intensities to smooth and centroid.
 #' @param halfWindowSize The window size used for smoothing divided by 2. A
 #' smaller halfWindowSize will result in a smaller smoothing window. Defaults
@@ -183,8 +185,9 @@ formatSpectra <- function(spectra, rts){
 
 #' @title Apply Savitz-golay filter
 #' @param y Vector of intensities
-#' @param halfWindowSize
-#' @param polynomialOrder
+#' @inheritParams centroid halfWindowSize
+#' @param polynomialOrder Determines the number of rows in calculating
+#' the coefficients for the smoothing filter.
 #' @importFrom utils head tail
 #' @noRd
 savgol <- function(y, halfWindowSize = 2L, polynomialOrder = 3L) {
