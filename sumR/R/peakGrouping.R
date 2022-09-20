@@ -1,5 +1,7 @@
 #' @title Bin masses of spectra
-#' @description This is an adapted form of Maldiquants binning function.
+#' @description This is an adapted form of Maldiquants binning function. It will
+#' check the given masses and if subsequent masses fall within the ppm
+#' tolerance, it will assign them to the same bin.
 #' @details Binning is a form of alignment that groups together masses
 #' within a given tolerance. Due to measurements errors in mass spectrometry,
 #' binning is necessary to determine which mass intensities belong to
@@ -11,8 +13,8 @@
 #' Defaults to "scan"
 #' @param ppm How much can masses deviate from the mean of the bin?
 #' Defaults to 5 ppm
-#' @returns A list of spectra with the masses replaced by the mean of the
-#' associated bin
+#' @returns A data.frame with the binned masses, their intensities and
+#' original peak identifiers for traceback.
 doBinning <- function(spectra, split = "scan", ppm = 5) {
   tolerance <- ppm * 1e-6
   if (is(spectra, "data.frame")) {
@@ -52,11 +54,11 @@ doBinning <- function(spectra, split = "scan", ppm = 5) {
 
 #' @title Bin spectra with similar masses
 #' @description
+#' @inherit doBinning details
 #' @returns DataFrame object from S4Vectors containing aligned spectra
 #' @param spectraList List of spectra to be binned
 #' @param ppm How much can masses deviate from the mean of the bin?
 #' Defaults to 5 ppm
-#' @inherit doBinning details
 #' @importFrom pbapply pblapply
 #' @export
 spectraBinning <- function(spectraList, ppm = 5) {
@@ -90,13 +92,10 @@ spectraBinning <- function(spectraList, ppm = 5) {
 }
 
 #' @title Group spectra using clustering
-#' @param spectraList List of spectra to be binned
-#' @param ppm How much can masses deviate from the mean of the cluster?
-#' Defaults to 5 ppm
+#' @inheritParams spectraAlignment -method
 #' @inherit spectraBinning details
 #' @importFrom pbapply pblapply
 #' @importFrom S4Vectors DataFrame
-#' @export
 spectraClustering <- function(spectraList, ppm = 5){
   if (requireNamespace("xcms", quietly = TRUE)) {
     prepareCells(pbapply::pblapply(spectraList, function(l) {
@@ -118,26 +117,41 @@ spectraClustering <- function(spectraList, ppm = 5){
   }
 }
 
-#' @title Group spectra
-#' @description
-#' @details
-#' @returns
-#' @param peaks
-#' @param method
-#' @param ppm
-#' @param nPeaks
+#' @title Group signals across spectra into peaks
+#' @description This function will perform either binning (default) or
+#' clustering to group signals across spectra into peaks from a single file
+#' @details With DI-MS, peak in retention time space are too unreliable to
+#' properly peak pick. Here, we use binning to bin mass signals that deviate
+#' less than the given ppm.
+#' @returns DataFrame where each row is a peak
+#' @param peaks Centroided spectra obtained from [extractPeaks].
+#' @param method Character, one of either `"binning"` (default) or
+#' `"clustering"`.
+#' @param ppm Tolerance between masses to be considered part of the same bin
+#' or cluster in parts per million (ppm). Defaults to 5.
 #' @export
 #' @examples
-spectraAlignment <- function(peaks, method = "binning", ppm = 5, nPeaks = 0){
+#' # Define files
+#' folder <- system.file("cells", package = "sumR")
+#' files <- list.files(folder, full.names = TRUE)
+#'
+#' # Extract peaks from files
+#' peaks <- extractPeaks(files)
+#'
+#' # Align peaks across spectra
+#' spectra <- spectraAlignment(peaks)
+#'
+#' # Show first few peaks
+#' print(head(spectra))
+spectraAlignment <- function(peaks, method = "binning", ppm = 5){
   if (!validatePeaks(peaks)) {
     warning("Invalid peakList object")
     return(NULL)
   }
-  cells <- switch(method,
+  spectra <- switch(method,
          "binning" = spectraBinning(peaks, ppm = ppm),
          "clustering" = spectraClustering(peaks, ppm = ppm)
   )
-  spectra <- cells[cells$npeaks >= nPeaks, ]
   spectra <- spectra[order(spectra$mz), ]
   rownames(spectra) <- 1:nrow(spectra)
   spectra
@@ -145,20 +159,48 @@ spectraAlignment <- function(peaks, method = "binning", ppm = 5, nPeaks = 0){
 
 
 
-#' @title Group cells into SE
-#' @description
-#' @details
-#' @returns
-#' @param spectraDf
-#' @param method
-#' @param ppm
-#' @param nCells
-#' @param cellData
-#' @param phenotype
+#' @title Align spectra across cells using binning or clustering
+#' @description This function will perform either binning (default) or
+#' clustering to group peaks from spectra across cells.
+#' @details Alignment across cells is a vital part of metabolomics data analysis
+#' in order to make comparisons across cells. Here, we support two methods of
+#' alignment: binning and clustering. Binning is an adjustment from Maldiquant
+#' while clustering is using xcms instead. Both will result in a
+#' SummarizedExperiment object that can be used for postprocessing.
+#' @returns SummarizedExperiment object that contains both data and metadata.
+#' @param spectraDf DataFrame of peaks in spectra, where 1 row equals 1 peak
+#' from a single cell
+#' @param method Character, one of either `"binning"` (default) or
+#' `"clustering"`.
+#' @param ppm Tolerance between masses to be considered part of the same bin
+#' or cluster in parts per million (ppm). Defaults to 5.
+#' @param cellData data.frame of metadata of each cell. While optional in
+#' this step, it is crucial for post-processing. Defaults to `NULL`
+#' @param phenotype Name of the column in `cellData` that describes the
+#' phenotype of each cell. Mandatory for statistics and modelling, but can
+#' be left empty here. Defaults to `NULL`
 #' @importFrom lubridate as_datetime
 #' @export
 #' @examples
-cellAlignment <- function(spectraDf, method = "binning", ppm = 5, nCells = 0,
+#' # Define files
+#' folder <- system.file("cells", package = "sumR")
+#' files <- list.files(folder, full.names = TRUE)
+#'
+#' # Extract peaks from files
+#' peaks <- extractPeaks(files)
+#'
+#' # Align peaks across spectra
+#' spectra <- spectraAlignment(peaks)
+#'
+#' # Align spectra across cells
+#' cells <- cellAlignment(spectra, method = "binning")
+#'
+#' ## Same but with clustering
+#' # cells <- cellAlignment(spectra, method = "clustering")
+#'
+#' # Show output
+#' print(cells)
+cellAlignment <- function(spectraDf, method = "binning", ppm = 5,
                           cellData = NULL, phenotype = NULL){
 
   if (is.null(cellData)) {
@@ -185,12 +227,11 @@ cellAlignment <- function(spectraDf, method = "binning", ppm = 5, nCells = 0,
   colData(cells) <- cbind(colData(cells), datetime)
   colData(cells)$Datetime <- lubridate::as_datetime(colData(cells)$Datetime)
   cells <- cells[, order(colData(cells)$Datetime)]
-  cells <- cells[rowData(cells)$npeaks >= nCells, ]
   rownames(cells) <- 1:nrow(cells)
   cells
 }
 
-#' @title Combine spectra into cells
+#' @title Combine spectra in
 #' @description
 #' @details
 #' @returns
@@ -206,11 +247,14 @@ prepareCells <- function(cells){
 }
 
 #' @title Construct a SummarizedExperiment from aligned spectra
-#' @description
-#' @details
-#' @returns
-#' @param res
-#' @param spectra
+#' @description This function constructs a SummarizedExperiment from a DataFrame
+#' of aligned spectra.
+#' @details The SummarizedExperiment is a community-standard container that
+#' allows for easy requesting and manipulating data and metadata.
+#' @returns SummarizedExperiment object with assay `"Area"` and rowData with
+#' mz, rt and other metadata.
+#' @param res DataFrame result from either [cellBinning] or [cellClustering].
+#' @param spectra Large DataFrame where each row is a peak from a single sample.
 #' @importFrom S4Vectors DataFrame
 #' @importFrom tidyr pivot_wider
 #' @importFrom SummarizedExperiment SummarizedExperiment
@@ -233,15 +277,16 @@ constructSE <- function(res, spectra){
   se
 }
 
-#' @title Bin cells
-#' @description
-#' @details
-#' @returns
-#' @param spectra DataFrame of spectra
-#' @param ppm
-#' @importFrom SummarizedExperiment SummarizedExperiment
-#' @export
-#' @examples
+#' @title Bin peaks from spectra across cells.
+#' @description This function will use the same binning method as
+#' [spectraBinning] but across cells instead of spectra.
+#' @inherit doBinning details
+#' @returns A SummarizedExperiment with an Area assay and mz, rt and ppm
+#' metrics in rowData.
+#' @param spectra DataFrame of spectra obtained from [spectraAlignment].
+#' @param ppm Tolerance between masses to be considered part of the same bin in
+#' parts per million (ppm). Defaults to 5.
+#' @importFrom S4Vectors DataFrame
 cellBinning <- function(spectra, ppm = 5) {
   df <- doBinning(as.data.frame(spectra), split = "sample", ppm = ppm)
   rownames(df) <- 1:nrow(df)

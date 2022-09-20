@@ -6,6 +6,20 @@
 \usage{
 constructSE(res, spectra)
 }
+\arguments{
+\item{res}{DataFrame result from either \link{cellBinning} or \link{cellClustering}.}
+
+\item{spectra}{Large DataFrame where each row is a peak from a single sample.}
+}
+\value{
+SummarizedExperiment object with assay \code{"Area"} and rowData with
+mz, rt and other metadata.
+}
 \description{
-Construct a SummarizedExperiment from aligned spectra
+This function constructs a SummarizedExperiment from a DataFrame
+of aligned spectra.
+}
+\details{
+The SummarizedExperiment is a community-standard container that
+allows for easy requesting and manipulating data and metadata.
 }

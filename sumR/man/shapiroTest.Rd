@@ -2,13 +2,11 @@
 % Please edit documentation in R/statistical_functions.R
 \name{shapiroTest}
 \alias{shapiroTest}
-\title{shapiro test}
+\title{Shapiro's test for normality across cells}
 \usage{
-shapiroTest(exp, assay = 1, threshold = 0.05)
+shapiroTest(exp, assay = 1)
 }
 \arguments{
-\item{threshold}{numerical value for wanted threshold . the default is 0.05}
-
 \item{dataframe}{transposed dataframe with m/z as columns}
 }
 \description{

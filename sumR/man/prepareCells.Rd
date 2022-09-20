@@ -2,10 +2,10 @@
 % Please edit documentation in R/peakGrouping.R
 \name{prepareCells}
 \alias{prepareCells}
-\title{Combine spectra into cells}
+\title{Combine spectra in}
 \usage{
 prepareCells(cells)
 }
 \description{
-Combine spectra into cells
+Combine spectra in
 }

@@ -1,112 +1,70 @@
-## shapiro's test for normality check
-## dataframe is transposed with mz values as columns
-
-#' @title shapiro test
+#' @title Shapiro's test for normality across cells
 #' @description shapiro test for normality check
 #' @param dataframe transposed dataframe with m/z as columns
-#' @param threshold numerical value for wanted threshold . the default is 0.05
+#' @param assay
 #' @importFrom stats shapiro.test
 #' @export
-shapiroTest <- function(exp, assay = 1, threshold = 0.05) {
-  if (!validateExperiment(exp)) return(NULL)
-  dataframe <- as.data.frame(t(assay(exp, assay)))
-  Test_results <- apply(dataframe, 2, function(x) shapiro.test(as.numeric(x)))
-  P.values <- unlist(lapply(Test_results, function(x) x$p.value))
-  P.values <- as.data.frame(P.values)
-  normality <- P.values > threshold ## pavalues larger than 0.05 assume normal distribution
-  results <- cbind(P.values, normality)
-  colnames(results) <- c("p.value", "normality")
-  rowData(exp)$shapiroTest <- results
+shapiroTest <- function(exp, assay = 1) {
+  if (!validateExperiment(exp)) return(exp)
+  dataframe <- assay(exp, assay)
+  pvalues <- apply(dataframe, 1, function(x) shapiro.test(x)$p.value)
+  rowData(exp)$shapiroTest <- pvalues
   exp
 }
 
-## Levenes testing for variances
-## dataframe is transposed with mz values as columns
-
-#' @title levene test
+#' @title Levene test for unequal variances across phenotypes
 #' @description levene test for variance check
-#' @param dataframe transposed dataframe with m/z as columns
+#' @param exp transposed dataframe with m/z as columns
+#' @param assay
 #' @param classifiers a factor vector with the classes of the samples
-#' @param threshold numerical value for wanted threshold . the default is 0.05
 #' @importFrom rstatix levene_test
 #' @export
-leveneTest <- function(exp, classifiers = metadata(exp)$phenotype,
-                       assay = 1, threshold = 0.05, filter = FALSE) {
-  if (!validateExperiment(exp)) return(NULL)
+leveneTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype) {
+  if (!validateExperiment(exp)) return(exp)
   if (is.null(classifiers)) stop("Cannot perform test without classifiers")
-  dataframe <- as.data.frame(t(assay(exp, assay)))
 
+  data <- assay(exp, assay)
   classifiers <- as.factor(exp[[classifiers]])
-  Test_results <- apply(dataframe, 2, function(x) levene_test(formula = x ~ classifiers, data = dataframe))
-  P.values <- unlist(lapply(Test_results, function(x) x$p))
-  P.values <- as.data.frame(na.omit(P.values))
-  Unequalvariances <- P.values < threshold
-  results <- cbind(P.values, Unequalvariances)
-  colnames(results) <- c("p.value", "unequal_variance")
-  rowData(exp)$leveneTest <- results
-  if (any(results$unequal_variance)) {
-    if (filter) exp <- exp[results$unequal_variance, ]
+
+  if (length(unique(classifiers)) > 2) {
+    warning("Cannot perform Levene Test for phenotypes with > 2 groups")
+    return(exp)
   }
+
+  rowData(exp)$leveneTest <- apply(data, 1, function(x){
+    levene_test(formula = x ~ classifiers, data = data)$p
+  })
   exp
 }
 
 #' @title foldchange for two groups test
-#' @param dataframe2 transposed dataframe with m/z as columns (raw imputed dataframe)
-#' @param samples a factor vector with the classes of the samples
+#' @param exp
+#' @param assay
+#' @param classifiers a factor vector with the classes of the samples
 #' @importFrom utils combn
 #' @export
-foldChange <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1) {
+foldChange <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype) {
   if (!validateExperiment(exp)) return(NULL)
   if (is.null(classifiers)) stop("Cannot perform test without classifiers")
-  dataframe2 <- as.data.frame(t(assay(exp, assay)))
   classifiers <- as.factor(exp[[classifiers]])
-  Splitted_per_sampletype <- split.data.frame(dataframe2, classifiers)
-  Median_per_group <- do.call(cbind, lapply(Splitted_per_sampletype, function(x){
-    apply(as.matrix(x), 2, median)
-  }))
-  combs <- combn(colnames(Median_per_group), 2)
-  fc <- function(a, b) b / a
-  foldchanges <- apply(combs, 2, function(col_names) fc(Median_per_group[, col_names[2]], Median_per_group[, col_names[1]]))
-  dimnames(foldchanges)[[2]] <- apply(combs, 2, paste, collapse = "_")
-  foldchanges <- as.data.frame(foldchanges)
-  colnames(foldchanges) <- paste("fc", colnames(foldchanges), sep = "_")
-  log2foldchanges <- log2(foldchanges)
-  colnames(Median_per_group) <- paste("median", colnames(Median_per_group), sep = "_")
-  colnames(log2foldchanges) <- paste("log2", colnames(foldchanges), sep = "")
-  results <- cbind(Median_per_group, foldchanges, log2foldchanges)
-  rowData(exp)$foldChange <- results
+  if (length(unique(classifiers)) > 2) {
+    warning("Cannot calculate Fold Change for phenotypes with > 2 groups")
+    return(exp)
+  }
+
+  data <- as.data.frame(t(assay(exp, assay)))
+
+  medians <- do.call(cbind, lapply(split(data, classifiers), colMedians))
+
+  combs <- combn(colnames(medians), 2)
+
+  foldchanges <- apply(combs, 2, function(names) {
+    medians[, col_names[1]] / medians[, col_names[2]]
+  })
+  dimnames(foldchanges)[[2]] <- apply(combs, 2, paste, collapse = ".")
+  rowData(exp)$foldChange <- as.data.frame(foldchanges)
   exp
 }
-
-
-
-
-#' @title foldchange for more than two groups test
-#'
-#' @param dataframe2 transposed dataframe with m/z as columns (raw imputed dataframe)
-#' @param samples a factor vector with the classes of the samples
-#' @importFrom stats median
-#' @importFrom utils combn
-foldChangeGroups <- function(dataframe2, samples) {
-  Splitted_per_sampletype <- split(dataframe2, samples)
-  Mean_per_group <- do.call(cbind, lapply(Splitted_per_sampletype, function(x) colMeans(x)))
-  combs <- combn(colnames(Mean_per_group), 2)
-  fc <- function(a, b) b / a
-  foldchanges <- apply(combs, 2, function(col_names) fc(Mean_per_group[, col_names[2]], Mean_per_group[, col_names[1]]))
-  dimnames(foldchanges)[[2]] <- apply(combs, 2, paste, collapse = "_")
-  foldchanges <- as.data.frame(foldchanges)
-  colnames(foldchanges) <- paste("fc", colnames(foldchanges), sep = "_")
-  log2foldchanges <- log2(foldchanges)
-  colnames(log2foldchanges) <- paste("log2", colnames(foldchanges), sep = "")
-  Median_per_group <- lapply(Splitted_per_sampletype, function(x){
-    apply(x, 2, median)
-  })
-  Median_per_group <- as.data.frame(do.call(cbind, Median_per_group))
-  colnames(Median_per_group) <- paste("median", colnames(Median_per_group), sep = "_")
-  results <- cbind(Median_per_group, foldchanges, log2foldchanges)
-  return(results)
-}
-
 
 
 # Welch T test
@@ -117,20 +75,26 @@ foldChangeGroups <- function(dataframe2, samples) {
 
 #' @title welch t test
 #' @description welch t test between two groups of samples (assuming unequal variance)
-#'
-#' @param dataframe transposed dataframe with m/z as columns (transformed dataframe)
-#' @param dataframe2 transposed dataframe with m/z as columns (raw imputed dataframe)
+#' @param exp
+#' @param assay
+#' @param classifiers
 #' @param threshold numerical value for wanted threshold . the default is 0.1
-#' @param samples a factor vector with the classes of the samples
 #' @param corr_method character string for correction method . default is "fdr"
 #' @importFrom stats p.adjust t.test
 #' @export
-welchTest <- function(exp, classifiers = metadata(exp)$phenotype, assay = 1, threshold = 0.1,
-                      corr_method = "fdr") {
+welchTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
+                      threshold = 0.1, corr_method = "fdr") {
   if (!validateExperiment(exp)) return(NULL)
   if (is.null(classifiers)) stop("Cannot perform test without classifiers")
-  dataframe <- as.data.frame(t(assay(exp, assay)))
+
   classifiers <- as.factor(exp[[classifiers]])
+  if (length(unique(classifiers)) > 2) {
+    warning("Cannot perform t-test for phenotypes with > 2 groups")
+    return(exp)
+  }
+
+  dataframe <- as.data.frame(t(assay(exp, assay)))
+
   p.value <- apply(dataframe, 2, function(x) t.test(x ~ classifiers, var.equal = FALSE)$p.value)
   p.adj <- p.adjust(p.value, method = corr_method)
   p.adj <- as.data.frame(p.adj)
@@ -169,6 +133,11 @@ wilcoxTest <- function(exp, classifiers = metadata(exp)$phenotype,
   dataframe <- as.data.frame(t(assay(exp, assay)))
   classifiers <- as.factor(exp[[classifiers]])
 
+  if (length(unique(classifiers)) > 2) {
+    warning("Cannot perform Wilcoxon Test for phenotypes with > 2 groups")
+    return(exp)
+  }
+
   wilcox.test <- apply(dataframe, 2, function(x) wilcox.test(formula = x ~ classifiers,
                                                              data = dataframe, paired = paired))
   p.value <- unlist((lapply(wilcox.test, function(x) x$p.value)))
@@ -181,22 +150,12 @@ wilcoxTest <- function(exp, classifiers = metadata(exp)$phenotype,
   exp
 }
 
-## WelchAnova
-## dataframe is transposed with mz values as columns
-## dataframe : scaled data
-## dataframe2: raw intensities - imputed
-## samples : classifiers
-
-
-
 #' @title welch anova test
 #' @description welch anova test between more than two groups of samples (assuming unequal variance)
-#'
 #' @param dataframe transposed dataframe with m/z as columns (transformed dataframe)
 #' @param dataframe2 transposed dataframe with m/z as columns (raw imputed dataframe)
 #' @param samples a factor vector with the classes of the samples
 #' @param threshold numerical value for wanted threshold . the default is 0.1
-#'
 #' @importFrom stats oneway.test
 welchAnova <- function(exp, classifiers = metadata(exp)$phenotype,
                        assay = 1, threshold = 0.1) {

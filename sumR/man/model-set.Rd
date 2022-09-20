@@ -2,7 +2,7 @@
 % Please edit documentation in R/Models.R
 \name{model<-}
 \alias{model<-}
-\title{Set value in model in Experiment}
+\title{Set or replace a model in the given experiment}
 \usage{
 model(exp, modelName) <- value
 }
@@ -14,5 +14,5 @@ model(exp, modelName) <- value
 \item{value}{Value to set in the model}
 }
 \description{
-Set value in model in Experiment
+Set or replace a model in the given experiment
 }

@@ -4,12 +4,10 @@
 \alias{foldChange}
 \title{foldchange for two groups test}
 \usage{
-foldChange(exp, classifiers = metadata(exp)$phenotype, assay = 1)
+foldChange(exp, assay = 1, classifiers = metadata(exp)$phenotype)
 }
 \arguments{
-\item{dataframe2}{transposed dataframe with m/z as columns (raw imputed dataframe)}
-
-\item{samples}{a factor vector with the classes of the samples}
+\item{classifiers}{a factor vector with the classes of the samples}
 }
 \description{
 foldchange for two groups test

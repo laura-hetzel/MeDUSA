@@ -6,8 +6,8 @@
 \usage{
 welchTest(
   exp,
-  classifiers = metadata(exp)$phenotype,
   assay = 1,
+  classifiers = metadata(exp)$phenotype,
   threshold = 0.1,
   corr_method = "fdr"
 )
@@ -16,12 +16,6 @@ welchTest(
 \item{threshold}{numerical value for wanted threshold . the default is 0.1}
 
 \item{corr_method}{character string for correction method . default is "fdr"}
-
-\item{dataframe}{transposed dataframe with m/z as columns (transformed dataframe)}
-
-\item{dataframe2}{transposed dataframe with m/z as columns (raw imputed dataframe)}
-
-\item{samples}{a factor vector with the classes of the samples}
 }
 \description{
 welch t test between two groups of samples (assuming unequal variance)

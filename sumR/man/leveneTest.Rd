@@ -2,22 +2,14 @@
 % Please edit documentation in R/statistical_functions.R
 \name{leveneTest}
 \alias{leveneTest}
-\title{levene test}
+\title{Levene test for unequal variances across phenotypes}
 \usage{
-leveneTest(
-  exp,
-  classifiers = metadata(exp)$phenotype,
-  assay = 1,
-  threshold = 0.05,
-  filter = FALSE
-)
+leveneTest(exp, assay = 1, classifiers = metadata(exp)$phenotype)
 }
 \arguments{
+\item{exp}{transposed dataframe with m/z as columns}
+
 \item{classifiers}{a factor vector with the classes of the samples}
-
-\item{threshold}{numerical value for wanted threshold . the default is 0.05}
-
-\item{dataframe}{transposed dataframe with m/z as columns}
 }
 \description{
 levene test for variance check

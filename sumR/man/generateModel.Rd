@@ -46,6 +46,6 @@ can be picked from the caret library of classification models. The results
 are stored in the model field of the SummarizedExperiment metadata slot. It
 can be accessed by the \link{model} function.
 }
-\references{
+\seealso{
 \href{https://topepo.github.io/caret/}{Caret manual}
 }

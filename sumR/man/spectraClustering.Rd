@@ -6,12 +6,6 @@
 \usage{
 spectraClustering(spectraList, ppm = 5)
 }
-\arguments{
-\item{spectraList}{List of spectra to be binned}
-
-\item{ppm}{How much can masses deviate from the mean of the cluster?
-Defaults to 5 ppm}
-}
 \description{
 Group spectra using clustering
 }

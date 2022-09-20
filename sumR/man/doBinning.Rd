@@ -18,11 +18,13 @@ Defaults to "scan"}
 Defaults to 5 ppm}
 }
 \value{
-A list of spectra with the masses replaced by the mean of the
-associated bin
+A data.frame with the binned masses, their intensities and
+original peak identifiers for traceback.
 }
 \description{
-This is an adapted form of Maldiquants binning function.
+This is an adapted form of Maldiquants binning function. It will
+check the given masses and if subsequent masses fall within the ppm
+tolerance, it will assign them to the same bin.
 }
 \details{
 Binning is a form of alignment that groups together masses

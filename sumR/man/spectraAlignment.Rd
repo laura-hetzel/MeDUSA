@@ -2,10 +2,42 @@
 % Please edit documentation in R/peakGrouping.R
 \name{spectraAlignment}
 \alias{spectraAlignment}
-\title{Group spectra}
+\title{Group signals across spectra into peaks}
 \usage{
-spectraAlignment(peaks, method = "binning", ppm = 5, nPeaks = 0)
+spectraAlignment(peaks, method = "binning", ppm = 5)
+}
+\arguments{
+\item{peaks}{Centroided spectra obtained from \link{extractPeaks}.}
+
+\item{method}{Character, one of either \code{"binning"} (default) or
+\code{"clustering"}.}
+
+\item{ppm}{Tolerance between masses to be considered part of the same bin
+or cluster in parts per million (ppm). Defaults to 5.}
+}
+\value{
+DataFrame where each row is a peak
 }
 \description{
-Group spectra
+This function will perform either binning (default) or
+clustering to group signals across spectra into peaks from a single file
+}
+\details{
+With DI-MS, peak in retention time space are too unreliable to
+properly peak pick. Here, we use binning to bin mass signals that deviate
+less than the given ppm.
+}
+\examples{
+# Define files
+folder <- system.file("cells", package = "sumR")
+files <- list.files(folder, full.names = TRUE)
+
+# Extract peaks from files
+peaks <- extractPeaks(files)
+
+# Align peaks across spectra
+spectra <- spectraAlignment(peaks)
+
+# Show first few peaks
+print(head(spectra))
 }
