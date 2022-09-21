@@ -137,3 +137,31 @@ rawToMzml <- function(folder, output = getwd(), rt = NULL,
   })
   list.files(output, full.names = T, pattern = ".mzML")
 }
+
+#' @title Auto-scale with optional log transform an assay
+#' @description
+#' @details
+#' @returns
+#' @param exp SummarizedExperiment object obtained after imputation
+#' @param assay Name or index of the assay to use. Defaults to the assay at
+#' index 1.
+#' @param log Boolean value, should log transformation be applied before
+#' scaling? Defaults to TRUE
+#' @param base If `log` is set to TRUE, what base should be used for the log
+#' transformation? Defaults to `exp(1)`
+#' @param setDefault Boolean value, should the new assay be set as default
+#' assay on index 1? Defaults to TRUE
+#' @importFrom SummarizedExperiment assay assay<-
+#' @export
+autoScale <- function(exp, assay = 1, log = TRUE, base = exp(1),
+                      setDefault = TRUE){
+  m <- assay(exp, assay)
+  if (log) {
+    m <- log(m, base = base)
+  }
+  assay(exp, "Scaled") <- scale(m, center = TRUE, scale = TRUE)
+  if (setDefault) {
+    exp <- setDefaultAssay(exp, "Scaled")
+  }
+  exp
+}

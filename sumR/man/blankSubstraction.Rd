@@ -4,7 +4,13 @@
 \alias{blankSubstraction}
 \title{Substract Blanks from SummarizedExperiment}
 \usage{
-blankSubstraction(exp, foldChange = 5, nSamples = Inf, removeBlanks = TRUE)
+blankSubstraction(
+  exp,
+  assay = 1,
+  foldChange = 5,
+  nSamples = Inf,
+  removeBlanks = TRUE
+)
 }
 \arguments{
 \item{exp}{SummarizedExperiment obtained after alignment}

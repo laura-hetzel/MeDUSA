@@ -2,9 +2,14 @@
 % Please edit documentation in R/filters.R
 \name{keepVariableFeatures}
 \alias{keepVariableFeatures}
-\title{Keep the most variable features based on Levene Test}
+\title{Keep the most variable features based on a univariate test}
 \usage{
-keepVariableFeatures(exp)
+keepVariableFeatures(
+  exp,
+  test = "leveneTest",
+  threshold = 0.05,
+  method = "any"
+)
 }
 \arguments{
 \item{exp}{SummarizedExperiment object after alignment and leveneTest}

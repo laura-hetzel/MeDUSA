@@ -13,14 +13,14 @@
 #' filter is applied? Defaults to `TRUE`.
 #' @export
 #' @examples
-blankSubstraction <- function(exp, foldChange = 5, nSamples = Inf,
+blankSubstraction <- function(exp, assay = 1, foldChange = 5, nSamples = Inf,
                               removeBlanks = TRUE){
   if (!validateExperiment(exp)) return(exp)
   blanks <- exp[, toupper(exp$Type) == 'BLANK']
   samps <- exp[, toupper(exp$Type) != 'BLANK']
 
-  threshold <- rowMedians(assay(blanks, "Area"), na.rm = TRUE) * foldChange
-  exp <- exp[rowSums(assay(samps, "Area") - threshold <= 0, na.rm = TRUE) <= nSamples, ]
+  threshold <- rowMedians(assay(blanks, assay), na.rm = TRUE) * foldChange
+  exp <- exp[rowSums(assay(samps, assay) - threshold <= 0, na.rm = TRUE) <= nSamples, ]
 
   if (removeBlanks) exp <- exp[, toupper(exp$Type) != "BLANK"]
 
@@ -140,7 +140,7 @@ featureFilter <- function(exp, assay = 1, nCells = 0, fCells = 0){
   exp[to_take, ]
 }
 
-#' @title Keep the most variable features based on Levene Test
+#' @title Keep the most variable features based on a univariate test
 #' @description This function removes features that have similar features
 #' across the given phenotypes and calculated by the function `leveneTest`.
 #' @details When interested in which peaks are significantly different between
@@ -153,12 +153,20 @@ featureFilter <- function(exp, assay = 1, nCells = 0, fCells = 0){
 #' @param exp SummarizedExperiment object after alignment and leveneTest
 #' @export
 #' @examples
-keepVariableFeatures <- function(exp){
+keepVariableFeatures <- function(exp, test = "leveneTest", threshold = 0.05,
+                                 method = "any"){
   if (!validateExperiment(exp)) return(NULL)
-  if (!"leveneTest" %in% colnames(rowData(exp))) {
-    message("'leveneTest' not found in rowData. Please run 'leveneTest' first.")
+  if (!test %in% colnames(rowData(exp))) {
+    message(sprintf("'%s' not found in rowData. Please run '%s' first.",
+                    test, test))
     return(exp)
   }
-  exp[which(rowData(exp)$leveneTest$unequal_variance), ]
-}
 
+  res <- rowData(exp)[[test]]
+  if (is(res, "data.frame")) {
+    idx <- rowSums(res < threshold) >= ifelse(method == "any", 1, ncol(res))
+    return(exp[which(idx), ])
+  } else {
+    return(exp[which(res < threshold), ])
+  }
+}

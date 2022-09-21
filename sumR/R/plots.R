@@ -144,17 +144,18 @@ plotCrossValidation <- function(exp, modelName = 1){
 #' @importFrom stats prcomp
 #' @export
 plotPCA <- function(se, assay = 1, group = metadata(se)$phenotype){
-  ratio <- log2(assay(se, assay))
-  aliquots <- apply(ratio, 2, function(x) !all(is.na(x)))
-  ratio <- ratio[, aliquots]
-  se <- se[, aliquots]
-  ratio <- as.data.frame(apply(ratio, 2, function(x) {
-    x[!is.finite(x)] <- min(x[is.finite(x)]) * 0.01
-    x
-  }))
-  aliquots <- vapply(colnames(ratio), function(x) all(!is.infinite(ratio[, x])), logical(1))
-  ratio <- ratio[, aliquots]
-  se <- se[, aliquots]
+  ratio <- assay(se, assay)
+  # ratio <- log2(assay(se, assay))
+  # aliquots <- apply(ratio, 2, function(x) !all(is.na(x)))
+  # ratio <- ratio[, aliquots]
+  # se <- se[, aliquots]
+  # ratio <- as.data.frame(apply(ratio, 2, function(x) {
+  #   x[!is.finite(x)] <- min(x[is.finite(x)]) * 0.01
+  #   x
+  # }))
+  # aliquots <- vapply(colnames(ratio), function(x) all(!is.infinite(ratio[, x])), logical(1))
+  # ratio <- ratio[, aliquots]
+  # se <- se[, aliquots]
 
   pc <- prcomp(t(ratio), retx = T,
                scale = T, center = T)
