@@ -2,10 +2,21 @@
 % Please edit documentation in R/peakGrouping.R
 \name{prepareCells}
 \alias{prepareCells}
-\title{Combine spectra in}
+\title{Combine spectra into a single DataFrame object}
 \usage{
 prepareCells(cells)
 }
+\arguments{
+\item{cells}{List of spectra to be combined into a DataFrame}
+}
+\value{
+A DataFrame object of spectra of multiple cells
+}
 \description{
-Combine spectra in
+This function combines a list of spectra into a S4Vectors
+DataFrame object.
+}
+\details{
+Storing the spectra as a list of S4Vectors allows to store the
+peakIdx as a list with other spectra information.
 }

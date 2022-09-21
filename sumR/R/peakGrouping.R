@@ -60,6 +60,7 @@ doBinning <- function(spectra, split = "scan", ppm = 5) {
 #' @param ppm How much can masses deviate from the mean of the bin?
 #' Defaults to 5 ppm
 #' @importFrom pbapply pblapply
+#' @importFrom stats median
 #' @export
 spectraBinning <- function(spectraList, ppm = 5) {
   res <- pbapply::pblapply(spectraList, function(spectra){
@@ -231,11 +232,14 @@ cellAlignment <- function(spectraDf, method = "binning", ppm = 5,
   cells
 }
 
-#' @title Combine spectra in
-#' @description
-#' @details
-#' @returns
-#' @param cells
+#' @title Combine spectra into a single DataFrame object
+#' @description This function combines a list of spectra into a S4Vectors
+#' DataFrame object.
+#' @details Storing the spectra as a list of S4Vectors allows to store the
+#' peakIdx as a list with other spectra information.
+#' @returns A DataFrame object of spectra of multiple cells
+#' @param cells List of spectra to be combined into a DataFrame
+#' @importFrom S4Vectors DataFrame
 prepareCells <- function(cells){
   non_nulls <- !vapply(cells, is.null, logical(1))
   cells <- cells[non_nulls]

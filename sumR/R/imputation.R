@@ -4,7 +4,6 @@
 #' as the given argument in `data`.
 #' @param data Data.frame of the assay to be imputated
 #' @param normalize Boolean value, should data be normalized before imputation?
-#' @inherit imputation examples
 saverImputation <- function(data, normalize = TRUE){
   data[is.na(data)] <- 0
   if (!normalize) normalize <- NULL
@@ -25,7 +24,6 @@ saverImputation <- function(data, normalize = TRUE){
 #' @returns A data.frame with all values filled with the same dimensions
 #' as the given argument in `data`.
 #' @param data Data.frame of the assay to be imputated
-#' @inherit imputation examples
 magicImputation <- function(data){
   data[is.na(data)] <- 0
   if (requireNamespace("Rmagic", quietly = TRUE)) {
@@ -47,7 +45,6 @@ magicImputation <- function(data){
 #' @param model Character, name of the model to be used for missing value
 #' imputation. Requires the `pmp` packages and must be one of the
 #' methods mentioned in `mv_imputation`.
-#' @inherit imputation examples
 modelImputation <- function(data, model = "rf"){
   if (requireNamespace("pmp", quietly = TRUE)) {
     loadNamespace("pmp")
@@ -66,7 +63,6 @@ modelImputation <- function(data, model = "rf"){
 #' @param noise numerical value for the maximum random noise level. Defaults
 #' to 100.
 #' @importFrom stats runif
-#' @inherit imputation examples
 noiseImputation <- function(data, noise = 100) {
   idx <- is.na(data) | data == 0
   data[idx] <- runif(sum(idx), min = 1, max = noise)

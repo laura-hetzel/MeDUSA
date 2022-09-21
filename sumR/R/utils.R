@@ -139,9 +139,13 @@ rawToMzml <- function(folder, output = getwd(), rt = NULL,
 }
 
 #' @title Auto-scale with optional log transform an assay
-#' @description
-#' @details
-#' @returns
+#' @description This function will log transform and auto-scale a given assay
+#' and store it in the assays of the SummarizedExperiment as "Scaled".
+#' @details Scaling is an important step before continuing data analysis. It
+#' will ensure that the peaks and samples are comparible for statistics and
+#' modelling.
+#' @returns SummarizedExperiment object with added assay called "Scaled" which
+#' contains scaled values that were optionally log-transformed prior to scaling.
 #' @param exp SummarizedExperiment object obtained after imputation
 #' @param assay Name or index of the assay to use. Defaults to the assay at
 #' index 1.

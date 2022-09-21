@@ -30,7 +30,8 @@ A list of data.frames, each obtained from \code{parseFile}. The names
 of the list are set to the basename of each file provided in \code{files}
 }
 \description{
-Extract centroided peaks from mzML files
+This function performs centroiding on profile-mode data and
+returns the peaks (centroids) in a similar format.
 }
 \details{
 Centroiding is a major part of a typical metabolomics pipeline.

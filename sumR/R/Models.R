@@ -12,7 +12,7 @@
 #' [generateModel].
 #' @param exp SummarizedExperiment object
 #' @export
-#' @examples
+#' @inherit generateModel examples
 models <- function(exp){
   if (!validateExperiment(exp)) return(NULL)
 
@@ -34,7 +34,8 @@ models <- function(exp){
 #' * __control__: Settings that were used to train the model, including for
 #' cross-validation.
 #' * __model__: The best model that was picked during cross-validation.
-#' * __prediction__: Result of the [predict] function on the test dataset.
+#' * __prediction__: Result of the [predict] function on the test
+#' dataset.
 #' * __varImp__: The variable importance of the model during training. Can be
 #' used to assess what combination of variables are the best predictors for
 #' the phenotype. These results can also be retrieved using the [varImportance]
@@ -45,17 +46,20 @@ models <- function(exp){
 #' @param exp SummarizedExperiment object obtained after post-processing.
 #' @param modelName Name or index of the model to retrieve. Defaults to `1`
 #' @export
-#' @examples
+#' @inherit generateModel examples
 model <- function(exp, modelName = 1){
   if (!validateExperiment(exp)) return(NULL)
 
   metadata(exp)$model[[modelName]]
 }
 
-#' @title Set or replace a model in the given experiment
-#' @description
-#' @details
-#' @returns
+#' @title Set or replace a model in the supplied SummarizedExperiment
+#' @description This function aids in setting a model in the [metadata] slot
+#' of the SummarizedExperiment if none is available.
+#' @details This function is used by [generateModel] for setting a trained
+#' model and its results.
+#' @returns Updated SummarizedExperiment object with added model information
+#' stored in the [metadata] slot.
 #' @param exp SummarizedExperiment object
 #' @param modelName Name of the model to adjust
 #' @param value Value to set in the model
@@ -74,7 +78,7 @@ model <- function(exp, modelName = 1){
 #' library to predict phenotypes. This can be used as a multivariate approach
 #' to determine important differentiating peaks between phenotypes.
 #' @details Modelling is a multi-variate approach of determining important
-#' peaks to predict the phenotype(s). Models are created using the [caret]
+#' peaks to predict the phenotype(s). Models are created using the `caret`
 #' package. First, a train-test split is made using the given ratio. Next,
 #' train control is done using a cross-validation approach. Here, the data
 #' is scaled and centered before training starts. The model used for training
@@ -93,6 +97,26 @@ model <- function(exp, modelName = 1){
 #' @seealso [Caret manual](https://topepo.github.io/caret/)
 #' @export
 #' @examples
+#' # Read example data
+#' data("sumRnegative")
+#'
+#' # Set colData and phenotype
+#' df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+#' sumRnegative <- addCellData(sumRnegative, df)
+#' sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+#'
+#' # Imputate and Scale data
+#' sumRnegative <- imputation(sumRnegative)
+#' sumRnegative <- autoScale(sumRnegative)
+#'
+#' # Generate a (Random Forest) model
+#' sumRnegative <- generateModel(sumRnegative, "rf", ratio = 0.5)
+#'
+#' # Retrieve model infomation
+#' model(sumRnegative)
+#'
+#' # Retrieve Variable importances
+#' varImportance(sumRnegative, "rf")
 generateModel <- function(exp, modelName, classifiers = metadata(exp)$phenotype,
                           assay = 1, folds = 5, ratio = 0.632, seed = NULL, ...){
   if (!validateExperiment(exp)) return(NULL)
@@ -148,7 +172,7 @@ generateModel <- function(exp, modelName, classifiers = metadata(exp)$phenotype,
 #' @param modelName Name or index of the model. Defaults to `1`, meaning the
 #' first model that was generated.
 #' @export
-#' @examples
+#' @inherit generateModel examples
 varImportance <- function(exp, modelName = 1){
   if (!validateExperiment(exp)) return(NULL)
 

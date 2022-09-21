@@ -21,6 +21,16 @@ transformation? Defaults to \code{exp(1)}}
 \item{setDefault}{Boolean value, should the new assay be set as default
 assay on index 1? Defaults to TRUE}
 }
+\value{
+SummarizedExperiment object with added assay called "Scaled" which
+contains scaled values that were optionally log-transformed prior to scaling.
+}
 \description{
-Auto-scale with optional log transform an assay
+This function will log transform and auto-scale a given assay
+and store it in the assays of the SummarizedExperiment as "Scaled".
+}
+\details{
+Scaling is an important step before continuing data analysis. It
+will ensure that the peaks and samples are comparible for statistics and
+modelling.
 }

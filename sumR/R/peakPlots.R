@@ -11,6 +11,37 @@ spectrumPlot <- function(peaks, file = 1, scan = 1){
     geom_segment(aes(x = .data$mz, y = 0, yend = .data$i, xend = .data$mz))
 }
 
+#' @title Plot chromatogram of a peak for 1 or more samples
+#' @description This function plots the chromatogram of an aligned peak. This
+#' can be used to inspect the peak alignment.
+#' @param exp SummarizedExperiment object obtained after alignment with
+#' [cellAlignment].
+#' @param peaks List of centroided peaks obtained from [extractPeaks]
+#' @param sampleIdx Vector of 1 or more sample indices or names to plot the
+#' chromatogram for.
+#' @param peakId Peak index or peak name to plot the chromatogram for.
+#' @importFrom stats aggregate.data.frame
+#' @importFrom ggplot2 ggplot aes geom_point geom_line theme_bw
+#' @export
+chromatogramPlot <- function(exp, peaks, sampleIdx = 1, peakId = 1){
+  centroided <- peaks[sampleIdx]
+
+  peak <- rowData(exp[peakId, ])
+  df <- do.call(rbind, lapply(sampleIdx, function(i){
+    df <- centroided[[i]]
+    df <- df[df$rt >= peak$rtmin & df$rt <= peak$rtmax &
+                    df$mz >= peak$mzmin & df$mz <= peak$mzmax, ]
+    df <- aggregate.data.frame(df, by = df$rt, FUN = "sum")
+    df$sample <- i
+  }))
+
+  ggplot(as.data.frame(df), aes(x = .data$rt, y = .data$i,
+                                color = .data$sample)) +
+    geom_point() +
+    geom_line() +
+    theme_bw()
+}
+
 
 #' @title plotCellPeaks
 #' @param peaks List of datafres with peak picked data

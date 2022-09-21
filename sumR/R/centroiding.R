@@ -1,11 +1,12 @@
 #' @title Extract centroided peaks from mzML files
-#' @description
+#' @description This function performs centroiding on profile-mode data and
+#' returns the peaks (centroids) in a similar format.
+#' @inherit parseFile details
 #' @param files A vector of paths to mzML files in profile mode to be converted
 #' to centroided mode.
 #' @param cores Integer value of the number of cores to use. Any value > 1
 #' indicates a multi-core approach. Defaults to 1.
 #' @inheritDotParams parseFile -file
-#' @inherit parseFile details
 #' @importFrom parallel makeCluster stopCluster
 #' @importFrom pbapply pblapply
 #' @importFrom tools file_path_sans_ext

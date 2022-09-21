@@ -1,12 +1,42 @@
 #' @title Shapiro's test for normality across cells
-#' @description shapiro test for normality check
-#' @details
-#' @returns
-#' @param exp
-#' @param assay
-#' @param method
+#' @description Shapiro's test for normality is a test that indicates if the
+#' supplied distribution is significantly different from a normal distribution.
+#' This test stored the results of the adjusted p-value in the [rowData] slot
+#' of the `exp`.
+#' @details A significant adjusted p-value indicates that the distribution is
+#' very likely not normal, and therefore non-parametric tests should be used to
+#' get an accurate indication of significance, e.g. [wilcoxTest] for 2 groups
+#' and [dunnTest] for > 2 groups.
+#'
+#' It is recommended to impute an assay using e.g. [imputation] and scale it
+#' using [autoScale] to get a fair estimation of normality.
+#' @returns SummarizedExperiment with updated [rowData] slot. The results will
+#' be stored in the `shapiroWilk` column of the rowData of `exp`.
+#' @param exp SummarizedExperiment with a (auto)scaled assay.
+#' @param assay Name or index of the assay with (auto)scaled values. Defaults
+#' to the first assay (index 1).
+#' @param method Correction method to address the multiple testing problem.
+#' Defaults to `"fdr"` (False Discovery Rate).
 #' @importFrom stats shapiro.test
 #' @export
+#' @examples
+#' #' # Read example data
+#' data("sumRnegative")
+#'
+#' # Set colData and phenotype
+#' df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+#' sumRnegative <- addCellData(sumRnegative, df)
+#' sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+#'
+#' # Imputate and Scale data
+#' sumRnegative <- imputation(sumRnegative)
+#' sumRnegative <- autoScale(sumRnegative)
+#'
+#' # Run Shapiro's test
+#' sumRnegative <- shapiroTest(sumRnegative)
+#'
+#' # Show results of first 5 compounds
+#' rowData(sumRnegative[1:5, ])$shapiroTest
 shapiroTest <- function(exp, assay = 1, method = "fdr") {
   if (!validateExperiment(exp)) return(exp)
   dataframe <- assay(exp, assay)
@@ -19,11 +49,31 @@ shapiroTest <- function(exp, assay = 1, method = "fdr") {
 #' @description
 #' @details
 #' @returns
-#' @param exp
-#' @param assay
-#' @param classifiers a factor vector with the classes of the samples
-#' @importFrom utils combn
+#' @param exp SummarizedExperiment with a (auto)scaled assay.
+#' @param assay Name or index of the assay with (auto)scaled values. Defaults
+#' to the first assay (index 1).
+#' @param classifiers Column in the [colData] that describes the phenotype or
+#' predictor class used for statistical testing and modelling. Defaults to the
+#' phenotype set using [setPhenotype].
 #' @export
+#' @examples
+#' #' # Read example data
+#' data("sumRnegative")
+#'
+#' # Set colData and phenotype
+#' df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+#' sumRnegative <- addCellData(sumRnegative, df)
+#' sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+#'
+#' # Imputate and Scale data
+#' sumRnegative <- imputation(sumRnegative)
+#' sumRnegative <- autoScale(sumRnegative)
+#'
+#' # Run Fold Change
+#' sumRnegative <- foldChange(sumRnegative)
+#'
+#' # Show results of first 5 compounds
+#' rowData(sumRnegative[1:5, ])$foldChange
 foldChange <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype) {
   if (!testCheck(exp, classifiers, maxGroups = 2)) return(exp)
 
@@ -43,12 +93,34 @@ foldChange <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype) {
 #' @description levene test for variance check
 #' @details
 #' @returns
-#' @param exp
-#' @param assay
-#' @param classifiers
-#' @param method
+#' @param exp SummarizedExperiment with a (auto)scaled assay.
+#' @param assay Name or index of the assay with (auto)scaled values. Defaults
+#' to the first assay (index 1).
+#' @param classifiers Column in the [colData] that describes the phenotype or
+#' predictor class used for statistical testing and modelling. Defaults to the
+#' phenotype set using [setPhenotype].
+#' @param method Correction method to address the multiple testing problem.
+#' Defaults to `"fdr"` (False Discovery Rate).
 #' @importFrom rstatix levene_test
 #' @export
+#' @examples
+#' #' # Read example data
+#' data("sumRnegative")
+#'
+#' # Set colData and phenotype
+#' df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+#' sumRnegative <- addCellData(sumRnegative, df)
+#' sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+#'
+#' # Imputate and Scale data
+#' sumRnegative <- imputation(sumRnegative)
+#' sumRnegative <- autoScale(sumRnegative)
+#'
+#' # Run Levene's Test
+#' sumRnegative <- leveneTest(sumRnegative)
+#'
+#' # Show results of first 5 compounds
+#' rowData(sumRnegative[1:5, ])$leveneTest
 leveneTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
                        method = "fdr") {
   if (!testCheck(exp, classifiers, maxGroups = 2)) return(exp)
@@ -68,12 +140,34 @@ leveneTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
 #' variance)
 #' @details
 #' @returns
-#' @param exp
-#' @param assay
-#' @param classifiers
-#' @param method
+#' @param exp SummarizedExperiment with a (auto)scaled assay.
+#' @param assay Name or index of the assay with (auto)scaled values. Defaults
+#' to the first assay (index 1).
+#' @param classifiers Column in the [colData] that describes the phenotype or
+#' predictor class used for statistical testing and modelling. Defaults to the
+#' phenotype set using [setPhenotype].
+#' @param method Correction method to address the multiple testing problem.
+#' Defaults to `"fdr"` (False Discovery Rate).
 #' @importFrom stats p.adjust t.test
 #' @export
+#' @examples
+#' #' # Read example data
+#' data("sumRnegative")
+#'
+#' # Set colData and phenotype
+#' df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+#' sumRnegative <- addCellData(sumRnegative, df)
+#' sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+#'
+#' # Imputate and Scale data
+#' sumRnegative <- imputation(sumRnegative)
+#' sumRnegative <- autoScale(sumRnegative)
+#'
+#' # Run Welch' T-Test
+#' sumRnegative <- welchTest(sumRnegative)
+#'
+#' # Show results of first 5 compounds
+#' rowData(sumRnegative[1:5, ])$welchTest
 welchTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
                       method = "fdr") {
   if (!testCheck(exp, classifiers, maxGroups = 2)) return(exp)
@@ -91,12 +185,34 @@ welchTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
 #' @description wilcox test between two groups of samples
 #' @details
 #' @returns
-#' @param exp
-#' @param assay
-#' @param classifiers
-#' @param method
+#' @param exp SummarizedExperiment with a (auto)scaled assay.
+#' @param assay Name or index of the assay with (auto)scaled values. Defaults
+#' to the first assay (index 1).
+#' @param classifiers Column in the [colData] that describes the phenotype or
+#' predictor class used for statistical testing and modelling. Defaults to the
+#' phenotype set using [setPhenotype].
+#' @param method Correction method to address the multiple testing problem.
+#' Defaults to `"fdr"` (False Discovery Rate).
 #' @importFrom stats p.adjust wilcox.test
 #' @export
+#' @examples
+#' #' # Read example data
+#' data("sumRnegative")
+#'
+#' # Set colData and phenotype
+#' df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+#' sumRnegative <- addCellData(sumRnegative, df)
+#' sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+#'
+#' # Imputate and Scale data
+#' sumRnegative <- imputation(sumRnegative)
+#' sumRnegative <- autoScale(sumRnegative)
+#'
+#' # Run Wilcoxon Test
+#' sumRnegative <- wilcoxTest(sumRnegative)
+#'
+#' # Show results of first 5 compounds
+#' rowData(sumRnegative[1:5, ])$wilcoxTest
 wilcoxTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
                        method = "fdr") {
 
@@ -112,42 +228,39 @@ wilcoxTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
   exp
 }
 
-#' @title welch anova test
-#' @description welch anova test between more than two groups of samples
-#' (assuming unequal variance)
-#' @details
-#' @returns
-#' @param exp
-#' @param assay
-#' @param classifiers
-#' @param method
-#' @importFrom stats oneway.test
-#' @export
-welchAnova <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
-                       method = "fdr") {
-  if (!testCheck(exp, classifiers, minGroups = 3)) return(exp)
-
-  dataframe <- as.data.frame(t(assay(exp, assay)))
-  classifiers <- exp[[classifiers]]
-
-  p.values <- apply(dataframe, 2, function(x){
-    oneway.test(formula = x ~ classifiers, data = dataframe,
-                subset = x)$p.value
-  })
-  rowData(exp)$welchAnova <- p.adjust(p.values, method = method)
-  exp
-}
-
 #' @title Dunn test
 #' @description Dunn post hoc test after kruskal-wallis test
 #' @details
 #' @returns
-#' @param exp
-#' @param assay
-#' @param classifiers
-#' @param method a character string for correction method .. default is "bh"
+#' @param exp SummarizedExperiment with a (auto)scaled assay.
+#' @param assay Name or index of the assay with (auto)scaled values. Defaults
+#' to the first assay (index 1).
+#' @param classifiers Column in the [colData] that describes the phenotype or
+#' predictor class used for statistical testing and modelling. Defaults to the
+#' phenotype set using [setPhenotype].
+#' @param Correction method to address the multiple testing problem.
+#' Defaults to `"bh"` (Benjamini-Hochberg).
 #' @importFrom dunn.test dunn.test
+#' @seealso [dunn.test] for correction methods available.
 #' @export
+#' @examples
+#' #' # Read example data
+#' data("sumRnegative")
+#'
+#' # Set colData and phenotype
+#' df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+#' sumRnegative <- addCellData(sumRnegative, df)
+#' sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+#'
+#' # Imputate and Scale data
+#' sumRnegative <- imputation(sumRnegative)
+#' sumRnegative <- autoScale(sumRnegative)
+#'
+#' # Run Dunn's Test
+#' sumRnegative <- dunnTest(sumRnegative)
+#'
+#' # Show results of first 5 compounds
+#' rowData(sumRnegative[1:5, ])$dunnTest
 dunnTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
                      method = "bh") {
 
@@ -169,11 +282,32 @@ dunnTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
 #' @description anova test followed by tukey HSD test as post-hoc
 #' @details
 #' @returns
-#' @param exp
-#' @param assay
-#' @param classifiers
-#' @importFrom stats TukeyHSD aov
+#' @param exp SummarizedExperiment with a (auto)scaled assay.
+#' @param assay Name or index of the assay with (auto)scaled values. Defaults
+#' to the first assay (index 1).
+#' @param classifiers Column in the [colData] that describes the phenotype or
+#' predictor class used for statistical testing and modelling. Defaults to the
+#' phenotype set using [setPhenotype].
+#' @importFrom stats TukeyHSD aov formula
 #' @export
+#' @examples
+#' #' # Read example data
+#' data("sumRnegative")
+#'
+#' # Set colData and phenotype
+#' df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+#' sumRnegative <- addCellData(sumRnegative, df)
+#' sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+#'
+#' # Imputate and Scale data
+#' sumRnegative <- imputation(sumRnegative)
+#' sumRnegative <- autoScale(sumRnegative)
+#'
+#' # Run Anova & Tukey Test
+#' sumRnegative <- aovTukeyTest(sumRnegative)
+#'
+#' # Show results of first 5 compounds
+#' rowData(sumRnegative[1:5, ])$aovTukeyTest
 aovTukeyTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype) {
   if (!testCheck(exp, classifiers, minGroups = 3)) return(exp)
 
@@ -194,10 +328,12 @@ aovTukeyTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype) 
 #' @description
 #' @details
 #' @returns
-#' @param exp
-#' @param classifiers
-#' @param minGroups
-#' @param maxGroups
+#' @param exp SummarizedExperiment with a (auto)scaled assay.
+#' @param classifiers Column in the [colData] that describes the phenotype or
+#' predictor class used for statistical testing and modelling. Defaults to the
+#' phenotype set using [setPhenotype].
+#' @param minGroups Minimum number of groups for the test. Defaults to `0`
+#' @param maxGroups Maximum number of groups for the test. Defaults to `Inf`
 testCheck <- function(exp, classifiers, minGroups = 0, maxGroups = Inf) {
   if (!validateExperiment(exp)) return(FALSE)
   if (is.null(classifiers)) stop("Cannot perform test without classifiers")
@@ -214,10 +350,28 @@ testCheck <- function(exp, classifiers, minGroups = 0, maxGroups = Inf) {
 #' @description
 #' @details
 #' @returns
-#' @param exp
-#' @param assay
-#' @param classifiers
+#' @param exp SummarizedExperiment with a (auto)scaled assay.
+#' @param assay Name or index of the assay with (auto)scaled values. Defaults
+#' to the first assay (index 1).
+#' @param classifiers Column in the [colData] that describes the phenotype or
+#' predictor class used for statistical testing and modelling. Defaults to the
+#' phenotype set using [setPhenotype].
 #' @export
+#' @examples
+#' #' # Read example data
+#' data("sumRnegative")
+#'
+#' # Set colData and phenotype
+#' df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+#' sumRnegative <- addCellData(sumRnegative, df)
+#' sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+#'
+#' # Imputate and Scale data
+#' sumRnegative <- imputation(sumRnegative)
+#' sumRnegative <- autoScale(sumRnegative)
+#'
+#' # Detect which test is suitable
+#' detectTest(sumRnegative)
 detectTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
                        threshold = 2/3){
   groups <- length(unique(exp[[classifiers]]))
@@ -238,10 +392,28 @@ detectTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
 #' @description
 #' @details
 #' @returns
-#' @param exp
-#' @param assay
-#' @param classifiers
+#' @param exp SummarizedExperiment with a (auto)scaled assay.
+#' @param assay Name or index of the assay with (auto)scaled values. Defaults
+#' to the first assay (index 1).
+#' @param classifiers Column in the [colData] that describes the phenotype or
+#' predictor class used for statistical testing and modelling. Defaults to the
+#' phenotype set using [setPhenotype].
 #' @export
+#' @examples
+#' #' # Read example data
+#' data("sumRnegative")
+#'
+#' # Set colData and phenotype
+#' df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+#' sumRnegative <- addCellData(sumRnegative, df)
+#' sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+#'
+#' # Imputate and Scale data
+#' sumRnegative <- imputation(sumRnegative)
+#' sumRnegative <- autoScale(sumRnegative)
+#'
+#' # Detect and execute appropriate test
+#' sumRnegative <- autoTest(sumRnegative)
 autoTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype){
   test <- detectTest(exp, assay, classifiers)
   message("Using test: ", test)

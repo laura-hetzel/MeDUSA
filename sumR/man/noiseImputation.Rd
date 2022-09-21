@@ -31,19 +31,3 @@ Imputation of missing values is a vital part of post-processing
 as it is needed for other post-processing methods, including statistics and
 modelling.
 }
-\examples{
-# Loading negative polarity dataset
-data("sumRnegative")
-
-# Noise Imputation
-exp <- imputation(sumRnegative, method = "noise", noise = 250)
-
-# Model Imputation
-exp <- imputation(sumRnegative, method = "model", model = "sv")
-
-# Rmagic Imputation
-# exp <- imputation(sumRnegative, method = "magic")
-
-# SAVER Imputation
-exp <- imputation(sumRnegative, method = "saver", normalize = TRUE)
-}

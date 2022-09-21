@@ -466,7 +466,7 @@ RF_CV_plots <- function(roc_all, auc_all, rocfinal, aucfinal) {
 
 #' @title ROC plot
 #' @description plotting ROC curves for any choosen model (final (rocfinal and aucfinal) or
-#' from cross validation model(sepcifiy model number roc_all[[1]] and auc_all[[1]]))
+#' from cross validation model
 #' @param roc ROC of desired model
 #' @param auc AUC of desired model
 ROC_plot <- function(roc, auc) {
