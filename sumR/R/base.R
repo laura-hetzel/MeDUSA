@@ -24,13 +24,12 @@ align_check <- function(aligned_peaks) {
 
 #' @title Boxplot of the ppm errors
 #' @param ppm_err_fn dataframe obtained from `align_check`
-#' @importFrom ggplot2 ggplot
+#' @importFrom ggplot2 ggplot .data geom_boxplot ggtitle theme_classic
 ppm_err_plot <- function(ppm_err_fn) {
-  ppm_err_plot_fn <- ggplot(ppm_err_fn, aes(x = ppm_error)) +
+  ggplot(ppm_err_fn, aes(x = .data$ppm_error)) +
     geom_boxplot() +
     ggtitle("ppm error boxplot") +
     theme_classic(base_size = 20)
-  return(ppm_err_plot_fn)
 }
 
 #' @title Alignment analysis (optional summary & boxplot of ppm errors)

@@ -20,7 +20,7 @@ spectrumPlot <- function(peaks, file = 1, scan = 1){
 #' @param sampleIdx Vector of 1 or more sample indices or names to plot the
 #' chromatogram for.
 #' @param peakId Peak index or peak name to plot the chromatogram for.
-#' @importFrom stats aggregate.data.frame
+#' @importFrom stats aggregate
 #' @importFrom ggplot2 ggplot aes geom_point geom_line theme_bw .data
 #' @export
 chromatogramPlot <- function(exp, peaks, sampleIdx = 1, peakId = 1){
@@ -48,7 +48,7 @@ chromatogramPlot <- function(exp, peaks, sampleIdx = 1, peakId = 1){
 #' @title spectraShiftPlot
 #' @param spectraList
 #' @param file File number of the files that were used.
-#' @importFrom ggplot2 ggplot geom_segment aes unit xlab arrow
+#' @importFrom ggplot2 ggplot geom_segment aes unit xlab arrow .data
 #' @export
 spectraShiftPlot <- function(spectra, cell = 1){
   if (is.numeric(cell)){
@@ -62,9 +62,11 @@ spectraShiftPlot <- function(spectra, cell = 1){
   spectra$mzmax <- spectra$mzmax - spectra$mz
   spectra$mzmin <- spectra$mzmin - spectra$mz
   ggplot(as.data.frame(spectra[spectra$sample == cell, ])) +
-    geom_segment(aes(x = mzmin, xend = mzmax, y = mz, yend = mz),
+    geom_segment(aes(x = .data$mzmin, xend = .data$mzmax,
+                     y = .data$mz, yend = .data$mz),
                  arrow = arrow(length = unit(2, "mm"))) +
-    geom_segment(aes(x = mzmax, xend = mzmin, y = mz, yend = mz),
+    geom_segment(aes(x = .data$mzmax, xend = .data$mzmin,
+                     y = .data$mz, yend = .data$mz),
                  arrow = arrow(length = unit(2, "mm"))) +
     xlab("mz Shift")
 }
@@ -81,9 +83,11 @@ cellShiftPlot <- function(exp) {
   df$mzmin <- df$mzmin - df$mz
   df$mzmax <- df$mzmax - df$mz
   ggplot(df) +
-    geom_segment(aes(x = mzmin, xend = mzmax, y = mz, yend = mz),
+    geom_segment(aes(x = .data$mzmin, xend =.data$ mzmax,
+                     y = .data$mz, yend = .data$mz),
                  arrow = arrow(length = unit(2, "mm"))) +
-    geom_segment(aes(x = mzmax, xend = mzmin, y = mz, yend = mz),
+    geom_segment(aes(x = .data$mzmax, xend = .data$mzmin,
+                     y = .data$mz, yend = .data$mz),
                  arrow = arrow(length = unit(2, "mm"))) +
     xlab("mz shift")
 }

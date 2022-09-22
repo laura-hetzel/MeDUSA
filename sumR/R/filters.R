@@ -253,7 +253,7 @@ peakFilter <- function(exp, assay = 1, phenotype = metadata(exp)$phenotype,
 #' sumRnegative <- wilcoxTest(sumRnegative)
 #'
 #' # Only keep peaks with p-value < 0.1
-#' keepVariablePeaks(sumRnegative, threshold = 0.1)
+#' keepVariablePeaks(sumRnegative, test = "wilcoxTest", threshold = 0.1)
 keepVariablePeaks <- function(exp, test, threshold = 0.05,
                                  method = "any"){
   if (!validateExperiment(exp)) return(NULL)

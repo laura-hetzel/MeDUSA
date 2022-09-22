@@ -51,5 +51,5 @@ sumRnegative <- autoScale(sumRnegative)
 sumRnegative <- wilcoxTest(sumRnegative)
 
 # Only keep peaks with p-value < 0.1
-keepVariablePeaks(sumRnegative, threshold = 0.1)
+keepVariablePeaks(sumRnegative, test = "wilcoxTest", threshold = 0.1)
 }

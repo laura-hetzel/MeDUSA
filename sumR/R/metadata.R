@@ -166,6 +166,8 @@ setDefaultAssay <- function(exp, default){
 #' @param exp SummarizedExperiment object obtained after alignment
 #' @param phenotype Character vector specifying the column in colData to
 #' be used as phenotype
+#' @importFrom SummarizedExperiment colData
+#' @importFrom S4Vectors metadata metadata<-
 #' @export
 #' @examples
 #' # Read data

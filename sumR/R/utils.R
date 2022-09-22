@@ -169,3 +169,15 @@ autoScale <- function(exp, assay = 1, log = TRUE, base = exp(1),
   }
   exp
 }
+
+#' @title Calculate median across rows of matrix/data.frame
+#' @importFrom stats median
+rowMedians <- function(x, na.rm = TRUE){
+  apply(x, 1, function(z) median(z, na.rm))
+}
+
+#' @title Calculate standard deviation across rows  of matrix/data.frame
+#' @importFrom stats sd
+rowSds <- function(x, na.rm = TRUE){
+  apply(x, 1, function(z) sd(z, na.rm))
+}

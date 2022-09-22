@@ -97,6 +97,7 @@ noiseImputation <- function(data, noise = 100) {
 #' @inheritDotParams modelImputation -data
 #' @inheritDotParams saverImputation -data
 #' @importFrom SummarizedExperiment assay<-
+#' @importFrom S4Vectors metadata<-
 #' @export
 #' @examples
 #' # Loading negative polarity dataset
