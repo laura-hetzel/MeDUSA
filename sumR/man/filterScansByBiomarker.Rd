@@ -15,6 +15,11 @@ filterScansByBiomarker(fileList, mass, intensity = 1e+05, ppm = 20)
 
 \item{ppm}{Mass error for the biomarker. Defaults to 20}
 }
+\value{
+List of peaks in a similar format as \link{extractPeaks}, but with
+reduced number of scans, depending on the \code{mass}, \code{intensity}, and \code{ppm}
+chosen.
+}
 \description{
 This function can be used to extract data obtained from the
 "slug" method that is currently in development. It will extract all scans

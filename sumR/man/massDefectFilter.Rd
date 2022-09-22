@@ -20,5 +20,6 @@ massDefectFilter(
 created per default set to TRUE}
 }
 \description{
-Mass defect filter pipeline
+uses the mass defect functions to filter
+the data with one command
 }

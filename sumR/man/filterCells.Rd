@@ -11,6 +11,10 @@ filterCells(exp, assay = 1)
 
 \item{assay}{The assay to be checked. Defaults to the assay at index 1}
 }
+\value{
+SummarizedExperiment without cells that have no measured values
+in the assay given.
+}
 \description{
 Not all cells will contain the same peaks after alignment. For
 peaks that are not found in cells, an \code{NA} value is used instead. This
@@ -22,4 +26,16 @@ During post-processing, several filters may be applied to remove
 either compounds or peaks to reduce false positive hits. In some cases,
 cells with few peaks may not contain any peaks at all. This function
 helps in detecting and removing such cells.
+}
+\examples{
+# Read example data
+data("sumRnegative")
+
+# Set colData and phenotype
+df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+sumRnegative <- addCellData(sumRnegative, df)
+sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+
+# Remove any cells without a value in the assay
+filterCells(sumRnegative)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/statistics.R
 \name{aovTukeyTest}
 \alias{aovTukeyTest}
-\title{anova-tukey test}
+\title{Anova with Tukey HSD post-hoc test for > 2 groups}
 \usage{
 aovTukeyTest(exp, assay = 1, classifiers = metadata(exp)$phenotype)
 }
@@ -16,8 +16,14 @@ to the first assay (index 1).}
 predictor class used for statistical testing and modelling. Defaults to the
 phenotype set using \link{setPhenotype}.}
 }
+\value{
+SummarizedExperiment with \code{aovTukeyTest} column in the \link{rowData}
+slot.
+}
 \description{
-anova test followed by tukey HSD test as post-hoc
+This function excutes an anova test and consecutively the
+Tukey HSD post-hoc test for determining which compounds are significantly
+different across > 2 phenotypes.
 }
 \examples{
 #' # Read example data

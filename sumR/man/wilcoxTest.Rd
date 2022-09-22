@@ -2,7 +2,7 @@
 % Please edit documentation in R/statistics.R
 \name{wilcoxTest}
 \alias{wilcoxTest}
-\title{wilcox test}
+\title{Wilcoxon test for non-parametric distributed data of 2 groups}
 \usage{
 wilcoxTest(
   exp,
@@ -24,8 +24,18 @@ phenotype set using \link{setPhenotype}.}
 \item{method}{Correction method to address the multiple testing problem.
 Defaults to \code{"fdr"} (False Discovery Rate).}
 }
+\value{
+SummarizedExperiment with \code{wilcoxTest} column in the \link{rowData} slot.
+}
 \description{
-wilcox test between two groups of samples
+This function will perform the Wilcoxon signed-rank test for
+non-parametric data. The groups are determined by the phenotype given and
+will produce an error if the number of groups is not equal to 2.
+}
+\details{
+This test is a common test that tests the difference between the
+phenotypes proivded. It is considered the equivalent to the \link{welchTest}, but
+for non-parametric data, which causes it to be less powerful in general.
 }
 \examples{
 #' # Read example data

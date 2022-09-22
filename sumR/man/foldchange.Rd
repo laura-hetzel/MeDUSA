@@ -16,8 +16,18 @@ to the first assay (index 1).}
 predictor class used for statistical testing and modelling. Defaults to the
 phenotype set using \link{setPhenotype}.}
 }
+\value{
+SummarizedExperiment with \code{foldChange} column in the \link{rowData} slot.
+}
 \description{
-foldchange for two groups test
+This function calculates the median fold change between the
+phenotypes determined by \code{classifiers}.
+}
+\details{
+The fold change is a metric for the difference between groups and
+can be indicative of the significance of the differences. When the assay has
+been scaled with a log transformation, this effectively calculates the logFC,
+often used for volcano plots.
 }
 \examples{
 #' # Read example data

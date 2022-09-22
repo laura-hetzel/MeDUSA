@@ -70,7 +70,7 @@ plot_mz_MD <- function(MD_df, MD_df_filtered) {
 }
 
 #' @title Mass defect filter pipeline
-#' @descritpion uses the mass defect functions to filter
+#' @description uses the mass defect functions to filter
 #' the data with one command
 #' @param dataframe containing the data, intensities and mz
 #' @param mz_MD_plot logical variable deciding if plot is

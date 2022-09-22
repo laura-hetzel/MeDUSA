@@ -19,6 +19,9 @@ phenotype set using \link{setPhenotype}.}
 \item{Correction}{method to address the multiple testing problem.
 Defaults to \code{"bh"} (Benjamini-Hochberg).}
 }
+\value{
+SummarizedExperiment with \code{dunnTest} column in the \link{rowData} slot.
+}
 \description{
 Dunn post hoc test after kruskal-wallis test
 }

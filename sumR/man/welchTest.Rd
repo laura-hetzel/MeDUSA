@@ -2,7 +2,7 @@
 % Please edit documentation in R/statistics.R
 \name{welchTest}
 \alias{welchTest}
-\title{welch t test}
+\title{Welch T-test for 2 groups}
 \usage{
 welchTest(
   exp,
@@ -24,9 +24,17 @@ phenotype set using \link{setPhenotype}.}
 \item{method}{Correction method to address the multiple testing problem.
 Defaults to \code{"fdr"} (False Discovery Rate).}
 }
+\value{
+SummarizedExperiment with \code{welchTest} column in the \link{rowData} slot.
+}
 \description{
-welch t test between two groups of samples (assuming unequal
-variance)
+Welch T-test between two groups of samples (assuming unequal
+variance).
+}
+\details{
+The Welch T-test is a two-sample test to see if the two
+phenotypes have equal means in their distribution. This test assums unequal
+variance across the phenotypes.
 }
 \examples{
 #' # Read example data

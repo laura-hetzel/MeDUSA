@@ -4,7 +4,13 @@
 \alias{pheatmapPlot}
 \title{Heatmap with colData groups}
 \usage{
-pheatmapPlot(exp, assay = 1, columns = NULL, rows = NULL, ...)
+pheatmapPlot(
+  exp,
+  assay = 1,
+  columns = colnames(colData(sumRnegative)),
+  rows = NULL,
+  ...
+)
 }
 \arguments{
 \item{exp}{SummarizedExperiment object}
@@ -13,6 +19,9 @@ pheatmapPlot(exp, assay = 1, columns = NULL, rows = NULL, ...)
 
 \item{columns}{Vector of column names from the colData to use as
 groups in the heatmap}
+
+\item{rows}{Any columns in rowData that can be visualized as group. Defaults
+to \code{NULL}}
 
 \item{...}{Any other parameters submitted to the \code{pheatmap} function}
 }

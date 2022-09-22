@@ -24,8 +24,18 @@ phenotype set using \link{setPhenotype}.}
 \item{method}{Correction method to address the multiple testing problem.
 Defaults to \code{"fdr"} (False Discovery Rate).}
 }
+\value{
+SummarizedExperiment with \code{leveneTest} column in the \link{rowData} slot.
+}
 \description{
-levene test for variance check
+This function tests the variance across phenotypes for each
+peak and adds the corresponding p-value to the column \code{leveneTest} to the
+\link{rowData} slot.
+}
+\details{
+The levene test is a test for calculating unequal variances across
+groups. This can be an indicator for peaks that have different values in the
+provided assay.
 }
 \examples{
 #' # Read example data

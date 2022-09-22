@@ -18,6 +18,9 @@ in the stats \code{cor} function.}
 \item{corr}{Minimum correlation for peaks to be considered fragments.
 Defaults to 0.95}
 }
+\value{
+SummarizedExperiment without peaks that are highly correlated.
+}
 \description{
 This function finds correlation based on intensities given
 in the assay. Peaks that have a higher correlation than the value
@@ -35,4 +38,20 @@ spearman correlation instead of pearson correlation as the latter tends to
 give higher correlation values. Spearman correlation uses ranked based
 correlation and has shown to give more accurate correlation values when
 many values are imputed.
+}
+\examples{
+#' # Read example data
+data("sumRnegative")
+
+# Set colData and phenotype
+df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+sumRnegative <- addCellData(sumRnegative, df)
+sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+
+# Imputate and Scale data
+sumRnegative <- imputation(sumRnegative)
+sumRnegative <- autoScale(sumRnegative)
+
+# Filter fragments
+fragmentFilter(sumRnegative)
 }

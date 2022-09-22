@@ -46,9 +46,13 @@ shapiroTest <- function(exp, assay = 1, method = "fdr") {
 }
 
 #' @title foldchange for two groups test
-#' @description
-#' @details
-#' @returns
+#' @description This function calculates the median fold change between the
+#' phenotypes determined by `classifiers`.
+#' @details The fold change is a metric for the difference between groups and
+#' can be indicative of the significance of the differences. When the assay has
+#' been scaled with a log transformation, this effectively calculates the logFC,
+#' often used for volcano plots.
+#' @returns SummarizedExperiment with `foldChange` column in the [rowData] slot.
 #' @param exp SummarizedExperiment with a (auto)scaled assay.
 #' @param assay Name or index of the assay with (auto)scaled values. Defaults
 #' to the first assay (index 1).
@@ -90,9 +94,13 @@ foldChange <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype) {
 }
 
 #' @title Levene test for unequal variances across phenotypes
-#' @description levene test for variance check
-#' @details
-#' @returns
+#' @description This function tests the variance across phenotypes for each
+#' peak and adds the corresponding p-value to the column `leveneTest` to the
+#' [rowData] slot.
+#' @details The levene test is a test for calculating unequal variances across
+#' groups. This can be an indicator for peaks that have different values in the
+#' provided assay.
+#' @returns SummarizedExperiment with `leveneTest` column in the [rowData] slot.
 #' @param exp SummarizedExperiment with a (auto)scaled assay.
 #' @param assay Name or index of the assay with (auto)scaled values. Defaults
 #' to the first assay (index 1).
@@ -135,11 +143,13 @@ leveneTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
 }
 
 
-#' @title welch t test
-#' @description welch t test between two groups of samples (assuming unequal
-#' variance)
-#' @details
-#' @returns
+#' @title Welch T-test for 2 groups
+#' @description Welch T-test between two groups of samples (assuming unequal
+#' variance).
+#' @details The Welch T-test is a two-sample test to see if the two
+#' phenotypes have equal means in their distribution. This test assums unequal
+#' variance across the phenotypes.
+#' @returns SummarizedExperiment with `welchTest` column in the [rowData] slot.
 #' @param exp SummarizedExperiment with a (auto)scaled assay.
 #' @param assay Name or index of the assay with (auto)scaled values. Defaults
 #' to the first assay (index 1).
@@ -181,10 +191,14 @@ welchTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
   exp
 }
 
-#' @title wilcox test
-#' @description wilcox test between two groups of samples
-#' @details
-#' @returns
+#' @title Wilcoxon test for non-parametric distributed data of 2 groups
+#' @description This function will perform the Wilcoxon signed-rank test for
+#' non-parametric data. The groups are determined by the phenotype given and
+#' will produce an error if the number of groups is not equal to 2.
+#' @details This test is a common test that tests the difference between the
+#' phenotypes proivded. It is considered the equivalent to the [welchTest], but
+#' for non-parametric data, which causes it to be less powerful in general.
+#' @returns SummarizedExperiment with `wilcoxTest` column in the [rowData] slot.
 #' @param exp SummarizedExperiment with a (auto)scaled assay.
 #' @param assay Name or index of the assay with (auto)scaled values. Defaults
 #' to the first assay (index 1).
@@ -231,7 +245,7 @@ wilcoxTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
 #' @title Dunn test
 #' @description Dunn post hoc test after kruskal-wallis test
 #' @details
-#' @returns
+#' @returns SummarizedExperiment with `dunnTest` column in the [rowData] slot.
 #' @param exp SummarizedExperiment with a (auto)scaled assay.
 #' @param assay Name or index of the assay with (auto)scaled values. Defaults
 #' to the first assay (index 1).
@@ -278,10 +292,13 @@ dunnTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
   exp
 }
 
-#' @title anova-tukey test
-#' @description anova test followed by tukey HSD test as post-hoc
+#' @title Anova with Tukey HSD post-hoc test for > 2 groups
+#' @description This function excutes an anova test and consecutively the
+#' Tukey HSD post-hoc test for determining which compounds are significantly
+#' different across > 2 phenotypes.
 #' @details
-#' @returns
+#' @returns SummarizedExperiment with `aovTukeyTest` column in the [rowData]
+#' slot.
 #' @param exp SummarizedExperiment with a (auto)scaled assay.
 #' @param assay Name or index of the assay with (auto)scaled values. Defaults
 #' to the first assay (index 1).
@@ -325,9 +342,12 @@ aovTukeyTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype) 
 }
 
 #' @title Check if the test picked can be executed
-#' @description
-#' @details
-#' @returns
+#' @description This function checks if the test is suitable for the data
+#' that is provided and will throw a warning if not or and error when no
+#' classifiers are provided.
+#' @details This function is called by all tests to see if the test is
+#' appropriate as a check. Used internally by sumR.
+#' @returns Boolean value, is the test valid to use?
 #' @param exp SummarizedExperiment with a (auto)scaled assay.
 #' @param classifiers Column in the [colData] that describes the phenotype or
 #' predictor class used for statistical testing and modelling. Defaults to the
@@ -347,16 +367,35 @@ testCheck <- function(exp, classifiers, minGroups = 0, maxGroups = Inf) {
 }
 
 #' @title Detect an appropriate statistical test
-#' @description
-#' @details
-#' @returns
+#' @description This function checks the supplied assay and phenotypes for
+#' normality and number of groups respectively. Consequently, it picks an
+#' appropriate test to check for statistical difference.
+#' @details This function uses the [shapiroTest] to determine for each peak
+#' if the assay supplied is normally distributed. Together with the number of
+#' groups found in the phenotype slot set by [setPhenotype], 4 different tests
+#' can be suggested:
+#'
+#' - __welchTest__: Number of groups equals 2 and data is considered normally
+#' distributed
+#' - __wilcoxTest__: Number of groups equals 2 and data is considered not to be
+#' normally distributed.
+#' - __aovTukeyTest__: Number of groups is higher than 2 and the data is
+#' considered normally distributed.
+#' - __dunnTest__: Number of groups is higher than 2 and the data is
+#' considered not to be normally distributed.
+#'
+#' @returns A character vector with the name of the test that is suggested.
+#' This is equal to the function name.
 #' @param exp SummarizedExperiment with a (auto)scaled assay.
 #' @param assay Name or index of the assay with (auto)scaled values. Defaults
 #' to the first assay (index 1).
 #' @param classifiers Column in the [colData] that describes the phenotype or
 #' predictor class used for statistical testing and modelling. Defaults to the
 #' phenotype set using [setPhenotype].
+#' @param threshold What fraction of the peaks need to be normally distributed
+#' before performing a parametric statistical test? Defaults to `2/3`.
 #' @export
+#' @seealso [autoTest]
 #' @examples
 #' #' # Read example data
 #' data("sumRnegative")
@@ -389,15 +428,23 @@ detectTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
 }
 
 #' @title Detect and execute an appropriate statistical test
-#' @description
-#' @details
-#' @returns
+#' @description This function checks the supplied assay and phenotypes for
+#' normality and number of groups respectively. Consequently, it picks an
+#' appropriate test to check for statistical difference. This function will
+#' print a message with the test chosen. See Details for more explanation on
+#' which tests are considered.
+#' @inherit detectTest details
+#' @returns SummarizedExperiment with an added column in [rowData] with the
+#' results of the chosen test.
 #' @param exp SummarizedExperiment with a (auto)scaled assay.
 #' @param assay Name or index of the assay with (auto)scaled values. Defaults
 #' to the first assay (index 1).
 #' @param classifiers Column in the [colData] that describes the phenotype or
 #' predictor class used for statistical testing and modelling. Defaults to the
 #' phenotype set using [setPhenotype].
+#' @param threshold Used for [detectTest]. What fraction of the peaks need to
+#' be normally distributed before performing a parametric statistical test?
+#' Defaults to `2/3`.
 #' @export
 #' @examples
 #' #' # Read example data
@@ -414,8 +461,9 @@ detectTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
 #'
 #' # Detect and execute appropriate test
 #' sumRnegative <- autoTest(sumRnegative)
-autoTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype){
-  test <- detectTest(exp, assay, classifiers)
+autoTest <- function(exp, assay = 1, classifiers = metadata(exp)$phenotype,
+                     threshold = 2/3){
+  test <- detectTest(exp, assay, classifiers, threshold)
   message("Using test: ", test)
   get(test)(exp, assay, classifiers)
 }

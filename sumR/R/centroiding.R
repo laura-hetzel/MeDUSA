@@ -94,15 +94,21 @@ parseFile <- function(file, massWindow = c(0, Inf), polarity = "-",
     if (polarity == "+") polarity_filter <- !polarity_filter
     scans <- scans & polarity_filter
   }
+  peaks <- peaks(z)
+  masses <- do.call(rbind, peaks)[,1]
+  lower <- df$scanWindowLowerLimit < min(masses)
+  upper <- df$scanWindowUpperLimit > max(masses)
+  scans <- scans & lower & upper
 
-  l <- doCentroid(peaks(z), df$retentionTime, scans, combineSpectra = combineSpectra, cl = cl)
+  l <- doCentroid(peaks, df$retentionTime, scans,
+                  combineSpectra = combineSpectra, cl = cl)
   if (length(l) == 0) l <- list()
   attr(l, "polarity") <- polarity
   attr(l, "massWindow") <- massWindow
   attr(l, "combineSpectra") <- combineSpectra
   attr(l, "Files") <- file
   attr(l, "rt") <- df$retentionTime
-  attr(l, "scanranges") <- unique(df$scanWindowLowerLimit)
+  attr(l, "scanranges") <- unique(df[scans, ]$scanWindowLowerLimit)
   attr(l, "Datetime") <- mzR::runInfo(z)$startTimeStamp
   l
 }

@@ -1,7 +1,14 @@
 #' @title Substract Blanks from SummarizedExperiment
-#' @description
-#' @details
-#' @returns
+#' @description This function removes peaks if the signal in the samples is
+#' too low in comparison with the blanks.
+#' @details For each peak, the median value is taken of the supplied assay and
+#' multiplied with the value in `foldChange`. If the number of samples exceeds
+#' the value in `sampleThresh`, the signal in the cells is considered too low
+#' and the peak will be removed. By default, `sampleThresh` is set to infinity,
+#' so the function does not remove peaks if left unset. Finally, the blank
+#' samples are optionally removed with `removeBlanks`
+#' @returns SummarizedExperiment with removed compounds and/or samples
+#' according to the parameters set.
 #' @param exp SummarizedExperiment obtained after alignment
 #' @param foldChange Multiplier used for the median blanks. If the Area of
 #' a sample is lower than this threshold, it counts towards the `nSamples`
@@ -13,6 +20,20 @@
 #' filter is applied? Defaults to `TRUE`.
 #' @export
 #' @examples
+#' # Read example data
+#' data("sumRnegative")
+#'
+#' # Set colData and phenotype
+#' df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+#' sumRnegative <- addCellData(sumRnegative, df)
+#' sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+#'
+#' # Imputate and Scale data
+#' sumRnegative <- imputation(sumRnegative)
+#' sumRnegative <- autoScale(sumRnegative)
+#'
+#' # Substract blanks
+#' blankSubstraction(sumRnegative, nSamples = 4)
 blankSubstraction <- function(exp, assay = 1, foldChange = 5, nSamples = Inf,
                               removeBlanks = TRUE){
   if (!validateExperiment(exp)) return(exp)
@@ -36,11 +57,22 @@ blankSubstraction <- function(exp, assay = 1, foldChange = 5, nSamples = Inf,
 #' either compounds or peaks to reduce false positive hits. In some cases,
 #' cells with few peaks may not contain any peaks at all. This function
 #' helps in detecting and removing such cells.
-#' @returns
+#' @returns SummarizedExperiment without cells that have no measured values
+#' in the assay given.
 #' @param exp SummarizedExperiment object obtained after alignment
 #' @param assay The assay to be checked. Defaults to the assay at index 1
 #' @export
 #' @examples
+#' # Read example data
+#' data("sumRnegative")
+#'
+#' # Set colData and phenotype
+#' df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+#' sumRnegative <- addCellData(sumRnegative, df)
+#' sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+#'
+#' # Remove any cells without a value in the assay
+#' filterCells(sumRnegative)
 filterCells <- function(exp, assay = 1) {
   if (!validateExperiment(exp)) return(NULL)
   exp[, colSums(is.na(assay(exp, assay))) != nrow(exp)]
@@ -56,6 +88,9 @@ filterCells <- function(exp, assay = 1) {
 #' higher concentrations than the second part, which contains the cell
 #' measurement. By extracting this middle part from the total ion chromatogram,
 #' the only remaining part is the cell with measurements of interest.
+#' @returns List of peaks in a similar format as [extractPeaks], but with
+#' reduced number of scans, depending on the `mass`, `intensity`, and `ppm`
+#' chosen.
 #' @param fileList List of centroided peaks obtained from `extractPeaks()`
 #' @param mass Biomarker mass to use as identification in the solvent
 #' @param intensity Intensity value that is expected in the solvent
@@ -96,7 +131,7 @@ filterScansByBiomarker <- function(fileList, mass, intensity = 1e5, ppm = 20){
 #' give higher correlation values. Spearman correlation uses ranked based
 #' correlation and has shown to give more accurate correlation values when
 #' many values are imputed.
-#' @returns
+#' @returns SummarizedExperiment without peaks that are highly correlated.
 #' @param exp SummarizedExperiment object obtained after alignment
 #' @param assay Name or index of the assay to use. Defaults to the first
 #' assay (index 1)
@@ -107,6 +142,20 @@ filterScansByBiomarker <- function(fileList, mass, intensity = 1e5, ppm = 20){
 #' @importFrom stats cor
 #' @export
 #' @examples
+#' #' # Read example data
+#' data("sumRnegative")
+#'
+#' # Set colData and phenotype
+#' df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+#' sumRnegative <- addCellData(sumRnegative, df)
+#' sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+#'
+#' # Imputate and Scale data
+#' sumRnegative <- imputation(sumRnegative)
+#' sumRnegative <- autoScale(sumRnegative)
+#'
+#' # Filter fragments
+#' fragmentFilter(sumRnegative)
 fragmentFilter <- function(exp, assay = 1, method = "spearman", corr = 0.95){
   if (!validateExperiment(exp)) return(NULL)
   corrs <- cor(t(assay(exp, assay)), method = method)
@@ -114,12 +163,25 @@ fragmentFilter <- function(exp, assay = 1, method = "spearman", corr = 0.95){
   exp[max_corr < corr, ]
 }
 
-#' @title Remove grouped peaks (features) per phenotype
-#' @description
-#' @details
-#' @returns
+#' @title Remove grouped peaks per phenotype
+#' @description This function removes peaks that might be discovered in only
+#' a few cases per phenotype and therefore undesired for statistics and
+#' modelling.
+#' @details Per phenotype in the set phenotype column of [colData], this
+#' function filters peaks by either absolute (`nCells`) or by fraction
+#' (`fCells`).
+#'
+#' In most cases, peaks often are discovered in just a single cell due to
+#' technical variation. By setting `nCells = 2`, these peaks are removed.
+#' Likewise, to only keep the peaks found in half of the phenotypes,
+#' not considering the number of samples, set `fCells = 0.5`. A combination of
+#' the two might also be a valuable strategy, but should be considered wisely.
+#' @returns SummarizedExperiment with removed peaks determined by the
+#' parameters provided.
 #' @param exp SummarizedExperiment obtained after alignment
 #' @param assay Assay to be used, defaults to the assay at index 1
+#' @param phenotype Name of the column used as a phenotype. Defaults to the
+#' phenotype in the [metadata] slot, set by [setPhenotype]
 #' @param nCells Minimum number of cells a feature should be found in. Defaults
 #' to 0, meaning all features are kept.
 #' @param fCells Similar to `nCells` but for fractions instead. Can be used
@@ -127,12 +189,27 @@ fragmentFilter <- function(exp, assay = 1, method = "spearman", corr = 0.95){
 #' to 0, meaning all features are kept.
 #' @export
 #' @examples
-featureFilter <- function(exp, assay = 1, nCells = 0, fCells = 0){
+#' #' # Read example data
+#' data("sumRnegative")
+#'
+#' # Set colData and phenotype
+#' df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+#' sumRnegative <- addCellData(sumRnegative, df)
+#' sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+#'
+#' # Filter peaks based on absolute numbers
+#' peakFilter(sumRnegative, nCells = 3)
+#'
+#' # Filter peaks based on fractions
+#' peakFilter(sumRnegative, fCells = 0.5)
+peakFilter <- function(exp, assay = 1, phenotype = metadata(exp)$phenotype,
+                       nCells = 0, fCells = 0){
   if (!validateExperiment(exp)) return(NULL)
 
-  to_take <- do.call(intersect, lapply(unique(metadata(exp)$phenotype),
-                                       function(split){
-    sub <- exp[, exp$phenotype == split]
+  phenotypes <- exp[[phenotype]]
+  to_take <- do.call(intersect, lapply(unique(phenotypes),
+                                       function(pheno){
+    sub <- exp[, phenotypes == pheno]
     nFeats <- as.double(apply(assay(sub, assay), 1, function(x) sum(!is.na(x))))
     pFeats <- nFeats / ncol(sub)
     which(nFeats >= nCells & pFeats >= fCells)
@@ -140,20 +217,44 @@ featureFilter <- function(exp, assay = 1, nCells = 0, fCells = 0){
   exp[to_take, ]
 }
 
-#' @title Keep the most variable features based on a univariate test
-#' @description This function removes features that have similar features
+#' @title Keep the most variable peaks based on a univariate test
+#' @description This function removes peaks that have similar peaks
 #' across the given phenotypes and calculated by the function `leveneTest`.
 #' @details When interested in which peaks are significantly different between
 #' groups in the given phenotypes, the leveneTest can be used. Here, only
-#' features are kept where the variance between the groups is significantly
+#' peaks are kept where the variance between the groups is significantly
 #' different. This greatly reduces the dataset with often only a few compounds
 #' remaining.
 #' @returns A SummarizedExperiment with only compounds that have different
 #' variances across the phenotype given.
-#' @param exp SummarizedExperiment object after alignment and leveneTest
+#' @param exp SummarizedExperiment object after performing statistical test(s)
+#' @param test Name of the test executed and stored as a column in [rowData].
+#' @param threshold Numerical value, p-value threshold for determining
+#' significance after multiple test correction. Defaults to 0.05
+#' @param method One of `"any"` or `"all"`. Only used for when number of
+#' phenotypes > 2. If `"any"`, any p-value value between two groups below
+#' `threshold` will be kept. If `"all"`, all p-values between the groups must
+#' be below `threshold` in order to be kept. Defaults to `"any"`.
 #' @export
 #' @examples
-keepVariableFeatures <- function(exp, test = "leveneTest", threshold = 0.05,
+#' #' # Read example data
+#' data("sumRnegative")
+#'
+#' # Set colData and phenotype
+#' df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+#' sumRnegative <- addCellData(sumRnegative, df)
+#' sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+#'
+#' # Imputate and Scale data
+#' sumRnegative <- imputation(sumRnegative)
+#' sumRnegative <- autoScale(sumRnegative)
+#'
+#' # Perform wilcoxText
+#' sumRnegative <- wilcoxTest(sumRnegative)
+#'
+#' # Only keep peaks with p-value < 0.1
+#' keepVariablePeaks(sumRnegative, threshold = 0.1)
+keepVariablePeaks <- function(exp, test, threshold = 0.05,
                                  method = "any"){
   if (!validateExperiment(exp)) return(NULL)
   if (!test %in% colnames(rowData(exp))) {

@@ -31,7 +31,7 @@ We can define the files as follows:
 ```{r files}
 folder <- system.file("cells", package = "sumR")
 files <- list.files(folder, full.names = TRUE)
-files
+basename(files)
 ```
 
 ### Extracting peaks
@@ -59,7 +59,7 @@ We can plot the result of this function using a `spectrumPlot`. This plots the c
 spectrumPlot(peaks, file = 1, scan = 1)
 ```
 
-```{r showAlignment, echo = FALSE}
+```{r showAlignment, include=FALSE}
 knitr::kable(head(peaks[[1]]), caption = sprintf("Peaks found in %s", names(peaks)[1]))
 ```
 

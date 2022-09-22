@@ -17,6 +17,15 @@ phenotype set using \link{setPhenotype}.}
 
 \item{maxGroups}{Maximum number of groups for the test. Defaults to \code{Inf}}
 }
+\value{
+Boolean value, is the test valid to use?
+}
 \description{
-Check if the test picked can be executed
+This function checks if the test is suitable for the data
+that is provided and will throw a warning if not or and error when no
+classifiers are provided.
+}
+\details{
+This function is called by all tests to see if the test is
+appropriate as a check. Used internally by sumR.
 }

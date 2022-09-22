@@ -4,7 +4,12 @@
 \alias{autoTest}
 \title{Detect and execute an appropriate statistical test}
 \usage{
-autoTest(exp, assay = 1, classifiers = metadata(exp)$phenotype)
+autoTest(
+  exp,
+  assay = 1,
+  classifiers = metadata(exp)$phenotype,
+  threshold = 2/3
+)
 }
 \arguments{
 \item{exp}{SummarizedExperiment with a (auto)scaled assay.}
@@ -15,9 +20,37 @@ to the first assay (index 1).}
 \item{classifiers}{Column in the \link{colData} that describes the phenotype or
 predictor class used for statistical testing and modelling. Defaults to the
 phenotype set using \link{setPhenotype}.}
+
+\item{threshold}{Used for \link{detectTest}. What fraction of the peaks need to
+be normally distributed before performing a parametric statistical test?
+Defaults to \code{2/3}.}
+}
+\value{
+SummarizedExperiment with an added column in \link{rowData} with the
+results of the chosen test.
 }
 \description{
-Detect and execute an appropriate statistical test
+This function checks the supplied assay and phenotypes for
+normality and number of groups respectively. Consequently, it picks an
+appropriate test to check for statistical difference. This function will
+print a message with the test chosen. See Details for more explanation on
+which tests are considered.
+}
+\details{
+This function uses the \link{shapiroTest} to determine for each peak
+if the assay supplied is normally distributed. Together with the number of
+groups found in the phenotype slot set by \link{setPhenotype}, 4 different tests
+can be suggested:
+\itemize{
+\item \strong{welchTest}: Number of groups equals 2 and data is considered normally
+distributed
+\item \strong{wilcoxTest}: Number of groups equals 2 and data is considered not to be
+normally distributed.
+\item \strong{aovTukeyTest}: Number of groups is higher than 2 and the data is
+considered normally distributed.
+\item \strong{dunnTest}: Number of groups is higher than 2 and the data is
+considered not to be normally distributed.
+}
 }
 \examples{
 #' # Read example data

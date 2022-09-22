@@ -4,7 +4,13 @@
 \alias{spectraClustering}
 \title{Group spectra using clustering}
 \usage{
-spectraClustering(spectraList, ppm = 5)
+spectraClustering(peaks, ppm = 5)
+}
+\arguments{
+\item{peaks}{Centroided spectra obtained from \link{extractPeaks}.}
+
+\item{ppm}{Tolerance between masses to be considered part of the same bin
+or cluster in parts per million (ppm). Defaults to 5.}
 }
 \description{
 Group spectra using clustering

@@ -26,6 +26,35 @@ filter is applied? Defaults to \code{TRUE}.}
 median blank area times the number given for \code{foldChange}. Defaults to \code{Inf},
 meaning that no compounds will be removed unless changed.}
 }
+\value{
+SummarizedExperiment with removed compounds and/or samples
+according to the parameters set.
+}
 \description{
-Substract Blanks from SummarizedExperiment
+This function removes peaks if the signal in the samples is
+too low in comparison with the blanks.
+}
+\details{
+For each peak, the median value is taken of the supplied assay and
+multiplied with the value in \code{foldChange}. If the number of samples exceeds
+the value in \code{sampleThresh}, the signal in the cells is considered too low
+and the peak will be removed. By default, \code{sampleThresh} is set to infinity,
+so the function does not remove peaks if left unset. Finally, the blank
+samples are optionally removed with \code{removeBlanks}
+}
+\examples{
+# Read example data
+data("sumRnegative")
+
+# Set colData and phenotype
+df <- read.csv(system.file("cellData.csv", package = "sumR"), row.names = 1)
+sumRnegative <- addCellData(sumRnegative, df)
+sumRnegative <- setPhenotype(sumRnegative, "Treatment")
+
+# Imputate and Scale data
+sumRnegative <- imputation(sumRnegative)
+sumRnegative <- autoScale(sumRnegative)
+
+# Substract blanks
+blankSubstraction(sumRnegative, nSamples = 4)
 }

@@ -1,3 +1,43 @@
+#' @title Group signals across spectra into peaks
+#' @description This function will perform either binning (default) or
+#' clustering to group signals across spectra into peaks from a single file
+#' @details With DI-MS, peak in retention time space are too unreliable to
+#' properly peak pick. Here, we use binning to bin mass signals that deviate
+#' less than the given ppm.
+#' @returns DataFrame where each row is a peak
+#' @param peaks Centroided spectra obtained from [extractPeaks].
+#' @param method Character, one of either `"binning"` (default) or
+#' `"clustering"`.
+#' @param ppm Tolerance between masses to be considered part of the same bin
+#' or cluster in parts per million (ppm). Defaults to 5.
+#' @export
+#' @examples
+#' # Define files
+#' folder <- system.file("cells", package = "sumR")
+#' files <- list.files(folder, full.names = TRUE)
+#'
+#' # Extract peaks from files
+#' peaks <- extractPeaks(files)
+#'
+#' # Align peaks across spectra
+#' spectra <- spectraAlignment(peaks)
+#'
+#' # Show first few peaks
+#' print(head(spectra))
+spectraAlignment <- function(peaks, method = "binning", ppm = 5){
+  if (!validatePeaks(peaks)) {
+    warning("Invalid peakList object")
+    return(NULL)
+  }
+  spectra <- switch(method,
+                    "binning" = spectraBinning(peaks, ppm = ppm),
+                    "clustering" = spectraClustering(peaks, ppm = ppm)
+  )
+  spectra <- spectra[order(spectra$mz), ]
+  rownames(spectra) <- 1:nrow(spectra)
+  spectra
+}
+
 #' @title Bin masses of spectra
 #' @description This is an adapted form of Maldiquants binning function. It will
 #' check the given masses and if subsequent masses fall within the ppm
@@ -53,8 +93,7 @@ doBinning <- function(spectra, split = "scan", ppm = 5) {
 }
 
 #' @title Bin spectra with similar masses
-#' @description
-#' @inherit doBinning details
+#' @inherit doBinning description details
 #' @returns DataFrame object from S4Vectors containing aligned spectra
 #' @param spectraList List of spectra to be binned
 #' @param ppm How much can masses deviate from the mean of the bin?
@@ -84,7 +123,7 @@ spectraBinning <- function(spectraList, ppm = 5) {
     res$fpeaks <- round(res$npeaks / n * length(attr(spectra, "scanranges")), 3)
     res$ppm <- round((res$mzmax - res$mzmin) / res$mz * 1e6, 3)
     res$peakIdx <- lapply(bins, function(x) x$origId)
-    res
+    res[res$i > 0, ]
   })
 
   res <- prepareCells(res)
@@ -93,13 +132,13 @@ spectraBinning <- function(spectraList, ppm = 5) {
 }
 
 #' @title Group spectra using clustering
-#' @inheritParams spectraAlignment -method
+#' @inheritParams spectraAlignment
 #' @inherit spectraBinning details
 #' @importFrom pbapply pblapply
 #' @importFrom S4Vectors DataFrame
-spectraClustering <- function(spectraList, ppm = 5){
+spectraClustering <- function(peaks, ppm = 5){
   if (requireNamespace("xcms", quietly = TRUE)) {
-    prepareCells(pbapply::pblapply(spectraList, function(l) {
+    prepareCells(pbapply::pblapply(peaks, function(l) {
       df <- prepareSpectra(l)
       if (is.null(df)) return(NULL)
 
@@ -118,45 +157,7 @@ spectraClustering <- function(spectraList, ppm = 5){
   }
 }
 
-#' @title Group signals across spectra into peaks
-#' @description This function will perform either binning (default) or
-#' clustering to group signals across spectra into peaks from a single file
-#' @details With DI-MS, peak in retention time space are too unreliable to
-#' properly peak pick. Here, we use binning to bin mass signals that deviate
-#' less than the given ppm.
-#' @returns DataFrame where each row is a peak
-#' @param peaks Centroided spectra obtained from [extractPeaks].
-#' @param method Character, one of either `"binning"` (default) or
-#' `"clustering"`.
-#' @param ppm Tolerance between masses to be considered part of the same bin
-#' or cluster in parts per million (ppm). Defaults to 5.
-#' @export
-#' @examples
-#' # Define files
-#' folder <- system.file("cells", package = "sumR")
-#' files <- list.files(folder, full.names = TRUE)
-#'
-#' # Extract peaks from files
-#' peaks <- extractPeaks(files)
-#'
-#' # Align peaks across spectra
-#' spectra <- spectraAlignment(peaks)
-#'
-#' # Show first few peaks
-#' print(head(spectra))
-spectraAlignment <- function(peaks, method = "binning", ppm = 5){
-  if (!validatePeaks(peaks)) {
-    warning("Invalid peakList object")
-    return(NULL)
-  }
-  spectra <- switch(method,
-         "binning" = spectraBinning(peaks, ppm = ppm),
-         "clustering" = spectraClustering(peaks, ppm = ppm)
-  )
-  spectra <- spectra[order(spectra$mz), ]
-  rownames(spectra) <- 1:nrow(spectra)
-  spectra
-}
+
 
 
 
@@ -314,13 +315,6 @@ cellBinning <- function(spectra, ppm = 5) {
   return(constructSE(res, spectra))
 }
 
-#' @title Cluster cells together
-#' @description
-#' @details
-#' @returns
-#' @param spectra
-#' @param ppm
-#' @importFrom S4Vectors DataFrame
 cellClustering <- function(spectra, ppm = 5){
   if (requireNamespace("xcms", quietly = TRUE)) {
 

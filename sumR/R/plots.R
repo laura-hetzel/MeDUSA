@@ -3,11 +3,14 @@
 #' @param assay Name of the assay or index of the assay to use
 #' @param columns Vector of column names from the colData to use as
 #' groups in the heatmap
+#' @param rows Any columns in rowData that can be visualized as group. Defaults
+#' to `NULL`
 #' @param ... Any other parameters submitted to the `pheatmap` function
 #' @importFrom pheatmap pheatmap
 #' @importFrom SummarizedExperiment rowData colData assay
 #' @export
-pheatmapPlot <- function(exp, assay = 1, columns = NULL,
+pheatmapPlot <- function(exp, assay = 1,
+                         columns = colnames(colData(sumRnegative)),
                          rows = NULL, ...){
 
   if (!is.null(rows)) {
@@ -29,8 +32,8 @@ pheatmapPlot <- function(exp, assay = 1, columns = NULL,
       assay(exp, assay),
       annotation_col = columns,
       annotation_row = rows,
-      cluster_rows = NA %in% m,
-      cluster_cols = NA %in% m,
+      cluster_rows = !NA %in% m,
+      cluster_cols = !NA %in% m,
       ...
   )
 }

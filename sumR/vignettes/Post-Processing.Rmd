@@ -24,14 +24,49 @@ suppressPackageStartupMessages(library(sumR))
 ```
 ## Post-processing
 
-With aligned features across cells, the pre-processing is complete. However, not all aligned features are actually novel compounds. This is due to artifacts, fragments, isotopes, and other non-biological compounds. The following functions are part of the post-processing pipeline in sumR to remove these unwanted features. All these functions are optional (and can be executed in any order), but are recommended for most uses.
+With aligned features across cells, the pre-processing is complete. However, 
+not all aligned features are actually novel compounds. This is due to artifacts, 
+fragments, isotopes, and other non-biological compounds. The following functions 
+are part of the post-processing pipeline in sumR to remove these unwanted 
+features. All these functions are optional (and can be executed in any order), 
+but are recommended for most uses.
+
+### Missing value imputation
+
+Due to the dropout effect, single cell datasets can contain over 50% of NA 
+values which will need to be imputed for statistical analysis. sumR currently 
+has two methods for imputation, determined by the parameter `method`. This 
+parameter can either be set to `"noise"` or `"saver"`. The former is a 
+noise-based random imputation method. It will generate a random number between 
+1 and the value of `noise`, which defaults to 100. The saver method is 
+model-based that assumes a poisson distribution and will generate values that 
+are similar to highly correlated cells.
+
+```{r imoputation}
+exp <- imputation(exp, method = "noise", noise = 100, seed = 42)
+```
+
+### Scaling data
+Scaling is the process of ensuring that peak areas are comparable across 
+samples.  
+```{r scaling}
+exp <- autoScale(exp)
+```
 
 ### Blank substracton
 
-When Blank samples are measured, these can be used to filter any features. `blankThresh` indicates the fold-change needed to exceed for a sample to be kept. By default, samples must have an intensity of at least 5x higher than the blank samples in order to be kept. This ensures that noisy peaks are removed. The `nSamples` parameter determines the number of samples that the blank threshold should exceed in order for a compound to be removed. The default for nSamples is infinite, thus no features will be removed. To remove the blank samples after filtering compounds, set the `removeBlanks` parameter to TRUE (the default)
+When Blank samples are measured, these can be used to filter any features. 
+`blankThresh` indicates the fold-change needed to exceed for a sample to be 
+kept. By default, samples must have an intensity of at least 5x higher than the 
+blank samples in order to be kept. This ensures that noisy peaks are removed. 
+The `nSamples` parameter determines the number of samples that the blank 
+threshold should exceed in order for a compound to be removed. The default for 
+nSamples is infinite, thus no features will be removed. To remove the blank 
+samples after filtering compounds, set the `removeBlanks` parameter to `TRUE` 
+(the default)
 
 ```{r Blanks}
-exp <- blankSubstraction(exp, blankThresh = 5, nSamples = 10, removeBlanks = TRUE)
+exp <- blankSubstraction(exp, foldChange = 5, nSamples = 10, removeBlanks = TRUE)
 ```
 
 ### Mass Defect Filter
@@ -40,14 +75,6 @@ As described by [McMillan et al.](10.1186/s13321-016-0156-0), calculating the ma
 
 ```{r}
 exp <- massDefectFilter(exp, plot = TRUE)
-```
-
-### Missing value imputation
-
-Due to the dropout effect, single cell datasets can contain over 50% of NA values which will need to be imputed for statistical analysis. sumR currently has two methods for imputation, determined by the parameter `method`. This parameter can either be set to `"noise"` or `"saver"`. The former is a noise-based random imputation method. It will generate a random number between 1 and the value of `noise`, which defaults to 100. The saver method is model-based that assumes a poisson distribution and will generate values that are similar to highly correlated cells.
-
-```{r imoputation}
-exp <- imputation(exp, method = "noise", noise = 100, seed = 42)
 ```
 
 ### Isotope identification
