@@ -520,3 +520,18 @@ MDS_plot <- function(model, training_set) {
     ylab(paste("MDS2 - ", mds_var[2], "%", sep = "")) +
     ggtitle("MDS plot using (1 - Random Forest Proximities)")
 }
+
+#' @title Plotting of the filtered data - m/z vs. MD
+#' @param MD_df data frame obtained from the experimental data using `mass_defect_calculation`
+#' @param MD_df_filtered data frame obtained from the experimental data using `MD_filter`
+#' @export
+plot_mz_MD <- function(MD_df, MD_df_filtered) {
+  mz_removed <- nrow(MD_df) - nrow(MD_df_filtered)
+  plot(MD_df_filtered$mz, MD_df_filtered$MD,
+       cex.axis = 0.8,
+       col = alpha("black", 0.5), pch = 20, cex = 0.8,
+       ylim = c(0, 1), xlim = c(50, 1200), ylab = "MD", xlab = "m/z",
+       main = "Filtered Data", sub = paste("datapoints removed = ", mz_removed),
+       cex.lab = 0.8, cex.main = 0.8, cex.sub = 0.8
+  )
+}

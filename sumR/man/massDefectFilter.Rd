@@ -6,10 +6,9 @@
 \usage{
 massDefectFilter(
   exp,
-  plot = FALSE,
   incl_list = FALSE,
-  incl_list_path = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt", package =
-    "sumR"),
+  incl_list_path = system.file("extdata/hmdb_inclusions_list_pos_McMillan.txt", package
+    = "sumR"),
   mass_accuracy = 0.01
 )
 }
