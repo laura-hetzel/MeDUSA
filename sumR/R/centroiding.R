@@ -95,10 +95,10 @@ parseFile <- function(file, massWindow = c(0, Inf), polarity = "-",
     scans <- scans & polarity_filter
   }
   peaks <- peaks(z)
-  masses <- do.call(rbind, peaks)[,1]
-  lower <- df$scanWindowLowerLimit < min(masses)
-  upper <- df$scanWindowUpperLimit > max(masses)
-  scans <- scans & lower & upper
+  # masses <- do.call(rbind, peaks)[,1]
+  # lower <- df$scanWindowLowerLimit < min(masses)
+  # upper <- df$scanWindowUpperLimit > max(masses)
+  # scans <- scans & lower & upper
 
   l <- doCentroid(peaks, df$retentionTime, scans,
                   combineSpectra = combineSpectra, cl = cl)

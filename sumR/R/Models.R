@@ -118,11 +118,11 @@ model <- function(exp, modelName = 1){
 #' # Retrieve Variable importances
 #' varImportance(sumRnegative, "rf")
 generateModel <- function(exp, modelName, classifiers = metadata(exp)$phenotype,
-                          assay = 1, folds = 5, ratio = 0.632, seed = NULL, ...){
+                          assay = 1, folds = 5, ratio = 0.632, seed = 42, ...){
   if (!validateExperiment(exp)) return(NULL)
 
   if (is.null(classifiers)) stop("Cannot perform test without phenotype")
-  if (!is.null(seed)) set.seed(seed)
+  if (seed != 42) set.seed(seed)
 
   data <- assay(exp, assay)
 
