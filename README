@@ -1,0 +1,23 @@
+Object Desciptions/expectations:
+
+
+MZ-OBJ: The standard "MZ Object"
+DataFrame where:
+  - Rownames = Float: MZ
+  - Colnames = String: sample_names
+  - Data     = Float: Intensities
+
+METADATA: The standard "MZ Metadata object"
+Dataframe where the columns are:
+  - Integer: measurement
+  - String : sample_name (Must match above)
+  - String : type (i.e. cell, media_cell, solvent)
+  - Integer: sample_number
+  - String : phenotype
+  - Integer: time
+  - Integer: plate
+  - Integer: cell_count
+  - String : sampler
+  - String : polarity
+  - String : sampling_day
+  - String : filtered_out (yes, no) #todo turn this into a boolean
