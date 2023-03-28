@@ -1,13 +1,12 @@
 
 library("sqrlSumr")
-#source("../../sqrlSumr/R/mz_4_filter.R")
-
 
 file0_neg <-  "neg.csv"
 file1_neg <-  "meta_neg.csv"
 mz_obj <- data.frame(read.csv(file0_neg))
 neg_meta <- data.frame(read.csv(file1_neg))
 colnames(mz_obj) <- gsub("\\.txt$", "", colnames(mz_obj))
+
 mz_obj <- tibble::column_to_rownames(mz_obj, "mz")
 neg_meta <- dplyr::rename(neg_meta,c(sample_name=filename))
 

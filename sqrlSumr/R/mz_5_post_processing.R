@@ -95,7 +95,7 @@ mz_pp_pivot_longer <- function(input_mz_obj, plot = TRUE) {
           , sep=""))
       local.save_plot(paste("PivotLonger",local.mz_polarity_guesser(input_mz_obj),sep="-"))
     }
-  input_mzlong
+  data.frame(input_mzlong)
 }
 
 # *** Log Transform -----------------------------------------------------

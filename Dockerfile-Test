@@ -1,0 +1,22 @@
+FROM  bioconductor/bioconductor_docker:devel AS bioc_base
+
+RUN R -e 'BiocManager::install("mzR")'
+
+FROM bioc_base AS package_base
+RUN R -e 'install.packages(c("dplyr","ggplot2","tibble","tidyr"))'
+
+
+#RUN R 0e 'install.package(c(""))'
+FROM package_base
+
+### TO BUILD
+# docker build . -f Dockerfile-Test -t rlocal
+
+### TO RUN:
+### TO RUN RSTUDIO: user=rstudio, pwd=bioc
+# docker run -e PASSWORD=bioc -p 8787:8787 rlocal
+### TO RUN R terminal:
+# docker run --rm -it -v $(pwd):/local  rlocal /bin/bash
+### To enter a running image
+# docker exec it $(docker ps find your image) /bin/bash
+  
