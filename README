@@ -21,3 +21,10 @@ Dataframe where the columns are:
   - String : polarity
   - String : sampling_day
   - String : filtered_out (yes, no) #todo turn this into a boolean
+
+TODOS:
+  - Raw -> MZML : msconvert doesnt play well with mac-M1 (apple silcon docker compatibility issue)
+  - MZML -> Generate MetaData
+  - MZML_1 -> Try using sapply rather than for loops
+  - MZ_6 -> Add Random Forest
+  

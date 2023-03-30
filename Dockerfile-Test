@@ -6,17 +6,17 @@ FROM bioc_base AS package_base
 RUN R -e 'install.packages(c("dplyr","ggplot2","tibble","tidyr"))'
 
 
-#RUN R 0e 'install.package(c(""))'
+RUN R -e 'install.packages(c("caret"))'
+
 FROM package_base
 
 ### TO BUILD
-# docker build . -f Dockerfile-Test -t rlocal
+# docker build . -f Dockerfile-Test -t lacdr/sumr
 
 ### TO RUN:
 ### TO RUN RSTUDIO: user=rstudio, pwd=bioc
-# docker run -e PASSWORD=bioc -p 8787:8787 rlocal
+# docker run -e PASSWORD=bioc -p 8787:8787 lacdr/sumr
 ### TO RUN R terminal:
-# docker run --rm -it -v $(pwd):/local  rlocal /bin/bash
+# docker run --rm -it -v $(pwd):/local  lacdr/sumr /bin/bash
 ### To enter a running image
 # docker exec it $(docker ps find your image) /bin/bash
-  
