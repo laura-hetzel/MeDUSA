@@ -14,22 +14,18 @@ mzml_extract <- function(input_mzml) {
   mzML_xml <- mzR::openMSfile(input_mzml,  backend = "pwiz")
   mzML_header <- mzR::header(mzML_xml)
 
-  ####User FilterString?
-  #isPos <- grepl("\\+",mzML_header$filterString)]
-  #mzML_negScans <- mzML_header[!isPos,]$seqNum
-  #mzML_posScans <- mzML_header[isPos,]$seqNum
-
+  print(paste("INFO: converting Pos-file:", input_mzml))
   mzML_posScans <- mzML_header[mzML_header$polarity == 1,]$seqNum
-  mzML_negScans <- mzML_header[mzML_header$polarity == 0,]$seqNum
-
   mzML_posList <- mzR::spectra(mzML_xml,mzML_posScans)
-  mzML_negList <- mzR::spectra(mzML_xml,mzML_negScans)
-
   #what is retention vs injection time?
   names(mzML_posList) <- mzML_header[mzML_header$polarity == 1,]$retentionTime
-  names(mzML_negList) <- mzML_header[mzML_header$polarity == 0,]$retentionTime
-
   mzT_pos <- .mzT_convert(mzML_posList)
+
+  #Annoying splitting neg/pos for memory management
+  print(paste("INFO: converting Neg-file:", input_mzml))
+  mzML_negScans <- mzML_header[mzML_header$polarity == 0,]$seqNum
+  mzML_negList <- mzR::spectra(mzML_xml,mzML_negScans)
+  names(mzML_negList) <- mzML_header[mzML_header$polarity == 0,]$retentionTime
   mzT_neg <- .mzT_convert(mzML_negList)
 
   list(pos = mzT_pos,neg = mzT_neg)
@@ -106,37 +102,53 @@ mzTime_squashTime <- function(mzT, method = mean, ignore_nulls = TRUE) {
 #' @export
 #
 mzml_magic <- function(input_dir = getwd()){
+  .add_mz_col <- function(file, list, polarity = 'pos'){
+    local_out <- mzTime_squashTime(list[[polarity]])
+    names(local_out) <- c("mz",file)
+    output <- readRDS(paste("tmp_mz_",polarity,".RDS", sep=""))
+    output <- dplyr::full_join(output, local_out, by="mz")
+    saveRDS(mz_pos,file="tmp_mz_pos.RDS")
+  }
+
   mz_pos <- data.frame(mz = double())
   mz_neg <- data.frame(mz = double())
+  saveRDS(mz_pos,file="tmp_mz_pos.RDS")
+  saveRDS(mz_neg,file="tmp_mz_neg.RDS")
   files <- list.files(path=input_dir, pattern="*.mzML")
+
   for(file in files){
-    print(paste("INFO: converting file:", file))
-    mz_list <- mzml_extract(file)
-    pos_out <- mzTime_squashTime(mz_list[['pos']])
-    neg_out <- mzTime_squashTime(mz_list[['neg']])
-    names(pos_out) <- c("mz",file)
-    names(neg_out) <- c("mz",file)
-    mz_pos <- dplyr::full_join(mz_pos, pos_out, by="mz")
-    mz_neg <- dplyr::full_join(mz_neg, neg_out, by="mz")
+    mz_list <- mzml_extract(paste(input_dir,file, sep="/"))
+    .add_mz_col(file, mz_list, "pos")
+    gc()
+    .add_mz_col(file, mz_list, "neg")
+    gc()
   }
+
+  mz_pos <- readRDS("tmp_mz_pos.RDS")
+  mz_neg <- readRDS("tmp_mz_neg.RDS")
   pos_out <- mzTime_squashMz(pos_out)
   neg_out <- mzTime_squashMz(neg_out)
+  #file.remove('tmp_mz_pos.RDS','tmp_mz_neg.RDS')
   list(pos = pos_out, neg = neg_out)
 }
 
 
-.mzT_convert <- function(spectra_list){
-  output <- data.frame(mz = double())# ,
+.mzT_convert <- function(spectra_list) {
+  output <- data.frame(mz = double())
   for( columnName in names(spectra_list) ) {
-  #.df_from_list <- function(columnName){
     out <- as.data.frame(spectra_list[[as.character(columnName)]])
     names(out) <- c('mz',as.character(columnName))
-    out$mz <- round(out$mz,4)
+    out$mz <- round(out$mz,5)
     output <- dplyr::full_join(output, out, by="mz")
+    print(paste("INFO: converting scanTime:", columnName))
+    #print(paste("INFO: Current MZ_T Size", dim(output)))
+    #TODO I hate this, find a better way to manage memory
+    gc()
   }
   output[is.na(output)] <- 0
   output
-
-  ##I'd rather use sapply, but i dont think join like it
-  #output <- sapply(names(spectra_list)), .df_from_list)
 }
+##I'd rather use sapply, but i dont think join like it
+#.df_from_list <- function(columnName)
+#These joins are expensive; perhaps prebin?
+#output <- sapply(names(spectra_list)), .df_from_list)

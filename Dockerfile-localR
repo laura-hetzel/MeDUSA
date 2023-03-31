@@ -11,7 +11,7 @@ RUN R -e 'install.packages(c("caret"))'
 FROM package_base
 
 ### TO BUILD
-# docker build . -f Dockerfile-Test -t lacdr/sumr
+# docker build . -f Dockerfile-localR -t lacdr/sumr
 
 ### TO RUN:
 ### TO RUN RSTUDIO: user=rstudio, pwd=bioc
