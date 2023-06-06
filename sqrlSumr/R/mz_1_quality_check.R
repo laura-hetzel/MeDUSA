@@ -1,5 +1,4 @@
-#source("local_tools.R")
-#
+
 #technical_quality_check <- function(dataframe, metadata, mz_name = "mz_s") {
 #
 #  summary_stats <- data.frame(name = character(length(dataframe)-1 ),
@@ -16,9 +15,9 @@
 #  # populate the empty data frames
 #
 #
-#  sapply(dataframe[-1], function(column, metadata_func = metadata){
+#  sapply(dataframe[-1], function(column, metadata){
 #    column[column>0] %>%
-#    dplyr::summarise(measurement = as.numeric(filter(metadata_func, filename == colnames(column))$measurement),
+#    dplyr::summarise(measurement = as.numeric(filter(metadata, filename == colnames(column))$measurement),
 #              median_mz = median(mz),
 #              min_mz = min(mz),
 #              max_mz = max(mz),

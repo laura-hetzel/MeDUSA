@@ -1,3 +1,5 @@
+### z_* written by ehetzel zz_* written by others
+
 dir_sep = "/" #Unix
 #dir_sep = "\" #Windows
 
@@ -16,8 +18,8 @@ local.tmp_dir_read <- function(name, sheet){
 }
 
 local.mz_log_removed_rows <- function(in_mz, out_mz, method){
-  mz_before <- nrow(in_mz)
-  mz_after <- nrow(out_mz)
+  mz_before <- nrow(as.data.frame(in_mz))
+  mz_after <- nrow(as.data.frame(out_mz))
   mz_removed <-  mz_before - mz_after
   print(paste("INFO:", method ,": Before Rows  : ", mz_before, sep=""))
   print(paste("INFO:", method ,": After Rows   :  ", mz_after, sep=""))
