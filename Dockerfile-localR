@@ -8,11 +8,11 @@ RUN R -e 'install.packages(c("dplyr","ggplot2","tibble","tidyr"))'
 
 
 RUN R -e 'install.packages(c("caret"))'
+RUN R -e 'install.packages(c("pbapply"))'
 
 FROM package_base
 
 #untested
-RUN R -e 'install.packages(c("pbapply"))'
 ENTRYPOINT 'local'
 
 ### TO BUILD

@@ -29,20 +29,21 @@ mzml_magic <- function(input_dir = getwd(), threads=2){
   list(pos = pos_out, neg = neg_out)
 }
 
-#Bin each sample individually
-.bin <- function(x){
+#Bin each sample individually ###TODO find source
+###TODO: Choose bin intesity by (average, max, and weighted-intensity)
+.bin <- function(x, math = max){
   x<-dplyr::select(x,mz,i)
   bin <- binning(x$mz)
-  x<-aggregate(x$i,list(bin),max,na.rm=T)
+  x<-aggregate(x$i,list(bin),math,na.rm=T)
   names(x)<-c("mz","intensity")
   x
 }
 
 #Re-Bin after the Mz-Obj is created
-.rebin <- function(x){
+.rebin <- function(x, math = max){
   bin <- binning(x$mz)
   local.mz_log_removed_rows((bin), unique(bin), "Re-Binning")
-  x <- aggregate(dplyr::select(x,-mz),list(bin),max)
+  x <- aggregate(dplyr::select(x,-mz),list(bin),math)
   names(x)[1] <- "mz"
   x
 }
@@ -57,3 +58,5 @@ mzml_magic <- function(input_dir = getwd(), threads=2){
   mz_neg <- extractPeaks(files,polarity = "-", combineSpectra=T)
   list(pos = mz_pos, neg = mz_neg)
 }
+
+##TODO add timequash math combineSpectra=F

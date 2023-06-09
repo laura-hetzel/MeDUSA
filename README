@@ -31,9 +31,17 @@ TODOS:
                -> Output in progress files
   - MZML_1 -> Binning is too simple
 ------- : ^^ Fixed with original scripts
-
-  - MZML_2 -> PeakPicking
-  - MZML_3 -> Generate MetaData
+  - MZML_2 -> PeakPicking ===>> PeakShapeFiltering
+  - MZML_3 -> Generate MetaData???
   - MZ_1 -> Fix
   - MZ_6 -> Add Random Forest
   - MZ_7 -> Migrate HMDB script
+
+----- Ahmed
+  - MZML_1-old -> Binning (intensity) math (avg, max, median)
+  - MZML_1-old -> Add tolerance to binning params
+  - MZML_1-old -> Make it more obvious when using binning/centroiding classes
+  - Binning -> Choose bin mz by intesity math (average, max, and weighted-intensity)
+  -1st Centroid -> TimeSquash ( filter out ( "missingness across scans" , " " )
+                             allow other math on time-scans)
+  - teach laura docker

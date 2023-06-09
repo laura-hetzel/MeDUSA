@@ -146,6 +146,8 @@ doCentroid <- function(peaks, rts, scans = seq_len(length(x)),
     })
   } else {
     l <- pblapply(peaks[scans], cl = cl, centroid)
+    ###ehetzel::TODO filter out ( "missingness across scans" , " " )
+    ###ehetzel::TODO allow other math on time-scans
   }
   formatSpectra(l, rts[scans])
 }
