@@ -4,24 +4,16 @@ FROM  bioconductor/bioconductor_docker:RELEASE_3_17 AS bioc_base
 RUN R -e 'BiocManager::install("mzR")'
 
 FROM bioc_base AS package_base
-RUN R -e 'install.packages(c("dplyr","ggplot2","tibble","tidyr"))'
-
-
-RUN R -e 'install.packages(c("caret"))'
-RUN R -e 'install.packages(c("pbapply"))'
+RUN R -e 'install.packages(c("dplyr","ggplot2","tibble","tidyr","pbapply","carat"))'
 
 FROM package_base
-
-#untested
-ENTRYPOINT 'local'
 
 ### TO BUILD
 # docker build . -f Dockerfile-localR -t lacdr/sumr
 
-### TO RUN:
-### TO RUN RSTUDIO: user=rstudio, pwd=bioc
+### TO RUN RSTUDIO (probably): user=rstudio, pwd=bioc
 # docker run -e PASSWORD=bioc -p 8787:8787 lacdr/sumr
 ### TO RUN R terminal:
-# docker run --rm -it -v $(pwd):/local  lacdr/sumr /bin/bash
-### To enter a running image
+# docker run --rm -it --name localR -v $(pwd):/local lacdr/sumr /bin/bash
+### To enter a running image (only works if there is only one sumr container running `docker ps` for info on running containers)
 # docker exec -it $(docker ps | grep sumr | awk '{print $1}') /bin/bash
