@@ -48,15 +48,15 @@ mz_filter_lowIntensity <- function(input_mz_obj, threshold){
 #' @param min_intensity \cr
 #'   Int       : Threshold to blank data under. (as a intesity value)\cr
 #'             : Default values: (Pos=10000, Neg=5000)
-#' @param min_missingness \cr
+#' @param missingness_thresholds \cr
 #'   Float     : Threshold to blank data under. (as a decimal 10% = 0.1)
 #'
 #' Dependencies : dplyr
 #' @return Returns an MZ-OBJ
 #' @export
-mz_filter_magic <- function(input_mz_obj, min_intensity, min_missingness=FALSE){
-  if(hasArg(min_missingness)){
-    tmp_mz <- mz_filter_missingness(input_mz_obj,min_missingness)
+mz_filter_magic <- function(input_mz_obj, min_intensity, missingness_threshold=FALSE){
+  if(hasArg(missingness_threshold)){
+    tmp_mz <- mz_filter_missingness(input_mz_obj,missingness_threshold)
   } else {
     tmp_mz <- mz_filter_missingness(input_mz_obj)
   }

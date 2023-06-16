@@ -35,7 +35,7 @@ mz_mass_defect <- function(input_mz_obj, plot = TRUE, magicNumber1 = 0.00112, ma
          ylim = c(0, 1), xlim = c(50, 1200), ylab = "MD", xlab = "m/z",
          main = "Filtered Data", sub = paste("datapoints removed = ", mz_removed),
          cex.lab = 0.8, cex.main = 0.8, cex.sub = 0.8)
-    ggplot(md_filtered, aes(x=rownames(md_filtered), y=MD)) + geom_point() +
+    ggplot2::ggplot(md_filtered, aes(x=rownames(md_filtered), y=MD)) + geom_point() +
          ggtitle(paste("MassDefect",local.mz_polarity_guesser(input_mz_obj),sep="-"))
 
     local.save_plot(paste("GGtest","MassDefect",local.mz_polarity_guesser(input_mz_obj),sep="-"))

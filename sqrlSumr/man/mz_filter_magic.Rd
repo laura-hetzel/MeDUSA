@@ -4,7 +4,7 @@
 \alias{mz_filter_magic}
 \title{MZ-OBJ Filter-Magic}
 \usage{
-mz_filter_magic(input_mz_obj, min_intensity, min_missingness = FALSE)
+mz_filter_magic(input_mz_obj, min_intensity, missingness_threshold = FALSE)
 }
 \arguments{
 \item{input_mz_obj}{\cr
@@ -14,7 +14,7 @@ DataFrame : Input MZ-Obj}
 Int       : Threshold to blank data under. (as a intesity value)\cr
 : Default values: (Pos=10000, Neg=5000)}
 
-\item{min_missingness}{\cr
+\item{missingness_thresholds}{\cr
 Float     : Threshold to blank data under. (as a decimal 10\% = 0.1)
 
 Dependencies : dplyr}

@@ -29,7 +29,7 @@ mzml_magic <- function(input_dir = getwd(), threads=2){
   list(pos = pos_out, neg = neg_out)
 }
 
-#Bin each sample individually ###TODO find source
+#Bin each sample individually (mzSquash) ###TODO find source
 ###TODO: Choose bin intesity by (average, max, and weighted-intensity)
 .bin <- function(x, math = max){
   x<-dplyr::select(x,mz,i)
@@ -39,7 +39,7 @@ mzml_magic <- function(input_dir = getwd(), threads=2){
   x
 }
 
-#Re-Bin after the Mz-Obj is created
+#Re-Bin after the Mz-Obj is created (mzSquash)
 .rebin <- function(x, math = max){
   bin <- binning(x$mz)
   local.mz_log_removed_rows((bin), unique(bin), "Re-Binning")
