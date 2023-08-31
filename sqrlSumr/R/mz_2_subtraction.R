@@ -43,8 +43,8 @@ mz_subtraction <- function(input_mz_obj, samples, compare_samples , threshold = 
     (input_mz_obj > compare) * input_mz_obj
   }
   samples_subset <- as.data.frame(sapply(samples_subset, .applyer))
-  row.names(samples_subset) <- row.names(input_mz_obj)
-  out_mz <- samples_subset[rowSums(samples_subset) > 0,]
+  samples_subset$mz <- input_mz_obj$mz
+  out_mz <- samples_subset[rowSums(dplyr::select(samples_subset,-mz)) > 0,]
   local.mz_log_removed_rows(input_mz_obj,out_mz,"sqrlSumr::mz_subtraction")
   out_mz
 }

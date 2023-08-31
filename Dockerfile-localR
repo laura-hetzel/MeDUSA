@@ -4,12 +4,12 @@ RUN R -e 'BiocManager::install("mzR")'
 
 FROM bioc_base AS package_base
 
-RUN R -e 'remotes::install_version("dplyr",    version = "1.1.2", dependencies = "never")'
-RUN R -e 'remotes::install_version("ggplot2",  version = "3.4.2", dependencies = "never")'
-RUN R -e 'remotes::install_version("tibble",   version = "3.2.1", dependencies = "never")'
-RUN R -e 'remotes::install_version("tidyr",    version = "1.3.0", dependencies = "never")'
-RUN R -e 'remotes::install_version("pbapply",  version = "1.7-2", dependencies = "never")'
-RUN R -e 'remotes::install_version("devtools", version = "2.4.5", dependencies = "never")'
+RUN R -e 'remotes::install_version("dplyr",    version = "1.1.2")'
+RUN R -e 'remotes::install_version("ggplot2",  version = "3.4.2")'
+RUN R -e 'remotes::install_version("tibble",   version = "3.2.1")'
+RUN R -e 'remotes::install_version("tidyr",    version = "1.3.0")'
+RUN R -e 'remotes::install_version("pbapply",  version = "1.7-2")'
+RUN R -e 'remotes::install_version("devtools", version = "2.4.5")'
 
 FROM package_base
 
