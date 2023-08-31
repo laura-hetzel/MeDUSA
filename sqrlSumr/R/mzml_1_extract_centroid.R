@@ -37,6 +37,7 @@ mzml_extract_magic <- function(files = getwd(), cores = 1,  ...){
     #This doesn't seem to stop the cluster :/
     if (cores > 1) {
       parallel::stopCluster(cl)
+      showConnections()
     }
   })
 }
@@ -93,8 +94,8 @@ mzml_extract_file <- function(file, polarity = NULL,  magic = T, massWindow = c(
   p <- mzR::peaks(z)
   if ( !is.null(polarity) ) {
     #df$polarity == 1 == Positive
-    data <-
-    meta <-
+    #data <-???
+    #meta <-????
 
     out <- .get_mzt(p[df["polarity"] == polarity],
                     df[ df["polarity"] == polarity,],
@@ -105,19 +106,22 @@ mzml_extract_file <- function(file, polarity = NULL,  magic = T, massWindow = c(
 }
 
 # ***  -----------------------------------------------------
-#' Missingness filtering (Uses mz_filtering) & binning for an MzT obj.
+#' MzTime filtering (Uses mz_filtering) & binning for an MzT obj.
 #'
 #' @param mzT \cr
 #'   MzT : MzT object
 #' @param method \cr
 #'   [Math] : i.e. (mean, max, median)
 #' @param missingness_threshold \cr
-#'   Float: Percent as a decimal. i.e. requiring non-zero values in 0.02 (2%) of columns per mz
-#'
+#'   Numeric   : If Decimal : Threshold % to blank data under. (as a decimal 10% = 0.1)
+#'             : If Whole : Number of scans required to be nonzero ( Value required in at least 2 scans )
+#' @param intensity_threshold \cr
+#'   Numeric   : Lowest allowed intensity
 #' @export
-mzT_filtering <- function(mzT, method = max, missingness_threshold = 0.02){
-  #MzT object (pre)binning
+# Note missingness_threshold is very low
+mzT_filtering <- function(mzT, method = max, missingness_threshold = 1, intensity_threshold = 1000 ){
   mzT <- .binning(mzT,method)
+  mzT <- mz_filter_lowIntensity(mzT,threshold = intensity_threshold)
   mzT <- mz_filter_missingness(mzT,threshold = missingness_threshold)
 }
 
@@ -128,21 +132,23 @@ mzT_filtering <- function(mzT, method = max, missingness_threshold = 0.02){
 #'   MzT : MzT object
 #' @param method \cr
 #'   [Math] : i.e. (mean, max, median)
-#' @param ignore_nulls \cr
-#'   Boolean: Consider 0 == null, thena ignore them?
+#' @param ignore_zeros \cr
+#'   Boolean: Should we set 0 <- NA (to not affect the math)
 #'
 #' @export
-mzT_squashTime <- function(mzT, method = mean, ignore_nulls = T){
-  if(ignore_nulls){
-    mzT[mzT==0] <- NA
+mzT_squashTime <- function(mzT, method = mean, ignore_zeros = T){
+  # This should be handled by filter low intesity
+  if( ignore_zeros ){
+    mzT[mzT == 0] <- NA
   }
-  squash <- apply(dplyr::select(mzT, -mz),1, method, na.rm=ignore_nulls)
+  squash <- apply(dplyr::select(mzT, -mz),1, method, na.rm=T)
   squash[is.na(squash)] <- 0
   out <- as.data.frame(cbind(mzT$mz, squash))
   names(out) <- c("mz","intensity")
   out
 }
 
+#[0|1]: 0=Negative, 1=Positive
 .magic_polarity_loop <- function(files,pol,cl){
   if(pol){
     pol_eng="pos"

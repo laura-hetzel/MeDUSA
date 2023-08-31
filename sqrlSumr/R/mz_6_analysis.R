@@ -81,3 +81,21 @@ mz_welch <- function(input_mz_obj, metadata, phenotype_a, phenotype_b){
 
   out
 }
+
+# *** RandomForest -----------------------------------------------------
+#' MZ-OBJ RandomForest
+#'
+#' Not really sure
+#'  - Requires: ggplot2, tibble
+#'
+#' @param input_mz_obj \cr
+#'   DataFrame : Input MZ-Obj
+#' @param metadata \cr
+#'   DataFrame?: MZ_metadata
+#' @param bad_samples \cr
+#'   List?     : c("bad1", "bad2")
+#' @param high_noise \cr
+#'   Float     : HighBoundry for "Noise"
+#'
+#' @export
+mz_random_forest <- function(input_mz_obj){}

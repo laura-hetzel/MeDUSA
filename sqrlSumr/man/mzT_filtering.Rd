@@ -2,9 +2,14 @@
 % Please edit documentation in R/mzml_1_extract_centroid.R
 \name{mzT_filtering}
 \alias{mzT_filtering}
-\title{Missingness filtering (Uses mz_filtering) & binning for an MzT obj.}
+\title{MzTime filtering (Uses mz_filtering) & binning for an MzT obj.}
 \usage{
-mzT_filtering(mzT, method = max, missingness_threshold = 0.02)
+mzT_filtering(
+  mzT,
+  method = max,
+  missingness_threshold = 1,
+  intensity_threshold = 1000
+)
 }
 \arguments{
 \item{mzT}{\cr
@@ -14,8 +19,12 @@ MzT : MzT object}
 \link{Math} : i.e. (mean, max, median)}
 
 \item{missingness_threshold}{\cr
-Float: Percent as a decimal. i.e. requiring non-zero values in 0.02 (2\%) of columns per mz}
+Numeric   : If Decimal : Threshold \% to blank data under. (as a decimal 10\% = 0.1)
+: If Whole : Number of scans required to be nonzero ( Value required in at least 2 scans )}
+
+\item{intensity_threshold}{\cr
+Numeric   : Lowest allowed intensity}
 }
 \description{
-Missingness filtering (Uses mz_filtering) & binning for an MzT obj.
+MzTime filtering (Uses mz_filtering) & binning for an MzT obj.
 }

@@ -38,10 +38,24 @@ TODOS:
   - MZ_7 -> Migrate HMDB script
 
 ----- Ahmed
-  - MZML_1-old -> Binning (intensity) math (avg, max, median)
-  - MZML_1-old -> Add tolerance to binning params
-  - MZML_1-old -> Make it more obvious when using binning/centroiding classes
-  - Binning -> Choose bin mz by intesity math (average, max, and weighted-intensity)
-  -1st Centroid -> TimeSquash ( filter out ( "missingness across scans" , " " )
+  -x MZML_1-old -> Binning (intensity) math (avg, max, median)
+  -x MZML_1-old -> Add tolerance to binning params
+  -x MZML_1-old -> Make it more obvious when using binning/centroiding classes
+  -x Binning -> Choose bin mz by intesity math (average, max, and **weighted-intensity**)
+  -x 1st Centroid -> TimeSquash ( filter out ( "missingness across scans" , " " )
                              allow other math on time-scans)
-  - teach laura docker
+
+---- Ahmed todo2
+  -x Missingness by # of Scans
+  -x LowIntensity in mzML ## ( didn't add to squashTime; feels repeditive)
+  -x tagging list
+  -x tagging isotope
+
+---- Laura todo
+  - extract_magic, all the parameters
+  -X docker image, including sumr
+  -X fix trycatch in massdefect
+  -X why missingness drop rows with value of 1
+  - blanksubtraction, validation
+  - hmdb/lipidmaps
+  - mz_random_forest

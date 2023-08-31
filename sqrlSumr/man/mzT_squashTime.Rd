@@ -4,7 +4,7 @@
 \alias{mzT_squashTime}
 \title{Squash MzT obj (many scans) into a single mz|intensity dataframe}
 \usage{
-mzT_squashTime(mzT, method = mean, ignore_nulls = T)
+mzT_squashTime(mzT, method = mean, ignore_zeros = T)
 }
 \arguments{
 \item{mzT}{\cr
@@ -13,8 +13,8 @@ MzT : MzT object}
 \item{method}{\cr
 \link{Math} : i.e. (mean, max, median)}
 
-\item{ignore_nulls}{\cr
-Boolean: Consider 0 == null, thena ignore them?}
+\item{ignore_zeros}{\cr
+Boolean: Should we set 0 <- NA (to not affect the math)}
 }
 \description{
 Squash MzT obj (many scans) into a single mz|intensity dataframe

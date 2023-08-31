@@ -2,7 +2,13 @@
 % Please edit documentation in R/mzml_1_extract_centroid.R
 \name{mzml_extract_magic}
 \alias{mzml_extract_magic}
-\title{Create MzObj from directory or file}
+\title{Create MzObj from directory or file
+Current Defaults:
+mzBinningMath: max
+mzBinTolerance = 5e-6
+timeSquashMath: mean
+missingness_threshold: 0.02 (2\%)
+massWindow: c(0,Inf)}
 \usage{
 mzml_extract_magic(files = getwd(), cores = 1, ...)
 }
@@ -14,4 +20,10 @@ String: File or directory of mzmL files}
 }
 \description{
 Create MzObj from directory or file
+Current Defaults:
+mzBinningMath: max
+mzBinTolerance = 5e-6
+timeSquashMath: mean
+missingness_threshold: 0.02 (2\%)
+massWindow: c(0,Inf)
 }

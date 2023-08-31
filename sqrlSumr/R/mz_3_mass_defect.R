@@ -18,8 +18,8 @@
 #' @export
 
 mz_mass_defect <- function(input_mz_obj, plot = TRUE, magicNumber1 = 0.00112, magicNumber2 = 0.01953) {
-  input_mz_obj$MD <-  as.numeric(row.names(input_mz_obj)) %% 1
-  input_mz_obj$mz_filter <- magicNumber1 * as.numeric(row.names(input_mz_obj)) + magicNumber2
+  input_mz_obj$MD <-  as.numeric(input_mz_obj$mz) %% 1
+  input_mz_obj$mz_filter <- magicNumber1 * as.numeric(input_mz_obj$mz) + magicNumber2
 
   #(revisit if original SUMR hmdb/McMillan is important)
   md_filtered <- input_mz_obj[which(input_mz_obj$MD <= input_mz_obj$mz_filter), ]
@@ -27,18 +27,24 @@ mz_mass_defect <- function(input_mz_obj, plot = TRUE, magicNumber1 = 0.00112, ma
   mz_removed <- local.mz_log_removed_rows(input_mz_obj,md_filtered,
                   "sqrlSumr::mz_mass_defect")["mz_removed"]
 
-  if(plot) {
-    #TODO refactor to ggplot
-    plot(as.numeric(row.names(md_filtered)), md_filtered$MD,
-         cex.axis = 0.8,
-         col = ggplot2::alpha("black", 0.5), pch = 20, cex = 0.8,
-         ylim = c(0, 1), xlim = c(50, 1200), ylab = "MD", xlab = "m/z",
-         main = "Filtered Data", sub = paste("datapoints removed = ", mz_removed),
-         cex.lab = 0.8, cex.main = 0.8, cex.sub = 0.8)
-    ggplot2::ggplot(md_filtered, aes(x=rownames(md_filtered), y=MD)) + geom_point() +
-         ggtitle(paste("MassDefect",local.mz_polarity_guesser(input_mz_obj),sep="-"))
+  tryCatch({
+    if(plot) {
+      #TODO refactor to ggplot
+      plot(as.numeric(row.names(md_filtered)), md_filtered$MD,
+           cex.axis = 0.8,
+           col = ggplot2::alpha("black", 0.5), pch = 20, cex = 0.8,
+           ylim = c(0, 1), xlim = c(50, 1200), ylab = "MD", xlab = "m/z",
+           main = "Filtered Data", sub = paste("datapoints removed = ", mz_removed),
+           cex.lab = 0.8, cex.main = 0.8, cex.sub = 0.8)
+      ggplot2::ggplot(md_filtered, aes(x=rownames(md_filtered), y=MD)) + geom_point() +
+           ggtitle(paste("MassDefect",local.mz_polarity_guesser(input_mz_obj),sep="-"))
 
-    local.save_plot(paste("GGtest","MassDefect",local.mz_polarity_guesser(input_mz_obj),sep="-"))
-  }
-  return(dplyr::select(md_filtered, -MD, -mz_filter))
+      local.save_plot(paste("GGtest","MassDefect",local.mz_polarity_guesser(input_mz_obj),sep="-"))
+    }
+  }, error = function(e) {
+      print("WARN: mz_mass_defect did not filter out anything to plot")
+      print(error)
+  }, finally = {
+    return(dplyr::select(md_filtered, -MD, -mz_filter))
+  })
 }
