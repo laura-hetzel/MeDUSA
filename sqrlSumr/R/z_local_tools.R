@@ -35,6 +35,6 @@ local.mz_polarity_guesser <- function(input, pos_return = "Positive", neg_return
   ret
 }
 
-local.save_plot <- function(plot_name, output_dir = paste("output", local.dir_sep ,Sys.Date(),"")){
-  ggsave(paste(output_dir,dir_sep,plot_name,".png",sep = ""))
+local.save_plot <- function(plot_name, output_dir = paste("output", local.dir_sep() ,Sys.Date(), "")){
+  ggsave(paste(output_dir,local.dir_sep(),plot_name,".png",sep = ""))
 }
