@@ -98,9 +98,9 @@ mz_filter_magic <- function(input_mz_obj, min_intensity, missingness_threshold=F
     }
   }
   if(hasArg(missingness_threshold)){
-    input_mz_obj <- mz_filter_missingness(tmp_mz,missingness_threshold)
+    input_mz_obj <- mz_filter_missingness(input_mz_obj,missingness_threshold)
   } else {
-    input_mz_obj <- mz_filter_missingness(tmp_mz)
+    input_mz_obj <- mz_filter_missingness(input_mz_obj)
   }
   if(!hasArg(min_intensity)){
     min_intensity <- tryCatch({
