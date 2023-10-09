@@ -19,12 +19,12 @@ mz_pp_imputation <- function(input_mz_obj, low_noise=10, high_noise=5000){
       local.mz_polarity_guesser(input_mz_obj, pos_return=10000, neg_return=5000)
     }, error = function(e) {
       print(e)
-      stop("ERROR: sqrlSumr::mz_pp_imputation: Could not guess positive or negative from colnames
+      stop("ERROR: sumR::mz_pp_imputation: Could not guess positive or negative from colnames
             Please specify min_intensity")
     })
   }
   if (low_noise > 100 ){
-    warning("WARN: sqrlSumr::mz_PP_imputation: low_noise is < 100.
+    warning("WARN: sumR::mz_PP_imputation: low_noise is < 100.
       Make sure [input_mz_obj] does not have an mz column ")
   }
 
@@ -80,10 +80,10 @@ mz_pp_normalization <- function(input_mz_obj, metadata, plot = TRUE ){
 #' @param plot \cr
 #'   Boolean   : to plot or not to plot
 #'
-#' @returns MZLONG-OBJ
+#' @returns mzLong-OBJ
 #' @export
 mz_pp_pivot_longer <- function(input_mz_obj, plot = TRUE) {
-  input_mz_obj$mz <- row.names(input_mz_obj)
+  row.names(input_mz_obj) <- input_mz_obj$mz
   input_mzlong <- input_mz_obj %>%
     tidyr::pivot_longer(!mz, names_to = "sample", values_to = "intensity")
     if(plot){
@@ -96,33 +96,6 @@ mz_pp_pivot_longer <- function(input_mz_obj, plot = TRUE) {
       local.save_plot(paste("PivotLonger",local.mz_polarity_guesser(input_mz_obj),sep="-"))
     }
   data.frame(input_mzlong)
-}
-
-# *** Log Transform -----------------------------------------------------
-#' MZLONG-OBJ Log Transform
-#'
-#' Convert intensities of MZLong to log2
-#'  For normal "mz_obj" use log2(mz_obj)
-#'  - Requires: ggplot2
-#'
-#' @param input_mz_obj \cr
-#'   DataFrame : Input MZLONG-Obj
-#' @param plot \cr
-#'   Boolean   : to plot or not to plot
-#'
-#' @export
-mzl_pp_log_transform <- function(input_mzlong, plot = TRUE){
-  input_mzlong$log <- log2(input_mzlong$intensity)
-  if(plot){
-    ggplot(input_mzlong, aes(x = sample, y = log)) +
-      geom_boxplot() +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-      ggtitle(paste("Normalized, Filtered,",
-        local.mz_polarity_guesser(input_mzlong)
-        , sep=""))
-    local.save_plot(paste("LogTransform",local.mz_polarity_guesser(input_mzlong),sep="-"))
-  }
-  input_mzlong
 }
 
 # *** Process Magic -----------------------------------------------------
@@ -138,7 +111,7 @@ mzl_pp_log_transform <- function(input_mzlong, plot = TRUE){
 #' @param plot \cr
 #'   Boolean   : to plot or not to plot
 #'
-#' @returns c(mz_long, mz_obj)
+#' @returns c(mzLong_obj, mzLog_obj)
 #' @export
 mz_post_process_magic <- function(input_mz_obj, metadata, plot = TRUE){
   tryCatch({
@@ -163,12 +136,12 @@ mz_post_process_magic <- function(input_mz_obj, metadata, plot = TRUE){
     stop("ERROR: in mz_pp_pivot_longer")
   })
   tryCatch({
-    input_mzlong <- mzl_pp_log_transform(input_mzlong, plot)
+    input_mzlong <- mzlong_pp_log_transform(input_mzlong, plot)
     input_mz_obj <- log2(input_mz_obj)
     print("INFO: log_transform success")
   }, error = function(e) {
     print(e)
     stop("ERROR: in mzl_pp_log_transform")
   })
-  list(input_mzlong ,input_mz_obj)
+  list("mzLong" = input_mzlong ,"mzLog" = input_mz_obj)
 }

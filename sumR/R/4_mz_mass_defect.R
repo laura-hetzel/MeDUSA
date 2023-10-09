@@ -25,7 +25,7 @@ mz_mass_defect <- function(input_mz_obj, plot = TRUE, magicNumber1 = 0.00112, ma
   md_filtered <- input_mz_obj[which(input_mz_obj$MD <= input_mz_obj$mz_filter), ]
 
   mz_removed <- local.mz_log_removed_rows(input_mz_obj,md_filtered,
-                  "sqrlSumr::mz_mass_defect")["mz_removed"]
+                  "sumR::mz_mass_defect")["mz_removed"]
 
   tryCatch({
     if(plot) {

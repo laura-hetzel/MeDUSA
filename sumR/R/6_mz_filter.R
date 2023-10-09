@@ -22,7 +22,7 @@ mz_filter_blacklist <- function( input_mz_obj, tolerance = 5e-6,
   }
   bool_list <- lapply(blacklist, function(x){abs(input_mz_obj$mz - x)/x > tolerance})
   out_mz <- input_mz_obj[as.logical(Reduce("*",bool_list)),]
-  local.mz_log_removed_rows(input_mz_obj, out_mz, "sqrlSumr::mz_tagging_blacklist")
+  local.mz_log_removed_rows(input_mz_obj, out_mz, "sumR::mz_tagging_blacklist")
   out_mz
 }
 
@@ -44,7 +44,7 @@ mz_filter_missingness <- function(input_mz_obj, threshold = 0.1){
     threshold <- threshold * length(input_mz_obj)
   }
   keep_peaks <- input_mz_obj[rowSums( dplyr::select(input_mz_obj, -mz) > 0 ) >= threshold,]
-  local.mz_log_removed_rows(input_mz_obj,keep_peaks,"sqrlSumr::mz_filter_missingness")
+  local.mz_log_removed_rows(input_mz_obj,keep_peaks,"sumR::mz_filter_missingness")
   keep_peaks
 }
 
@@ -69,7 +69,7 @@ mz_filter_lowIntensity <- function(input_mz_obj, threshold){
   input_mz_obj[ input_mz_obj <= threshold ] <- 0
   input_mz_obj$mz <- mz
   out_mz <- input_mz_obj[ rowSums(dplyr::select(input_mz_obj ,-mz)) > 0, ]
-  local.mz_log_removed_rows(input_mz_obj, out_mz, "sqrlSumr::mz_filter_lowIntensity")
+  local.mz_log_removed_rows(input_mz_obj, out_mz, "sumR::mz_filter_lowIntensity")
   out_mz
 }
 
@@ -107,7 +107,7 @@ mz_filter_magic <- function(input_mz_obj, min_intensity, missingness_threshold=F
       local.mz_polarity_guesser(input_mz_obj, pos_return=10000, neg_return=5000)
     }, error = function(e) {
       print(e)
-      stop("ERROR: sqrlSumr::mz_filter_magic: Could not guess positive or negative from colnames
+      stop("ERROR: sumR::mz_filter_magic: Could not guess positive or negative from colnames
         Please specify min_intensity")
     })
   }

@@ -20,7 +20,7 @@
 #' @return Returns a List of MZ that are isotopes of each other
 #' @export
 
-mz_isotope_hunter <- function(input_mz_obj, iso_target = 1.0034, iso_iter = 5, tol_ppm = 5e-6, cores = 4 ){
+mz_isotope_hunter <- function(input_mz_obj, iso_target = 1.0034, iso_iter = 5, tol_ppm = 5e-6, cores = 4, ...){
   input_mz_obj$tol <- input_mz_obj$mz - (input_mz_obj$mz/( tol_ppm + 1 ))
   sub_set <- dplyr::select(input_mz_obj, c(mz, tol))
   out <- list()
@@ -49,5 +49,13 @@ mz_isotope_hunter <- function(input_mz_obj, iso_target = 1.0034, iso_iter = 5, t
 
   return(out)
 }
+
+mz_isotope_flatten <- function(input_mz_obj, isotope_list, method = max, cores = 4){
+  pblapply(input_mz_obj, function(isotope_list, x, method = method){
+    if x$mz %in% names(isotope_list){
+      x <- apply(select(input_mz_obj[input_mz_obj$mz %in% x,], -mz),2, method)
+  })
+}
+
 
 #TODO FLATTEN?

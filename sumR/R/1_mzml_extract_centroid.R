@@ -11,7 +11,7 @@
 #' @param cores
 #'   Integer: Can I has multithreading? (Need parallel)
 #' @export
-mzml_extract_magic <- function(files = getwd(), cores = 1,  ...){
+mzml_extract_magic <- function(files = getwd(), cores = 1,  ... ){
   if (!grepl('\\.mzML$',files)){
     files <- list.files(path=files, pattern="*.mzML")
   }
@@ -119,8 +119,8 @@ mzml_extract_file <- function(file, polarity = NULL,  magic = T, massWindow = c(
 #'   Numeric   : Lowest allowed intensity
 #' @export
 # Note missingness_threshold is very low
-mzT_filtering <- function(mzT, method = max, missingness_threshold = 1, intensity_threshold = 1000 ){
-  mzT <- .binning(mzT,method)
+mzT_filtering <- function(mzT, prebin_method = max, missingness_threshold = 1, intensity_threshold = 1000 ){
+  mzT <- .binning(mzT,prebin_method)
   mzT <- mz_filter_lowIntensity(mzT,threshold = intensity_threshold)
   mzT <- mz_filter_missingness(mzT,threshold = missingness_threshold)
 }
@@ -136,12 +136,12 @@ mzT_filtering <- function(mzT, method = max, missingness_threshold = 1, intensit
 #'   Boolean: Should we set 0 <- NA (to not affect the math)
 #'
 #' @export
-mzT_squashTime <- function(mzT, method = mean, ignore_zeros = T){
+mzT_squashTime <- function(mzT, timeSquash_method = mean, ignore_zeros = T){
   # This should be handled by filter low intesity
   if( ignore_zeros ){
     mzT[mzT == 0] <- NA
   }
-  squash <- apply(dplyr::select(mzT, -mz),1, method, na.rm=T)
+  squash <- apply(dplyr::select(mzT, -mz),1, timeSquash_method, na.rm=T)
   squash[is.na(squash)] <- 0
   out <- as.data.frame(cbind(mzT$mz, squash))
   names(out) <- c("mz","intensity")
@@ -149,7 +149,7 @@ mzT_squashTime <- function(mzT, method = mean, ignore_zeros = T){
 }
 
 #[0|1]: 0=Negative, 1=Positive
-.magic_polarity_loop <- function(files,pol,cl){
+.magic_polarity_loop <- function(files, pol, cl, postbin_method = mean, ...){
   if(pol){
     pol_eng="pos"
   }else{
@@ -163,7 +163,7 @@ mzT_squashTime <- function(mzT, method = mean, ignore_zeros = T){
     colnames(mzT[[i]]) <- c("mz", gsub("^(.*)\\.(.*)",paste(pol_eng,"\\1",sep="_"),files[i]))
   }
   mz <- .mz_format(mzT)
-  mz <- .binning(mz)
+  mz <- .binning(mz, postbin_method)
 }
 
 .binning <- function(df, method = max, tolerance = 5e-6){

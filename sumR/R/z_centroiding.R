@@ -1,4 +1,3 @@
-###Reference zz_centroiding for the original/more information
 
 #Return MZ,I list for single scan
 centroid.singleScan <- function(spectrum, halfWindowSize = 2) {

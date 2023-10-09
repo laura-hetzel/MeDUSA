@@ -24,13 +24,13 @@ local.mz_polarity_guesser <- function(input, pos_return = "Positive", neg_return
   input <- head(input)
   try({input[3,] <- colnames(input)})
   if (sum(grep("[^A-Za-z|^][Nn]eg|[Nn]egative",input)) > 0){
-    print("INFO:sqrlSumr::polarity_guess: Detected Negative")
+    print("INFO:sumR::polarity_guess: Detected Negative")
     ret <- neg_return
   } else if(sum(grep("[^A-Za-z|^][Pp]os|[Pp]ositive",input)) >0){
     ret <- pos_return
-    print("INFO:sqrlSumr::polarity_guess: Detected Positive")
+    print("INFO:sumR::polarity_guess: Detected Positive")
   } else {
-    stop("ERROR: sqrlSumr::polarity_guess: Could not guess positive or negative from colnames")
+    stop("ERROR: sumR::polarity_guess: Could not guess positive or negative from colnames")
   }
   ret
 }
