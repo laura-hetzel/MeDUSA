@@ -38,3 +38,14 @@ local.mz_polarity_guesser <- function(input, pos_return = "Positive", neg_return
 local.save_plot <- function(plot_name, output_dir = paste("output", local.dir_sep() ,Sys.Date(), "")){
   ggsave(paste(output_dir,local.dir_sep(),plot_name,".png",sep = ""))
 }
+
+local.export_thread_env <- function(cores, func_name){
+  func_name <- gsub("\\(.*\\)","",func_name)
+  if (cores > 1) {
+    cl <- parallel::makeCluster(cores)
+    parallel::clusterExport(cl, varlist = ls(environment(func_name)),
+                                envir = environment(func_name))
+  } else {
+    cl <- NULL
+  }
+}

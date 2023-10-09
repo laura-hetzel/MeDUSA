@@ -18,6 +18,8 @@ DataFrame where:
   - Colnames = String: sample_names
   - Data     = Float: log2(Intensities)
 
+Programatically: the methods for [mz-obj, mzT-obj, mzLog-obj] are all interchangeable....proceed with caution.
+
 mzLong-OBJ: A pivot longer of an "MZ Object"
 DataFrame where columns are:
   - Float : MZ
@@ -46,6 +48,11 @@ file: [input object type]_[suggested order]_[category].R (i.e. "mz_7_post_proces
     - suggested method to handle everything in the file category (i.e. "mz_post_process_magic")
  - public function : [input object]_[subcategory]_[description] (i.e. "mz_pp_pivotlonger")
  - private funciton: .[description]
+
+file: z_[description].R
+  - common methods written by ehetzel
+file: zz_[description].R
+  - common methods written by others
 
 
 ---- Laura todo

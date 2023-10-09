@@ -25,37 +25,36 @@ mz_isotope_hunter <- function(input_mz_obj, iso_target = 1.0034, iso_iter = 5, t
   sub_set <- dplyr::select(input_mz_obj, c(mz, tol))
   out <- list()
 
-  if (cores > 1 || !is.null(cl)){
-    cl <- parallel::makeCluster(cores)
-    parallel::clusterExport(cl, varlist = ls(environment(mz_isotope_hunter)),
-                            envir = environment(mz_isotope_hunter))
-  }
+  cl <- local.export_thread_env(cores, deparse(sys.calls()[[sys.nframe()]]))
+  tryCatch({
+    out <- pbapply::pbapply(sub_set, 1,cl=cl,function(mz_target){
+      hunt_zone  <- dplyr::filter(sub_set, (mz_target[1] - iso_target * (iso_iter + 0.1)) < mz
+                            & mz <  (mz_target[1] + iso_target * (iso_iter + 0.1)))
+      x <- hunt_zone$mz[(((abs(hunt_zone$mz - mz_target[1]) + mz_target[2]) %% iso_target )
+                            - mz_target[2] ) < mz_target[2]]
+      out[[mz_target[1]]] <- x
+    })
 
-  out <- pbapply::pbapply(sub_set, 1,cl=cl,function(mz_target){
-    hunt_zone  <- dplyr::filter(sub_set, (mz_target[1] - iso_target * (iso_iter + 0.1)) < mz
-                          & mz <  (mz_target[1] + iso_target * (iso_iter + 0.1)))
-    x <- hunt_zone$mz[(((abs(hunt_zone$mz - mz_target[1]) + mz_target[2]) %% iso_target )
-                          - mz_target[2] ) < mz_target[2]]
-    out[[mz_target[1]]] <- x
-  })
-
-  #Thread cleanup
-  if( cores > 1 || !is.null(cl)){
-    parallel::stopCluster(cl)
-    showConnections()
-  }
   out <- unique(out[ lapply(out, length) > 1 ])
   names(out) <- lapply(out, `[[`, 1)
 
   return(out)
-}
 
-mz_isotope_flatten <- function(input_mz_obj, isotope_list, method = max, cores = 4){
-  pblapply(input_mz_obj, function(isotope_list, x, method = method){
-    if x$mz %in% names(isotope_list){
-      x <- apply(select(input_mz_obj[input_mz_obj$mz %in% x,], -mz),2, method)
+  },
+  finally={
+    if (cores > 1 || !is.null(cl)) {
+      parallel::stopCluster(cl)
+      showConnections()
+    }
   })
 }
+
+#mz_isotope_flatten <- function(input_mz_obj, isotope_list, method = max, cores = 4){
+#  pblapply(input_mz_obj, function(isotope_list, x, method = method){
+#    if x$mz %in% names(isotope_list){
+#      x <- apply(select(input_mz_obj[input_mz_obj$mz %in% x,], -mz),2, method)
+#  })
+#}
 
 
 #TODO FLATTEN?

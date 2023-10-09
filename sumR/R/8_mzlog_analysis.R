@@ -1,5 +1,5 @@
 # *** PCA -----------------------------------------------------
-#' MZ-OBJ PCA
+#' MZLOG-OBJ PCA
 #'
 #' Not really sure
 #'  - Requires: ggplot2, tibble
@@ -40,7 +40,7 @@ mzlog_pca <- function(input_mzlog_obj,metadata, bad_samples ) {
 }
 
 # *** T-Test -----------------------------------------------------
-#' MZ-OBJ T-Test
+#' MZLOG-OBJ T-Test
 #'
 #' Welch T-test, input should be an log2 of mz_obj
 #'  - Requires: dplyr
@@ -71,13 +71,8 @@ mzlog_pca <- function(input_mzlog_obj,metadata, bad_samples ) {
 #'
 #' @export
 mzlog_welch <- function(input_mzlog_obj, phenotype_a, phenotype_b, cores = 4){
-  if (cores > 1) {
-    cl <- parallel::makeCluster(cores)
-    parallel::clusterExport(cl, varlist = ls(environment(mzlog_welch)),
-                              envir = environment(mzlog_welch))
-  } else {
-    cl <- NULL
-  }
+
+  cl <- local.export_thread_env(cores, deparse(sys.calls()[[sys.nframe()]]))
   tryCatch({
     out <- data.frame(p    = rep(Inf, nrow(input_mzlog_obj)),
                       p_05 = rep(FALSE, nrow(input_mzlog_obj)),
@@ -96,27 +91,9 @@ mzlog_welch <- function(input_mzlog_obj, phenotype_a, phenotype_b, cores = 4){
     return(out)
   },
   finally={
-    if (cores > 1) {
+    if (cores > 1 || !is.null(cl)) {
       parallel::stopCluster(cl)
       showConnections()
     }
   })
 }
-
-# *** RandomForest -----------------------------------------------------
-#' MZ-OBJ RandomForest
-#'
-#' Not really sure
-#'  - Requires: ggplot2, tibble
-#'
-#' @param input_mzlog_obj \cr
-#'   DataFrame : Log2 of Input MZ-Ob
-#' @param metadata \cr
-#'   DataFrame?: MZ_metadata
-#' @param bad_samples \cr
-#'   List?     : c("bad1", "bad2")
-#' @param high_noise \cr
-#'   Float     : HighBoundry for "Noise"
-#'
-#' @export
-mzlog_random_forest <- function(input_mzlog_obj){}

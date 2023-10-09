@@ -16,6 +16,7 @@ FROM package_base
 COPY sumR sumR
 WORKDIR sumR
 
+RUN R -e 'devtools::document()'
 RUN R -e 'devtools::install(dependencies="never")'
 
 
