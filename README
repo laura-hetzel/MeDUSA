@@ -55,11 +55,21 @@ file: zz_[description].R
   - common methods written by others
 
 
----- Laura todo
-  - extract_magic, all the parameters
+---- Laura tody Oct13
   -X docker image, including sumr
   -X fix trycatch in massdefect
   -X why missingness drop rows with value of 1
-  - blanksubtraction, validation
+  - mz_random_forest (stemcell)
+  - iso_tag output, 1 filtered(mz_obj sans isos), one original (iso_obj with mappings) [sucks]
+  - pca variable bug [need data]
+  -IN volcano plot (look at hypoxia)
+  -X t-test "FDR correct" (stemcell)
   - hmdb/lipidmaps
-  - mz_random_forest
+  - heatmap
+  - anova analysis
+
+-- Todo Oct31
+  -X quality check
+  -X metadata file naming validation
+  - extract_magic, all the parameters
+  - blanksubtraction, validation (need better data) ... clunky naming.

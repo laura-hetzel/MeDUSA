@@ -137,11 +137,12 @@ mz_post_process_magic <- function(input_mz_obj, metadata, plot = TRUE){
   })
   tryCatch({
     input_mzlong <- mzlong_pp_log_transform(input_mzlong, plot)
-    input_mz_obj <- log2(input_mz_obj)
     print("INFO: log_transform success")
   }, error = function(e) {
     print(e)
     stop("ERROR: in mzl_pp_log_transform")
   })
+  ind <- grep("mz", colnames(input_mz_obj))
+  input_mz_obj[-ind] <- log2(input_mz_obj[-ind])
   list("mzLong" = input_mzlong ,"mzLog" = input_mz_obj)
 }
