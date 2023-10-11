@@ -37,10 +37,7 @@ mz_quality_metrics <- function(input_mz_obj, cores = 2){
     return(mz_metrics[-1] <- t(tmp))
   },
   finally={
-    if (cores > 1 || !is.null(cl)) {
-      parallel::stopCluster(cl)
-      showConnections()
-    }
+    local.kill_threads(cl)
   })
 }
 
@@ -51,7 +48,7 @@ mz_quality_metrics <- function(input_mz_obj, cores = 2){
 #' @param mz_metrics \cr
 #'   DataFrame : from "sumR::mz_quality_metrics"
 #' @export
-mz_metrics_quality_plot_all <- function(mz_metrics){
+mzmetrics_quality_plot_all <- function(mz_metrics){
   for (f in colnames(mz_metrics[-1])){
     mz_metrics_quality_plot(mz_metrics, f)
   }
@@ -69,7 +66,7 @@ mz_metrics_quality_plot_all <- function(mz_metrics){
 #'
 #' Dependencies : ggplot2, dplyr, parallel
 #' @export
-mz_metrics_quality_plot <- function(mz_metrics, focus, title = focus){
+mzmetrics_quality_plot <- function(mz_metrics, focus, title = focus){
   ggplot() +
     geom_line(data = mz_metrics,
               aes_string(x = "name" , y = focus, group = "1")) +

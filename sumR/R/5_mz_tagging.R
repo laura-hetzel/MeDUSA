@@ -20,7 +20,7 @@
 #' @return Returns a List of MZ that are isotopes of each other
 #' @export
 
-mz_isotope_hunter <- function(input_mz_obj, iso_target = 1.0034, iso_iter = 5, tol_ppm = 5e-6, cores = 4, ...){
+mz_tag_isotope_hunter <- function(input_mz_obj, iso_target = 1.0034, iso_iter = 5, tol_ppm = 5e-6, cores = 4, ...){
   input_mz_obj$tol <- input_mz_obj$mz - (input_mz_obj$mz/( tol_ppm + 1 ))
   sub_set <- dplyr::select(input_mz_obj, c(mz, tol))
   out <- list()
@@ -39,13 +39,9 @@ mz_isotope_hunter <- function(input_mz_obj, iso_target = 1.0034, iso_iter = 5, t
   names(out) <- lapply(out, `[[`, 1)
 
   return(out)
-
   },
   finally={
-    if (cores > 1 || !is.null(cl)) {
-      parallel::stopCluster(cl)
-      showConnections()
-    }
+    local.kill_threads(cl)
   })
 }
 

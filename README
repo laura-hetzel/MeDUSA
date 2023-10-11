@@ -62,10 +62,10 @@ file: zz_[description].R
   - mz_random_forest (stemcell)
   - iso_tag output, 1 filtered(mz_obj sans isos), one original (iso_obj with mappings) [sucks]
   - pca variable bug [need data]
-  -IN volcano plot (look at hypoxia)
+  -X volcano plot (look at hypoxia)
   -X t-test "FDR correct" (stemcell)
   - hmdb/lipidmaps
-  - heatmap
+  -X heatmap
   - anova analysis
 
 -- Todo Oct31

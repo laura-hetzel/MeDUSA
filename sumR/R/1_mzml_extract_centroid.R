@@ -10,8 +10,9 @@
 #'   String: File or directory of mzmL files
 #' @param cores
 #'   Integer: Can I has multithreading? (Need parallel)
+#'
 #' @export
-mzml_extract_magic <- function(files = getwd(), cores = 1,  ... ){
+mzml_extract_magic <- function(files = getwd(), cores = 2,  ... ){
   if (!grepl('\\.mzML$',files)){
     files <- list.files(path=files, pattern="*.mzML")
   }
@@ -19,14 +20,8 @@ mzml_extract_magic <- function(files = getwd(), cores = 1,  ... ){
     warning("Cannot find mzML files in given files.")
     return(NULL)
   }
+  cl <- local.export_thread_env(cores, deparse(sys.calls()[[sys.nframe()]]))
   tryCatch({
-    # Make cluster if cores > 1
-    if (cores > 1) {
-      cl <- parallel::makeCluster(cores)
-    } else {
-      cl <- NULL
-    }
-
     # Prepare each file (by polarity) #TODO, maybe you know...don't
     # Get MzT for each file
     mz_pos <- .magic_polarity_loop(files,1,cl)
@@ -35,10 +30,7 @@ mzml_extract_magic <- function(files = getwd(), cores = 1,  ... ){
   },
   finally={
     #This doesn't seem to stop the cluster :/
-    if (cores > 1) {
-      parallel::stopCluster(cl)
-      showConnections()
-    }
+    local.kill_threads(cl)
   })
 }
 
