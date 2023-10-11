@@ -18,6 +18,8 @@ library(tidyverse)
 library(ggplot2)
 library(ggbiplot)
 library(dplyr)
+library(caret)
+library(caTools)
 
 # 2. Data Processing ------------------------------------------------------
 
@@ -575,3 +577,225 @@ ggplot(data = volcano_input_p, aes(x = log2(fold),
   geom_vline(xintercept = c(-0.6, 0.6), col = "red") +
   geom_hline(yintercept = -log10(0.05), col = "red") +
   ggtitle("Positive Mode")
+
+
+# *** 3.4 Random Forest ---------------------------------------------------
+# correlate the features
+stat_neg_t <- as.data.frame(t(stat_neg))
+cor_feat_neg <- cor(stat_neg_t)
+
+# isolate highly correlated, with a correlated ratio of 75%
+high_cor_feat_neg <- findCorrelation(cor_feat_neg, cutoff = 0.75)
+# 1261 features identified as highly correlated
+
+# identify features to be removed
+feat_removal_neg <- as.data.frame(stat_neg_t[, high_cor_feat_neg])
+random_neg <- stat_neg_t %>%
+  dplyr :: select(-colnames(feat_removal_neg))
+# random_neg has 12,221 features
+# force the row names to be a column to identify all of the samples
+random_neg$samples <- rownames(random_neg)
+random_neg <- dplyr:: left_join(random_neg, meta[c("filename", "phenotype")],
+                                by = c('samples' = 'filename')) 
+random_neg$phenotype <- as.factor(random_neg$phenotype)
+
+control_neg <- rfeControl(functions = rfFuncs, 
+                          method = "repeatedcv", 
+                          repeats = 5,
+                          number = 10)
+
+feat_select_neg <- rfe(random_neg %>%
+                         dplyr :: select(-phenotype, -samples),
+                       random_neg$phenotype,
+                       rfeControl = control_neg,
+                       sizes = seq(50,500, by=50))
+
+ggplot(data = feat_select_neg, metric = "Accuracy") + theme_bw()
+ggplot(data = feat_select_neg, metric = "Kappa") + theme_bw()
+
+# mz selection with rows = mz and columns = samples
+mz_select_neg <- stat_neg
+mz_select_neg <- rownames_to_column(mz_select_neg, "mz")
+mz_select_neg <- mz_select_neg %>%
+  filter_all(any_vars(.%in% predictors(feat_select_neg)))
+# format the data set and add a column to identify the phenotype
+mz_select_neg <- column_to_rownames(mz_select_neg, "mz")
+mz_select_neg_t <- as.data.frame(t(mz_select_neg))
+mz_select_neg_t <- rownames_to_column(mz_select_neg_t, "samples")
+rf_neg <- left_join(mz_select_neg_t, select(meta, filename, phenotype),
+                    by = c('samples' = 'filename'))
+rf_neg <- select(rf_neg, -samples)
+
+# Cross validation
+
+set.seed(42)
+split_neg <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
+train_neg <- subset(rf_neg, split_neg == TRUE)
+test_neg <- subset(rf_neg, split_neg == FALSE)  
+
+#Train settings
+mtry <- c(sqrt(ncol(rf_neg)))
+tunegrid <- expand.grid(.mtry=mtry)
+control <- trainControl(method ='repeatedcv', 
+                        number = 10, 
+                        repeats = 4, 
+                        search = 'grid',
+                        allowParallel = TRUE)
+
+rf_fit <- train(as.factor(phenotype) ~.,
+                data = train_neg,
+                method = 'rf',
+                tuneGrid = tunegrid,
+                trControl = control,
+                ntree = 500,
+                na.action = na.exclude)
+
+rf_pred <- predict(rf_fit, test_neg)
+
+confusionMatrix(rf_pred, as.factor(test_neg$phenotype))
+
+# split again for testing, Test number 1
+set.seed(111)
+split_neg1 <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
+train_neg1 <- subset(rf_neg, split_neg1 == TRUE)
+test_neg1 <- subset(rf_neg, split_neg1 == FALSE)  
+
+#Train settings same as previous
+rf_fit_neg1 <- train(as.factor(phenotype) ~.,
+                     data = train_neg1,
+                     method = 'rf',
+                     tuneGrid = tunegrid,
+                     trControl = control,
+                     ntree = 500,
+                     na.action = na.exclude)
+
+rf_pred_neg1 <- predict(rf_fit_neg1, test_neg1)
+confusionMatrix(rf_pred_neg1, as.factor(test_neg1$phenotype))
+
+# split again for testing, Test number 2
+set.seed(2e2)
+split_neg2 <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
+train_neg2 <- subset(rf_neg, split_neg2 == TRUE)
+test_neg2 <- subset(rf_neg, split_neg2 == FALSE)  
+
+#Train settings same as previous
+
+rf_fit_neg2 <- train(as.factor(phenotype) ~.,
+                     data = train_neg2,
+                     method = 'rf',
+                     tuneGrid = tunegrid,
+                     trControl = control,
+                     ntree = 500,
+                     na.action = na.exclude)
+
+rf_pred_neg2 <- predict(rf_fit_neg2, test_neg2)
+
+confusionMatrix(rf_pred_neg2, as.factor(test_neg2$phenotype))
+
+# split again for testing, Test number 3
+set.seed(3e3)
+split_neg3 <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
+train_neg3 <- subset(rf_neg, split_neg3 == TRUE)
+test_neg3 <- subset(rf_neg, split_neg3 == FALSE)  
+
+#Train settings same as previous
+
+#rf_fit <- train(as.factor(phenotype) ~., data = test_neg, method= 'rf')
+rf_fit_neg3 <- train(as.factor(phenotype) ~.,
+                     data = train_neg3,
+                     method = 'rf',
+                     tuneGrid = tunegrid,
+                     trControl = control,
+                     ntree = 500,
+                     na.action = na.exclude)
+
+rf_pred_neg3 <- predict(rf_fit_neg3, test_neg3)
+
+confusionMatrix(rf_pred_neg3, as.factor(test_neg3$phenotype))
+
+# split again for testing, Test number 4
+set.seed(4e4)
+split_neg4 <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
+train_neg4 <- subset(rf_neg, split_neg4 == TRUE)
+test_neg4 <- subset(rf_neg, split_neg4 == FALSE)  
+
+#Train settings same as previous
+
+#rf_fit <- train(as.factor(phenotype) ~., data = test_neg, method= 'rf')
+rf_fit_neg4 <- train(as.factor(phenotype) ~.,
+                     data = train_neg4,
+                     method = 'rf',
+                     tuneGrid = tunegrid,
+                     trControl = control,
+                     ntree = 500,
+                     na.action = na.exclude)
+
+rf_pred_neg4 <- predict(rf_fit_neg4, test_neg4)
+
+confusionMatrix(rf_pred_neg4, as.factor(test_neg4$phenotype))
+
+# split again for testing, Test number 5
+set.seed(5e5)
+split_neg5 <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
+train_neg5 <- subset(rf_neg, split_neg5 == TRUE)
+test_neg5 <- subset(rf_neg, split_neg5 == FALSE)  
+
+#Train settings same as previous
+
+#rf_fit <- train(as.factor(phenotype) ~., data = test_neg, method= 'rf')
+rf_fit_neg5 <- train(as.factor(phenotype) ~.,
+                     data = train_neg5,
+                     method = 'rf',
+                     tuneGrid = tunegrid,
+                     trControl = control,
+                     ntree = 500,
+                     na.action = na.exclude)
+
+rf_pred_neg5 <- predict(rf_fit_neg5, test_neg5)
+
+confusionMatrix(rf_pred_neg5, as.factor(test_neg5$phenotype))
+
+
+
+# important variables (features) of each model
+# neg
+imp_neg1 <- varImp(rf_fit_neg1)
+imp_neg1 <- imp_neg1$importance
+imp_neg1 <- rownames_to_column(imp_neg1, "mz")
+imp_neg1$mz <- as.numeric(gsub("`", "", imp_neg1$mz))
+imp_neg1 <- imp_neg1[order(-imp_neg1$Overall),]
+
+imp_neg2 <- varImp(rf_fit_neg2)
+imp_neg2 <- imp_neg2$importance
+imp_neg2 <- rownames_to_column(imp_neg2, "mz")
+imp_neg2$mz <- as.numeric(gsub("`", "", imp_neg2$mz))
+imp_neg2 <- imp_neg2[order(-imp_neg2$Overall),]
+
+imp_neg3 <- varImp(rf_fit_neg3)
+imp_neg3 <- imp_neg3$importance
+imp_neg3 <- rownames_to_column(imp_neg3, "mz")
+imp_neg3$mz <- as.numeric(gsub("`", "", imp_neg3$mz))
+imp_neg3 <- imp_neg3[order(-imp_neg3$Overall),]
+
+imp_neg4 <- varImp(rf_fit_neg4)
+imp_neg4 <- imp_neg4$importance
+imp_neg4 <- rownames_to_column(imp_neg4, "mz")
+imp_neg4$mz <- as.numeric(gsub("`", "", imp_neg4$mz))
+imp_neg4 <- imp_neg4[order(-imp_neg4$Overall),]
+
+imp_neg5 <- varImp(rf_fit_neg5)
+imp_neg5 <- imp_neg5$importance
+imp_neg5 <- rownames_to_column(imp_neg5, "mz")
+imp_neg5$mz <- as.numeric(gsub("`", "", imp_neg5$mz))
+imp_neg5 <- imp_neg5[order(-imp_neg5$Overall),]
+
+
+# isolate the top 100 most important from each model
+imp_neg1 <- head(imp_neg1, n = 100)
+imp_neg2 <- head(imp_neg2, n = 100)
+imp_neg3 <- head(imp_neg3, n = 100)
+imp_neg4 <- head(imp_neg4, n = 100)
+imp_neg5 <- head(imp_neg5, n = 100)
+
+imp_neg <- rbind(imp_neg1, imp_neg2, imp_neg3, imp_neg4, imp_neg5)
+
