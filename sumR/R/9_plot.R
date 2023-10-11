@@ -74,42 +74,46 @@ mz_analysis_volcano_magic <- function(input_mzlog_obj, phenotype_a, phenotype_b,
 #'
 #' @param input_mz_obj \cr
 #'   DataFrame : Input MZ-Obj
+#' @param metadata \cr
+#'   DataFrame : Metadata-Obj of Samples
 #' @param annotation \cr
-#'   DataFrame: Two columns from metadata: (sample_name ; [annotation_column]) * optional
+#'   String: Colname of metadata to annotate on.
 #' @param title
 #'   String: Plot title
 #' @param save_file
-#'   String: Path to save the plot. Defaults to default output directory
+#'   String: Path to save the plot.
+#'   TRUE: Save to default output directory
+#'   NA: Do not save
 #' @param cluster
 #'   c("row"=Boolean,"col"=Boolean): Cluster data? Defaults to False
 #'
-#' @examples
-#' Create a HeatMap noting Phenotype
-#'   plot_heatmap(mz_object, select(metadata, "sample_name", "phenotype"))
-#'
-#'
 #' @export
-plot_heatmap <- function(input_mz_obj, annotation = NULL, title = "HeatMap of intensities", save_file = NULL, cluster = NULL...){
-  if (!is.null(annotation)){
-    if (sort(annotation$sample_name) != sort(dplyr::select(input_mz_obj,-mz))){
+plot_heatmap <- function(input_mz_obj, metadata = NULL, annotation = "phenotype",
+                          title = "HeatMap of intensities", save_file = TRUE, cluster = NULL, ...){
+
+  plot_obj <- dplyr::select(input_mz_obj, -mz)
+  row.names(plot_obj) <- input_mz_obj$mz
+
+  if (!is.null(annotation) && !is.null(metadata)){
+    if (sum( sort(metadata$sample_name) !=
+             sort(colnames(plot_obj)))) {
       stop("ERROR: plot_heatmap: annotation sample_name does not match mz_obj data")
     }
-    if (dim(annotation)[2] != 2){
-      stop(paste("ERROR: plot_heatmap: annotation parameter expected 2 columns. Got: ", dim(annoation[2]),dir_sep=""))
-    }
-    annotation = data.frame(row.names = annotation$sample_name, dplyr::select(annotation, -sample_name)))
+    annotation_int = data.frame(row.names = metadata$sample_name, metadata[annotation])
+  } else {
+    annotation_int <- NULL
   }
-  if (is.null(save_file)){
+  if (!is.na(save_file) && save_file == T){
     save_file = paste(local.output_dir,local.dir_sep(),title,".png",sep = "")
   }
   if (is.null(cluster)){
     cluster <- c("row"=F,"col"=F)
   }
 
-  pheatmap::pheatmap( t(input_mz_obj),
+  pheatmap::pheatmap( t(plot_obj),
                       cluster_rows = cluster["row"],
                       cluster_cols = cluster["col"],
-                      annotation_row = annotation,
+                      annotation_row = annotation_int,
                       main = title,
                       filename = save_file,
                       ...)

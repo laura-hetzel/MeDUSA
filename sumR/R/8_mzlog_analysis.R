@@ -7,11 +7,9 @@
 #' @param input_mzlog_obj \cr
 #'   DataFrame : Log2 of Input MZ-Obj
 #' @param metadata \cr
-#'   DataFrame?: MZ_metadata
+#'   DataFrame: MZ_metadata
 #' @param bad_samples \cr
 #'   List?     : c("bad1", "bad2")
-#' @param high_noise \cr
-#'   Float     : HighBoundry for "Noise"
 #'
 #' @export
 mzlog_analysis_pca <- function(input_mzlog_obj,metadata, bad_samples ) {
