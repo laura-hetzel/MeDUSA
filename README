@@ -1,11 +1,30 @@
-Object Desciptions/expectations:
-
+----Object Desciptions/expectations----
 
 MZ-OBJ: The standard "MZ Object"
 DataFrame where:
   - Rownames = Float: MZ
   - Colnames = String: sample_names
   - Data     = Float: Intensities
+
+mzT-OBJ: An "MZ Object" rebranded to represent scan-time.
+DataFrame where:
+  - Rownames = Float: MZ
+  - Colnames = String: ScanTime
+  - Data     = Float: Intensities
+
+mzLog-OBJ: A log2 of "MZ Object."
+DataFrame where:
+  - Rownames = Float: MZ
+  - Colnames = String: sample_names
+  - Data     = Float: log2(Intensities)
+
+Programatically: the methods for [mz-obj, mzT-obj, mzLog-obj] are all interchangeable....proceed with caution.
+
+mzLong-OBJ: A pivot longer of an "MZ Object"
+DataFrame where columns are:
+  - Float : MZ
+  - String: ScanTime
+  - Float : intensity
 
 METADATA: The standard "MZ Metadata object"
 Dataframe where the columns are:
@@ -22,40 +41,35 @@ Dataframe where the columns are:
   - String : sampling_day
   - String : filtered_out (yes, no) #todo turn this into a boolean
 
-TODOS:
-  - Docker -> Raw-MZML : msconvert doesnt play well with mac-M1 (apple silcon docker compatibility issue)
-  - MZML_1 -> Try using sapply rather than for loops
-  - MZML_1 -> Refactor: Improve Memory and Speed (could be Docker limitation)
-               -> Refactor away from joins
-               -> Write more to disk
-               -> Output in progress files
-  - MZML_1 -> Binning is too simple
-------- : ^^ Fixed with original scripts
-  - MZML_2 -> PeakPicking ===>> PeakShapeFiltering
-  - MZML_3 -> Generate MetaData???
-  - MZ_1 -> Fix
-  - MZ_6 -> Add Random Forest
-  - MZ_7 -> Migrate HMDB script
 
------ Ahmed
-  -x MZML_1-old -> Binning (intensity) math (avg, max, median)
-  -x MZML_1-old -> Add tolerance to binning params
-  -x MZML_1-old -> Make it more obvious when using binning/centroiding classes
-  -x Binning -> Choose bin mz by intesity math (average, max, and **weighted-intensity**)
-  -x 1st Centroid -> TimeSquash ( filter out ( "missingness across scans" , " " )
-                             allow other math on time-scans)
+----Project Structure----
+file: [input object type]_[suggested order]_[category].R (i.e. "mz_7_post_processing.R")
+ - public function : [input_object]_[category]_magic
+    - suggested method to handle everything in the file category (i.e. "mz_post_process_magic")
+ - public function : [input object]_[subcategory]_[description] (i.e. "mz_pp_pivotlonger")
+ - private funciton: .[description]
 
----- Ahmed todo2
-  -x Missingness by # of Scans
-  -x LowIntensity in mzML ## ( didn't add to squashTime; feels repeditive)
-  -x tagging list
-  -x tagging isotope
+file: z_[description].R
+  - common methods written by ehetzel
+file: zz_[description].R
+  - common methods written by others
 
----- Laura todo
-  - extract_magic, all the parameters
+
+---- Laura tody Oct13
   -X docker image, including sumr
   -X fix trycatch in massdefect
   -X why missingness drop rows with value of 1
-  - blanksubtraction, validation
+  - mz_random_forest (stemcell)
+  - iso_tag output, 1 filtered(mz_obj sans isos), one original (iso_obj with mappings) [sucks]
+  - pca variable bug [need data]
+  -IN volcano plot (look at hypoxia)
+  -X t-test "FDR correct" (stemcell)
   - hmdb/lipidmaps
-  - mz_random_forest
+  - heatmap
+  - anova analysis
+
+-- Todo Oct31
+  -X quality check
+  -X metadata file naming validation
+  - extract_magic, all the parameters
+  - blanksubtraction, validation (need better data) ... clunky naming.

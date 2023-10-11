@@ -13,9 +13,10 @@ RUN R -e 'remotes::install_version("devtools", version = "2.4.5")'
 
 FROM package_base
 
-COPY sqrlSumr sqrlSumr
-WORKDIR sqrlSumr
+COPY sumR sumR
+WORKDIR sumR
 
+RUN R -e 'devtools::document()'
 RUN R -e 'devtools::install(dependencies="never")'
 
 
@@ -27,6 +28,8 @@ RUN R -e 'devtools::install(dependencies="never")'
 ### TO RUN:
 ### TO RUN RSTUDIO: user=rstudio, pwd=sumr
 # docker run -e PASSWORD=sumr -p 8787:8787 -v .:/home/rstudio/ lacdr/sumr
+# Navigate to localhost:8787 in your browser
+
 ### TO RUN R terminal:
 #[Unix/Mac] docker run --rm -it --name localR -v $(pwd):/local  lacdr/sumr /bin/bash
 #[Win?]     docker run --rm -it --name localR -v .:/local  lacdr/sumr /bin/bash
