@@ -210,7 +210,7 @@ blank_subt_local <- function(input_data, sample_filenames, blank_filenames, blan
 }
 
 bsub_pos_cells <- blank_subt_local(
-  df_pos,
+  df_pos_named,
   filter(meta, type == "cell" & filtered_out == "no"),
   filter(meta, type == "media" & filtered_out == "no")
 )
@@ -220,7 +220,7 @@ bsub_pos_cells <- blank_subt_local(
 # peaks removed with blank subtraction: 13,659
 
 bsub_neg_cells <- blank_subt_local(
-  df_neg,
+  df_neg_named,
   filter(meta, type == "cell" & filtered_out == "no"),
   filter(meta, type == "media" & filtered_out == "no")
 )
@@ -228,4 +228,312 @@ bsub_neg_cells <- blank_subt_local(
 # peaks before blank subtraction: 121,303
 # peaks after blank subtraction: 114,170
 # peaks removed with blank subtraction: 7,133
+
+
+# *** 2.5 Mass Defect filtering -------------------------------------------
+filtered_neg_named <- bsub_neg_cells
+filtered_pos_named <- bsub_pos_cells
+
+mass_defect_calculation <- function(dataframe) {
+  dataframe$MD <-  as.numeric(row.names(dataframe)) %% 1
+  dataframe$mz_filter <- 0.00112 * as.numeric(row.names(dataframe)) + 0.01953
+  
+  # Taken from the else of the SumR thing that was broken anyway 
+  #   (revisit if hmdb...McMillan is important)
+  md_filtered <- dataframe[which(dataframe$MD <= dataframe$mz_filter), ]
+  
+  #Ripped from SumR:plot_mz_MD
+  mz_removed <- nrow(dataframe) - nrow(md_filtered)
+  plot(as.numeric(row.names(md_filtered)), md_filtered$MD,
+       cex.axis = 0.8,
+       col = alpha("black", 0.5), pch = 20, cex = 0.8,
+       ylim = c(0, 1), xlim = c(50, 1200), ylab = "MD", xlab = "m/z",
+       main = "Filtered Data", sub = paste("datapoints removed = ", mz_removed),
+       cex.lab = 0.8, cex.main = 0.8, cex.sub = 0.8)
+  return(select(md_filtered, -MD, -mz_filter))
+}
+
+md_filtered_neg_df <- mass_defect_calculation(filtered_neg_named) 
+# peaks before md filter: 114,170
+# peaks after md filter: 79,284
+# peaks removed with md filter: 24,786
+md_filtered_pos_df <- mass_defect_calculation(filtered_pos_named) 
+# peaks before md filter: 102,710
+# peaks after md filter: 74,929
+# peaks removed with md filter: 27,781
+
+filtered_neg_named <- md_filtered_neg_df
+filtered_pos_named <- md_filtered_pos_df
+rm(md_filtered_neg_df)
+rm(md_filtered_pos_df)
+
+
+# *** 2.6 Missingness filter ----------------------------------------------
+missingness <- function(dataframe, threshold = 0.1){
+  thresh <- threshold * length(dataframe)
+  keep_peaks <- dataframe[rowSums( dataframe > 0 ) > thresh,]
+}
+
+filtered_neg_named <- missingness(filtered_neg_named)
+# peaks before missingness filter: 79,384
+# peaks after missingness filter: 30,519
+# peaks removed with missingness filter: 48,875
+
+filtered_pos_named <- missingness(filtered_pos_named)
+# peaks before missingness filter: 74,929
+# peaks after missingness filter: 30,934
+# peaks removed with missingness filter: 43,995
+
+
+# *** 2.7 Low intensity filter --------------------------------------------
+
+neg_int_filter <- filtered_neg_named %>%
+  filter_at(vars(-matches("mz")), any_vars( . > 5000))
+# peaks before low intensity filter: 30,519
+# peaks after low intensity filter: 13,482
+# peaks removed by low intensity filter: 17,037
+
+pos_int_filter <- filtered_pos_named %>%
+  filter_at(vars(-matches("mz")), any_vars( . > 8000))
+# peaks before low intensity filter: 30,934
+# peaks after low intensity filter: 17,621
+# peaks removed by low intensity filter: 13,313
+
+filtered_neg_named <- neg_int_filter
+filtered_pos_named <- pos_int_filter
+rm(neg_int_filter)
+rm(pos_int_filter)
+
+
+# *** 2.8 Imputation ------------------------------------------------------
+# replace all zeros with a value between 10 and noise
+filtered_neg_named[!filtered_neg_named] <- sample(10:5000, 
+                                                  sum(!filtered_neg_named),
+                                                  replace = TRUE)
+
+filtered_pos_named[!filtered_pos_named] <- sample(10:10000, 
+                                                  sum(!filtered_pos_named),
+                                                  replace = TRUE)
+
+
+# *** 2.9 Normalization ---------------------------------------------------
+# get the file with the PQN code
+source("C:/Users/Laura Hetzel/OneDrive - Universiteit Leiden/Documents/thesis_planning/mimetas_hypoxia/hypoxia_normoxia_mimetas/scripts/quotNorm.R")
+
+# transpose the data frame before normalization
+norm_neg <- t(filtered_neg_named)
+norm_neg <- quotNorm(norm_neg)
+
+# plot the dilution factor per sample
+dilution_neg <- data.frame(norm_neg$dilution)
+dilution_neg$sample <- rownames(dilution_neg)
+ggplot(dilution_neg, aes(sample, norm_neg.dilution)) + 
+  geom_point() + 
+  theme(axis.text.x = element_text(angle = 90))
+
+dilution_neg_df <- left_join(meta, dilution_neg, by = c('filename' = 'sample'))
+ggplot(dilution_neg_df, 
+       aes(x = phenotype, y = norm_neg.dilution)) + geom_boxplot()
+
+norm_neg_df <- data.frame(norm_neg$X)
+norm_neg_df <- as.data.frame(t(norm_neg_df))
+
+# pos mode
+norm_pos <- t(filtered_pos_named)
+norm_pos <- quotNorm(norm_pos)
+
+dilution_pos <- data.frame(norm_pos$dilution)
+dilution_pos$sample <- rownames(dilution_pos)
+ggplot(dilution_pos, aes(sample, norm_pos.dilution)) + geom_point() + theme(axis.text.x = element_text(angle = 90))
+
+
+dilution_pos_df <- left_join(meta, dilution_pos, by = c('filename' = 'sample'))
+
+ggplot(dilution_pos_df, 
+       aes(x = phenotype, y = norm_pos.dilution)) + geom_boxplot()
+
+norm_pos_df <- data.frame(norm_pos$X)
+norm_pos_df <- as.data.frame(t(norm_pos_df))
+
+# remove measurements that were flagged by normalization plots and raw data review
+# revealed a cell was not measured.
+norm_pos_df <- norm_pos_df %>%
+  select(-c("sumr_hep_081")) %>%
+  filter_at(vars(-matches("mz")), any_vars(. > 0))
+
+norm_neg_df <- norm_neg_df %>%
+  select(-c("sumr_hep_081")) %>%
+  filter_at(vars(-matches("mz")), any_vars(. > 0))
+
+# update meta data with removed samples
+meta$filtered_out[grep("081", meta$filename)] <- "yes"
+
+#rearrange the normalized data sets with pivot longer
+norm_neg_df$mz <- row.names(norm_neg_df)
+norm_neg_long <- norm_neg_df %>% 
+  pivot_longer(!mz, names_to = "sample", values_to = "intensity")
+
+norm_pos_df$mz <- row.names(norm_pos_df)
+norm_pos_long <- norm_pos_df %>% 
+  pivot_longer(!mz, names_to = "sample", values_to = "intensity")
+
+
+# *** 2.10 Log Transform --------------------------------------------------
+norm_pos_long$log <- log2(norm_pos_long$intensity)
+norm_neg_long$log <- log2(norm_neg_long$intensity)
+
+# remove the X from the mz value
+norm_pos_long$mz <- gsub("X", "", norm_pos_long$mz)
+norm_neg_long$mz <- gsub("X", "", norm_neg_long$mz)
+
+ggplot(norm_neg_long, aes(x = sample, y = log)) + 
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  ggtitle("Filtered, Normalized, Logged, Negative")
+
+ggplot(norm_pos_long, aes(x = sample, y = log)) + 
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  ggtitle("Filtered, Normalized, Logged, Positive")
+
+
+# 3. Statistical Analysis -------------------------------------------------
+stat_neg <- subset(norm_neg_df, select = -c(mz))
+row.names(stat_neg) <- gsub("X", "", rownames(stat_neg))
+stat_neg <- log2(stat_neg)
+save(stat_neg, file = "sumr_neg_filtered_for_stats_df.Rdata")
+stat_pos <- subset(norm_pos_df, select = -c(mz))
+row.names(stat_pos) <- gsub("X", "", rownames(stat_pos))
+stat_pos <- log2(stat_pos)
+save(stat_pos, file = "stem_pos_filtered_for_stats_df.Rdata")
+save(meta, file = "sumr_filtered_meta.Rdata")
+
+
+# *** 3.1 PCA -------------------------------------------------------------
+# neg mode
+pca_input_neg <- as.data.frame(t(stat_neg))
+pca_input_neg <- scale(pca_input_neg)
+
+pca_input_neg <- merge(x = pca_input_neg, 
+                       y = subset(column_to_rownames(meta, "filename"), 
+                                  select = "phenotype"),
+                       by = 0, all.x = TRUE)
+rownames(pca_input_neg) <- paste(pca_input_neg$Row.names, pca_input_neg$phenotype, 
+                                 sep = "&")
+
+pca_neg <- prcomp(subset(pca_input_neg, select = -c(Row.names, phenotype)))
+summary(pca_neg)
+
+var_explained_n <- pca_neg$sdev^2/sum(pca_neg$sdev^2)
+
+pca_neg$x %>%
+  as.data.frame %>%
+  rownames_to_column("sample_phenotype") %>%
+  separate(sample_phenotype, c("sample", "phenotype"), "&") %>%
+  ggplot(aes(x = PC1, y = PC2)) +
+  geom_point(aes(color = phenotype)) +
+  labs(x=paste0("PC1: ",round(var_explained_n[1]*100,1),"%"),
+       y=paste0("PC2: ",round(var_explained_n[2]*100,1),"%")) +
+  theme(legend.position="top")
+
+# pos mode
+pca_input_pos <- as.data.frame(t(stat_pos))
+pca_input_pos <- scale(pca_input_pos)
+
+pca_input_pos <- merge(x = pca_input_pos, 
+                       y = subset(column_to_rownames(meta, "filename"), 
+                                  select = "phenotype"),
+                       by = 0, all.x = TRUE)
+rownames(pca_input_pos) <- paste(pca_input_pos$Row.names, pca_input_pos$phenotype, 
+                                 sep = "&")
+
+pca_pos <- prcomp(subset(pca_input_pos, select = -c(Row.names, phenotype)))
+summary(pca_pos)
+
+var_explained_p <- pca_pos$sdev^2/sum(pca_pos$sdev^2)
+
+pca_pos$x %>%
+  as.data.frame %>%
+  rownames_to_column("sample_phenotype") %>%
+  separate(sample_phenotype, c("sample", "phenotype"), "&") %>%
+  ggplot(aes(x = PC1, y = PC2)) +
+  geom_point(aes(color = phenotype)) +
+  labs(x=paste0("PC1: ",round(var_explained_n[1]*100,1),"%"),
+       y=paste0("PC2: ",round(var_explained_n[2]*100,1),"%")) +
+  theme(legend.position="top")
+
+
+# *** 3.2 T-test ----------------------------------------------------------
+welch <- function(df, meta){
+  samples_hep <- filter(meta, phenotype == "HepG2" &
+                           type == "cell" &
+                           filtered_out == "no")
+  samples_hek <- filter(meta, phenotype == "HEK293T" &
+                            type == "cell" &
+                            filtered_out == "no")
+  
+  a <- data.frame(p    = rep(Inf, nrow(df)), 
+                  p_05 = rep(FALSE, nrow(df)),
+                  p_10 = rep(FALSE, nrow(df)),
+                  p_15 = rep(FALSE, nrow(df)),
+                  row.names = row.names(df))
+  for (i in 1:nrow(df)){
+    # create a new data frame to write the t-test values to
+    a$p[i] <- t.test(select(df[i,], samples_hep$filename),
+                     select(df[i,], samples_hek$filename))$p.value
+  }
+  a$p_05 <- a$p < 0.05
+  a$p_10 <- a$p < 0.10
+  a$p_15 <- a$p < 0.15
+  
+  a
+}
+
+welch_neg <- welch(stat_neg, meta)
+welch_pos <- welch(stat_pos, meta)
+
+fdr_neg <- as.data.frame(p.adjust(welch_neg$p), method = p.adjust.methods("fdr"))
+# all values are 1, so not helpful
+fdr_pos <- as.data.frame(p.adjust(welch_pos$p), method = p.adjust.methods("fdr"))
+# all values are 1, so not helpful
+
+p05neg <- select(welch_neg[welch_neg$p_05,],p)
+# 492 mz with a p < 0.05
+p05pos <- select(welch_pos[welch_pos$p_05,],p)
+# 703 mz with a p < 0.05
+
+
+# *** 3.3 Volcano Plots ---------------------------------------------------
+
+# ***** Fold Change -------------------------------------------------------
+fold_change <- function(input_data, num_samples, den_samples) {
+  input_data <- as.data.frame(input_data)
+  
+  num_subset <- input_data[,num_samples$filename]
+  den_subset <- input_data[,den_samples$filename]
+  input_data$fold <- (apply(num_subset, 1, mean) /
+                        apply(den_subset, 1, mean))
+  
+  df_out <- select(input_data, fold)
+}
+
+neg_fold <- fold_change(
+  stat_neg,
+  filter(meta, phenotype == "HepG2" & type == "cell" & filtered_out == "no"),
+  filter(meta, phenotype != "HepG2" & type == "cell"  & filtered_out == "no"))
+
+pos_fold <- fold_change(
+  stat_pos,
+  filter(meta, phenotype == "HepG2" & type == "cell" & filtered_out == "no"),
+  filter(meta, phenotype != "HepG2" & type == "cell"  & filtered_out == "no"))
+
+
+# ***** fold vs welch volcano ---------------------------------------------
+
+volcano_input_n <- cbind(rownames(welch_neg),welch_neg$p, neg_fold$fold)
+colnames(volcano_input_n) <- c("mz", "pvalue", "fold")
+volcano_input_n <- data.frame(volcano_input_n)
+volcano_input_n$mz <- as.numeric(volcano_input_n$mz)
+volcano_input_n$pvalue <- as.numeric(volcano_input_n$pvalue)
+volcano_input_n$fold <- as.numeric(volcano_input_n$fold)
 
