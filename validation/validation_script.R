@@ -186,3 +186,46 @@ meta$filtered_out[grep("100|061|147", meta$filename)] <- "yes"
 # clean up the environment by removing uneccessary data frames
 rm(df_neg_clean)
 rm(df_pos_clean)
+
+
+# *** 2.3 Alignment/Binning -----------------------------------------------
+# Binning performed in MarkerView software, 5 ppm centroiding option
+
+
+# *** 2.4 Blank Subtraction -----------------------------------------------
+blank_subt_local <- function(input_data, sample_filenames, blank_filenames, blank_thresh = 3) {
+  input_data <- as.data.frame(input_data)
+  
+  blanks_subset <- input_data[,blank_filenames$filename]
+  blanks_subset$threshold <- apply(blanks_subset, 1, median) * blank_thresh
+  
+  samples_subset <- input_data[,sample_filenames$filename]
+  
+  blank_applyer <- function(input_data, blank = blanks_subset$threshold){
+    (input_data > blank) * input_data
+  }
+  samples_subset <- as.data.frame(sapply(samples_subset, blank_applyer))
+  row.names(samples_subset) <- row.names(input_data)
+  samples_subset[rowSums(samples_subset) > 0,]
+}
+
+bsub_pos_cells <- blank_subt_local(
+  df_pos,
+  filter(meta, type == "cell" & filtered_out == "no"),
+  filter(meta, type == "media" & filtered_out == "no")
+)
+
+# peaks before blank subtraction: 116,369
+# peaks after blank subtraction: 102,710
+# peaks removed with blank subtraction: 13,659
+
+bsub_neg_cells <- blank_subt_local(
+  df_neg,
+  filter(meta, type == "cell" & filtered_out == "no"),
+  filter(meta, type == "media" & filtered_out == "no")
+)
+
+# peaks before blank subtraction: 121,303
+# peaks after blank subtraction: 114,170
+# peaks removed with blank subtraction: 7,133
+
