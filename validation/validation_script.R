@@ -537,3 +537,41 @@ volcano_input_n$mz <- as.numeric(volcano_input_n$mz)
 volcano_input_n$pvalue <- as.numeric(volcano_input_n$pvalue)
 volcano_input_n$fold <- as.numeric(volcano_input_n$fold)
 
+volcano_input_n$diff <- "NO"
+volcano_input_n$diff[log2(volcano_input_n$fold) > 0.6 & 
+                       -log10(volcano_input_n$pvalue) > -log10(0.05)] <- "UP"
+volcano_input_n$diff[log2(volcano_input_n$fold) < -0.6 & 
+                       -log10(volcano_input_n$pvalue) > -log10(0.05)] <- "DOWN"
+
+
+ggplot(data = volcano_input_n, aes(x = log2(fold),
+                                  y = -log10(pvalue),
+                                  col = diff)) +
+  geom_point() +
+  scale_color_manual(values = c("blue", "black", "red")) +
+  geom_vline(xintercept = c(-0.6, 0.6), col = "red") +
+  geom_hline(yintercept = -log10(0.05), col = "red") +
+  ggtitle("Negative Mode")
+
+volcano_input_p <- cbind(rownames(welch_pos),welch_pos$p, pos_fold$fold)
+colnames(volcano_input_p) <- c("mz", "pvalue", "fold")
+volcano_input_p <- data.frame(volcano_input_p)
+volcano_input_p$mz <- as.numeric(volcano_input_p$mz)
+volcano_input_p$pvalue <- as.numeric(volcano_input_p$pvalue)
+volcano_input_p$fold <- as.numeric(volcano_input_p$fold)
+
+volcano_input_p$diff <- "NO"
+volcano_input_p$diff[log2(volcano_input_p$fold) > 0.6 & 
+                       -log10(volcano_input_p$pvalue) > -log10(0.05)] <- "UP"
+volcano_input_p$diff[log2(volcano_input_p$fold) < -0.6 & 
+                       -log10(volcano_input_p$pvalue) > -log10(0.05)] <- "DOWN"
+
+
+ggplot(data = volcano_input_p, aes(x = log2(fold),
+                                   y = -log10(pvalue),
+                                   col = diff)) +
+  geom_point() +
+  scale_color_manual(values = c("blue", "black", "red")) +
+  geom_vline(xintercept = c(-0.6, 0.6), col = "red") +
+  geom_hline(yintercept = -log10(0.05), col = "red") +
+  ggtitle("Positive Mode")
