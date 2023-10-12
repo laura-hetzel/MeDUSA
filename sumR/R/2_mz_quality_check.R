@@ -86,30 +86,28 @@ mzmetrics_quality_plot <- function(mz_metrics, focus, title = focus){
 #' Dependencies : dplyr
 #' @export
 mz_quality_meta_check <- function(input_mz_obj, meta){
+  .subset_check <- function( listA, listB, msg ){
+    missing <- listA[!(listA %in% listB)]
+    if( length(missing) > 0 ){
+      error <- append(error,paste(msg ,missing, sep=""))
+    }
+    error
+  }
+  
   error <- list()
 
   #Many more are expected for good science, but these are the ones that absence will actively break
   meta_columns_expected <- c("measurement",
                              "sample_name",
                              "type",
-                             "chicken",
                              "phenotype",
                              "filtered_out")
 
   error <- .subset_check(meta_columns_expected,colnames(meta),"MetaColumns missing: ")
-  error <- .subset_check(meta$sample_name,colnames(mz_obj),"MetaSamples not in data: ")
-  error <- .subset_check(colnames(dplyr::select(mz_obj,-mz)), meta$sample_name,"DataSamples not in meta: ")
+  error <- .subset_check(meta$sample_name,colnames(input_mz_obj),"MetaSamples not in data: ")
+  error <- .subset_check(colnames(dplyr::select(input_mz_obj,-mz)), meta$sample_name,"DataSamples not in meta: ")
 
-
-  .subset_check <- function( listA, listB, msg ){
-     missing <- listA[!(listA %in% listB)]
-     if( length(missing) > 0 ){
-      error <- append(error,paste(msg ,missing, sep=""))
-    }
-    error
-  }
-
-  sample_diff <- nrow(meta) - ncol(dplyr::select(mz_obj, -mz))
+  sample_diff <- nrow(meta) - ncol(dplyr::select(input_mz_obj, -mz))
   if ( sample_diff != 0){
     error <- append(paste(sample_diff,": more meta samples than data ones.", sep=""),error)
   }
