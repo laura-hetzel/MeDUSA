@@ -6,9 +6,9 @@
 #'   DataFrame : Log2 of Input MZ-Obj
 #' @param correlation_cutoff \cr
 #'   Float: Decimal percentage of high correlation cutoff
-#'   
+#'
 #' @returns Transposed mzlog_obj
-#'   
+#'
 #' @export
 mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
   data <- data.frame(t(input_mzlog_obj))
@@ -17,7 +17,7 @@ mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
   data <- data.frame(data[,-high_cor_data])
   colnames(data) <- data["mz",]
   data$sample_name <- rownames(data)
-  return(data[-1,]) 
+  return(data[-1,])
 }
 
 # *** RandomForest Correlation -----------------------------------------------------
@@ -29,9 +29,9 @@ mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
 #'   DataFrame: metadata object
 #' @param feat_size_seq \cr
 #'   Sequence to find optimal "number_of_variables"
-#'   
+#'
 #' @export
-rf_train <- function(correlation_data, metadata, attribute = "phenotype", feat_size_seq = seq(50,1000, by=50))){
+rf_train <- function(correlation_data, metadata, attribute = "phenotype", feat_size_seq = seq(50,1000, by=50)){
   data <- dplyr::left_join(correlation_data, metadata[c("sample_name", attribute)])
   data[[attribute]] <- as.factor(data[[attribute]])
 
@@ -44,8 +44,8 @@ rf_train <- function(correlation_data, metadata, attribute = "phenotype", feat_s
                             dplyr::select(-attribute, -"sample_name"),
                             data[[attribute]],
                             rfeControl = control,
-                            sizes = seq_size
-  
+                            sizes = seq_size )
+
   ggplot(data = feat_select, metric = "Accuracy") + theme_bw()
   #local.save_plot(paste("RandomForest Accuracy",local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
   ggplot(data = feat_select, metric = "Kappa") + theme_bw()
