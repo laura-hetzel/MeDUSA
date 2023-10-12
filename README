@@ -59,7 +59,7 @@ file: zz_[description].R
   -X docker image, including sumr
   -X fix trycatch in massdefect
   -X why missingness drop rows with value of 1
-  - mz_random_forest (stemcell)
+  -X mz_random_forest (stemcell)
   - iso_tag output, 1 filtered(mz_obj sans isos), one original (iso_obj with mappings) [sucks]
   - pca variable bug [need data]
   -X volcano plot (look at hypoxia)
@@ -74,3 +74,4 @@ file: zz_[description].R
   - extract_magic, all the parameters
   - blanksubtraction, validation (need better data) ... clunky naming.
   - fix file managment when meta & data & scripts are seperate
+  - handle neg/pos better
