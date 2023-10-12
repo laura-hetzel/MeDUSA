@@ -23,16 +23,15 @@ mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
 # *** RandomForest Correlation -----------------------------------------------------
 #' Find Correlation data within a mzLog_obj
 #'
-#'
 #' @param correlation_data \cr
 #'   DataFrame : from rf_correlation
 #' @param metadata \cr
 #'   DataFrame: metadata object
-#' @param seq_size \cr
-#'   Parameters to find optimal number variables to consider
-#'   c(low, high, step)
+#' @param feat_size_seq \cr
+#'   Sequence to find optimal "number_of_variables"
+#'   
 #' @export
-rf_train <- function(correlation_data, metadata, attribute = "phenotype", seq_size = seq(feat_sizes[1],feat_sizes[2], by=feat_sizes[3]))){
+rf_train <- function(correlation_data, metadata, attribute = "phenotype", feat_size_seq = seq(50,1000, by=50))){
   data <- dplyr::left_join(correlation_data, metadata[c("sample_name", attribute)])
   data[[attribute]] <- as.factor(data[[attribute]])
 
