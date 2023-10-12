@@ -51,6 +51,7 @@ local.export_thread_env <- function(cores, env){
   } else {
     cl <- NULL
   }
+  return(cl)
 }
 local.kill_threads <- function(cl){
   parallel::stopCluster(cl)

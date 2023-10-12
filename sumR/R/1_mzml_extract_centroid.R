@@ -20,7 +20,8 @@ mzml_extract_magic <- function(files = getwd(), cores = 2,  ... ){
     warning("Cannot find mzML files in given files.")
     return(NULL)
   }
-  cl <- local.export_thread_env(cores, environment(mzml_extract_magic))
+  cl <- local.export_thread_env(cores, environment(mz_quality_metrics))
+
   tryCatch({
     # Prepare each file (by polarity) #TODO, maybe you know...don't
     # Get MzT for each file
@@ -33,6 +34,9 @@ mzml_extract_magic <- function(files = getwd(), cores = 2,  ... ){
     local.kill_threads(cl)
   })
 }
+
+#' @export
+mzml_test <- function(hi){ print(hi)}
 
 # ***  -----------------------------------------------------
 #' Return mzT from a single file
@@ -86,8 +90,6 @@ mzml_extract_file <- function(file, polarity = NULL,  magic = T, massWindow = c(
   p <- mzR::peaks(z)
   if ( !is.null(polarity) ) {
     #df$polarity == 1 == Positive
-    #data <-???
-    #meta <-????
 
     out <- .get_mzt(p[df["polarity"] == polarity],
                     df[ df["polarity"] == polarity,],
