@@ -26,6 +26,7 @@ mzml_extract_magic <- function(files = getwd(), cores = 2,  ... ){
     # Prepare each file (by polarity) #TODO, maybe you know...don't
     # Get MzT for each file
     mz_pos <- .magic_polarity_loop(files,1,cl)
+    print("INFO: mzml_extract_magic: Positive Complete")
     mz_neg <- .magic_polarity_loop(files,0,cl)
     list(pos=mz_pos, neg=mz_neg)
   },
@@ -151,7 +152,7 @@ mzT_squashTime <- function(mzT, timeSquash_method = mean, ignore_zeros = T){
   }
   print(sprintf("INFO: %s.TIVE",toupper(pol_eng)))
   mzT <- pbapply::pblapply(files, function(x) mzml_extract_file(x, polarity=pol, cl = cl))
-
+  print(paste("INFO: mzml_extract_magic : Extraction of [",pol_eng,"] complete, now formatting data.",sep=""))
   for( i in seq_along(mzT) ){
     #crappy gsub to change col names to [polarity]_[filename(without extension)]
     colnames(mzT[[i]]) <- c("mz", gsub("^(.*)\\.(.*)",paste(pol_eng,"\\1",sep="_"),files[i]))

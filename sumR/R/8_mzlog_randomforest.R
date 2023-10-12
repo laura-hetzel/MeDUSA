@@ -1,56 +1,59 @@
-# *** RandomForest -----------------------------------------------------
-#' MZLOG-OBJ RandomForest
+# *** RandomForest Correlation -----------------------------------------------------
+#' Find Correlation data within a mzLog_obj
 #'
-#' Not really sure
-#'  - Requires: ggplot2, tibble
 #'
 #' @param input_mzlog_obj \cr
 #'   DataFrame : Log2 of Input MZ-Obj
-#' @param metadata \cr
-#'   DataFrame: MZ_metadata
-#' @param bad_samples \cr
-#'   List?     : c("bad1", "bad2")
-#'
+#' @param correlation_cutoff \cr
+#'   Float: Decimal percentage of high correlation cutoff
+#'   
+#' @returns Transposed mzlog_obj
+#'   
 #' @export
-
-# correlate the features
-
-mzlog_prep <- function(input_mzlog_obj){
-  data <- cor(t(input_mzlog_obj))
-  high_cor_data <- findCorrelation(input_mzlog_obj, cutoff = 0.75)
-
-  print(paste("INFO:mzlog_prep: Found", length(high_cor_data) ,"highly correlated MZs", sep=" "))
-
-
-  data <- dplyr::select(data,-high_cor_feat_neg )
-
+mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
+  data <- data.frame(t(input_mzlog_obj))
+  high_cor_data <- caret::findCorrelation(cor(data), cutoff = correlation_cutoff)
+  print(paste("INFO:mzlog_prep: ", length(high_cor_data)," of ", ncol(data) ," MZs are highly correlated ", sep=""))
+  data <- data.frame(data[,-high_cor_data])
+  colnames(data) <- data["mz",]
+  data$sample_name <- rownames(data)
+  return(data[-1,]) 
 }
-#
-## identify features to be removed
-#feat_removal_neg <- as.data.frame(stat_neg_t[, high_cor_feat_neg])
-#random_neg <- stat_neg_t %>%
-#  dplyr :: select(-colnames(feat_removal_neg))
-## random_neg has 12,221 features
-## force the row names to be a column to identify all of the samples
-#random_neg$samples <- rownames(random_neg)
-#random_neg <- dplyr:: left_join(random_neg, meta[c("filename", "phenotype")],
-#                                by = c('samples' = 'filename'))
-#random_neg$phenotype <- as.factor(random_neg$phenotype)
-#
-#control_neg <- rfeControl(functions = rfFuncs,
-#                          method = "repeatedcv",
-#                          repeats = 5,
-#                          number = 10)
-#
-#feat_select_neg <- rfe(random_neg %>%
-#                         dplyr :: select(-phenotype, -samples),
-#                       random_neg$phenotype,
-#                       rfeControl = control_neg,
-#                       sizes = seq(50,1000, by=50))
-#
-#ggplot(data = feat_select_neg, metric = "Accuracy") + theme_bw()
-#ggplot(data = feat_select_neg, metric = "Kappa") + theme_bw()
-#
+
+# *** RandomForest Correlation -----------------------------------------------------
+#' Find Correlation data within a mzLog_obj
+#'
+#'
+#' @param correlation_data \cr
+#'   DataFrame : from rf_correlation
+#' @param metadata \cr
+#'   DataFrame: metadata object
+#' @param seq_size \cr
+#'   Parameters to find optimal number variables to consider
+#'   c(low, high, step)
+#' @export
+rf_train <- function(correlation_data, metadata, attribute = "phenotype", seq_size = seq(feat_sizes[1],feat_sizes[2], by=feat_sizes[3]))){
+  data <- dplyr::left_join(correlation_data, metadata[c("sample_name", attribute)])
+  data[[attribute]] <- as.factor(data[[attribute]])
+
+  control <- caret::rfeControl( functions = caret::rfFuncs,
+                                method = "repeatedcv",
+                                repeats = 5,
+                                number = 10)
+
+  feat_select <- caret::rfe(data %>%
+                            dplyr::select(-attribute, -"sample_name"),
+                            data[[attribute]],
+                            rfeControl = control,
+                            sizes = seq_size
+  
+  ggplot(data = feat_select, metric = "Accuracy") + theme_bw()
+  #local.save_plot(paste("RandomForest Accuracy",local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
+  ggplot(data = feat_select, metric = "Kappa") + theme_bw()
+  #local.save_plot(paste("RandomForest Kappa",local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
+  feat_select
+}
+
 ## mz selection with rows = mz and columns = samples
 #mz_select_neg <- stat_neg
 #mz_select_neg <- rownames_to_column(mz_select_neg, "mz")
