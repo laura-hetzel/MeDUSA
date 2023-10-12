@@ -43,12 +43,11 @@ local.save_plot <- function(plot_name, output_dir = local.output_dir ){
   ggsave(paste(output_dir,local.dir_sep(),plot_name,".png",sep = ""))
 }
 
-local.export_thread_env <- function(cores, func_name){
-  func_name <- gsub("\\(.*\\)","",func_name)
+local.export_thread_env <- function(cores, env){
   if (cores > 1) {
     cl <- parallel::makeCluster(cores)
-    parallel::clusterExport(cl, varlist = ls(environment(func_name)),
-                                envir = environment(func_name))
+    parallel::clusterExport(cl, varlist = ls(env),
+                                envir = env)
   } else {
     cl <- NULL
   }

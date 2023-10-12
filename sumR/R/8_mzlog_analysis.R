@@ -77,7 +77,7 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, bad_samples ) {
 #' @export
 mzlog_analysis_welch <- function(input_mzlog_obj, phenotype_a, phenotype_b, adjust = 'fdr', cores = 2){
 
-  cl <- local.export_thread_env(cores, deparse(sys.calls()[[sys.nframe()]]))
+  cl <- local.export_thread_env(cores, environment(mzlog_analysis_welch))
   tryCatch({
     out <- data.frame(p    = rep(Inf, nrow(input_mzlog_obj)),
                       p_05 = rep(FALSE, nrow(input_mzlog_obj)),
@@ -146,7 +146,7 @@ mzlog_analysis_fold <- function(input_mzlog_obj, phenotype_a, phenotype_b, cores
   if ( nrow(filter(input_mzlog_obj, intensity == 0)) > 0 ) {
     stop(paste("ERROR: ", deparse(substitute(input_mzlog_obj)), "has zero intensities (can't divide)"))
   }
-  cl <- local.export_thread_env(cores, deparse(sys.calls()[[sys.nframe()]]))
+  cl <- local.export_thread_env(cores, environment(mzlog_analysis_fold))
   tryCatch({
     out$fold <- pblapply::pbapply(out, 1, function(row){
       tmp_mz <- filter(input_mz_obj, mz == as.numeric(row[1]))

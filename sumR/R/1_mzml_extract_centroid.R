@@ -20,7 +20,7 @@ mzml_extract_magic <- function(files = getwd(), cores = 2,  ... ){
     warning("Cannot find mzML files in given files.")
     return(NULL)
   }
-  cl <- local.export_thread_env(cores, deparse(sys.calls()[[sys.nframe()]]))
+  cl <- local.export_thread_env(cores, environment(mzml_extract_magic))
   tryCatch({
     # Prepare each file (by polarity) #TODO, maybe you know...don't
     # Get MzT for each file

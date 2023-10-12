@@ -22,7 +22,7 @@ mz_quality_metrics <- function(input_mz_obj, cores = 2){
                             peaks_10k = numeric(length(no_mz)),
                             peaks_100k = numeric(length(no_mz)))
 
-  cl <- local.export_thread_env(cores, deparse(sys.calls()[[sys.nframe()]]))
+  cl <- local.export_thread_env(cores, environment(mz_quality_metrics))
   tryCatch({
     tmp <- pbapply::pbapply(no_mz, 2,cl=cl,function(pop_sum){
       test <- input_mz_obj$mz[pop_sum>0]

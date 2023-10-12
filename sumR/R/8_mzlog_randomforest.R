@@ -1,26 +1,41 @@
-## *** 3.5 random forest ---------------------------------------------------
-#
-## correlate the features
-#stat_neg_t <- as.data.frame(t(stat_neg))
-#cor_feat_neg <- cor(stat_neg_t)
-#save(cor_feat_neg, file = "stem_neg_correlated_features.Rdata")
-#
-## isolate highly correlated, with a correlated ratio of 75%
-#high_cor_feat_neg <- findCorrelation(cor_feat_neg, cutoff = 0.75)
-## 651 features identified as highly correlated
+# *** RandomForest -----------------------------------------------------
+#' MZLOG-OBJ RandomForest
+#'
+#' Not really sure
+#'  - Requires: ggplot2, tibble
+#'
+#' @param input_mzlog_obj \cr
+#'   DataFrame : Log2 of Input MZ-Obj
+#' @param metadata \cr
+#'   DataFrame: MZ_metadata
+#' @param bad_samples \cr
+#'   List?     : c("bad1", "bad2")
+#'
+#' @export
+
+# correlate the features
+
+mzlog_prep <- function(input_mzlog_obj){
+  data <- cor(t(input_mzlog_obj))
+  high_cor_data <- findCorrelation(input_mzlog_obj, cutoff = 0.75)
+
+  print(paste("INFO:mzlog_prep: Found", length(high_cor_data) ,"highly correlated MZs", sep=" "))
+
+
+  data <- dplyr::select(data,-high_cor_feat_neg )
+
+}
 #
 ## identify features to be removed
 #feat_removal_neg <- as.data.frame(stat_neg_t[, high_cor_feat_neg])
 #random_neg <- stat_neg_t %>%
 #  dplyr :: select(-colnames(feat_removal_neg))
-## random_neg has 6,675 features
+## random_neg has 12,221 features
 ## force the row names to be a column to identify all of the samples
 #random_neg$samples <- rownames(random_neg)
-#random_neg <- dplyr:: left_join(random_neg, neg_meta[c("filename", "phenotype")],
+#random_neg <- dplyr:: left_join(random_neg, meta[c("filename", "phenotype")],
 #                                by = c('samples' = 'filename'))
 #random_neg$phenotype <- as.factor(random_neg$phenotype)
-#
-##subsets_cor <- c(150:300, 500)
 #
 #control_neg <- rfeControl(functions = rfFuncs,
 #                          method = "repeatedcv",
@@ -31,7 +46,7 @@
 #                         dplyr :: select(-phenotype, -samples),
 #                       random_neg$phenotype,
 #                       rfeControl = control_neg,
-#                       sizes = seq(50,500, by=50))
+#                       sizes = seq(50,1000, by=50))
 #
 #ggplot(data = feat_select_neg, metric = "Accuracy") + theme_bw()
 #ggplot(data = feat_select_neg, metric = "Kappa") + theme_bw()
@@ -40,12 +55,12 @@
 #mz_select_neg <- stat_neg
 #mz_select_neg <- rownames_to_column(mz_select_neg, "mz")
 #mz_select_neg <- mz_select_neg %>%
-#                      filter_all(any_vars(.%in% predictors(feat_select_neg)))
+#  filter_all(any_vars(.%in% predictors(feat_select_neg)))
 ## format the data set and add a column to identify the phenotype
 #mz_select_neg <- column_to_rownames(mz_select_neg, "mz")
 #mz_select_neg_t <- as.data.frame(t(mz_select_neg))
 #mz_select_neg_t <- rownames_to_column(mz_select_neg_t, "samples")
-#rf_neg <- left_join(mz_select_neg_t, select(neg_meta, filename, phenotype),
+#rf_neg <- left_join(mz_select_neg_t, select(meta, filename, phenotype),
 #                    by = c('samples' = 'filename'))
 #rf_neg <- select(rf_neg, -samples)
 #
@@ -64,13 +79,13 @@
 #                        repeats = 4,
 #                        search = 'grid',
 #                        allowParallel = TRUE)
-##rf_fit <- train(as.factor(phenotype) ~., data = test_neg, method= 'rf')
+#
 #rf_fit <- train(as.factor(phenotype) ~.,
 #                data = train_neg,
 #                method = 'rf',
 #                tuneGrid = tunegrid,
 #                trControl = control,
-#                ntree = 500,
+#                ntree = 700,
 #                na.action = na.exclude)
 #
 #rf_pred <- predict(rf_fit, test_neg)
@@ -84,17 +99,16 @@
 #test_neg1 <- subset(rf_neg, split_neg1 == FALSE)
 #
 ##Train settings same as previous
-#
-##rf_fit <- train(as.factor(phenotype) ~., data = test_neg, method= 'rf')
 #rf_fit_neg1 <- train(as.factor(phenotype) ~.,
-#                data = train_neg1,
-#                method = 'rf',
-#                tuneGrid = tunegrid,
-#                trControl = control,
-#                ntree = 500,
-#                na.action = na.exclude)
+#                     data = train_neg1,
+#                     method = 'rf',
+#                     tuneGrid = tunegrid,
+#                     trControl = control,
+#                     ntree = 700,
+#                     na.action = na.exclude)
 #
 #rf_pred_neg1 <- predict(rf_fit_neg1, test_neg1)
+#confusionMatrix(rf_pred_neg1, as.factor(test_neg1$phenotype))
 #
 ## split again for testing, Test number 2
 #set.seed(2e2)
@@ -104,13 +118,12 @@
 #
 ##Train settings same as previous
 #
-##rf_fit <- train(as.factor(phenotype) ~., data = test_neg, method= 'rf')
 #rf_fit_neg2 <- train(as.factor(phenotype) ~.,
 #                     data = train_neg2,
 #                     method = 'rf',
 #                     tuneGrid = tunegrid,
 #                     trControl = control,
-#                     ntree = 500,
+#                     ntree = 700,
 #                     na.action = na.exclude)
 #
 #rf_pred_neg2 <- predict(rf_fit_neg2, test_neg2)
@@ -131,7 +144,7 @@
 #                     method = 'rf',
 #                     tuneGrid = tunegrid,
 #                     trControl = control,
-#                     ntree = 500,
+#                     ntree = 700,
 #                     na.action = na.exclude)
 #
 #rf_pred_neg3 <- predict(rf_fit_neg3, test_neg3)
@@ -152,7 +165,7 @@
 #                     method = 'rf',
 #                     tuneGrid = tunegrid,
 #                     trControl = control,
-#                     ntree = 500,
+#                     ntree = 700,
 #                     na.action = na.exclude)
 #
 #rf_pred_neg4 <- predict(rf_fit_neg4, test_neg4)
@@ -173,7 +186,7 @@
 #                     method = 'rf',
 #                     tuneGrid = tunegrid,
 #                     trControl = control,
-#                     ntree = 500,
+#                     ntree = 700,
 #                     na.action = na.exclude)
 #
 #rf_pred_neg5 <- predict(rf_fit_neg5, test_neg5)
@@ -184,20 +197,19 @@
 ## correlate the features
 #stat_pos_t <- as.data.frame(t(stat_pos))
 #cor_feat_pos <- cor(stat_pos_t)
-#save(cor_feat_pos, file = "stem_pos_correlated_features.Rdata")
 #
 ## isolate highly correlated, with a correlated ratio of 75%
 #high_cor_feat_pos <- findCorrelation(cor_feat_pos, cutoff = 0.75)
-## 644 features identified as highly correlated
+## 1984 features identified as highly correlated
 #
 ## identify features to be removed
 #feat_removal_pos <- as.data.frame(stat_pos_t[, high_cor_feat_pos])
 #random_pos <- stat_pos_t %>%
 #  dplyr :: select(-colnames(feat_removal_pos))
-## random_pos has 9,132 features
+## random_pos has 15,637 features
 ## force the row names to be a column to identify all of the samples
 #random_pos$samples <- rownames(random_pos)
-#random_pos <- dplyr:: left_join(random_pos, pos_meta[c("filename", "phenotype")],
+#random_pos <- dplyr:: left_join(random_pos, meta[c("filename", "phenotype")],
 #                                by = c('samples' = 'filename'))
 #random_pos$phenotype <- as.factor(random_pos$phenotype)
 #
@@ -205,7 +217,7 @@
 #                         dplyr :: select(-phenotype, -samples),
 #                       random_pos$phenotype,
 #                       rfeControl = control_neg,
-#                       sizes = seq(50,500, by=50))
+#                       sizes = seq(50,1000, by=50))
 #
 #ggplot(data = feat_select_pos, metric = "Accuracy") + theme_bw()
 #ggplot(data = feat_select_pos, metric = "Kappa") + theme_bw()
@@ -219,7 +231,7 @@
 #mz_select_pos <- column_to_rownames(mz_select_pos, "mz")
 #mz_select_pos_t <- as.data.frame(t(mz_select_pos))
 #mz_select_pos_t <- rownames_to_column(mz_select_pos_t, "samples")
-#rf_pos <- left_join(mz_select_pos_t, select(pos_meta, filename, phenotype),
+#rf_pos <- left_join(mz_select_pos_t, select(meta, filename, phenotype),
 #                    by = c('samples' = 'filename'))
 #rf_pos <- select(rf_pos, -samples)
 #
@@ -240,12 +252,12 @@
 #                        allowParallel = TRUE)
 #
 #rf_fit_pos <- train(as.factor(phenotype) ~.,
-#                data = train_pos,
-#                method = 'rf',
-#                tuneGrid = tunegrid,
-#                trControl = control,
-#                ntree = 500,
-#                na.action = na.exclude)
+#                    data = train_pos,
+#                    method = 'rf',
+#                    tuneGrid = tunegrid,
+#                    trControl = control,
+#                    ntree = 900,
+#                    na.action = na.exclude)
 #
 #rf_pred_pos <- predict(rf_fit_pos, test_pos)
 #
@@ -262,7 +274,7 @@
 #                     method = 'rf',
 #                     tuneGrid = tunegrid,
 #                     trControl = control,
-#                     ntree = 500,
+#                     ntree = 900,
 #                     na.action = na.exclude)
 #
 #rf_pred_pos1 <- predict(rf_fit_pos1, test_pos1)
@@ -280,7 +292,7 @@
 #                     method = 'rf',
 #                     tuneGrid = tunegrid,
 #                     trControl = control,
-#                     ntree = 500,
+#                     ntree = 900,
 #                     na.action = na.exclude)
 #
 #rf_pred_pos2 <- predict(rf_fit_pos2, test_pos2)
@@ -298,7 +310,7 @@
 #                     method = 'rf',
 #                     tuneGrid = tunegrid,
 #                     trControl = control,
-#                     ntree = 500,
+#                     ntree = 900,
 #                     na.action = na.exclude)
 #
 #rf_pred_pos3 <- predict(rf_fit_pos3, test_pos3)
@@ -316,7 +328,7 @@
 #                     method = 'rf',
 #                     tuneGrid = tunegrid,
 #                     trControl = control,
-#                     ntree = 500,
+#                     ntree = 900,
 #                     na.action = na.exclude)
 #
 #rf_pred_pos4 <- predict(rf_fit_pos4, test_pos4)
@@ -334,7 +346,7 @@
 #                     method = 'rf',
 #                     tuneGrid = tunegrid,
 #                     trControl = control,
-#                     ntree = 500,
+#                     ntree = 900,
 #                     na.action = na.exclude)
 #
 #rf_pred_pos5 <- predict(rf_fit_pos5, test_pos5)
@@ -346,32 +358,33 @@
 #imp_neg1 <- varImp(rf_fit_neg1)
 #imp_neg1 <- imp_neg1$importance
 #imp_neg1 <- rownames_to_column(imp_neg1, "mz")
-#imp_neg1$mz <- as.numeric(gsub("X", "", imp_neg1$mz))
+#imp_neg1$mz <- as.numeric(gsub("`", "", imp_neg1$mz))
 #imp_neg1 <- imp_neg1[order(-imp_neg1$Overall),]
 #
 #imp_neg2 <- varImp(rf_fit_neg2)
 #imp_neg2 <- imp_neg2$importance
 #imp_neg2 <- rownames_to_column(imp_neg2, "mz")
-#imp_neg2$mz <- as.numeric(gsub("X", "", imp_neg2$mz))
+#imp_neg2$mz <- as.numeric(gsub("`", "", imp_neg2$mz))
 #imp_neg2 <- imp_neg2[order(-imp_neg2$Overall),]
 #
 #imp_neg3 <- varImp(rf_fit_neg3)
 #imp_neg3 <- imp_neg3$importance
 #imp_neg3 <- rownames_to_column(imp_neg3, "mz")
-#imp_neg3$mz <- as.numeric(gsub("X", "", imp_neg3$mz))
+#imp_neg3$mz <- as.numeric(gsub("`", "", imp_neg3$mz))
 #imp_neg3 <- imp_neg3[order(-imp_neg3$Overall),]
 #
 #imp_neg4 <- varImp(rf_fit_neg4)
 #imp_neg4 <- imp_neg4$importance
 #imp_neg4 <- rownames_to_column(imp_neg4, "mz")
-#imp_neg4$mz <- as.numeric(gsub("X", "", imp_neg4$mz))
+#imp_neg4$mz <- as.numeric(gsub("`", "", imp_neg4$mz))
 #imp_neg4 <- imp_neg4[order(-imp_neg4$Overall),]
 #
 #imp_neg5 <- varImp(rf_fit_neg5)
 #imp_neg5 <- imp_neg5$importance
 #imp_neg5 <- rownames_to_column(imp_neg5, "mz")
-#imp_neg5$mz <- as.numeric(gsub("X", "", imp_neg5$mz))
+#imp_neg5$mz <- as.numeric(gsub("`", "", imp_neg5$mz))
 #imp_neg5 <- imp_neg5[order(-imp_neg5$Overall),]
+#
 #
 ## isolate the top 100 most important from each model
 #imp_neg1 <- head(imp_neg1, n = 100)
@@ -386,31 +399,31 @@
 #imp_pos1 <- varImp(rf_fit_pos1)
 #imp_pos1 <- imp_pos1$importance
 #imp_pos1 <- rownames_to_column(imp_pos1, "mz")
-#imp_pos1$mz <- as.numeric(gsub("X", "", imp_pos1$mz))
+#imp_pos1$mz <- as.numeric(gsub("`", "", imp_pos1$mz))
 #imp_pos1 <- imp_pos1[order(-imp_pos1$Overall),]
 #
 #imp_pos2 <- varImp(rf_fit_pos2)
 #imp_pos2 <- imp_pos2$importance
 #imp_pos2 <- rownames_to_column(imp_pos2, "mz")
-#imp_pos2$mz <- as.numeric(gsub("X", "", imp_pos2$mz))
+#imp_pos2$mz <- as.numeric(gsub("`", "", imp_pos2$mz))
 #imp_pos2 <- imp_pos2[order(-imp_pos2$Overall),]
 #
 #imp_pos3 <- varImp(rf_fit_pos3)
 #imp_pos3 <- imp_pos3$importance
 #imp_pos3 <- rownames_to_column(imp_pos3, "mz")
-#imp_pos3$mz <- as.numeric(gsub("X", "", imp_pos3$mz))
+#imp_pos3$mz <- as.numeric(gsub("`", "", imp_pos3$mz))
 #imp_pos3 <- imp_pos3[order(-imp_pos3$Overall),]
 #
 #imp_pos4 <- varImp(rf_fit_pos4)
 #imp_pos4 <- imp_pos4$importance
 #imp_pos4 <- rownames_to_column(imp_pos4, "mz")
-#imp_pos4$mz <- as.numeric(gsub("X", "", imp_pos4$mz))
+#imp_pos4$mz <- as.numeric(gsub("`", "", imp_pos4$mz))
 #imp_pos4 <- imp_pos4[order(-imp_pos4$Overall),]
 #
 #imp_pos5 <- varImp(rf_fit_pos5)
 #imp_pos5 <- imp_pos5$importance
 #imp_pos5 <- rownames_to_column(imp_pos5, "mz")
-#imp_pos5$mz <- as.numeric(gsub("X", "", imp_pos5$mz))
+#imp_pos5$mz <- as.numeric(gsub("`", "", imp_pos5$mz))
 #imp_pos5 <- imp_pos5[order(-imp_pos5$Overall),]
 #
 ## isolate the top 100 most important from each model
@@ -423,24 +436,23 @@
 #imp_pos <- rbind(imp_pos1, imp_pos2, imp_pos3, imp_pos4, imp_pos5)
 #
 ## set the phenotype to phenotype + a number so that it is unique and can be a row name
-#train_neg$phenotype <- paste(train_neg$phenotype, 1:66, sep = "_")
+#train_neg$phenotype <- paste(train_neg$phenotype, 1:108, sep = "_")
 #rownames(train_neg) <- NULL
 #train_neg <- column_to_rownames(train_neg, "phenotype")
+#
 ## transpose and add an mz column
 #train_neg_t <- as.data.frame(t(train_neg))
 #train_neg_t <- rownames_to_column(train_neg_t, "mz")
-#train_neg_t$mz <- as.numeric(gsub("X", "", train_neg_t$mz))
-#
 #imp_var_neg <- train_neg_t %>%
 #  filter_all(any_vars(.%in% imp_neg$mz))
 #imp_var_neg <- column_to_rownames(imp_var_neg, "mz")
 #imp_var_neg_t <- as.data.frame(t(imp_var_neg))
 #imp_var_neg_t <- rownames_to_column(imp_var_neg_t, "phenotype")
 #imp_var_neg_t$phenotype <- as.factor(ifelse(grepl(imp_var_neg_t$phenotype,
-#                                                 pattern = "differentiated"),
-#                                            "differentiated", "naive"))
+#                                                  pattern = "HepG2"),
+#                                            "HepG2", "HEK293T"))
 #train_neg <- imp_var_neg_t
-## 201 peaks
+## 286 peaks
 #
 ## set the phenotype to phenotype + a number so that it is unique and can be a row name
 #train_pos$phenotype <- paste(train_pos$phenotype, 1:66, sep = "_")
@@ -449,7 +461,6 @@
 ## transpose and add an mz column
 #train_pos_t <- as.data.frame(t(train_pos))
 #train_pos_t <- rownames_to_column(train_pos_t, "mz")
-#train_pos_t$mz <- as.numeric(gsub("X", "", train_pos_t$mz))
 #
 #imp_var_pos <- train_pos_t %>%
 #  filter_all(any_vars(.%in% imp_pos$mz))
@@ -457,18 +468,17 @@
 #imp_var_pos_t <- as.data.frame(t(imp_var_pos))
 #imp_var_pos_t <- rownames_to_column(imp_var_pos_t, "phenotype")
 #imp_var_pos_t$phenotype <- as.factor(ifelse(grepl(imp_var_pos_t$phenotype,
-#                                                  pattern = "differentiated"),
-#                                            "differentiated", "naive"))
+#                                                  pattern = "HepG2"),
+#                                            "HepG2", "HEK293T"))
 #train_pos <- imp_var_pos_t
-## 241 peaks
+## 285 peaks
 #
-#test_neg$phenotype <- paste(test_neg$phenotype, 1:16, sep = "_")
+#test_neg$phenotype <- paste(test_neg$phenotype, 1:27, sep = "_")
 #rownames(test_neg) <- NULL
 #test_neg <- column_to_rownames(test_neg, "phenotype")
 ## transpose and add an mz column
 #test_neg_t <- as.data.frame(t(test_neg))
 #test_neg_t <- rownames_to_column(test_neg_t, "mz")
-#test_neg_t$mz <- as.numeric(gsub("X", "", test_neg_t$mz))
 #
 #test_neg_t <- test_neg_t %>%
 #  filter_all(any_vars(.%in% imp_neg$mz))
@@ -476,18 +486,17 @@
 #test_neg <- as.data.frame(t(test_neg_t))
 #test_neg <- rownames_to_column(test_neg, "phenotype")
 #test_neg$phenotype <- as.factor(ifelse(grepl(test_neg$phenotype,
-#                                             pattern = "differentiated"),
-#                                       "differentiated", "naive"))
+#                                             pattern = "HepG2"),
+#                                       "HepG2", "HEK293T"))
 #
 #colnames(train_neg) <- as.character(colnames(train_neg))
 #
-#test_pos$phenotype <- paste(test_pos$phenotype, 1:16, sep = "_")
+#test_pos$phenotype <- paste(test_pos$phenotype, 1:27, sep = "_")
 #rownames(test_pos) <- NULL
 #test_pos <- column_to_rownames(test_pos, "phenotype")
 ## transpose and add an mz column
 #test_pos_t <- as.data.frame(t(test_pos))
 #test_pos_t <- rownames_to_column(test_pos_t, "mz")
-#test_pos_t$mz <- as.numeric(gsub("X", "", test_pos_t$mz))
 #
 #test_pos_t <- test_pos_t %>%
 #  filter_all(any_vars(.%in% imp_pos$mz))
@@ -495,8 +504,8 @@
 #test_pos <- as.data.frame(t(test_pos_t))
 #test_pos <- rownames_to_column(test_pos, "phenotype")
 #test_pos$phenotype <- as.factor(ifelse(grepl(test_pos$phenotype,
-#                                             pattern = "differentiated"),
-#                                       "differentiated", "naive"))
+#                                             pattern = "HepG2"),
+#                                       "HepG2", "HEK293T"))
 #
 #colnames(train_pos) <- as.character(colnames(train_pos))
 #
@@ -504,7 +513,7 @@
 #model_neg <- randomForest(x = train_neg[-1],
 #                          y = train_neg$phenotype,
 #                          data = train_neg,
-#                          ntree = 500,
+#                          ntree = 700,
 #                          mtry = 20,
 #                          importance = TRUE,
 #                          proximity = TRUE)
@@ -515,7 +524,7 @@
 #model_pos <- randomForest(x = train_pos[-1],
 #                          y = train_pos$phenotype,
 #                          data = train_pos,
-#                          ntree = 500,
+#                          ntree = 900,
 #                          mtry = 20,
 #                          importance = TRUE,
 #                          proximity = TRUE)
@@ -548,14 +557,14 @@
 #  fit <- randomForest(x = (train_neg %>% dplyr :: select(-phenotype)),
 #                      y = train_neg$phenotype,
 #                      data = train_neg,
-#                      ntree = 300,
+#                      ntree = 500,
 #                      mtry = i,
 #                      importance = TRUE)
 #
 #  modellist_neg$err_rate[i] <- fit[["err.rate"]][nrow(fit[["err.rate"]]),1]
 #}
 #
-## mtry =3  has the lowest error rate, 201 peaks, error rate of 6%
+## mtry = 17  has the lowest error rate of approx 5.5%
 #
 #modellist_pos <- data.frame(mtry = 1:240)
 #for (i in c(1:240)){
@@ -563,42 +572,39 @@
 #  fit <- randomForest(x = (train_neg %>% dplyr :: select(-phenotype)),
 #                      y = train_neg$phenotype,
 #                      data = train_neg,
-#                      ntree = 300,
+#                      ntree = 900,
 #                      mtry = i,
 #                      importance = TRUE)
 #
 #  modellist_pos$err_rate[i] <- fit[["err.rate"]][nrow(fit[["err.rate"]]),1]
 #}
-## mtry =   has the lowest error rate, 240 peaks, error rate of 6%
-#
+## mtry = 3 has the lowest error rate,  approx 5.5%
 #
 ## permutation of data
 #permuted_neg <- rbind(train_neg, test_neg)
-#x <- c("differentiated", "naive")
+#x <- c("HepG2", "HEK293T")
 ## get all permutations
 #set.seed(1230)
-#false_samples_neg <- sample(x, 82, replace = TRUE)
+#false_samples_neg <- sample(x, 135, replace = TRUE)
 #
 #permuted_neg$phenotype <- as.factor(false_samples_neg)
 #permuted_predict_neg <- predict(model_neg, newdata = permuted_neg[-1])
 #confusionMatrix(permuted_predict_neg, permuted_neg$phenotype)
-## accuracy 0.5122
+## accuracy 0.5111
 #results_permuted_neg <- as.data.frame(cbind("actual" = permuted_neg$phenotype,
 #                                            "prediction" = permuted_predict_neg))
 #roc_permuted_neg <- roc(results_permuted_neg$actual, results_permuted_neg$prediction)
 #auc_permuted_neg <- auc(roc_permuted_neg)
 #
-## permutation of data
 #permuted_pos <- rbind(train_pos, test_pos)
-#x <- c("differentiated", "naive")
-## get all permutations
+#x <- c("HepG2", "HEK293T")
 #set.seed(1230)
-#false_samples_pos <- sample(x, 82, replace = TRUE)
+#false_samples_pos <- sample(x, 135, replace = TRUE)
 #
 #permuted_pos$phenotype <- as.factor(false_samples_pos)
 #permuted_predict_pos <- predict(model_pos, newdata = permuted_pos[-1])
 #confusionMatrix(permuted_predict_pos, permuted_pos$phenotype)
-## accuracy 0.5122
+## accuracy 0.4593
 #results_permuted_pos <- as.data.frame(cbind("actual" = permuted_pos$phenotype,
 #                                            "prediction" = permuted_predict_pos))
 #roc_permuted_pos <- roc(results_permuted_pos$actual, results_permuted_pos$prediction)
@@ -606,36 +612,36 @@
 #
 ## AUC and ROC, first prep results from above models
 #test_neg1$phenotype <- as.factor(ifelse(grepl(test_neg1$phenotype,
-#                                              pattern = "differentiated"),
-#                                        "differentiated", "naive"))
+#                                              pattern = "HepG2"),
+#                                        "HepG2", "HEK293T"))
 #test_neg2$phenotype <- as.factor(ifelse(grepl(test_neg2$phenotype,
-#                                              pattern = "differentiated"),
-#                                        "differentiated", "naive"))
+#                                              pattern = "HepG2"),
+#                                        "HepG2", "HEK293T"))
 #test_neg3$phenotype <- as.factor(ifelse(grepl(test_neg3$phenotype,
-#                                              pattern = "differentiated"),
-#                                        "differentiated", "naive"))
+#                                              pattern = "HepG2"),
+#                                        "HepG2", "HEK293T"))
 #test_neg4$phenotype <- as.factor(ifelse(grepl(test_neg4$phenotype,
-#                                              pattern = "differentiated"),
-#                                        "differentiated", "naive"))
+#                                              pattern = "HepG2"),
+#                                        "HepG2", "HEK293T"))
 #test_neg5$phenotype <- as.factor(ifelse(grepl(test_neg5$phenotype,
-#                                              pattern = "differentiated"),
-#                                        "differentiated", "naive"))
+#                                              pattern = "HepG2"),
+#                                        "HepG2", "HEK293T"))
 #
 #test_pos1$phenotype <- as.factor(ifelse(grepl(test_pos1$phenotype,
-#                                              pattern = "differentiated"),
-#                                        "differentiated", "naive"))
+#                                              pattern = "HepG2"),
+#                                        "HepG2", "HEK293T"))
 #test_pos2$phenotype <- as.factor(ifelse(grepl(test_pos2$phenotype,
-#                                              pattern = "differentiated"),
-#                                        "differentiated", "naive"))
+#                                              pattern = "HepG2"),
+#                                        "HepG2", "HEK293T"))
 #test_pos3$phenotype <- as.factor(ifelse(grepl(test_pos3$phenotype,
-#                                              pattern = "differentiated"),
-#                                        "differentiated", "naive"))
+#                                              pattern = "HepG2"),
+#                                        "HepG2", "HEK293T"))
 #test_pos4$phenotype <- as.factor(ifelse(grepl(test_pos4$phenotype,
-#                                              pattern = "differentiated"),
-#                                        "differentiated", "naive"))
+#                                              pattern = "HepG2"),
+#                                        "HepG2", "HEK293T"))
 #test_pos5$phenotype <- as.factor(ifelse(grepl(test_pos5$phenotype,
-#                                              pattern = "differentiated"),
-#                                        "differentiated", "naive"))
+#                                              pattern = "HepG2"),
+#                                        "HepG2", "HEK293T"))
 #
 #results_neg1 <- as.data.frame(cbind("actual" = test_neg1$phenotype,
 #                                    "prediction" = rf_pred_neg1))
@@ -706,7 +712,6 @@
 #plot(roc_permuted_neg, col = "Green", main = paste("Permuted model(neg), AUC:",
 #                                                   as.character(round(auc_permuted_neg, 3))))
 #
-## ROC curve of each fold/section
 #plot(roc_pos1, col = "Red", main = paste("Fold_1, AUC:", as.character(round(auc_pos1, 3))))
 #plot(roc_pos2, col = "Red", main = paste("Fold_2, AUC:", as.character(round(auc_pos2, 3))))
 #plot(roc_pos3, col = "Red", main = paste("Fold_3, AUC:", as.character(round(auc_pos3, 3))))
@@ -750,7 +755,7 @@
 #  theme(text = element_text(size = 18)) +
 #  xlab(paste("MDS1 - ", mds_var_neg[1], "%", sep = "")) +
 #  ylab(paste("MDS2 - ", mds_var_neg[2], "%", sep = "")) +
-#  scale_color_manual(breaks = c("differentiated", "naive"),
+#  scale_color_manual(breaks = c("HepG2", "HEK293T"),
 #                     values = c("red4", "deepskyblue2")) +
 #  ggtitle("MDS plot (neg) using random forest proximities")
 #
@@ -761,6 +766,9 @@
 #  theme(text = element_text(size = 18)) +
 #  xlab(paste("MDS1 - ", mds_var_pos[1], "%", sep = "")) +
 #  ylab(paste("MDS2 - ", mds_var_pos[2], "%", sep = "")) +
-#  scale_color_manual(breaks = c("differentiated", "naive"),
+#  scale_color_manual(breaks = c("HepG2", "HEK293T"),
 #                     values = c("red4", "deepskyblue2")) +
 #  ggtitle("MDS plot (pos) using random forest proximities")
+#
+#save(mds_neg_data, file = "mds_neg_data.R")
+#save(mds_pos_data, file = "mds_pos_data.R")

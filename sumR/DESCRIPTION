@@ -16,6 +16,9 @@ Depends:
     ggplot2,
     mzR,
     parallel,
+    pheatmap,
     pbapply,
+    randomForest,
     tidyr,
-    tibble
+    tibble,
+    XML
