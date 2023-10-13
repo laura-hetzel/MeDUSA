@@ -6,8 +6,8 @@ meta <- data.frame(read.csv("meta_neg.csv"))
 
 mz_obj <-  mzL$neg
 
-mz_metrics <- sumR::mz_quality_metrics(mz_obj, cores = 1)
-sumR::mz_metrics_quality_plot_all(mz_metrics)
+sumR::mz_quality_magic(mz_obj, cores = 2)
+
 #mz_carbon <- sumR::mz_isotope_hunter(mz_obj, cores=4)
 
 mz_obj <- sumR::mz_subtraction(mz_obj,
@@ -20,11 +20,10 @@ mz_obj <- sumR::mz_mass_defect(mz_obj)
 mz_obj <- sumR::mz_filter_magic(mz_obj, blacklist=c(100,110))
 
 #post processing
-mz_mag <- sumR::mz_post_process_magic(mz_obj,meta)
-
-mz_mag <- sumR::mz_pp_imputation(mz_obj)
-mz_mag <- sumR::mz_pp_normalization(mz_mag, meta)
-mz_mag <- log2(mz_mag)
+mz_mag <- sumR::mz_post_process_magic(mz_obj,meta)x
+#mz_mag <- sumR::mz_pp_imputation(mz_obj)
+#mz_mag <- sumR::mz_pp_normalization(mz_mag, meta)
+#mz_mag <- log2(mz_mag)
 
 
 ## debugging without magic

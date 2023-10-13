@@ -10,7 +10,7 @@ timeSquashMath: mean
 missingness_threshold: 0.02 (2\%)
 massWindow: c(0,Inf)}
 \usage{
-mzml_extract_magic(files = getwd(), cores = 1, ...)
+mzml_extract_magic(files = getwd(), cores = 2, ...)
 }
 \arguments{
 \item{files}{\cr

@@ -35,7 +35,7 @@ mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
 #' @returns caret::rfe object
 #'
 #' @export
-rf_select <- function(correlation_data, metadata, attribute = "phenotype", feat_size_seq = seq(50,1000, by=50))){
+rf_select <- function(correlation_data, metadata, attribute = "phenotype", feat_size_seq = seq(50,1000, by=50)) {
   data <- dplyr::left_join(correlation_data, metadata[c("sample_name", attribute)])
   data[[attribute]] <- as.factor(data[[attribute]])
 
@@ -48,7 +48,7 @@ rf_select <- function(correlation_data, metadata, attribute = "phenotype", feat_
                             dplyr::select(-attribute, -"sample_name"),
                             data[[attribute]],
                             rfeControl = control,
-                            sizes = seq_size
+                            sizes = seq_size )
 
   ggplot(data = feat_select, metric = "Accuracy") + theme_bw()
   local.save_plot(paste("RandomForest Accuracy",local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
@@ -109,6 +109,7 @@ mzlog_rf_train <- function(mzlog_obj, rfe_obj, meta, attribute = "phenotype",
                            trControl = control,
                            ntree = rfe_obj$bestSubset,
                            na.action = na.exclude)
+
     rf_pred <- predict(rf_fit, test_df)
     caret::confusionMatrix(rf_pred, as.factor(test_df[[attribute]]))
     out <- varImp(rf_fit)
@@ -121,7 +122,7 @@ mzlog_rf_train <- function(mzlog_obj, rfe_obj, meta, attribute = "phenotype",
 
   cl <- local.export_thread_env(cores, environment(mzlog_rf_train))
   tryCatch({
-    out <- pbapply::pblapply(seeds, cl=cl .run_train)
+    out <- pbapply::pblapply(seeds, cl=cl, .run_train)
 
   }, finally={
     local.kill_threads(cl)

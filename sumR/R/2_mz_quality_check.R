@@ -34,7 +34,7 @@ mz_quality_metrics <- function(input_mz_obj, cores = 2){
                                            peaks_10k = sum(pop_sum > 10000),
                                            peaks_100k = sum(pop_sum >100000))
   })
-    mz_metrics[-1] <- t(tmp))
+    mz_metrics[-1] <- t(tmp)
     return(data.frame(mz_metrics))
   },
   finally={
