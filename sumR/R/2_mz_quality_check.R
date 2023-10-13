@@ -34,7 +34,8 @@ mz_quality_metrics <- function(input_mz_obj, cores = 2){
                                            peaks_10k = sum(pop_sum > 10000),
                                            peaks_100k = sum(pop_sum >100000))
   })
-    return(mz_metrics[-1] <- t(tmp))
+    mz_metrics[-1] <- t(tmp))
+    return(data.frame(mz_metrics))
   },
   finally={
     local.kill_threads(cl)
@@ -93,7 +94,7 @@ mz_quality_meta_check <- function(input_mz_obj, meta){
     }
     error
   }
-  
+
   error <- list()
 
   #Many more are expected for good science, but these are the ones that absence will actively break
@@ -131,8 +132,8 @@ mz_quality_meta_check <- function(input_mz_obj, meta){
 #' Dependencies : dplyr
 #' @return Returns a dataframe of samples by metrics
 #' @export
-mz_quality_metrics <- function(input_mz_obj, meta, cores = 2){
+mz_quality_magic <- function(input_mz_obj, meta, cores = 2){
   mz_quality_meta_check(input_mz_obj, meta)
   qc <- mz_quality_metrics(input_mz_obj, cores)
-  mz_metrics_quality_plot_all(qc)
+  mzmetrics_quality_plot_all(qc)
 }

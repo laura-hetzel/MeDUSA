@@ -69,9 +69,11 @@ file: zz_[description].R
   - anova analysis
 
 -- Todo Oct31
-  -X quality check
+  - quality check [bug in plots]
   -X metadata file naming validation
   - extract_magic, all the parameters
   - blanksubtraction, validation (need better data) ... clunky naming.
   - fix file managment when meta & data & scripts are seperate
   - handle neg/pos better
+  - mass defect windows debugging
+  - lower dependencies (catools, tibble)

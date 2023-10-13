@@ -11,6 +11,8 @@
 #'   DataFrame : Metadata-Obj of Samples
 #' @param compare_samples \cr
 #'   DataFrame : Metadata-Obj of Compared samples (blanks)
+#' @param method: \cr
+#'   String : method to apply to compare samples before threshold
 #' @param threshold \cr
 #'   Int       : "Delete samples < compare_samples * threshold"
 #'
@@ -31,11 +33,11 @@
 #
 #' @export
 
-mz_subtraction <- function(input_mz_obj, samples, compare_samples , threshold = 3) {
+mz_subtraction <- function(input_mz_obj, samples, compare_samples , method = mean, threshold = 3) {
   input_mz_obj <- as.data.frame(input_mz_obj)
 
   compare_subset <- input_mz_obj[,compare_samples$sample_name]
-  compare_subset[threshold] <- apply(compare_subset, 1, median) * threshold
+  compare_subset[threshold] <- apply(compare_subset, 1, method) * threshold
 
   samples_subset <- input_mz_obj[,samples$sample_name]
 
