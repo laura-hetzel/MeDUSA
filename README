@@ -55,7 +55,7 @@ file: zz_[description].R
   - common methods written by others
 
 
----- Laura tody Oct13
+---- TODO Oct31
   -X docker image, including sumr
   -X fix trycatch in massdefect
   -X why missingness drop rows with value of 1
@@ -67,13 +67,14 @@ file: zz_[description].R
   - hmdb/lipidmaps
   -X heatmap
   - anova analysis
-
--- Todo Oct31
   -X quality check [bug in plots]
   -X metadata file naming validation
   - extract_magic, all the parameters
   - blanksubtraction, validation (need better data) ... clunky naming.
   - fix file managment when meta & data & scripts are seperate
-  - handle neg/pos better
+  - handle meta neg/pos better
   -X mass defect windows debugging
-  - lower dependencies (catools, tibble)
+  -2 lower dependencies (catools, tibble)
+  - optional correlation RFs
+  - alignment fix
+  - ??config file?

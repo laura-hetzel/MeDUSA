@@ -1,8 +1,8 @@
 FROM  bioconductor/bioconductor_docker:RELEASE_3_17-R-4.3.0 AS bioc_base
 
 RUN R -e 'BiocManager::install("mzR")'
-#RUN curl https://hmdb.ca/system/downloads/current/hmdb_metabolites.zip -o hmdb_metabolites.zip
-#RUN unzip hmdb_metabolites.zip; mv hmdb_metabolites.xml /usr/hmdb_metabolites.xml
+RUN curl https://hmdb.ca/system/downloads/current/hmdb_metabolites.zip -o hmdb_metabolites.zip
+RUN unzip hmdb_metabolites.zip; mv hmdb_metabolites.xml /usr/hmdb_metabolites.xml
 
 FROM bioc_base AS package_base
 
@@ -19,7 +19,7 @@ RUN R -e 'remotes::install_version("caret",        version = "6.0-94")'
 RUN R -e 'remotes::install_version("caTools",      version = "1.18.2")'
 
 
-#Quality of Life
+#User Tools
 RUN R -e 'remotes::install_version("readxl",        version = "1.4.3")'
 
 
