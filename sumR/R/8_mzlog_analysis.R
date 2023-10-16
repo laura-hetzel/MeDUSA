@@ -8,13 +8,14 @@
 #'   DataFrame : Log2 of Input MZ-Obj
 #' @param metadata \cr
 #'   DataFrame: MZ_metadata
-#' @param bad_samples \cr
+#' @param sample_blacklist \cr
 #'   List?     : c("bad1", "bad2")
 #'
 #' @export
-mzlog_analysis_pca <- function(input_mzlog_obj,metadata, bad_samples ) {
-  t_mz_obj <- scale(t(input_mzlog_obj))
-  t_mz_obj <- t_mz_obj[!row.names(t_mz_obj) %in% bad_samples ]
+mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() ) {
+  rownames(input_mzlog_obj) <- input_mzlog_obj$mz
+  t_mz_obj <- scale(t(dplyr::select(input_mzlog_obj,-mz)))
+  t_mz_obj <- t_mz_obj[!row.names(t_mz_obj) %in% sample_blacklist ,]
   t_mz_obj <- merge(x = t_mz_obj,
         y = subset(tibble::column_to_rownames(metadata, "sample_name"), select = "phenotype"),
         by = 0, all.x = TRUE)
@@ -25,15 +26,15 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, bad_samples ) {
 
   var_explained <- t_mz_obj$sdev^2/sum(t_mz_obj$sdev^2)
 
-  pca_neg$x %>%
+  t_mz_obj$x %>%
     as.data.frame %>%
     rownames_to_column("sample_phenotype") %>%
     separate(sample_phenotype, c("sample", "phenotype"), "&") %>%
     ggplot(aes(x = PC1, y = PC2)) +
     geom_point(aes(color = phenotype)) +
-    labs(x=paste0("PC1: ",round(var_explained_n[1]*100,1),"%"),
-         y=paste0("PC2: ",round(var_explained_n[2]*100,1),"%")) +
-    theme(legend.position="top")
+    labs(x=paste0("PC1: ",round(var_explained[1]*100,1),"%"),
+         y=paste0("PC2: ",round(var_explained[2]*100,1),"%")) +
+    theme(legend.position="top")}
   local.save_plot(paste("PCA",local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
 }
 
@@ -76,16 +77,16 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, bad_samples ) {
 #'
 #' @export
 mzlog_analysis_welch <- function(input_mzlog_obj, phenotype_a, phenotype_b, adjust = 'fdr', cores = 2){
-
-  cl <- local.export_thread_env(cores, environment(mzlog_analysis_welch))
+  phenotype_a <- phenotype_a
+  cl <- local.export_thread_env(cores, environment())
   tryCatch({
     out <- data.frame(p    = rep(Inf, nrow(input_mzlog_obj)),
                       p_05 = rep(FALSE, nrow(input_mzlog_obj)),
                       p_10 = rep(FALSE, nrow(input_mzlog_obj)),
                       p_15 = rep(FALSE, nrow(input_mzlog_obj)),
-                      row.names = row.names(input_mzlog_obj))
+                      row.names = input_mzlog_obj$mz)
 
-    out$p <- pbapply::pblapply(1:nrow(input_mzlog_obj), cl = cl, function(i){
+    out$p <- pbapply::pbapply(input_mzlog_obj,1 , cl = cl, function(i){
         t.test(dplyr::select(input_mzlog_obj[i,], phenotype_a$sample_name),
                dplyr::select(input_mzlog_obj[i,], phenotype_b$sample_name))$p.value
     })
@@ -93,6 +94,8 @@ mzlog_analysis_welch <- function(input_mzlog_obj, phenotype_a, phenotype_b, adju
     out$p_05 <- out$p < 0.05
     out$p_10 <- out$p < 0.10
     out$p_15 <- out$p < 0.15
+    out <- tibble::rownames_to_column(out, "mz")
+    out$mz <- as.numeric(out$mz)
     return(out)
   },
   finally={
@@ -131,33 +134,18 @@ mzlog_analysis_welch <- function(input_mzlog_obj, phenotype_a, phenotype_b, adju
 #' phenotype_b <- filter(metadata, phenotype == "phenoB &
 #'                       ionmode == ionmode_val  & phase == phase_val &
 #'                       filtered_out == "no")
-#' @param cores
-#'   Integer: Can I has multithreading? (Need parallel)
+#' @param fold_math
+#'   Method: How to combine Phenotype intensities
 #'
 #' @returns DataFrame with columns:
 #'  - mz   : Float
 #'  - fold : Float
 #'
 #' @export
-mzlog_analysis_fold <- function(input_mzlog_obj, phenotype_a, phenotype_b, cores = 2){
-
-  out <- data.frame(mz = input_mzlog_obj$mz,
-                       fold = numeric(length(input_mzlog_obj)))
-  if ( nrow(filter(input_mzlog_obj, intensity == 0)) > 0 ) {
-    stop(paste("ERROR: ", deparse(substitute(input_mzlog_obj)), "has zero intensities (can't divide)"))
-  }
-  cl <- local.export_thread_env(cores, environment(mzlog_analysis_fold))
-  tryCatch({
-    out$fold <- pblapply::pbapply(out, 1, function(row){
-      tmp_mz <- filter(input_mz_obj, mz == as.numeric(row[1]))
-      tmp_squash <- aggregate(intensity ~ type , tmp_mz, mean)
-
-      fold <- ((filter(tmp_squash, phenotype == phenotype_a)$intensity ) /
-               (filter(tmp_squash, phenotype == phenotype_b)$intensity ))
-    })
-    return(out)
-  },
-  finally={
-    local.kill_threads(cl)
-  })
+mzlog_analysis_fold <- function(input_mzlog_obj, phenotype_a, phenotype_b, fold_math = "mean"){
+  pheno_a <- input_mzlog_obj[,phenotype_a$sample_name]
+  pheno_b <- input_mzlog_obj[,phenotype_b$sample_name]
+  input_mzlog_obj$fold <- (apply(pheno_a, 1, fold_math) /
+                           apply(pheno_b, 1, fold_math))
+  return(dplyr::select(input_mzlog_obj, mz,fold))
 }

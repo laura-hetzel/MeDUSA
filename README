@@ -61,7 +61,7 @@ file: zz_[description].R
   -X why missingness drop rows with value of 1
   -X mz_random_forest (stemcell)
   - iso_tag output, 1 filtered(mz_obj sans isos), one original (iso_obj with mappings) [sucks]
-  - pca variable bug [need data]
+  -X pca variable bug [need data]
   -X volcano plot (look at hypoxia)
   -X t-test "FDR correct" (stemcell)
   - hmdb/lipidmaps
@@ -69,11 +69,11 @@ file: zz_[description].R
   - anova analysis
 
 -- Todo Oct31
-  - quality check [bug in plots]
+  -X quality check [bug in plots]
   -X metadata file naming validation
   - extract_magic, all the parameters
   - blanksubtraction, validation (need better data) ... clunky naming.
   - fix file managment when meta & data & scripts are seperate
   - handle neg/pos better
-  - mass defect windows debugging
+  -X mass defect windows debugging
   - lower dependencies (catools, tibble)

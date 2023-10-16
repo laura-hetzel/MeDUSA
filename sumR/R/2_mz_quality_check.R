@@ -22,7 +22,7 @@ mz_quality_metrics <- function(input_mz_obj, cores = 2){
                             peaks_10k = numeric(length(no_mz)),
                             peaks_100k = numeric(length(no_mz)))
 
-  cl <- local.export_thread_env(cores, environment(mz_quality_metrics))
+  cl <- local.export_thread_env(cores, environment())
   tryCatch({
     tmp <- pbapply::pbapply(no_mz, 2,cl=cl,function(pop_sum){
       test <- input_mz_obj$mz[pop_sum>0]
@@ -51,7 +51,7 @@ mz_quality_metrics <- function(input_mz_obj, cores = 2){
 #' @export
 mzmetrics_quality_plot_all <- function(mz_metrics){
   for (f in colnames(mz_metrics[-1])){
-    mz_metrics_quality_plot(mz_metrics, f)
+    mzmetrics_quality_plot(mz_metrics, f)
   }
 }
 
@@ -67,13 +67,16 @@ mzmetrics_quality_plot_all <- function(mz_metrics){
 #'
 #' Dependencies : ggplot2, dplyr, parallel
 #' @export
-mzmetrics_quality_plot <- function(mz_metrics, focus, title = focus){
+mzmetrics_quality_plot <- function(mz_metrics, focus, title = F){
+  if(title == F ){
+    title <- focus
+  }
   ggplot() +
     geom_line(data = mz_metrics,
-              aes_string(x = "name" , y = focus, group = "1")) +
+              aes(x = name , y = focus, group = "1")) +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
     ggtitle(title)
-  local.save_plot(paste("Quality Check ",f,local.mz_polarity_guesser(input_mz_obj),sep="-"))
+  local.save_plot(paste("Quality Check ",focus,local.mz_polarity_guesser(mz_metrics),sep="-"))
 }
 
 # *** Metrics Quality Metadata Check -----------------------------------------------------

@@ -13,16 +13,16 @@
 #'
 #' @export
 plot_volcano <- function(welch, fold_change, title = "Volcano Plot"){
-  if ( welch$mz != fold$mz){
+  if ( sum(round(welch$mz,6) != round(fold$mz,6)) > 0){
     stop("ERROR: plot_volcano : Welch mz does not match FoldChange mz")
   }
-  df <- cbind(welch$mz, log2(welch$p), log2(fold_change$fold))
+  df <- data.frame("mz"   =  welch$mz, 
+                   "p"    = -log10(welch$p), 
+                   "fold" =  log2(fold_change$fold), 
+                   "diff" =  rep("NONE",nrow(welch)))
 
-  colnames(df) <- c("mz","p","fold")
-  df$diff <- "NO"
-  df$diff[out$max_fold > 0.6 & df$p > -log10(0.05)] <- "UP"
-  df$diff[out$max_fold < -0.6 & df$p > -log10(0.05)] <- "DOWN"
-  as.data.frame(df)
+  df$diff[df$fold > 0.6 & df$p > -log10(0.05)] <- "UP"
+  df$diff[df$fold < -0.6 & df$p > -log10(0.05)] <- "DOWN"
 
   ggplot( data = df,
           aes(x = fold, y = p, col = diff)) +
@@ -30,7 +30,7 @@ plot_volcano <- function(welch, fold_change, title = "Volcano Plot"){
           scale_color_manual(values = c("blue", "black", "red")) +
           geom_vline(xintercept = c(-0.6, 0.6), col = "red") +
           geom_hline(yintercept = -log10(0.05), col = "red") +
-          ggtitle(title)
+          ggtitle("title")
 
   local.save_plot(paste("Volcano",local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
 }
@@ -61,7 +61,7 @@ plot_volcano <- function(welch, fold_change, title = "Volcano Plot"){
 #' @export
 mz_analysis_volcano_magic <- function(input_mzlog_obj, phenotype_a, phenotype_b, cores = 2 ){
   welch <- mzlog_analysis_welch(input_mzlog_obj, phenotype_a, phenotype_b, cores)
-  fold  <- mzlog_analysis_fold(input_mzlog_obj, phenotype_a, phenotype_b, cores)
+  fold  <- mzlog_analysis_fold(input_mzlog_obj, phenotype_a, phenotype_b)
 
   plot_volcano(welch, fold)
 
@@ -104,7 +104,7 @@ plot_heatmap <- function(input_mz_obj, metadata = NULL, annotation = "phenotype"
     annotation_int <- NULL
   }
   if (!is.na(save_file) && save_file == T){
-    save_file = paste(local.output_dir,local.dir_sep(),title,".png",sep = "")
+    save_file = paste(local.output_dir(),local.dir_sep(),title,".png",sep = "")
   }
   if (is.null(cluster)){
     cluster <- c("row"=F,"col"=F)
@@ -115,6 +115,5 @@ plot_heatmap <- function(input_mz_obj, metadata = NULL, annotation = "phenotype"
                       cluster_cols = cluster["col"],
                       annotation_row = annotation_int,
                       main = title,
-                      filename = save_file,
-                      ...)
+                      filename = save_file)
 }

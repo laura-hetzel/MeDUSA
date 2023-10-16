@@ -10,7 +10,7 @@ local.dir_sep <- function() {
 }
 
 local.output_dir <- function(){
-  paste("output", local.dir_sep() ,Sys.Date(), "")
+  paste("output", local.dir_sep() ,Sys.Date(), sep = "")
 }
 
 #Show zeros requres full mzobjs
@@ -39,7 +39,7 @@ local.mz_polarity_guesser <- function(input, pos_return = "Positive", neg_return
   ret
 }
 
-local.save_plot <- function(plot_name, output_dir = local.output_dir ){
+local.save_plot <- function(plot_name, output_dir = local.output_dir()){
   ggsave(paste(output_dir,local.dir_sep(),plot_name,".png",sep = ""))
 }
 
@@ -53,7 +53,8 @@ local.export_thread_env <- function(cores, env){
   }
   return(cl)
 }
-local.kill_threads <- function(cl){
-  parallel::stopCluster(cl)
-  showConnections()
+local.kill_threads <- function(cl = NULL){
+  tryCatch(parallel::stopCluster(cl),
+           error = function(e){print(paste("WARN: cl error:",e))},
+           finally = showConnections())
 }

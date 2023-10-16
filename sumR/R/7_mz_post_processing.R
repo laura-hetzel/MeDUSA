@@ -38,7 +38,19 @@ mz_pp_imputation <- function(input_mz_obj, low_noise=10, high_noise=5000){
 # *** Normalization -----------------------------------------------------
 #' MZ-OBJ Normalization
 #'
-#' Not really sure what this does
+#' This function utilizes Probabilistic Quotient Normalization, or PQN, to limit
+#' the effects of general fluctuations and random effects on the results. In 
+#' single-cell measurements, this is important since the size of the cell as 
+#' well as the volume of media captured and measured with the cell are variable,
+#' thus impacting the overall dilution of the cellular material.
+#' 
+#' It is recommended to use PQN after samples and mz have been removed in the 
+#' standard filtering steps. 
+#' 
+#'The algorithm will choose one reference sample if one is not provided. This 
+#'reference is then used to calculate ratios at each m/z in every sample, and this
+#'ratio is the dilution factor that is applied.
+#'
 #'  - Requires: ggplot2, dplyr
 #'
 #' @param input_mz_obj \cr
@@ -113,7 +125,7 @@ mz_pp_pivot_longer <- function(input_mz_obj, plot = TRUE) {
 #'
 #' @returns c(mzLong_obj, mzLog_obj)
 #' @export
-mz_post_process_magic <- function(input_mz_obj, metadata, plot = TRUE){
+mz_pp_magic <- function(input_mz_obj, metadata, plot = TRUE){
   tryCatch({
     input_mz_obj <- mz_pp_imputation(input_mz_obj)
     print("INFO: imputation success")

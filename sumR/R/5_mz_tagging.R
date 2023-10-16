@@ -25,7 +25,7 @@ mz_tag_isotope_hunter <- function(input_mz_obj, iso_target = 1.0034, iso_iter = 
   sub_set <- dplyr::select(input_mz_obj, c(mz, tol))
   out <- list()
 
-  cl <- local.export_thread_env(cores, environment(mz_tag_isotope_hunter))
+  cl <- local.export_thread_env(cores, environment())
   tryCatch({
     out <- pbapply::pbapply(sub_set, 1,cl=cl,function(mz_target){
       hunt_zone  <- dplyr::filter(sub_set, (mz_target[1] - iso_target * (iso_iter + 0.1)) < mz
