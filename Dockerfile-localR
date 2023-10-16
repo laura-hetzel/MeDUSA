@@ -16,6 +16,8 @@ RUN R -e 'remotes::install_version("pheatmap",     version = "1.0.12")'
 RUN R -e 'remotes::install_version("XML",          version = "3.99-0.14")'
 RUN R -e 'remotes::install_version("randomForest", version = "4.7-1.1")'
 RUN R -e 'remotes::install_version("caret",        version = "6.0-94")'
+#RUN R -e 'remotes::install_version("caTools",      version = "1.18.2")'
+
 
 #Quality of Life
 RUN R -e 'remotes::install_version("readxl",        version = "1.4.3")'

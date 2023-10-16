@@ -27,11 +27,15 @@ mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
 #'   DataFrame : from rf_correlation
 #' @param metadata \cr
 #'   DataFrame: metadata object
+#' @param attribute \cr
+#'   String: which metadata attribute to compare
 #' @param feat_size_seq \cr
 #'   Sequence to find optimal "number_of_variables"
 #'
+#' @returns caret::rfe object
+#'
 #' @export
-rf_train <- function(correlation_data, metadata, attribute = "phenotype", feat_size_seq = seq(50,1000, by=50)){
+rf_select <- function(correlation_data, metadata, attribute = "phenotype", feat_size_seq = seq(50,1000, by=50)) {
   data <- dplyr::left_join(correlation_data, metadata[c("sample_name", attribute)])
   data[[attribute]] <- as.factor(data[[attribute]])
 
@@ -47,396 +51,89 @@ rf_train <- function(correlation_data, metadata, attribute = "phenotype", feat_s
                             sizes = seq_size )
 
   ggplot(data = feat_select, metric = "Accuracy") + theme_bw()
-  #local.save_plot(paste("RandomForest Accuracy",local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
+  local.save_plot(paste("RandomForest Accuracy",local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
   ggplot(data = feat_select, metric = "Kappa") + theme_bw()
-  #local.save_plot(paste("RandomForest Kappa",local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
+  local.save_plot(paste("RandomForest Kappa",local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
   feat_select
 }
 
-## mz selection with rows = mz and columns = samples
-#mz_select_neg <- stat_neg
-#mz_select_neg <- rownames_to_column(mz_select_neg, "mz")
-#mz_select_neg <- mz_select_neg %>%
-#  filter_all(any_vars(.%in% predictors(feat_select_neg)))
-## format the data set and add a column to identify the phenotype
-#mz_select_neg <- column_to_rownames(mz_select_neg, "mz")
-#mz_select_neg_t <- as.data.frame(t(mz_select_neg))
-#mz_select_neg_t <- rownames_to_column(mz_select_neg_t, "samples")
-#rf_neg <- left_join(mz_select_neg_t, select(meta, filename, phenotype),
-#                    by = c('samples' = 'filename'))
-#rf_neg <- select(rf_neg, -samples)
-#
-## Cross validation
-#
-#set.seed(42)
-#split_neg <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
-#train_neg <- subset(rf_neg, split_neg == TRUE)
-#test_neg <- subset(rf_neg, split_neg == FALSE)
-#
-##Train settings
-#mtry <- c(sqrt(ncol(rf_neg)))
-#tunegrid <- expand.grid(.mtry=mtry)
-#control <- trainControl(method ='repeatedcv',
-#                        number = 10,
-#                        repeats = 4,
-#                        search = 'grid',
-#                        allowParallel = TRUE)
-#
-#rf_fit <- train(as.factor(phenotype) ~.,
-#                data = train_neg,
-#                method = 'rf',
-#                tuneGrid = tunegrid,
-#                trControl = control,
-#                ntree = 700,
-#                na.action = na.exclude)
-#
-#rf_pred <- predict(rf_fit, test_neg)
-#
-#confusionMatrix(rf_pred, as.factor(test_neg$phenotype))
-#
-## split again for testing, Test number 1
-#set.seed(111)
-#split_neg1 <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
-#train_neg1 <- subset(rf_neg, split_neg1 == TRUE)
-#test_neg1 <- subset(rf_neg, split_neg1 == FALSE)
-#
-##Train settings same as previous
-#rf_fit_neg1 <- train(as.factor(phenotype) ~.,
-#                     data = train_neg1,
-#                     method = 'rf',
-#                     tuneGrid = tunegrid,
-#                     trControl = control,
-#                     ntree = 700,
-#                     na.action = na.exclude)
-#
-#rf_pred_neg1 <- predict(rf_fit_neg1, test_neg1)
-#confusionMatrix(rf_pred_neg1, as.factor(test_neg1$phenotype))
-#
-## split again for testing, Test number 2
-#set.seed(2e2)
-#split_neg2 <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
-#train_neg2 <- subset(rf_neg, split_neg2 == TRUE)
-#test_neg2 <- subset(rf_neg, split_neg2 == FALSE)
-#
-##Train settings same as previous
-#
-#rf_fit_neg2 <- train(as.factor(phenotype) ~.,
-#                     data = train_neg2,
-#                     method = 'rf',
-#                     tuneGrid = tunegrid,
-#                     trControl = control,
-#                     ntree = 700,
-#                     na.action = na.exclude)
-#
-#rf_pred_neg2 <- predict(rf_fit_neg2, test_neg2)
-#
-#confusionMatrix(rf_pred_neg2, as.factor(test_neg2$phenotype))
-#
-## split again for testing, Test number 3
-#set.seed(3e3)
-#split_neg3 <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
-#train_neg3 <- subset(rf_neg, split_neg3 == TRUE)
-#test_neg3 <- subset(rf_neg, split_neg3 == FALSE)
-#
-##Train settings same as previous
-#
-##rf_fit <- train(as.factor(phenotype) ~., data = test_neg, method= 'rf')
-#rf_fit_neg3 <- train(as.factor(phenotype) ~.,
-#                     data = train_neg3,
-#                     method = 'rf',
-#                     tuneGrid = tunegrid,
-#                     trControl = control,
-#                     ntree = 700,
-#                     na.action = na.exclude)
-#
-#rf_pred_neg3 <- predict(rf_fit_neg3, test_neg3)
-#
-#confusionMatrix(rf_pred_neg3, as.factor(test_neg3$phenotype))
-#
-## split again for testing, Test number 4
-#set.seed(4e4)
-#split_neg4 <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
-#train_neg4 <- subset(rf_neg, split_neg4 == TRUE)
-#test_neg4 <- subset(rf_neg, split_neg4 == FALSE)
-#
-##Train settings same as previous
-#
-##rf_fit <- train(as.factor(phenotype) ~., data = test_neg, method= 'rf')
-#rf_fit_neg4 <- train(as.factor(phenotype) ~.,
-#                     data = train_neg4,
-#                     method = 'rf',
-#                     tuneGrid = tunegrid,
-#                     trControl = control,
-#                     ntree = 700,
-#                     na.action = na.exclude)
-#
-#rf_pred_neg4 <- predict(rf_fit_neg4, test_neg4)
-#
-#confusionMatrix(rf_pred_neg4, as.factor(test_neg4$phenotype))
-#
-## split again for testing, Test number 5
-#set.seed(5e5)
-#split_neg5 <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
-#train_neg5 <- subset(rf_neg, split_neg5 == TRUE)
-#test_neg5 <- subset(rf_neg, split_neg5 == FALSE)
-#
-##Train settings same as previous
-#
-##rf_fit <- train(as.factor(phenotype) ~., data = test_neg, method= 'rf')
-#rf_fit_neg5 <- train(as.factor(phenotype) ~.,
-#                     data = train_neg5,
-#                     method = 'rf',
-#                     tuneGrid = tunegrid,
-#                     trControl = control,
-#                     ntree = 700,
-#                     na.action = na.exclude)
-#
-#rf_pred_neg5 <- predict(rf_fit_neg5, test_neg5)
-#
-#confusionMatrix(rf_pred_neg5, as.factor(test_neg5$phenotype))
-#
-## Repeat all RFE and random forest for positive mode
-## correlate the features
-#stat_pos_t <- as.data.frame(t(stat_pos))
-#cor_feat_pos <- cor(stat_pos_t)
-#
-## isolate highly correlated, with a correlated ratio of 75%
-#high_cor_feat_pos <- findCorrelation(cor_feat_pos, cutoff = 0.75)
-## 1984 features identified as highly correlated
-#
-## identify features to be removed
-#feat_removal_pos <- as.data.frame(stat_pos_t[, high_cor_feat_pos])
-#random_pos <- stat_pos_t %>%
-#  dplyr :: select(-colnames(feat_removal_pos))
-## random_pos has 15,637 features
-## force the row names to be a column to identify all of the samples
-#random_pos$samples <- rownames(random_pos)
-#random_pos <- dplyr:: left_join(random_pos, meta[c("filename", "phenotype")],
-#                                by = c('samples' = 'filename'))
-#random_pos$phenotype <- as.factor(random_pos$phenotype)
-#
-#feat_select_pos <- rfe(random_pos %>%
-#                         dplyr :: select(-phenotype, -samples),
-#                       random_pos$phenotype,
-#                       rfeControl = control_neg,
-#                       sizes = seq(50,1000, by=50))
-#
-#ggplot(data = feat_select_pos, metric = "Accuracy") + theme_bw()
-#ggplot(data = feat_select_pos, metric = "Kappa") + theme_bw()
-#
-## mz selection with rows = mz and columns = samples
-#mz_select_pos <- stat_pos
-#mz_select_pos <- rownames_to_column(mz_select_pos, "mz")
-#mz_select_pos <- mz_select_pos %>%
-#  filter_all(any_vars(.%in% predictors(feat_select_pos)))
-## format the data set and add a column to identify the phenotype
-#mz_select_pos <- column_to_rownames(mz_select_pos, "mz")
-#mz_select_pos_t <- as.data.frame(t(mz_select_pos))
-#mz_select_pos_t <- rownames_to_column(mz_select_pos_t, "samples")
-#rf_pos <- left_join(mz_select_pos_t, select(meta, filename, phenotype),
-#                    by = c('samples' = 'filename'))
-#rf_pos <- select(rf_pos, -samples)
-#
-## Cross validation
-#
-#set.seed(42)
-#split_pos <- sample.split(rf_pos$phenotype, SplitRatio = 0.8)
-#train_pos <- subset(rf_pos, split_pos == TRUE)
-#test_pos <- subset(rf_pos, split_pos == FALSE)
-#
-##Train settings
-#mtry <- c(sqrt(ncol(rf_pos)))
-#tunegrid <- expand.grid(.mtry=mtry)
-#control <- trainControl(method ='repeatedcv',
-#                        number = 10,
-#                        repeats = 4,
-#                        search = 'grid',
-#                        allowParallel = TRUE)
-#
-#rf_fit_pos <- train(as.factor(phenotype) ~.,
-#                    data = train_pos,
-#                    method = 'rf',
-#                    tuneGrid = tunegrid,
-#                    trControl = control,
-#                    ntree = 900,
-#                    na.action = na.exclude)
-#
-#rf_pred_pos <- predict(rf_fit_pos, test_pos)
-#
-#confusionMatrix(rf_pred_pos, as.factor(test_pos$phenotype))
-#
-## split again for testing, Test number 1
-#set.seed(111)
-#split_pos1 <- sample.split(rf_pos$phenotype, SplitRatio = 0.8)
-#train_pos1 <- subset(rf_pos, split_pos1 == TRUE)
-#test_pos1 <- subset(rf_pos, split_pos1 == FALSE)
-#
-#rf_fit_pos1 <- train(as.factor(phenotype) ~.,
-#                     data = train_pos1,
-#                     method = 'rf',
-#                     tuneGrid = tunegrid,
-#                     trControl = control,
-#                     ntree = 900,
-#                     na.action = na.exclude)
-#
-#rf_pred_pos1 <- predict(rf_fit_pos1, test_pos1)
-#
-#confusionMatrix(rf_pred_pos1, as.factor(test_pos1$phenotype))
-#
-## split again for testing, Test number 2
-#set.seed(2e2)
-#split_pos2 <- sample.split(rf_pos$phenotype, SplitRatio = 0.8)
-#train_pos2 <- subset(rf_pos, split_pos2 == TRUE)
-#test_pos2 <- subset(rf_pos, split_pos2 == FALSE)
-#
-#rf_fit_pos2 <- train(as.factor(phenotype) ~.,
-#                     data = train_pos2,
-#                     method = 'rf',
-#                     tuneGrid = tunegrid,
-#                     trControl = control,
-#                     ntree = 900,
-#                     na.action = na.exclude)
-#
-#rf_pred_pos2 <- predict(rf_fit_pos2, test_pos2)
-#
-#confusionMatrix(rf_pred_pos2, as.factor(test_pos2$phenotype))
-#
-## split again for testing, Test number 3
-#set.seed(3e3)
-#split_pos3 <- sample.split(rf_pos$phenotype, SplitRatio = 0.8)
-#train_pos3 <- subset(rf_pos, split_pos3 == TRUE)
-#test_pos3 <- subset(rf_pos, split_pos3 == FALSE)
-#
-#rf_fit_pos3 <- train(as.factor(phenotype) ~.,
-#                     data = train_pos3,
-#                     method = 'rf',
-#                     tuneGrid = tunegrid,
-#                     trControl = control,
-#                     ntree = 900,
-#                     na.action = na.exclude)
-#
-#rf_pred_pos3 <- predict(rf_fit_pos3, test_pos3)
-#
-#confusionMatrix(rf_pred_pos3, as.factor(test_pos3$phenotype))
-#
-## split again for testing, Test number 4
-#set.seed(4e4)
-#split_pos4 <- sample.split(rf_pos$phenotype, SplitRatio = 0.8)
-#train_pos4 <- subset(rf_pos, split_pos4 == TRUE)
-#test_pos4 <- subset(rf_pos, split_pos4 == FALSE)
-#
-#rf_fit_pos4 <- train(as.factor(phenotype) ~.,
-#                     data = train_pos4,
-#                     method = 'rf',
-#                     tuneGrid = tunegrid,
-#                     trControl = control,
-#                     ntree = 900,
-#                     na.action = na.exclude)
-#
-#rf_pred_pos4 <- predict(rf_fit_pos4, test_pos4)
-#
-#confusionMatrix(rf_pred_pos4, as.factor(test_pos4$phenotype))
-#
-## split again for testing, Test number 5
-#set.seed(5e5)
-#split_pos5 <- sample.split(rf_pos$phenotype, SplitRatio = 0.8)
-#train_pos5 <- subset(rf_pos, split_pos5 == TRUE)
-#test_pos5 <- subset(rf_pos, split_pos5 == FALSE)
-#
-#rf_fit_pos5 <- train(as.factor(phenotype) ~.,
-#                     data = train_pos5,
-#                     method = 'rf',
-#                     tuneGrid = tunegrid,
-#                     trControl = control,
-#                     ntree = 900,
-#                     na.action = na.exclude)
-#
-#rf_pred_pos5 <- predict(rf_fit_pos5, test_pos5)
-#
-#confusionMatrix(rf_pred_pos5, as.factor(test_pos5$phenotype))
-#
-## important variables (features) of each model
-## neg
-#imp_neg1 <- varImp(rf_fit_neg1)
-#imp_neg1 <- imp_neg1$importance
-#imp_neg1 <- rownames_to_column(imp_neg1, "mz")
-#imp_neg1$mz <- as.numeric(gsub("`", "", imp_neg1$mz))
-#imp_neg1 <- imp_neg1[order(-imp_neg1$Overall),]
-#
-#imp_neg2 <- varImp(rf_fit_neg2)
-#imp_neg2 <- imp_neg2$importance
-#imp_neg2 <- rownames_to_column(imp_neg2, "mz")
-#imp_neg2$mz <- as.numeric(gsub("`", "", imp_neg2$mz))
-#imp_neg2 <- imp_neg2[order(-imp_neg2$Overall),]
-#
-#imp_neg3 <- varImp(rf_fit_neg3)
-#imp_neg3 <- imp_neg3$importance
-#imp_neg3 <- rownames_to_column(imp_neg3, "mz")
-#imp_neg3$mz <- as.numeric(gsub("`", "", imp_neg3$mz))
-#imp_neg3 <- imp_neg3[order(-imp_neg3$Overall),]
-#
-#imp_neg4 <- varImp(rf_fit_neg4)
-#imp_neg4 <- imp_neg4$importance
-#imp_neg4 <- rownames_to_column(imp_neg4, "mz")
-#imp_neg4$mz <- as.numeric(gsub("`", "", imp_neg4$mz))
-#imp_neg4 <- imp_neg4[order(-imp_neg4$Overall),]
-#
-#imp_neg5 <- varImp(rf_fit_neg5)
-#imp_neg5 <- imp_neg5$importance
-#imp_neg5 <- rownames_to_column(imp_neg5, "mz")
-#imp_neg5$mz <- as.numeric(gsub("`", "", imp_neg5$mz))
-#imp_neg5 <- imp_neg5[order(-imp_neg5$Overall),]
-#
-#
-## isolate the top 100 most important from each model
-#imp_neg1 <- head(imp_neg1, n = 100)
-#imp_neg2 <- head(imp_neg2, n = 100)
-#imp_neg3 <- head(imp_neg3, n = 100)
-#imp_neg4 <- head(imp_neg4, n = 100)
-#imp_neg5 <- head(imp_neg5, n = 100)
-#
-#imp_neg <- rbind(imp_neg1, imp_neg2, imp_neg3, imp_neg4, imp_neg5)
-#
-## pos
-#imp_pos1 <- varImp(rf_fit_pos1)
-#imp_pos1 <- imp_pos1$importance
-#imp_pos1 <- rownames_to_column(imp_pos1, "mz")
-#imp_pos1$mz <- as.numeric(gsub("`", "", imp_pos1$mz))
-#imp_pos1 <- imp_pos1[order(-imp_pos1$Overall),]
-#
-#imp_pos2 <- varImp(rf_fit_pos2)
-#imp_pos2 <- imp_pos2$importance
-#imp_pos2 <- rownames_to_column(imp_pos2, "mz")
-#imp_pos2$mz <- as.numeric(gsub("`", "", imp_pos2$mz))
-#imp_pos2 <- imp_pos2[order(-imp_pos2$Overall),]
-#
-#imp_pos3 <- varImp(rf_fit_pos3)
-#imp_pos3 <- imp_pos3$importance
-#imp_pos3 <- rownames_to_column(imp_pos3, "mz")
-#imp_pos3$mz <- as.numeric(gsub("`", "", imp_pos3$mz))
-#imp_pos3 <- imp_pos3[order(-imp_pos3$Overall),]
-#
-#imp_pos4 <- varImp(rf_fit_pos4)
-#imp_pos4 <- imp_pos4$importance
-#imp_pos4 <- rownames_to_column(imp_pos4, "mz")
-#imp_pos4$mz <- as.numeric(gsub("`", "", imp_pos4$mz))
-#imp_pos4 <- imp_pos4[order(-imp_pos4$Overall),]
-#
-#imp_pos5 <- varImp(rf_fit_pos5)
-#imp_pos5 <- imp_pos5$importance
-#imp_pos5 <- rownames_to_column(imp_pos5, "mz")
-#imp_pos5$mz <- as.numeric(gsub("`", "", imp_pos5$mz))
-#imp_pos5 <- imp_pos5[order(-imp_pos5$Overall),]
-#
-## isolate the top 100 most important from each model
-#imp_pos1 <- head(imp_pos1, n = 100)
-#imp_pos2 <- head(imp_pos2, n = 100)
-#imp_pos3 <- head(imp_pos3, n = 100)
-#imp_pos4 <- head(imp_pos4, n = 100)
-#imp_pos5 <- head(imp_pos5, n = 100)
-#
-#imp_pos <- rbind(imp_pos1, imp_pos2, imp_pos3, imp_pos4, imp_pos5)
-#
+# *** RandomForest Train -----------------------------------------------------
+#' Train you model data within a mzLog_obj
+#'
+#' @param correlation_data \cr
+#'   DataFrame : from rf_correlation
+#' @param metadata \cr
+#'   DataFrame: metadata object
+#' @param feat_size_seq \cr
+#'   Sequence to find optimal "number_of_variables"
+#' @param attribute \cr
+#'   String: which metadata attribute to compare
+#' @param seed \cr
+#'   List: which seeds to use. Also how many runs to do
+#' @param ratio \cr
+#'   Float: split ratio for train
+#'
+#' @returns caret::rfe object
+#'
+#' @export
+mzlog_rf_train <- function(mzlog_obj, rfe_obj, meta, attribute = "phenotype",
+                          seeds = c(42,666,314159,1.05457, 998001), ratio = 0.8, cores = 4){
+  data <- mzLog_obj[ mzLog_obj$mz %in% as.numeric(caret::predictors(rfe_obj)), ]
+  rownames(data) <- data$mz
+  data_t <- data.frame(t(dplyr::select(data,-mz)))
+  data_t <- tibble::rownames_to_column(data_t,"sample_name")
+  data_t <- dplyr::left_join(data_t, meta[c("sample_name", attribute)])
+  data_t <- dplyr::select(data_t,-"sample_name")
+  data_t[[attribute]] <- as.factor(data_t[[attribute]])
+
+  set.seed(seed)
+  split <- caTools::sample.split(data_t[[attribute]], SplitRatio = ratio)
+  train_df <- subset(data_t, split == T)
+  test_df <- subset(data_t, split == F)
+
+  ##Train settings
+  mtry <- c(sqrt(ncol(data_t)))
+  tunegrid <- expand.grid(.mtry=mtry)
+  control <- caret::trainControl(method ='repeatedcv',
+                                 number = 10,
+                                 repeats = 4,
+                                 search = 'grid',
+                                 allowParallel = TRUE)
+
+  .run_train <- function(seed, cutoff =  100, train_df=train_df,
+                         attribute=attribute ,rfe_obj=rfe_obj, test_df = test_df){
+    rf_fit <- caret::train(as.factor(attribute) ~.,
+                           data = train_df,
+                           method = 'rf',
+                           tuneGrid = tunegrid,
+                           trControl = control,
+                           ntree = rfe_obj$bestSubset,
+                           na.action = na.exclude)
+
+    rf_pred <- predict(rf_fit, test_df)
+    caret::confusionMatrix(rf_pred, as.factor(test_df[[attribute]]))
+    out <- varImp(rf_fit)
+    out <- out$importance
+    out <- rownames_to_column(out, "mz")
+    out$mz <- as.numeric(gsub("`", "", out$mz))
+    out <- out[order(-out$Overall),]
+    out <- head(out, n = cutoff)
+  }
+
+  cl <- local.export_thread_env(cores, environment(mzlog_rf_train))
+  tryCatch({
+    out <- pbapply::pblapply(seeds, cl=cl, .run_train)
+
+  }, finally={
+    local.kill_threads(cl)
+  })
+  out
+}
+
+
+rf_fancy_pheno <- function(rf_out){
+
+}
 ## set the phenotype to phenotype + a number so that it is unique and can be a row name
 #train_neg$phenotype <- paste(train_neg$phenotype, 1:108, sep = "_")
 #rownames(train_neg) <- NULL

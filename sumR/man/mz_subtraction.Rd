@@ -4,7 +4,13 @@
 \alias{mz_subtraction}
 \title{MZ-OBJ Subtraction (usually used for blanks subtraction)}
 \usage{
-mz_subtraction(input_mz_obj, samples, compare_samples, threshold = 3)
+mz_subtraction(
+  input_mz_obj,
+  samples,
+  compare_samples,
+  method = mean,
+  threshold = 3
+)
 }
 \arguments{
 \item{input_mz_obj}{\cr
@@ -18,6 +24,9 @@ DataFrame : Metadata-Obj of Compared samples (blanks)}
 
 \item{threshold}{\cr
 Int       : "Delete samples < compare_samples * threshold"}
+
+\item{method:}{\cr
+String : method to apply to compare samples before threshold}
 }
 \value{
 Returns an MZ-OBJ
