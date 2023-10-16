@@ -97,7 +97,7 @@ mz_pp_normalization <- function(input_mz_obj, metadata, plot = TRUE ){
 mz_pp_pivot_longer <- function(input_mz_obj, plot = TRUE) {
   row.names(input_mz_obj) <- input_mz_obj$mz
   input_mzlong <- input_mz_obj %>%
-    tidyr::pivot_longer(!mz, names_to = "sample", values_to = "intensity")
+    tidyr::pivot_longer(!mz, names_to = "sample_name", values_to = "intensity")
     if(plot){
       ggplot(input_mzlong, aes(x = sample, y = intensity)) +
         geom_boxplot() +
