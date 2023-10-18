@@ -36,9 +36,6 @@ mzml_extract_magic <- function(files = getwd(), cores = 2,  ... ){
   })
 }
 
-#' @export
-mzml_test <- function(hi){ print(hi)}
-
 # ***  -----------------------------------------------------
 #' Return mzT from a single file
 #'
@@ -164,8 +161,9 @@ mzT_squashTime <- function(mzT, timeSquash_method = mean, ignore_zeros = T){
 .binning <- function(df, method = max, tolerance = 5e-6){
   bin <- binning(df$mz, tolerance = tolerance)
   local.mz_log_removed_rows((bin), unique(bin), "Binning")
-  df <- aggregate(dplyr::select(df,-mz),list(bin), method)
+  df <- aggregate(dplyr::select(df,-mz),list(bin), method, na.rm = T)
   names(df)[1] <- "mz"
+  df[df < 0] <- 0
   df[is.na(df)] <- 0
   df
 }

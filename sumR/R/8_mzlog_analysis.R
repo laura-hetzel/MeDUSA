@@ -34,7 +34,7 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() 
     geom_point(aes(color = phenotype)) +
     labs(x=paste0("PC1: ",round(var_explained[1]*100,1),"%"),
          y=paste0("PC2: ",round(var_explained[2]*100,1),"%")) +
-    theme(legend.position="top")}
+    theme(legend.position="top")
   local.save_plot(paste("PCA",local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
 }
 
