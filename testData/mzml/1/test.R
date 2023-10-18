@@ -1,3 +1,4 @@
+setwd("~/local/testData/mzml/1")
 library("sumR")
 
 mzL <- sumR::mzml_extract_magic(cores=4)
@@ -6,7 +7,7 @@ meta <- data.frame(read.csv("meta_neg.csv"))
 
 mz_obj <-  mzL$neg
 
-sumR::mz_quality_magic(mz_obj, cores = 2)
+sumR::mz_quality_magic(mz_obj, meta, cores = 2)
 
 #mz_carbon <- sumR::mz_isotope_hunter(mz_obj, cores=4)
 
