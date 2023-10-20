@@ -11,28 +11,58 @@
 #'   List: of mzML files (i.e. list.files(".",pattern = "qc_.*mzML"))
 #' @param cores
 #'   Integer: Can I has multithreading? (Need parallel)
+#' @param verbose Which Parallization method: parLapply is faster (on Win), but no active output)
+#'   Boolean: T=pblapply; F=parLapply
 #'
 #' @export
-mzml_extract_magic <- function(files = getwd(), cores = 2,  ... ){
-  if (class(files) ==  Character & !grepl('\\.mzML$',files)){
+mzml_extract_magic <- function(files = getwd(), cores = 4, verbose = F, ... ){
+  #[0|1]: 0=Negative, 1=Positive
+  magic.polarity_loop <- function(polarity){
+    if(polarity){
+      pol_eng="pos"
+    }else{
+      pol_eng="neg"
+    }
+    print(sprintf("INFO: %s.TIVE",toupper(pol_eng)))
+    cl <- local.export_thread_env(cores,environment())
+    mzT <- pbapply::pblapply(files, mzml_extract_file, cl=cl)
+    print(paste("INFO: mzml_extract_magic :", format(Sys.time(),"%H:%M:%S"), ": Extraction of [",pol_eng,"] complete, now formatting data.",sep=""))
+    for( i in seq_along(mzT) ){
+      #crappy gsub to change col names to [polarity]_[filename(without extension)]
+      colnames(mzT[[i]]) <- c("mz", gsub("^(.*)\\.(.*)",paste(pol_eng,"\\1",sep="_"),files[i]))
+    }
+    mz <- priv.mz_format(mzT)
+    mz <- priv.binning(mz, postbin_method)
+  }
+  
+  
+  if (class(files) ==  "character" && any(!grepl('\\.mzML$',files))){
     files <- list.files(path=files, pattern="*.mzML")
   }
   if (length(files) == 0) {
     warning("Cannot find mzML files in given files.")
     return(NULL)
   }
-  cl <- local.export_thread_env(cores, environment())
 
   tryCatch({
     # Prepare each file (by polarity) #TODO, maybe you know...don't
     # Get MzT for each file
-    mz_pos <- .magic_polarity_loop(files,1,cl)
-    print("INFO: mzml_extract_magic: Positive Complete")
-    mz_neg <- .magic_polarity_loop(files,0,cl)
-    list(pos=mz_pos, neg=mz_neg)
+    if(cores > 1){
+      cl <- local.export_thread_env(2, environment())
+      if(verbose){
+        out <- pbapply::pblapply(c(0,1), magic.polarity_loop)
+      } else {
+        out <- parallel::parLapply(cl, c(0,1),magic.polarity_loop)
+      }
+    } else {
+      mz_pos <- magic.polarity_loop(1)
+      print("INFO: mzml_extract_magic: Positive Complete")
+      mz_neg <- magic.polarity_loop(0)
+      out <-list(pos=mz_pos, neg=mz_neg)
+    }
+    return(out)
   },
   finally={
-    #This doesn't seem to stop the cluster :/
     local.kill_threads(cl)
   })
 }
@@ -58,14 +88,14 @@ mzml_extract_file <- function(file, polarity = NULL,  magic = T, massWindow = c(
     #TODO, get this to output 'file' correctly
     #TODO, unnest this. I keep getting this error:
     #  cannot coerce type 'closure' to vector of type 'character'
-    print(sprintf("INFO: Scans found in %s: %i",file, nrow(meta)))
+    print(sprintf("INFO: %s: Scans found in %s: %i",format(Sys.time(),"%H:%M:%S"), file, nrow(meta)))
     rts <-lapply(meta$retentionTime, function(x){c("mz",x)})
     l <- pbapply::pblapply(data, cl = cl, centroid.singleScan)
     for( i in seq_along(l) ){ colnames(l[[i]]) <- rts[[i]] }
-    out <- .mz_format(l)
+    out <- priv.mz_format(l)
     if (magic) {
-      out <- mzT_filtering(out)
-      out <- mzT_squashTime(out)
+      out <- sumR::mzT_filtering(out)
+      out <- mzT_squashTime(out, cl=cl)
     }else{
       out
     }
@@ -113,7 +143,7 @@ mzml_extract_file <- function(file, polarity = NULL,  magic = T, massWindow = c(
 #' @export
 # Note missingness_threshold is very low
 mzT_filtering <- function(mzT, prebin_method = max, missingness_threshold = 1, intensity_threshold = 1000 ){
-  mzT <- .binning(mzT,prebin_method)
+  mzT <- priv.binning(mzT,prebin_method)
   mzT <- mz_filter_lowIntensity(mzT,threshold = intensity_threshold)
   mzT <- mz_filter_missingness(mzT,threshold = missingness_threshold)
 }
@@ -129,60 +159,30 @@ mzT_filtering <- function(mzT, prebin_method = max, missingness_threshold = 1, i
 #'   Boolean: Should we set 0 <- NA (to not affect the math)
 #'
 #' @export
-mzT_squashTime <- function(mzT, timeSquash_method = mean, ignore_zeros = T){
+mzT_squashTime <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl = NULL){
   # This should be handled by filter low intesity
   if( ignore_zeros ){
     mzT[mzT == 0] <- NA
   }
-  squash <- apply(dplyr::select(mzT, -mz),1, timeSquash_method, na.rm=T)
+  squash <- pbapply::pbapply(dplyr::select(mzT, -mz),1, timeSquash_method, na.rm=T, cl=cl)
   squash[is.na(squash)] <- 0
   out <- as.data.frame(cbind(mzT$mz, squash))
   names(out) <- c("mz","intensity")
   out
 }
 
-#[0|1]: 0=Negative, 1=Positive
-.magic_polarity_loop <- function(files, pol, cl, postbin_method = mean, ...){
-  if(pol){
-    pol_eng="pos"
-  }else{
-    pol_eng="neg"
-  }
-  print(sprintf("INFO: %s.TIVE",toupper(pol_eng)))
-  mzT <- pbapply::pblapply(files, function(x) mzml_extract_file(x, polarity=pol, cl = cl))
-  print(paste("INFO: mzml_extract_magic : Extraction of [",pol_eng,"] complete, now formatting data.",sep=""))
-  for( i in seq_along(mzT) ){
-    #crappy gsub to change col names to [polarity]_[filename(without extension)]
-    colnames(mzT[[i]]) <- c("mz", gsub("^(.*)\\.(.*)",paste(pol_eng,"\\1",sep="_"),files[i]))
-  }
-  mz <- .mz_format(mzT)
-  mz <- .binning(mz, postbin_method)
-}
-
-.binning <- function(df, method = max, tolerance = 5e-6){
+priv.binning <- function(df, method = max, tolerance = 5e-6){
   bin <- binning(df$mz, tolerance = tolerance)
   local.mz_log_removed_rows((bin), unique(bin), "Binning")
-  df <- aggregate(dplyr::select(df,-mz),list(bin), method, na.rm = T, na.action=NULL)
+  df <- suppressWarnings(aggregate(dplyr::select(df,-mz),list(bin), method, na.rm = T, na.action=NULL))
   names(df)[1] <- "mz"
   df[df < 0] <- 0
   df[is.na(df)] <- 0
   df
 }
 
-.bin_parallel <- function(df, method = max, tolerance = 5e-6, cl = cl){
-  bin <- binning(df$mz, tolerance = tolerance)
-  cl <- local.export_thread_env(cl, environment())
-  out <- dplyr::select(df, -mz)[0]
-  out <- pbapply::pblapply(unique(bin), cl = cl, function(b){
-    tmp <- df[bin == b,]
-    out[b,] <- apply(tmp, 2 ,method , na.rm =T)
-  })
-  out <- as.data.frame(out)
-  out <- tibble::rownames_to_column(out, "mz")
-}
-
 #convert annoying mzR::list[[mz,i],[mz,i],[mz,i]] into usuable dataframe
-.mz_format <- function(out){
+priv.mz_format <- function(out){
   out <- dplyr::bind_rows(out)
   out <- out[order(out$mz),]
   out$mz <- round(out$mz, 5)
