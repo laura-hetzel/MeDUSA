@@ -9,6 +9,7 @@ mz_obj <-  mzL$neg
 
 sumR::mz_quality_magic(mz_obj, meta, cores = 2)
 
+
 #mz_carbon <- sumR::mz_isotope_hunter(mz_obj, cores=4)
 
 mz_obj <- sumR::mz_subtraction(mz_obj,
