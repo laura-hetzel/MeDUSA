@@ -8,12 +8,13 @@
 #'      massWindow: c(0,Inf)
 #' @param files \cr
 #'   String: File or directory of mzmL files
+#'   List: of mzML files (i.e. list.files(".",pattern = "qc_.*mzML"))
 #' @param cores
 #'   Integer: Can I has multithreading? (Need parallel)
 #'
 #' @export
 mzml_extract_magic <- function(files = getwd(), cores = 2,  ... ){
-  if (!grepl('\\.mzML$',files)){
+  if (class(files) ==  Character & !grepl('\\.mzML$',files)){
     files <- list.files(path=files, pattern="*.mzML")
   }
   if (length(files) == 0) {
@@ -161,11 +162,23 @@ mzT_squashTime <- function(mzT, timeSquash_method = mean, ignore_zeros = T){
 .binning <- function(df, method = max, tolerance = 5e-6){
   bin <- binning(df$mz, tolerance = tolerance)
   local.mz_log_removed_rows((bin), unique(bin), "Binning")
-  df <- aggregate(dplyr::select(df,-mz),list(bin), method, na.rm = T)
+  df <- aggregate(dplyr::select(df,-mz),list(bin), method, na.rm = T, na.action=NULL)
   names(df)[1] <- "mz"
   df[df < 0] <- 0
   df[is.na(df)] <- 0
   df
+}
+
+.bin_parallel <- function(df, method = max, tolerance = 5e-6, cl = cl){
+  bin <- binning(df$mz, tolerance = tolerance)
+  cl <- local.export_thread_env(cl, environment())
+  out <- dplyr::select(df, -mz)[0]
+  out <- pbapply::pblapply(unique(bin), cl = cl, function(b){
+    tmp <- df[bin == b,]
+    out[b,] <- apply(tmp, 2 ,method , na.rm =T)
+  })
+  out <- as.data.frame(out)
+  out <- tibble::rownames_to_column(out, "mz")
 }
 
 #convert annoying mzR::list[[mz,i],[mz,i],[mz,i]] into usuable dataframe
@@ -173,6 +186,6 @@ mzT_squashTime <- function(mzT, timeSquash_method = mean, ignore_zeros = T){
   out <- dplyr::bind_rows(out)
   out <- out[order(out$mz),]
   out$mz <- round(out$mz, 5)
-  rownames(out) <- NULL
+  #rownames(out) <- NULL
   out
 }
