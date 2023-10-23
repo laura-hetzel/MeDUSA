@@ -11,6 +11,8 @@
 #'   List: of mzML files (i.e. list.files(".",pattern = "qc_.*mzML"))
 #' @param cores
 #'   Integer: Can I has multithreading? (Need parallel)
+#' @param verbose Which Parallization method: parLapply is faster (on Win), but no active output)
+#'   Boolean: T=pblapply; F=parLapply
 #'
 #' @export
 mzml_extract_magic <- function(files = getwd(), cores = 6,  params = NULL ){
@@ -137,12 +139,12 @@ mzT_filtering <- function(mzT, prebin_method = max, missingness_threshold = 1, i
 #'   Boolean: Should we set 0 <- NA (to not affect the math)
 #'
 #' @export
-mzT_squashTime <- function(mzT, timeSquash_method = mean, ignore_zeros = T){
+mzT_squashTime <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl = NULL){
   # This should be handled by filter low intesity
   if( ignore_zeros ){
     mzT[mzT == 0] <- NA
   }
-  squash <- apply(dplyr::select(mzT, -mz),1, timeSquash_method, na.rm=T)
+  squash <- pbapply::pbapply(dplyr::select(mzT, -mz),1, timeSquash_method, na.rm=T, cl=cl)
   squash[is.na(squash)] <- 0
   out <- as.data.frame(cbind(mzT$mz, squash))
   names(out) <- c("mz","intensity")
