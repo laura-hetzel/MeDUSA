@@ -39,12 +39,12 @@ mz_filter_blacklist <- function( input_mz_obj, tolerance = 5e-6,
 #'             : If Integer : Number of scans required to be nonzero ( i.e. Value required in at least 2 samples )
 #' @return Returns an MZ-OBJ
 #' @export
-mz_filter_missingness <- function(input_mz_obj, threshold = 0.1){
+mz_filter_missingness <- function(input_mz_obj, threshold = 0.1, msg = ""){
   if ( threshold < 1){
     threshold <- threshold * length(input_mz_obj)
   }
   keep_peaks <- input_mz_obj[rowSums( dplyr::select(input_mz_obj, -mz) > 0 ) >= threshold,]
-  local.mz_log_removed_rows(input_mz_obj,keep_peaks,"sumR::mz_filter_missingness")
+  local.mz_log_removed_rows(input_mz_obj,keep_peaks,paste("sumR::mz_filter_missingness",msg))
   keep_peaks
 }
 
@@ -62,14 +62,14 @@ mz_filter_missingness <- function(input_mz_obj, threshold = 0.1){
 #'
 #' @return Returns an MZ-OBJ
 #' @export
-mz_filter_lowIntensity <- function(input_mz_obj, threshold){
+mz_filter_lowIntensity <- function(input_mz_obj, threshold, msg = ""){
   #TODO make this better
   mz <- input_mz_obj$mz
   input_mz_obj[is.na(input_mz_obj)] <- 0
   input_mz_obj[ input_mz_obj <= threshold ] <- 0
   input_mz_obj$mz <- mz
   out_mz <- input_mz_obj[ rowSums(dplyr::select(input_mz_obj ,-mz)) > 0, ]
-  local.mz_log_removed_rows(input_mz_obj, out_mz, "sumR::mz_filter_lowIntensity")
+  local.mz_log_removed_rows(input_mz_obj, out_mz, paste("sumR::mz_filter_lowIntensity",msg))
   out_mz
 }
 

@@ -43,9 +43,9 @@ local.save_plot <- function(plot_name, output_dir = local.output_dir()){
   ggsave(paste(output_dir,local.dir_sep(),plot_name,".png",sep = ""))
 }
 
-local.export_thread_env <- function(cores, env){
+local.export_thread_env <- function(cores, env = environment()){
   if (cores > 1) {
-    cl <- parallel::makeCluster(cores)
+    cl <- parallel::makeCluster(cores, outfile="")
     parallel::clusterExport(cl, varlist = ls(env),
                                 envir = env)
   } else {
@@ -53,8 +53,10 @@ local.export_thread_env <- function(cores, env){
   }
   return(cl)
 }
+
 local.kill_threads <- function(cl = NULL){
   tryCatch(parallel::stopCluster(cl),
-           error = function(e){print(paste("WARN: cl error:",e))},
-           finally = showConnections())
+           error = function(e){print(paste("WARN: Thread kill error:",e))},
+           finally = {print("INFO: Killing threads. Often throws odd errors.")
+                     suppressWarnings(try(closeAllConnections(),silent=TRUE))})
 }
