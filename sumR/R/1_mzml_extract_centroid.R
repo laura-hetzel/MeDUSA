@@ -38,7 +38,7 @@ mzml_extract_magic <- function(files = getwd(), cores = 6,  params = NULL ){
       mz_neg <- magic.polarity_loop(files,0,params)
       out <- list(pos=mz_pos, neg=mz_neg)
     }
-    print(paste("INFO: mzml_extract_magic, execution complete in:",round(as.numeric(Sys.time()-a, units="mins"),3),"minutes"))
+    print(paste("INFO: mzml_extract_magic, execution complete in:",round(as.numeric(Sys.time()-start, units="mins"),3),"minutes"))
     return(out)
   },
   finally={
@@ -161,9 +161,9 @@ magic.polarity_loop <- function(files, polarity, cores, params){
   print(sprintf("INFO: %s.TIVE",toupper(pol_eng)))
   if(cores > 3 ){
     cl <- local.export_thread_env(round(cores/2) , environment(magic.polarity_loop))
-    mzT <- parallel::parLapply(cl, files, function(file) mzml_extract_file(file, polarity, T,  NULL , params))
+    mzT <- parallel::parLapplyLB(cl, files, function(file) mzml_extract_file(file, polarity, T,  NULL , params))
   } else {
-    mzT <- pbapply::pblapply(files,  function(x) mzml_extract_file(x, polarity, cl))
+    mzT <- pbapply::pblapply(files,  function(x) mzml_extract_file(x, polarity, T, NULL, params))
   }
   print(paste("INFO: mzml_extract_magic : Extraction of [",pol_eng,"] complete, now formatting data.",sep=""))
   for( i in seq_along(mzT) ){
@@ -171,7 +171,9 @@ magic.polarity_loop <- function(files, polarity, cores, params){
     colnames(mzT[[i]]) <- c("mz", gsub("^(.*)\\.(.*)",paste(pol_eng,"\\1",sep="_"),files[i]))
   }
   mz <- magic.mz_format(mzT)
-  mz <- magic.binning(mz, params$postbin_method, "final")
+  save(mz, file = paste("mzT-",pol_eng,".Rdata"))
+  gc()
+  mz <- magic.binning(mz, params$postbin_method, paste("final-",pol_eng))
 }
 
 magic.binning <- function(df, method = max, log_name = "", tolerance = 5e-6){
