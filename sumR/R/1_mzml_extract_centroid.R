@@ -32,17 +32,22 @@ mzml_extract_magic <- function(files = getwd(), cores = 6,  params = NULL ){
       cl <- local.export_thread_env(2)
       out <- parallel::parLapply(cl, c(0,1), function(x) magic.polarity_loop(polarity = x, files, cores, params))
       names(out) <- c('neg','pos')
+      local.kill_threads(cl)
+      gc()
+      cl <- local.export_thread_env(2)
+      out <- parallel::parLapply(cl, c("neg","pos"), function(x) magic.polarity_final(x, out, files, params))
+      names(out) <- c('neg','pos') 
     } else {
       mz_pos <- magic.polarity_loop(files,1,params)
       print("INFO: mzml_extract_magic: Positive Complete")
       mz_neg <- magic.polarity_loop(files,0,params)
       out <- list(pos=mz_pos, neg=mz_neg)
     }
-    print(paste("INFO: mzml_extract_magic, execution complete in:",round(as.numeric(Sys.time()-start, units="mins"),3),"minutes"))
+    print(paste("INFO: mzml_extract_magic SUCCESS, execution complete in:",round(as.numeric(Sys.time()-start, units="mins"),3),"minutes"))
     return(out)
   },
   finally={
-    local.kill_threads(cl)
+    local.kill_threads()
   })
 }
 
@@ -159,26 +164,37 @@ magic.polarity_loop <- function(files, polarity, cores, params){
     pol_eng="neg"
   }
   print(sprintf("INFO: %s.TIVE",toupper(pol_eng)))
-  if(cores > 3 ){
-    cl <- local.export_thread_env(round(cores/2) , environment(magic.polarity_loop))
+  if(cores > 3){
+    #Give Pos an extra core
+    cl = trunc(cores/2)+1
+    if(!polarity){
+      cl = cores - cl
+    }
+    cl <- local.export_thread_env(cl , environment(magic.polarity_loop))
     mzT <- parallel::parLapplyLB(cl, files, function(file) mzml_extract_file(file, polarity, T,  NULL , params))
   } else {
     mzT <- pbapply::pblapply(files,  function(x) mzml_extract_file(x, polarity, T, NULL, params))
   }
   print(paste("INFO: mzml_extract_magic : Extraction of [",pol_eng,"] complete, now formatting data.",sep=""))
+  save(mzT, file = paste(Sys.Date(),"mzT-",pol_eng,".Rdata", sep=""))
+  mzT
+}
+
+magic.polarity_final <- function(pol,mzT,files,params){
+  mzT <- mzT[[pol]]
   for( i in seq_along(mzT) ){
     #crappy gsub to change col names to [polarity]_[filename(without extension)]
-    colnames(mzT[[i]]) <- c("mz", gsub("^(.*)\\.(.*)",paste(pol_eng,"\\1",sep="_"),files[i]))
+    #  Needs to be a for loop, because all the "intensity" columns have to be; lest they be overwritten by mz_format
+    colnames(mzT[[i]]) <- c("mz", gsub("^(.*)\\.(.*)",paste(pol,"\\1",sep="_"),files[i]))
   }
   mz <- magic.mz_format(mzT)
-  save(mz, file = paste("mzT-",pol_eng,".Rdata"))
-  gc()
-  mz <- magic.binning(mz, params$postbin_method, paste("final-",pol_eng))
+  mz <- magic.binning(mz, params$postbin_method)
+  #colnames(mz) <- c("mz", gsub("^(.*)\\.(.*)",paste(pol,"\\1",sep="_"),files))
 }
 
 magic.binning <- function(df, method = max, log_name = "", tolerance = 5e-6){
   bin <- binning(df$mz, tolerance = tolerance)
-  local.mz_log_removed_rows((bin), unique(bin), paste("Binning",log_name))
+  #local.mz_log_removed_rows((bin), unique(bin), paste("Binning",log_name))
   df <- suppressWarnings(aggregate(dplyr::select(df,-mz),list(bin), method, na.rm = T, na.action=NULL))
   names(df)[1] <- "mz"
   df[df < 0] <- 0
