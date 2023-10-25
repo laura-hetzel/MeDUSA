@@ -1,0 +1,16 @@
+# ============
+# mz_mass_defect(mz, plot, magicNumber1, magicNumber2)
+# ============
+test_that("mz_mass_defect: Happy Path", {
+  load("../test_data/mz_neg.Rdata")
+  load("../test_data/asserts/mass_defect_happy.Rdata")
+  actual <- mz_mass_defect(mz_neg,F)
+  expect_identical(actual,mass_defect_happy)
+})
+
+test_that("mz_mass_defect: custom params", {
+  load("../test_data/mz_neg.Rdata")
+  load("../test_data/asserts/mass_defect_custom.Rdata")
+  actual <- mz_mass_defect(mz_neg,F, 0.001,0.1)
+  expect_identical(actual,mass_defect_custom)
+})

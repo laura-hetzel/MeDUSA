@@ -18,14 +18,7 @@
 mzml_extract_magic <- function(files = getwd(), cores = 6,  params = NULL ){
   start <- Sys.time()
   params <- magic.fill_defaults(params)
-
-  if (class(files) ==  "character" & any(!grepl('\\.mzML$',files))){
-    files <- list.files(path=files, pattern="*.mzML")
-  }
-  if (length(files) == 0) {
-    warning("Cannot find mzML files in given files.")
-    return(NULL)
-  }
+  files <- magic.file_lister(files)
 
   tryCatch({
     if (cores > 1){
@@ -36,7 +29,7 @@ mzml_extract_magic <- function(files = getwd(), cores = 6,  params = NULL ){
       gc()
       cl <- local.export_thread_env(2)
       out <- parallel::parLapply(cl, c("neg","pos"), function(x) magic.polarity_final(x, out, files, params))
-      names(out) <- c('neg','pos') 
+      names(out) <- c('neg','pos')
     } else {
       mz_pos <- magic.polarity_loop(files,1,params)
       print("INFO: mzml_extract_magic: Positive Complete")
@@ -164,19 +157,21 @@ magic.polarity_loop <- function(files, polarity, cores, params){
     pol_eng="neg"
   }
   print(sprintf("INFO: %s.TIVE",toupper(pol_eng)))
-  if(cores > 3){
+  if(cores > 3 && polarity ){
     #Give Pos an extra core
-    cl = trunc(cores/2)+1
+    cl <- trunc(cores/2)+1
     if(!polarity){
-      cl = cores - cl
+      cl <- cores- cl
     }
+    print(paste("cores",polarity,cl))
     cl <- local.export_thread_env(cl , environment(magic.polarity_loop))
     mzT <- parallel::parLapplyLB(cl, files, function(file) mzml_extract_file(file, polarity, T,  NULL , params))
   } else {
     mzT <- pbapply::pblapply(files,  function(x) mzml_extract_file(x, polarity, T, NULL, params))
   }
   print(paste("INFO: mzml_extract_magic : Extraction of [",pol_eng,"] complete, now formatting data.",sep=""))
-  save(mzT, file = paste(Sys.Date(),"mzT-",pol_eng,".Rdata", sep=""))
+  #Useful for debugging
+  #save(mzT, file = paste(Sys.Date(),"-mzT-preBin",pol_eng,".Rdata", sep=""))
   mzT
 }
 
@@ -185,7 +180,7 @@ magic.polarity_final <- function(pol,mzT,files,params){
   for( i in seq_along(mzT) ){
     #crappy gsub to change col names to [polarity]_[filename(without extension)]
     #  Needs to be a for loop, because all the "intensity" columns have to be; lest they be overwritten by mz_format
-    colnames(mzT[[i]]) <- c("mz", gsub("^(.*)\\.(.*)",paste(pol,"\\1",sep="_"),files[i]))
+    colnames(mzT[[i]]) <- c("mz", gsub("(^.*/|^)(.*).mzML",paste(pol,"\\2",sep="_"),files[i]))
   }
   mz <- magic.mz_format(mzT)
   mz <- magic.binning(mz, params$postbin_method)
@@ -211,7 +206,19 @@ magic.mz_format <- function(out){
   out
 }
 
-magic.fill_defaults <- function(params){
+magic.file_lister <- function(files) {
+  #if string, and not an mzml file, treat as directory
+  if (class(files) ==  "character" & any(!grepl('\\.mzML$',files))){
+    files <- list.files(path=files, pattern="*.mzML", full.names=T)
+  }
+  if (length(files) == 0) {
+    warning("ERROR: mzml_extract_magic: Cannot find mzML files in given files.")
+    return(NULL)
+  }
+  files
+}
+
+magic.fill_defaults <- function(params = NULL){
   defaults <- list(
     "prebin_method" = max,
     "postbin_method" = max,

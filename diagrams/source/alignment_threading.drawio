@@ -1,0 +1,64 @@
+<mxfile host="app.diagrams.net" modified="2023-10-25T19:56:12.416Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.55" etag="HU_HZYX0y5F-nnsFPGfP" version="22.0.8" type="device">
+  <diagram name="Page-1" id="o-mXXIeAViBAMRU4H46-">
+    <mxGraphModel dx="1384" dy="1018" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="PYrD0hpPmA-zsg5U1x3j-22" value="&lt;b&gt;mzml_extract_magic(files, cores, &lt;font color=&quot;#0066cc&quot;&gt;params&lt;/font&gt;)&lt;br&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="90" y="300" width="920" height="650" as="geometry" />
+        </mxCell>
+        <mxCell id="_Ctapk6UfDxtFrrtLrer-1" value="&lt;b&gt;magic.polarity_final( files, polarity, cores, &lt;font color=&quot;#0066cc&quot;&gt;params&lt;/font&gt;)&lt;br&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
+          <mxGeometry x="190" y="830" width="700" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="PYrD0hpPmA-zsg5U1x3j-16" value="&lt;b&gt;magic.polarity_loop( files, polarity, cores, &lt;font color=&quot;#0066cc&quot;&gt;params&lt;/font&gt;)&lt;br&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="190" y="410" width="700" height="420" as="geometry" />
+        </mxCell>
+        <mxCell id="PYrD0hpPmA-zsg5U1x3j-15" value="&lt;b&gt;mzml_extract_file ( file, peak_meta, polarity, magic, log_name, &lt;font color=&quot;#0066cc&quot;&gt;missingness_threshod, intensity_threshold, &lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;time_squash_method, log_name&lt;/font&gt;)&lt;br&gt;&lt;br&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="290" y="450" width="580" height="370" as="geometry" />
+        </mxCell>
+        <mxCell id="PYrD0hpPmA-zsg5U1x3j-3" value="&lt;b&gt;centroid.singleScan ( data )&lt;br&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="311" y="507" width="250" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="PYrD0hpPmA-zsg5U1x3j-4" value="&lt;b&gt;.mzformat( list(data) )&lt;br&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="311" y="537" width="250" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="PYrD0hpPmA-zsg5U1x3j-6" value="&lt;b&gt;if(magic)&lt;br&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="311" y="567" width="540" height="233" as="geometry" />
+        </mxCell>
+        <mxCell id="PYrD0hpPmA-zsg5U1x3j-8" value="&lt;b&gt;mzT_squashTime(data, &lt;font color=&quot;#0066cc&quot;&gt;time_squash_method&lt;/font&gt;)&lt;br&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="326" y="750" width="510" height="33" as="geometry" />
+        </mxCell>
+        <mxCell id="PYrD0hpPmA-zsg5U1x3j-7" value="&lt;b&gt;mzT_filter(mzT, &lt;font color=&quot;#0066cc&quot;&gt;prebin_method, missingness_threshold, intensity_threshold&lt;/font&gt;, log_name&lt;br&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="326" y="600" width="509" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="PYrD0hpPmA-zsg5U1x3j-12" value="&lt;b&gt;magic.binning(mzT, &lt;font color=&quot;#0066cc&quot;&gt;prebin_method&lt;/font&gt;, log_name)&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="347" y="630" width="459" height="33" as="geometry" />
+        </mxCell>
+        <mxCell id="PYrD0hpPmA-zsg5U1x3j-14" value="&lt;b style=&quot;border-color: var(--border-color);&quot;&gt;mz_filter_missingness(mzT, &lt;font color=&quot;#0066cc&quot;&gt;missingness_threshold&lt;/font&gt;, log_name)&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="347" y="696" width="459" height="33" as="geometry" />
+        </mxCell>
+        <mxCell id="PYrD0hpPmA-zsg5U1x3j-18" value="Parallel*&lt;br&gt;NewThreads = cores / 2" style="verticalLabelPosition=top;shadow=0;dashed=0;align=center;html=1;verticalAlign=bottom;strokeWidth=1;shape=mxgraph.mockup.markup.curlyBrace;whiteSpace=wrap;strokeColor=#999999;rotation=-90;labelPosition=center;" parent="1" vertex="1">
+          <mxGeometry x="75.5" y="622.5" width="371" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="PYrD0hpPmA-zsg5U1x3j-19" value="&lt;b&gt;magic.binning(mzT, &lt;font color=&quot;#0066cc&quot;&gt;postbin_method&lt;/font&gt;, log_name)&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="290" y="870" width="580" height="33" as="geometry" />
+        </mxCell>
+        <mxCell id="PYrD0hpPmA-zsg5U1x3j-20" value="&lt;b style=&quot;border-color: var(--border-color);&quot;&gt;mz_filter_lowIntensity(mzT, &lt;font color=&quot;#0066cc&quot;&gt;intensity_threshold&amp;nbsp;&lt;/font&gt;, log_name)&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" parent="1" vertex="1">
+          <mxGeometry x="347" y="663" width="459" height="33" as="geometry" />
+        </mxCell>
+        <mxCell id="PYrD0hpPmA-zsg5U1x3j-23" value="Parallel&lt;br&gt;NewThreads = 2" style="verticalLabelPosition=top;shadow=0;dashed=0;align=center;html=1;verticalAlign=bottom;strokeWidth=1;shape=mxgraph.mockup.markup.curlyBrace;whiteSpace=wrap;strokeColor=#999999;rotation=-90;labelPosition=center;" parent="1" vertex="1">
+          <mxGeometry x="-41" y="607" width="405" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="_Ctapk6UfDxtFrrtLrer-4" value="Parallel&lt;br&gt;NewThreads = 2" style="verticalLabelPosition=top;shadow=0;dashed=0;align=center;html=1;verticalAlign=bottom;strokeWidth=1;shape=mxgraph.mockup.markup.curlyBrace;whiteSpace=wrap;strokeColor=#999999;rotation=-90;labelPosition=center;" vertex="1" parent="1">
+          <mxGeometry x="115.5" y="865.5" width="92" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="_Ctapk6UfDxtFrrtLrer-7" value="&lt;b&gt;magic.fill_params(&lt;font color=&quot;#0066cc&quot;&gt;params&lt;/font&gt;)&lt;br&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
+          <mxGeometry x="190" y="344" width="700" height="33" as="geometry" />
+        </mxCell>
+        <mxCell id="_Ctapk6UfDxtFrrtLrer-8" value="&lt;b&gt;magic.file_lister(&lt;font color=&quot;#000066&quot;&gt;files&lt;/font&gt;)&lt;br&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="1">
+          <mxGeometry x="190" y="377" width="700" height="33" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
