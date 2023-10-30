@@ -64,17 +64,19 @@ file: zz_[description].R
   -X pca variable bug [need data]
   -X volcano plot (look at hypoxia)
   -X t-test "FDR correct" (stemcell)
-  - hmdb/lipidmaps
+  -X hmdb
   -X heatmap
-  - anova analysis
   -X quality check [bug in plots]
   -X metadata file naming validation
-  - extract_magic, all the parameters
-  - blanksubtraction, validation (need better data) ... clunky naming.
-  - fix file managment when meta & data & scripts are seperate
-  - handle meta neg/pos better
+  -X extract_magic, all the parameters
+  -X fix file managment when meta & data & scripts are seperate
   -X mass defect windows debugging
+  -X alignment fix
+  -X unitTests
   -2 lower dependencies (catools, tibble)
+  -X config file (half-ish)
   - optional correlation RFs
-  - alignment fix
-  - ??config file?
+  - lipidmaps
+  - blanksubtraction, validation (need better data) ... clunky naming.
+  - handle meta neg/pos better
+  - anova analysis

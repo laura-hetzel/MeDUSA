@@ -15,7 +15,7 @@
 mzlong_pp_log_transform <- function(input_mzlong, plot = TRUE){
   input_mzlong$log <- log2(input_mzlong$intensity)
   if(plot){
-    ggplot(input_mzlong, aes(x = sample, y = log)) +
+    ggplot(input_mzlong, aes(x = sample_name, y = log)) +
       geom_boxplot() +
       theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
       ggtitle(paste("Normalized, Filtered,",

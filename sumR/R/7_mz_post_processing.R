@@ -99,7 +99,7 @@ mz_pp_pivot_longer <- function(input_mz_obj, plot = TRUE) {
   input_mzlong <- input_mz_obj %>%
     tidyr::pivot_longer(!mz, names_to = "sample_name", values_to = "intensity")
     if(plot){
-      ggplot(input_mzlong, aes(x = sample, y = intensity)) +
+      ggplot(input_mzlong, aes(x = sample_name, y = intensity)) +
         geom_boxplot() +
         theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
         ggtitle(paste("Normalized, Filtered,",

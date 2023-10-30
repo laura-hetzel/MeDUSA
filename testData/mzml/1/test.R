@@ -22,7 +22,7 @@ mz_obj <- sumR::mz_mass_defect(mz_obj)
 mz_obj <- sumR::mz_filter_magic(mz_obj, blacklist=c(100,110))
 
 #post processing
-mz_mag <- sumR::mz_post_process_magic(mz_obj,meta)x
+mz_mag <- sumR::mz_pp_magic(mz_obj,meta)
 #mz_mag <- sumR::mz_pp_imputation(mz_obj)
 #mz_mag <- sumR::mz_pp_normalization(mz_mag, meta)
 #mz_mag <- log2(mz_mag)
