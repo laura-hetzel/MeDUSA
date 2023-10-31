@@ -62,6 +62,7 @@ mz_pp_imputation <- function(input_mz_obj, low_noise=10, high_noise=5000){
 #' @export
 mz_pp_normalization <- function(input_mz_obj, metadata, plot = TRUE ){
   #TODO revisit, for a refactor
+  #TODO ensure mz's are filtered out
   normal <- quotNorm(t(input_mz_obj))
   dilution <- data.frame(normal$dilution)
   dilution$sample <- rownames(dilution)
@@ -82,7 +83,7 @@ mz_pp_normalization <- function(input_mz_obj, metadata, plot = TRUE ){
 }
 
 # *** PivotLonger -----------------------------------------------------
-#' MZ-OBJ Pivot Longer
+#' MZ-OBJ Pivot Longer (Does not Log2)
 #'
 #' Not really sure what this does
 #'  - Requires: ggplot2, tidyr
@@ -110,6 +111,21 @@ mz_pp_pivot_longer <- function(input_mz_obj, plot = TRUE) {
   data.frame(input_mzlong)
 }
 
+# *** PP Log2 -----------------------------------------------------
+#' MZ-OBJ Log2
+
+#'
+#' @param input_mz_obj \cr
+#'   DataFrame : Input MZ-Obj
+#'
+#' @returns mzLog-OBJ
+#' @export
+mz_pp_log <- function(input_mz_obj) {
+  ind <- grep("mz", colnames(input_mz_obj))
+  input_mz_obj[-ind] <- log2(input_mz_obj[-ind])
+  input_mz_obj
+}
+
 # *** Process Magic -----------------------------------------------------
 #' MZ-OBJ Process Magic
 #'
@@ -125,9 +141,9 @@ mz_pp_pivot_longer <- function(input_mz_obj, plot = TRUE) {
 #'
 #' @returns c(mzLong_obj, mzLog_obj)
 #' @export
-mz_pp_magic <- function(input_mz_obj, metadata, plot = TRUE){
+mz_pp_magic <- function(input_mz_obj, metadata, noise = c(10,5000), plot = TRUE){
   tryCatch({
-    input_mz_obj <- mz_pp_imputation(input_mz_obj)
+    input_mz_obj <- mz_pp_imputation(input_mz_obj, noise[1], noise[2])
     print("INFO: imputation success")
   }, error = function(e) {
     print(e)
@@ -154,7 +170,6 @@ mz_pp_magic <- function(input_mz_obj, metadata, plot = TRUE){
     print(e)
     stop("ERROR: in mzl_pp_log_transform")
   })
-  ind <- grep("mz", colnames(input_mz_obj))
-  input_mz_obj[-ind] <- log2(input_mz_obj[-ind])
-  list("mzLong" = input_mzlong ,"mzLog" = input_mz_obj)
+  out <- mz_pp_log(input_mz_obj)
+  list("mzLong" = input_mzlong ,"mzLog" = out)
 }

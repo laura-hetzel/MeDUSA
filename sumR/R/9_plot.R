@@ -13,7 +13,7 @@
 #'
 #' @export
 plot_volcano <- function(welch, fold_change, title = "Volcano Plot"){
-  if ( sum(round(welch$mz,6) != round(fold$mz,6)) > 0){
+  if ( sum(round(welch$mz,6) != round(fold_change$mz,6)) > 0){
     stop("ERROR: plot_volcano : Welch mz does not match FoldChange mz")
   }
   df <- data.frame("mz"   =  welch$mz, 
@@ -30,8 +30,7 @@ plot_volcano <- function(welch, fold_change, title = "Volcano Plot"){
           scale_color_manual(values = c("blue", "black", "red")) +
           geom_vline(xintercept = c(-0.6, 0.6), col = "red") +
           geom_hline(yintercept = -log10(0.05), col = "red") +
-          ggtitle("title")
-
+          ggtitle(title)
   local.save_plot(paste("Volcano",local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
 }
 

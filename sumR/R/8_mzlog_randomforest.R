@@ -1,17 +1,11 @@
 # *** RandomForest Correlation -----------------------------------------------------
 #' Find Correlation data within a mzLog_obj
 #'
-#'
-#' @param input_mzlog_obj \cr
-#'   DataFrame : Log2 of Input MZ-Obj
-#' @param correlation_cutoff \cr
-#'   Float: Decimal percentage of high correlation cutoff
-#'
 #' @returns Transposed mzlog_obj
 #'
 #' @export
 mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
-  data <- data.frame(t(input_mzlog_obj))
+  data <- data.frame(t(dplyr::select(input_mzlog_obj,-mz)))
   high_cor_data <- caret::findCorrelation(cor(data), cutoff = correlation_cutoff)
   print(paste("INFO:mzlog_prep: ", length(high_cor_data)," of ", ncol(data) ," MZs are highly correlated ", sep=""))
   data <- data.frame(data[,-high_cor_data])
@@ -20,7 +14,7 @@ mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
   return(data[-1,])
 }
 
-# *** RandomForest Correlation -----------------------------------------------------
+# *** RandomForest Select -----------------------------------------------------
 #' Find Correlation data within a mzLog_obj
 #'
 #' @param correlation_data \cr
@@ -60,70 +54,54 @@ rf_select <- function(correlation_data, metadata, attribute = "phenotype", feat_
 # *** RandomForest Train -----------------------------------------------------
 #' Train you model data within a mzLog_obj
 #'
-#' @param correlation_data \cr
-#'   DataFrame : from rf_correlation
+#' @param mzlog_obj \cr
+#'   DataFrame : mzlog
+#' @param rfe_obj \cr
+#'   carat::rfe_obj (see rf_select)
 #' @param metadata \cr
 #'   DataFrame: metadata object
 #' @param feat_size_seq \cr
 #'   Sequence to find optimal "number_of_variables"
 #' @param attribute \cr
 #'   String: which metadata attribute to compare
-#' @param seed \cr
+#' @param seeds \cr
 #'   List: which seeds to use. Also how many runs to do
-#' @param ratio \cr
-#'   Float: split ratio for train
+#' @param cores \cr
+#'   Int: can I haz multithreading
 #'
-#' @returns caret::rfe object
 #'
 #' @export
-mzlog_rf_train <- function(mzlog_obj, rfe_obj, meta, attribute = "phenotype",
+mzlog_rf_train <- function(mzlog_obj,  metadata, attribute = "phenotype", trees = NULL, rfe_obj = NULL,
                           seeds = c(42,666,314159,1.05457, 998001), ratio = 0.8, cores = 4){
-  data <- mzLog_obj[ mzLog_obj$mz %in% as.numeric(caret::predictors(rfe_obj)), ]
-  rownames(data) <- data$mz
-  data_t <- data.frame(t(dplyr::select(data,-mz)))
+  if (! is.null(rfe_obj)){
+    mzLog_obj <- mzLog_obj[ mzLog_obj$mz %in% as.numeric(caret::predictors(rfe_obj)), ]
+  }
+  if (is.null(trees)){
+    if( is.null(rfe_obj)){
+      stop("ERROR: mzlog_rf_train: both rfe_obj & trees are null")
+    }
+    trees <- rfe_obj$bestSubset
+  }
+  rownames(mzlog_obj) <- mzlog_obj$mz
+  data_t <- data.frame(t(dplyr::select(mzlog_obj,-mz)))
   data_t <- tibble::rownames_to_column(data_t,"sample_name")
-  data_t <- dplyr::left_join(data_t, meta[c("sample_name", attribute)])
+  data_t <- dplyr::left_join(data_t, metadata[c("sample_name", attribute)])
   data_t <- dplyr::select(data_t,-"sample_name")
   data_t[[attribute]] <- as.factor(data_t[[attribute]])
-
-  set.seed(seed)
-  split <- caTools::sample.split(data_t[[attribute]], SplitRatio = ratio)
-  train_df <- subset(data_t, split == T)
-  test_df <- subset(data_t, split == F)
-
-  ##Train settings
+  
+  #Train settings
   mtry <- c(sqrt(ncol(data_t)))
   tunegrid <- expand.grid(.mtry=mtry)
-  control <- caret::trainControl(method ='repeatedcv',
-                                 number = 10,
-                                 repeats = 4,
-                                 search = 'grid',
-                                 allowParallel = TRUE)
-
-  .run_train <- function(seed, cutoff =  100, train_df=train_df,
-                         attribute=attribute ,rfe_obj=rfe_obj, test_df = test_df){
-    rf_fit <- caret::train(as.factor(attribute) ~.,
-                           data = train_df,
-                           method = 'rf',
-                           tuneGrid = tunegrid,
-                           trControl = control,
-                           ntree = rfe_obj$bestSubset,
-                           na.action = na.exclude)
-
-    rf_pred <- predict(rf_fit, test_df)
-    caret::confusionMatrix(rf_pred, as.factor(test_df[[attribute]]))
-    out <- varImp(rf_fit)
-    out <- out$importance
-    out <- rownames_to_column(out, "mz")
-    out$mz <- as.numeric(gsub("`", "", out$mz))
-    out <- out[order(-out$Overall),]
-    out <- head(out, n = cutoff)
-  }
-
+  control <- trainControl(method ='repeatedcv', 
+                          number = 10, 
+                          repeats = 4, 
+                          search = 'grid',
+                          allowParallel = TRUE)
+  
   cl <- local.export_thread_env(cores, environment(mzlog_rf_train))
   tryCatch({
     out <- pbapply::pblapply(seeds, cl=cl, .run_train)
-
+    out <- do.call(rbind,out)
   }, finally={
     local.kill_threads(cl)
   })
@@ -131,8 +109,33 @@ mzlog_rf_train <- function(mzlog_obj, rfe_obj, meta, attribute = "phenotype",
 }
 
 
-rf_fancy_pheno <- function(rf_out){
-
+.run_train <- function(seed, data_t, ratio, trees, attribute, mtry, tunegrid, control){
+  
+  #Split
+  set.seed(seed)
+  split <- caTools::sample.split(data_t$phenotype, SplitRatio = ratio, trees)
+  train <- subset(data_t, split == TRUE)
+  test  <- subset(data_t, split == FALSE)  
+  
+  #Train
+  
+  rf_fit <- train( as.factor(attribute) ~.,
+                   data = data_t,
+                   method = 'rf',
+                   tuneGrid = tunegrid,
+                   trControl = control,
+                   ntree = trees ,
+                   na.action = na.exclude)
+  
+  rf_pred <- predict(rf_fit, test)
+  caret::confusionMatrix(rf_pred, as.factor(test_df[[attribute]]))
+  
+  imp <- caret::varImp(rf_fit)
+  imp <- imp$importance
+  imp <- rownames_to_column(imp, "mz")
+  imp$mz <- as.numeric(gsub("`", "", imp$mz))
+  imp <- imp[order(-imp$Overall),]
+  imp <- head(imp, n = 100)
 }
 ## set the phenotype to phenotype + a number so that it is unique and can be a row name
 #train_neg$phenotype <- paste(train_neg$phenotype, 1:108, sep = "_")

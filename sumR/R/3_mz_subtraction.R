@@ -8,9 +8,9 @@
 #' @param input_mz_obj \cr
 #'   DataFrame : Input MZ-Obj
 #' @param samples \cr
-#'   DataFrame : Metadata-Obj of Samples
-#' @param compare_samples \cr
-#'   DataFrame : Metadata-Obj of Compared samples (blanks)
+#'   DataFrame : Metadata-Obj of Samples to keep
+#' @param subtract \cr
+#'   DataFrame : Metadata-Obj of Samples to subtract (blanks)
 #' @param method: \cr
 #'   String : method to apply to compare samples before threshold
 #' @param threshold \cr
@@ -33,20 +33,20 @@
 #
 #' @export
 
-mz_subtraction <- function(input_mz_obj, samples, compare_samples , method = mean, threshold = 3) {
+mz_subtraction <- function(input_mz_obj, sample_meta, sub_meta , method = mean, threshold = 3) {
   input_mz_obj <- as.data.frame(input_mz_obj)
 
-  compare_subset <- input_mz_obj[,compare_samples$sample_name]
-  compare_subset[threshold] <- apply(compare_subset, 1, method) * threshold
+  df_sub <- input_mz_obj[,sub_meta$sample_name]
+  df_sub["threshold"] <- apply(df_sub, 1, method) * threshold
 
-  samples_subset <- input_mz_obj[,samples$sample_name]
+  df_sample <- input_mz_obj[,sample_meta$sample_name]
 
-  .applyer <- function(input_mz_obj, compare = compare_subset[threshold]){
+  .applyer <- function(input_mz_obj, compare = df_sub["threshold"]){
     (input_mz_obj > compare) * input_mz_obj
   }
-  samples_subset <- as.data.frame(sapply(samples_subset, .applyer))
-  samples_subset$mz <- input_mz_obj$mz
-  out_mz <- samples_subset[rowSums(dplyr::select(samples_subset,-mz)) > 0,]
+  df_sample <- as.data.frame(sapply(df_sample, .applyer))
+  df_sample$mz <- input_mz_obj$mz
+  out_mz <- df_sample[rowSums(dplyr::select(df_sample,-mz)) > 0,]
   local.mz_log_removed_rows(input_mz_obj,out_mz,"sumR::mz_subtraction")
   out_mz
 }

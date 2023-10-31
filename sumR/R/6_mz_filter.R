@@ -41,7 +41,7 @@ mz_filter_blacklist <- function( input_mz_obj, tolerance = 5e-6,
 #' @export
 mz_filter_missingness <- function(input_mz_obj, threshold = 0.1, msg = ""){
   if ( threshold < 1){
-    threshold <- threshold * length(input_mz_obj)
+    threshold <- threshold * (length(input_mz_obj)-1)
   }
   keep_peaks <- input_mz_obj[rowSums( dplyr::select(input_mz_obj, -mz) > 0 ) >= threshold,]
   local.mz_log_removed_rows(input_mz_obj,keep_peaks,paste("sumR::mz_filter_missingness",msg))
@@ -98,7 +98,7 @@ mz_filter_magic <- function(input_mz_obj, min_intensity, missingness_threshold=F
     }
   }
   if(hasArg(missingness_threshold)){
-    input_mz_obj <- mz_filter_missingness(input_mz_obj,missingness_threshold)
+    input_mz_obj <- mz_filter_missingness(input_mz_obj, missingness_threshold)
   } else {
     input_mz_obj <- mz_filter_missingness(input_mz_obj)
   }
