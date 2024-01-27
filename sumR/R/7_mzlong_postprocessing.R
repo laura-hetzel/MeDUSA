@@ -15,13 +15,42 @@
 mzlong_pp_log_transform <- function(input_mzlong, plot = TRUE){
   input_mzlong$log <- log2(input_mzlong$intensity)
   if(plot){
-    ggplot(input_mzlong, aes(x = sample_name, y = log)) +
-      geom_boxplot() +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-      ggtitle(paste("Normalized, Filtered,",
-        local.mz_polarity_guesser(input_mzlong)
-        , sep=""))
-    local.save_plot(paste("LogTransform",local.mz_polarity_guesser(input_mzlong),sep="-"))
+    tmp <- select(input_mzlong, -intensity)
+    tmp$intensity <- tmp$log
+    mzlongpp.plot(tmp, local.mz_polarity_guesser(input_mzlong), "PivotLongLog")
   }
   input_mzlong
+}
+
+mzlongpp.plot <- function(input_mzlong, polarity, plot_title){
+  ggpubr::ggscatter(
+    input_mzlong, 
+    x      = "sample_name", y    = "intensity",
+    xlab   = "Sample_Name", ylab = "Intensity", 
+    shape  = 20,            size = 1,
+    color  = "intensity",
+    title  = paste(plot_title, polarity, sep=": "),
+    rotate = T ) +
+    ggplot2::scale_x_discrete(
+      label = sapply(strsplit(input_mzlong$sample_name, '_'), function(x) paste(x[-2:-1], collapse = '.')), 
+      guide = ggplot2::guide_axis( n.dodge=3)) +
+    ggplot2::theme(legend.position = "none", axis.text.y=ggplot2::element_text(size=ggplot2::rel(0.5)))
+    
+  local.save_plot(paste(plot_title ,polarity, sep="-"))
+  
+  ggpubr::ggboxplot(
+    input_mzlong, 
+    x             = "sample_name", y            = "intensity", 
+    xlab          = "Sample_Name", ylab         = "Intensity", 
+    outlier.shape = 3,             outlier.size = 0.1, 
+    title         = paste(plot_title, "box:", polarity, sep=" "),
+    legend        = "none",
+    rotate        = T
+    ) +
+    ggplot2::scale_x_discrete(
+      label = sapply(strsplit(input_mzlong$sample_name, '_'), function(x) paste(x[-2:-1], collapse = '.')), 
+      guide = ggplot2::guide_axis( n.dodge=3)) +
+    ggplot2::theme(legend.position = "none", axis.text.y=ggplot2::element_text(size=ggplot2::rel(0.5)))
+  
+  local.save_plot(paste(plot_title, "box" ,polarity, sep="-"))
 }

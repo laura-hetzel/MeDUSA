@@ -12,7 +12,7 @@
 #'   DataFrame: Filtered metadata for phenotypeB
 #'
 #' @export
-plot_volcano <- function(welch, fold_change, title = "Volcano Plot"){
+plot_volcano <- function(welch, fold_change, title = "Volcano_Plot"){
   if ( sum(round(welch$mz,6) != round(fold_change$mz,6)) > 0){
     stop("ERROR: plot_volcano : Welch mz does not match FoldChange mz")
   }
@@ -31,7 +31,7 @@ plot_volcano <- function(welch, fold_change, title = "Volcano Plot"){
           geom_vline(xintercept = c(-0.6, 0.6), col = "red") +
           geom_hline(yintercept = -log10(0.05), col = "red") +
           ggtitle(title)
-  local.save_plot(paste("Volcano",local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
+  local.save_plot(paste(title,sep="-"))
 }
 
 # *** Volcano Magic -----------------------------------------------------
@@ -103,7 +103,7 @@ plot_heatmap <- function(input_mz_obj, metadata = NULL, annotation = "phenotype"
     annotation_int <- NULL
   }
   if (!is.na(save_file) && save_file == T){
-    save_file = paste(local.output_dir(),local.dir_sep(),title,".png",sep = "")
+    save_file = paste0(local.output_dir(),local.dir_sep(),title,".png")
   }
   if (is.null(cluster)){
     cluster <- c("row"=F,"col"=F)

@@ -28,12 +28,12 @@ mz_quality_metrics <- function(input_mz_obj, cores = 2){
       test <- input_mz_obj$mz[pop_sum>0]
       mz_metrics[colnames(pop_sum),] <-  c(median_mz = median(test),
                                            min_mz = min(test),
-                                           maz_mz = max(test),
+                                           max_mz = max(test),
                                            n_peaks = length(test),
                                            peaks_1k = sum(pop_sum > 1000),
                                            peaks_10k = sum(pop_sum > 10000),
                                            peaks_100k = sum(pop_sum >100000))
-  })
+    })
     mz_metrics[-1] <- t(tmp)
     return(data.frame(mz_metrics))
   },
@@ -65,18 +65,27 @@ mzmetrics_quality_plot_all <- function(mz_metrics){
 #' @param title \cr
 #'   String : title of plot
 #'
-#' Dependencies : ggplot2, dplyr, parallel
+#' Dependencies : ggplot2, ggpubr, dplyr, parallel
 #' @export
-mzmetrics_quality_plot <- function(mz_metrics, focus, title = F){
+mzmetrics_quality_plot <- function(mz_metrics, focus, title = F, plot_dim = c(8,8)){
   if(title == F ){
     title <- focus
   }
-  ggplot() +
-    geom_line(data = mz_metrics,
-              aes(x = name , y = focus, group = "1")) +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-    ggtitle(title)
-  local.save_plot(paste("Quality Check ",focus,local.mz_polarity_guesser(mz_metrics),sep="-"))
+  
+  ggpubr::ggbarplot(mz_metrics, x = "name", y = focus,
+                    title = title,
+                    fill  = focus,
+                    color = focus,    
+                    xlab = "Sample_Name",
+                    ylab = title) + 
+    ggpubr::rotate(ylim = c( min(mz_metrics[[focus]][is.finite(mz_metrics[[focus]])]), 
+                             max(mz_metrics[[focus]][is.finite(mz_metrics[[focus]])]) )) +
+    ggplot2::scale_x_discrete(
+      label = sapply(strsplit(mz_metrics$name, '_'), function(x) paste(x[-2:-1], collapse = '.')), 
+      guide = ggplot2::guide_axis( n.dodge=3 )) +
+    ggplot2::theme(legend.position = "none", axis.text.y=ggplot2::element_text(size=ggplot2::rel(0.5)))
+  
+  local.save_plot(paste("QualityCheck", title, local.mz_polarity_guesser(mz_metrics),sep="-"), dim = plot_dim)
 }
 
 # *** Metrics Quality Metadata Check -----------------------------------------------------
@@ -93,7 +102,7 @@ mz_quality_meta_check <- function(input_mz_obj, meta){
   .subset_check <- function( listA, listB, msg ){
     missing <- listA[!(listA %in% listB)]
     if( length(missing) > 0 ){
-      error <- append(error,paste(msg ,missing, sep=""))
+      error <- append(error,paste0(msg ,missing))
     }
     error
   }
@@ -113,12 +122,12 @@ mz_quality_meta_check <- function(input_mz_obj, meta){
 
   sample_diff <- nrow(meta) - ncol(dplyr::select(input_mz_obj, -mz))
   if ( sample_diff != 0){
-    error <- append(paste(sample_diff,": more meta samples than data ones.", sep=""),error)
+    error <- append(paste0(sample_diff,": more meta samples than data ones."),error)
   }
 
 
   if (length(error) > 0){
-    stop(paste("ERROR: MetaQuality: ", error, "\n", sep=""))
+    stop(paste0("ERROR: sumR::mz_quality_meta_check: ", error, "\n"))
   }
 }
 
@@ -139,4 +148,5 @@ mz_quality_magic <- function(input_mz_obj, meta, cores = 2){
   mz_quality_meta_check(input_mz_obj, meta)
   qc <- mz_quality_metrics(input_mz_obj, cores)
   mzmetrics_quality_plot_all(qc)
+  qc
 }

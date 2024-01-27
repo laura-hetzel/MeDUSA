@@ -51,7 +51,7 @@ mz_pp_imputation <- function(input_mz_obj, low_noise=10, high_noise=5000){
 #'reference is then used to calculate ratios at each m/z in every sample, and this
 #'ratio is the dilution factor that is applied.
 #'
-#'  - Requires: ggplot2, dplyr
+#'  - Requires: ggplot2, ggpubr, dplyr
 #'
 #' @param input_mz_obj \cr
 #'   DataFrame : Input MZ-Obj
@@ -62,8 +62,8 @@ mz_pp_imputation <- function(input_mz_obj, low_noise=10, high_noise=5000){
 #' @export
 mz_pp_normalization <- function(input_mz_obj, metadata, plot = TRUE ){
   #TODO revisit, for a refactor
-  #TODO ensure mz's are filtered out
-  normal <- quotNorm(t(input_mz_obj))
+  rownames(input_mz_obj) <- input_mz_obj$mz
+  normal <- quotNorm(t(select(input_mz_obj,-mz)))
   dilution <- data.frame(normal$dilution)
   dilution$sample <- rownames(dilution)
   join_by <- c('sample')
@@ -71,14 +71,20 @@ mz_pp_normalization <- function(input_mz_obj, metadata, plot = TRUE ){
   dilution <- dplyr::left_join(metadata, dilution, by = join_by)
 
   if(plot){
-    ggplot(dilution,
-           aes(x = phenotype, y = normal.dilution)) + geom_boxplot()
+    ggpubr::ggboxplot(dilution, x="phenotype", y="normal.dilution", 
+                      ylab.    = "Dilution Factor",
+                      xlab.    = "Phenotype",
+                      title    = "Normalized Dilution Factor per Phenotype",
+                      subtitle = local.mz_polarity_guesser(input_mz_obj),
+                      legend = "none")
+    
     local.save_plot(paste("Normalization",local.mz_polarity_guesser(input_mz_obj),sep="-"))
   }
-
   normal <- data.frame(normal$X)
   normal <- as.data.frame(t(normal))
-  rownames(normal) <- gsub("X", "",rownames(normal)) #TODO fix 'quotNorm' to not return mz = "X100.2"
+  normal <- cbind("mz" = gsub("X", "",rownames(normal)),normal) #TODO fix 'quotNorm' to not return mz = "X100.2"
+  rownames(normal) <- NULL
+  normal$mz <- as.numeric(normal$mz)
   normal
 }
 
@@ -86,7 +92,7 @@ mz_pp_normalization <- function(input_mz_obj, metadata, plot = TRUE ){
 #' MZ-OBJ Pivot Longer (Does not Log2)
 #'
 #' Not really sure what this does
-#'  - Requires: ggplot2, tidyr
+#'  - Requires: ggplot2, ggpubr, tidyr
 #'
 #' @param input_mz_obj \cr
 #'   DataFrame : Input MZ-Obj
@@ -100,13 +106,7 @@ mz_pp_pivot_longer <- function(input_mz_obj, plot = TRUE) {
   input_mzlong <- input_mz_obj %>%
     tidyr::pivot_longer(!mz, names_to = "sample_name", values_to = "intensity")
     if(plot){
-      ggplot(input_mzlong, aes(x = sample_name, y = intensity)) +
-        geom_boxplot() +
-        theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-        ggtitle(paste("Normalized, Filtered,",
-          local.mz_polarity_guesser(input_mz_obj)
-          , sep=""))
-      local.save_plot(paste("PivotLonger",local.mz_polarity_guesser(input_mz_obj),sep="-"))
+      mzlongpp.plot(input_mzlong, local.mz_polarity_guesser(input_mz_obj), "PivotLonger") 
     }
   data.frame(input_mzlong)
 }
@@ -165,10 +165,10 @@ mz_pp_magic <- function(input_mz_obj, metadata, noise = c(10,5000), plot = TRUE)
   })
   tryCatch({
     input_mzlong <- mzlong_pp_log_transform(input_mzlong, plot)
-    print("INFO: log_transform success")
+    print("INFO: mzlong_log_transform success")
   }, error = function(e) {
     print(e)
-    stop("ERROR: in mzl_pp_log_transform")
+    stop("ERROR: in mzlong_pp_log_transform")
   })
   out <- mz_pp_log(input_mz_obj)
   list("mzLong" = input_mzlong ,"mzLog" = out)

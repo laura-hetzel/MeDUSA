@@ -169,7 +169,7 @@ magic.polarity_loop <- function(files, polarity, cores, params){
   } else {
     mzT <- pbapply::pblapply(files,  function(x) mzml_extract_file(x, polarity, T, NULL, params))
   }
-  print(paste("INFO: mzml_extract_magic : Extraction of [",pol_eng,"] complete, now formatting data.",sep=""))
+  print(paste0("INFO: mzml_extract_magic : Extraction of [",pol_eng,"] complete, now formatting data."))
   #Useful for debugging
   #save(mzT, file = paste(Sys.Date(),"-mzT-preBin",pol_eng,".Rdata", sep=""))
   mzT

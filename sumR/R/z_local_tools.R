@@ -10,7 +10,7 @@ local.dir_sep <- function() {
 }
 
 local.output_dir <- function(){
-  paste("output", local.dir_sep() ,Sys.Date(), sep = "")
+  paste0("output", local.dir_sep() ,Sys.Date())
 }
 
 #Show zeros requres full mzobjs
@@ -19,9 +19,9 @@ local.mz_log_removed_rows <- function( in_mz, out_mz, method){
   mz_after <- nrow(as.data.frame(out_mz))
   mz_removed <- mz_before - mz_after
 
-  print(paste("INFO:", method, ": Before Rows  : ", mz_before, sep=""))
-  print(paste("INFO:", method, ": After Rows   : ", mz_after, sep=""))
-  print(paste("INFO:", method, ": Dropped Rows : ", mz_removed, sep=""))
+  print(paste0("INFO:", method, ": Before Rows  : ", mz_before))
+  print(paste0("INFO:", method, ": After Rows   : ", mz_after))
+  print(paste0("INFO:", method, ": Dropped Rows : ", mz_removed))
 }
 
 local.mz_polarity_guesser <- function(input, pos_return = "Positive", neg_return = "Negative"){
@@ -39,8 +39,11 @@ local.mz_polarity_guesser <- function(input, pos_return = "Positive", neg_return
   ret
 }
 
-local.save_plot <- function(plot_name, output_dir = local.output_dir()){
-  ggsave(paste(output_dir,local.dir_sep(),plot_name,".png",sep = ""))
+local.save_plot <- function(plot_name, output_dir = local.output_dir(), dim=c(8,8)){
+  ggplot2::ggsave(filename = paste0(output_dir,local.dir_sep(),plot_name,".png"),
+                  height = dim[1],
+                  width = dim[2]
+                  )
 }
 
 local.export_thread_env <- function(cores, env = environment()){
@@ -60,3 +63,23 @@ local.kill_threads <- function(cl = NULL){
            finally = {print("INFO: Killing threads. Often throws odd errors.")
                      suppressWarnings(try(closeAllConnections(),silent=TRUE))})
 }
+
+local.ensure_mz <- function(input_a, input_b, source){
+  if ( sum(c(colnames(input_a), colnames(input_b)) == "mz")) {
+    if ( sum(colnames(input_b) == "mz") ) {
+      mz <- input_b$mz
+      input_b <- dplyr::select(input_b, -mz)
+    }
+    if (sum(colnames(input_a) == "mz") ) {
+      mz <- input_a$mz
+      input_a <- dplyr::select(input_a, -mz)
+    }
+  } else {
+    stop(paste0("ERROR: ", source, ": neither input dataframes have column mz"))
+  }
+  list(mz   = as.data.frame(mz), 
+       df_a = as.data.frame(input_a), 
+       df_b = as.data.frame(input_b)) 
+}
+
+

@@ -76,7 +76,10 @@ file: zz_[description].R
   -2 lower dependencies (catools, tibble)
   -X config file (half-ish)
   - optional correlation RFs
-  - lipidmaps
-  - blanksubtraction, validation (need better data) ... clunky naming.
+  -Xlipidmaps
+  - lipidmaps search
+  - blanksubtraction, validation (need better data) ... 
+  -Xbetter pheno/blank filtering
   - handle meta neg/pos better
   - anova analysis
+  -X ggpubr

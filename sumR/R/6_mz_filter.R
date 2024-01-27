@@ -89,9 +89,9 @@ mz_filter_lowIntensity <- function(input_mz_obj, threshold, msg = ""){
 #' Dependencies : dplyr
 #' @return Returns an MZ-OBJ
 #' @export
-mz_filter_magic <- function(input_mz_obj, min_intensity, missingness_threshold=F, blacklist=T){
-  if( sum(blacklist)){
-    if (sum(blacklist) != T){
+mz_filter_magic <- function(input_mz_obj, min_intensity, missingness_threshold=F, blacklist=F){
+  if( blacklist != F ){
+    if ( blacklist != T){
       input_mz_obj <- mz_filter_blacklist(input_mz_obj, blacklist = blacklist)
     }else{
       input_mz_obj <- mz_filter_blacklist(input_mz_obj)

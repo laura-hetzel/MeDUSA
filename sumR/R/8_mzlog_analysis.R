@@ -30,11 +30,17 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() 
     as.data.frame %>%
     rownames_to_column("sample_phenotype") %>%
     separate(sample_phenotype, c("sample", "phenotype"), "&") %>%
-    ggplot(aes(x = PC1, y = PC2)) +
-    geom_point(aes(color = phenotype)) +
-    labs(x=paste0("PC1: ",round(var_explained[1]*100,1),"%"),
-         y=paste0("PC2: ",round(var_explained[2]*100,1),"%")) +
-    theme(legend.position="top")
+    
+    ggpubr::ggscatter(x = "PC1",y="PC2",
+                      title = paste("PCA: ", local.mz_polarity_guesser(input_mzlog_obj)),
+                      color ="phenotype",
+                      size  = 0.5,
+                      ellipse = TRUE, 
+                      mean.point = TRUE,
+                      mean.point.size = 2,
+                      xlab = paste0("PC1: ",round(var_explained[1]*100,1),"%"),
+                      ylab = paste0("PC2: ",round(var_explained[2]*100,1),"%"))
+                      
   local.save_plot(paste("PCA",local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
 }
 
@@ -44,12 +50,10 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() 
 #' Welch T-test, input should be an log2 of mz_obj
 #'  - Requires: dplyr
 #''
-#' @param input_mzlog_obj \cr
-#'   DataFrame : Log2 of Input MZ-Obj
-#' @param phenotype_a \cr
-#'   DataFrame: Filtered metadata for phenotypeA
-#' @param phenotype_b \cr
-#'   DataFrame: Filtered metadata for phenotypeB
+#' @param phenoA_mz_obj \cr
+#'   DataFrame: mz_obj of phenoA samples
+#' @param phenoB_mz_obj \cr
+#'   DataFrame: mz_obj of phenoB samples
 #' @param adjust_method \cr
 #'   String: How to p.adjust?
 #'   Boolean: False = no adjustment ; True = "fdr"
@@ -58,12 +62,9 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() 
 #' @examples
 #' To t.test values from "phenoA" over "phenoB"
 #'
-#' phenotype_a <- filter(metadata, phenotype == "phenoA" &
-#'                       ionmode == ionmode_val & phase == phase_val &
-#'                       filtered_out == "no")
-#' phenotype_b <- filter(metadata, phenotype == "phenoB &
-#'                       ionmode == ionmode_val  & phase == phase_val &
-#'                       filtered_out == "no")
+#' phenoA_mz_obj  <- sumR::mztools_filter(input_mzObj,metadata,"phenoA")
+#' phenoB_mz_obj  <- sumR::mztools_filter(input_mzObj,metadata,"phenoB")
+#'
 #' @param cores
 #'   Integer: Can I has multithreading? (Need parallel)
 #'
@@ -76,26 +77,28 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() 
 #'  - adjusted: p.adjust($p, adjust_method) *optional, but default
 #'
 #' @export
-mzlog_analysis_welch <- function(input_mzlog_obj, phenotype_a, phenotype_b, adjust = 'fdr', cores = 2){
-  phenotype_a <- phenotype_a
+mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', cores = 2){
+  df_l <- local.ensure_mz(phenoA_mz_obj,phenoB_mz_obj, "sumR::mzlog_analysis_welch")
+  
+  
   cl <- local.export_thread_env(cores, environment())
   tryCatch({
-    out <- data.frame(p    = rep(Inf, nrow(input_mzlog_obj)),
-                      p_05 = rep(FALSE, nrow(input_mzlog_obj)),
-                      p_10 = rep(FALSE, nrow(input_mzlog_obj)),
-                      p_15 = rep(FALSE, nrow(input_mzlog_obj)),
-                      row.names = input_mzlog_obj$mz)
+    out <- data.frame(p    = rep(Inf, nrowdf_l$mz),
+                      p_05 = rep(FALSE, nrow(df_l$mz)),
+                      p_10 = rep(FALSE, nrow(df_l$mz)),
+                      p_15 = rep(FALSE, nrow(df_l$mz)),
+                      row.names = df_l$mz)
 
     out$p <- pbapply::pbapply(input_mzlog_obj,1 , cl = cl, function(i){
-        t.test(dplyr::select(input_mzlog_obj[i,], phenotype_a$sample_name),
-               dplyr::select(input_mzlog_obj[i,], phenotype_b$sample_name))$p.value
+        t.test(df_l$df_a[i,],
+               df_l$df_b[i,])$p.value
     })
 
     out$p_05 <- out$p < 0.05
     out$p_10 <- out$p < 0.10
     out$p_15 <- out$p < 0.15
     out <- tibble::rownames_to_column(out, "mz")
-    out$mz <- as.numeric(out$mz)
+    out$mz <- as.numeric(df_l$mz)
     return(out)
   },
   finally={
@@ -118,34 +121,29 @@ mzlog_analysis_welch <- function(input_mzlog_obj, phenotype_a, phenotype_b, adju
 #'
 #' Compare two phenotypes
 #'
-#' @param input_mzlog_obj \cr
-#'   DataFrame : Log2 of Input MZ-Obj
-#' @param phenotype_a \cr
-#'   DataFrame: Filtered metadata for phenotypeA
-#' @param phenotype_b \cr
-#'   DataFrame: Filtered metadata for phenotypeB
+#' @param phenoA_mz_obj \cr
+#'   DataFrame: mz_obj of phenoA samples
+#' @param phenoB_mz_obj \cr
+#'   DataFrame: mz_obj of phenoB samples
+#' @param fold_math
+#'   Method: How to combine Phenotype intensities
 #'
 #' @examples
 #' To fold values from "phenoA" over "phenoB"
 #'
-#' phenotype_a <- filter(metadata, phenotype == "phenoA" &
-#'                       ionmode == ionmode_val & phase == phase_val &
-#'                       filtered_out == "no")
-#' phenotype_b <- filter(metadata, phenotype == "phenoB &
-#'                       ionmode == ionmode_val  & phase == phase_val &
-#'                       filtered_out == "no")
-#' @param fold_math
-#'   Method: How to combine Phenotype intensities
+#' phenoA_mz_obj  <- sumR::mztools_filter(input_mzObj,metadata,"phenoA")
+#' phenoB_mz_obj  <- sumR::mztools_filter(input_mzObj,metadata,"phenoB")
 #'
 #' @returns DataFrame with columns:
 #'  - mz   : Float
 #'  - fold : Float
-#'
+#'#'
+
 #' @export
-mzlog_analysis_fold <- function(input_mzlog_obj, phenotype_a, phenotype_b, fold_math = "mean"){
-  pheno_a <- input_mzlog_obj[,phenotype_a$sample_name]
-  pheno_b <- input_mzlog_obj[,phenotype_b$sample_name]
-  input_mzlog_obj$fold <- (apply(pheno_a, 1, fold_math) /
-                           apply(pheno_b, 1, fold_math))
-  return(dplyr::select(input_mzlog_obj, mz,fold))
+mzlog_analysis_fold <- function(phenoA_mz_obj, phenoB_mz_obj, fold_math = "mean"){
+  df_l <- local.ensure_mz(phenoA_mz_obj,phenoB_mz_obj, "sumR::mzlog_analysis_fold")
+  out <- df_l$mz
+  out$fold <- (apply(df_l$df_a, 1, fold_math) /
+               apply(df_l$df_b, 1, fold_math))
+  return(out)
 }
