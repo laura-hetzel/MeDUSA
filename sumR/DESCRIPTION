@@ -1,9 +1,10 @@
 Package: sumR
-Title: What the Package Does (One Line, Title Case)
+Title: Metabolomic Analysis of Single-cell Direct-injection in R
 Version: 0.0.0.9000
 Authors@R:
-    person("Eric", "Hetzel", , "ericmhetzel@gmail.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+    c(person(given = "Laura", family = "Hetzel", email = "l.a.hetzel@lacdr.leidenuniv.nl", role = c("aut"),
+           comment = c(ORCID = "TODO")),
+      person(given = "Eric", family = "Hetzel", email = "ericmhetzel@gmail.com", role = c("aut", "cre")))
 Description: What the package does (one paragraph).
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
@@ -15,6 +16,7 @@ Depends:
     caret,
     dplyr,
     ggplot2,
+    ggpubr,
     mzR,
     parallel,
     pheatmap,

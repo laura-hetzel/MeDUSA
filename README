@@ -82,4 +82,5 @@ file: zz_[description].R
   -Xbetter pheno/blank filtering
   - handle meta neg/pos better
   - anova analysis
+  - finish tests
   -X ggpubr

@@ -17,3 +17,12 @@ test_that("identfy_hmdb: with custom adducts", {
   actual <- identify_hmdb(mz,ad)
 	expect_identical(actual, hmdb_filtered)
 })
+
+
+test_that("identfy_lipids: with default adduct(H)", {
+  mz <- c(872.5805,501.2620)
+  load("../test_data/asserts/lipid_filtered.Rdata")
+  actual <-identify_lipids(mz)
+  actual <- identify_hmdb(mz,ad)
+	expect_identical(actual, lipid_filtered)
+})
