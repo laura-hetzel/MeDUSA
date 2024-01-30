@@ -29,10 +29,11 @@ RUN R -e 'remotes::install_version("readxl",   version = "1.4.3")'
 RUN R -e 'remotes::install_version("testthat", version = "3.2.0")'
 
 
-FROM package_base
+FROM package_base AS db_base
 COPY db_massager.sh db_massager.sh
 RUN sh db_massager.sh
 
+FROM db_base
 COPY sumR sumR
 WORKDIR sumR
 

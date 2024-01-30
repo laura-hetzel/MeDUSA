@@ -61,6 +61,7 @@ mz_pp_imputation <- function(input_mz_obj, low_noise=10, high_noise=5000){
 #' @returns Returns an MZ-OBJ
 #' @export
 mz_pp_normalization <- function(input_mz_obj, metadata, plot = TRUE ){
+  metadata <- local.meta_polarity_fixer(input_mz_obj, metadata)
   #TODO revisit, for a refactor
   rownames(input_mz_obj) <- input_mz_obj$mz
   normal <- quotNorm(t(select(input_mz_obj,-mz)))

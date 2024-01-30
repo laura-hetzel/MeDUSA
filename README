@@ -75,12 +75,12 @@ file: zz_[description].R
   -X unitTests
   -2 lower dependencies (catools, tibble)
   -X config file (half-ish)
-  - optional correlation RFs
+  - optional correlation RFs (cor() is optional?)
   -Xlipidmaps
-  - lipidmaps search
+  -Xlipidmaps search
   - blanksubtraction, validation (need better data) ... 
   -Xbetter pheno/blank filtering
-  - handle meta neg/pos better
+  -Xhandle meta neg/pos better
   - anova analysis
   - finish tests
   -X ggpubr

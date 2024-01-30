@@ -26,15 +26,14 @@
 #
 #' @export
 mz_subtraction <- function(sample_mz_obj, subtract_mz_obj , method = mean, threshold = 3) {
-  df_l <- local.ensure_mz(sample_mz_obj,subtract_mz_obj, "sumR::mz_subtraction")
-
+  df_l <- local.ensure_mz(sample_mz_obj, subtract_mz_obj, "sumR::mz_subtraction")
   df_l$df_b["threshold"] <- apply(df_l$df_b, 1, method) * threshold
 
   .applyer <- function(input_mz_obj, compare = df_l$df_b["threshold"]){
     (input_mz_obj > compare) * input_mz_obj
   }
   df_sample <- as.data.frame(sapply(df_l$df_a, .applyer))
-  df_sample$mz <- df_l$mz
+  df_sample <- cbind(df_l$mz, df_sample)
   out_mz <- df_sample[rowSums(dplyr::select(df_sample,-mz)) > 0,]
   local.mz_log_removed_rows(df_l$df_a,out_mz,"sumR::mz_subtraction")
   out_mz

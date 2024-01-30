@@ -39,6 +39,12 @@ local.mz_polarity_guesser <- function(input, pos_return = "Positive", neg_return
   ret
 }
 
+local.meta_polarity_fixer <- function(input_mz, meta){
+  prepend <- local.mz_polarity_guesser(input_mz, pos_return = "pos", neg_return = "neg")
+  meta$sample_name <- paste(prepend, meta$sample_name, sep="_")
+  meta
+}
+
 local.save_plot <- function(plot_name, output_dir = local.output_dir(), dim=c(8,8)){
   ggplot2::ggsave(filename = paste0(output_dir,local.dir_sep(),plot_name,".png"),
                   height = dim[1],
@@ -65,6 +71,9 @@ local.kill_threads <- function(cl = NULL){
 }
 
 local.ensure_mz <- function(input_a, input_b, source){
+  if (nrow(input_a) != nrow(input_b)){
+    stop(paste0("ERROR: ", source, ": Dataframes have a different number of mz"))
+  }
   if ( sum(c(colnames(input_a), colnames(input_b)) == "mz")) {
     if ( sum(colnames(input_b) == "mz") ) {
       mz <- input_b$mz

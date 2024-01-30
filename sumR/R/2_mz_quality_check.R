@@ -99,6 +99,7 @@ mzmetrics_quality_plot <- function(mz_metrics, focus, title = F, plot_dim = c(8,
 #' Dependencies : dplyr
 #' @export
 mz_quality_meta_check <- function(input_mz_obj, meta){
+  meta <- local.meta_polarity_fixer(input_mz_obj, meta)
   .subset_check <- function( listA, listB, msg ){
     missing <- listA[!(listA %in% listB)]
     if( length(missing) > 0 ){

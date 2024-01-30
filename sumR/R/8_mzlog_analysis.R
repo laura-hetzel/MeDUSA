@@ -13,6 +13,7 @@
 #'
 #' @export
 mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() ) {
+  metadata <- local.meta_polarity_fixer(input_mzlog_obj,metadata)
   rownames(input_mzlog_obj) <- input_mzlog_obj$mz
   t_mz_obj <- scale(t(dplyr::select(input_mzlog_obj,-mz)))
   t_mz_obj <- t_mz_obj[!row.names(t_mz_obj) %in% sample_blacklist ,]
@@ -80,18 +81,16 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() 
 mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', cores = 2){
   df_l <- local.ensure_mz(phenoA_mz_obj,phenoB_mz_obj, "sumR::mzlog_analysis_welch")
   
-  
   cl <- local.export_thread_env(cores, environment())
   tryCatch({
-    out <- data.frame(p    = rep(Inf, nrowdf_l$mz),
+    out <- data.frame(p    = rep(Inf, nrow(df_l$mz)),
                       p_05 = rep(FALSE, nrow(df_l$mz)),
                       p_10 = rep(FALSE, nrow(df_l$mz)),
-                      p_15 = rep(FALSE, nrow(df_l$mz)),
-                      row.names = df_l$mz)
+                      p_15 = rep(FALSE, nrow(df_l$mz)))
 
-    out$p <- pbapply::pbapply(input_mzlog_obj,1 , cl = cl, function(i){
-        t.test(df_l$df_a[i,],
-               df_l$df_b[i,])$p.value
+    out$p <- pbapply::pbapply(df_l$mz, 1 , cl = cl, function(i){
+      t.test(df_l$df_a[df_l$mz==i,],
+             df_l$df_b[df_l$mz==i,])$p.value
     })
 
     out$p_05 <- out$p < 0.05
@@ -111,7 +110,7 @@ mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', c
     }
     out$adjusted <- as.data.frame(p.adjust(out$p), method = adjust_method)
   }
-  out$mz <- row.names(out)
+  #out$mz <- row.names(out)
   out
 }
 
