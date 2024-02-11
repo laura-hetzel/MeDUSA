@@ -23,6 +23,7 @@ RUN R -e 'remotes::install_version("caret",        version = "6.0-94")'
 RUN R -e 'remotes::install_version("caTools",      version = "1.18.2")'
 RUN R -e 'remotes::install_version("AICcmodavg",   version = "2.3-2")'
 RUN R -e 'remotes::install_version("ggpubr",       version = "0.6.0")'
+RUN R -e 'remotes::install_version("pROC",         version = "1.18.5")'
 
 #User Tools
 RUN R -e 'remotes::install_version("readxl",   version = "1.4.3")'
