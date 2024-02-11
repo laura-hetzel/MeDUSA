@@ -31,17 +31,17 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() 
     as.data.frame %>%
     rownames_to_column("sample_phenotype") %>%
     separate(sample_phenotype, c("sample", "phenotype"), "&") %>%
-    
+
     ggpubr::ggscatter(x = "PC1",y="PC2",
                       title = paste("PCA: ", local.mz_polarity_guesser(input_mzlog_obj)),
                       color ="phenotype",
                       size  = 0.5,
-                      ellipse = TRUE, 
+                      ellipse = TRUE,
                       mean.point = TRUE,
                       mean.point.size = 2,
                       xlab = paste0("PC1: ",round(var_explained[1]*100,1),"%"),
                       ylab = paste0("PC2: ",round(var_explained[2]*100,1),"%"))
-                      
+
   local.save_plot(paste("PCA",local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
 }
 
@@ -80,7 +80,7 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() 
 #' @export
 mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', cores = 2){
   df_l <- local.ensure_mz(phenoA_mz_obj,phenoB_mz_obj, "sumR::mzlog_analysis_welch")
-  
+
   cl <- local.export_thread_env(cores, environment())
   tryCatch({
     out <- data.frame(p    = rep(Inf, nrow(df_l$mz)),
@@ -96,9 +96,7 @@ mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', c
     out$p_05 <- out$p < 0.05
     out$p_10 <- out$p < 0.10
     out$p_15 <- out$p < 0.15
-    out <- tibble::rownames_to_column(out, "mz")
-    out$mz <- as.numeric(df_l$mz)
-    return(out)
+    return(cbind(df_l$mz, out))
   },
   finally={
     local.kill_threads(cl)
@@ -110,7 +108,6 @@ mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', c
     }
     out$adjusted <- as.data.frame(p.adjust(out$p), method = adjust_method)
   }
-  #out$mz <- row.names(out)
   out
 }
 

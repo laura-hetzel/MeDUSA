@@ -26,3 +26,7 @@ test_that("identfy_lipids: with default adduct(H)", {
   actual <- identify_hmdb(mz,ad)
 	expect_identical(actual, lipid_filtered)
 })
+
+# ============
+# identify_lipids(mzs, adducts, hmdb_file)
+# ============
