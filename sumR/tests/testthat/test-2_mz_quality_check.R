@@ -8,7 +8,6 @@ test_that("mz_quality_metrics: ", {
 	expect_identical(actual, quality_check)
 })
 
-
 # ============
 # mz_quality_meta_check(input_mz_obj, meta)
 # ============

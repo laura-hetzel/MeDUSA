@@ -15,10 +15,14 @@
 #' Dependencies :dplyr
 #' @return Returns an MZ-OBJ
 #' @export
-mz_filter_blacklist <- function( input_mz_obj, tolerance = 5e-6,
-                        blacklist = sprintf("%s/../default_inputs/mz_blacklist.csv",getSrcDirectory(mz_tagging_blacklist))){
+mz_filter_blacklist <- function( input_mz_obj,
+                                 blacklist = sprintf("%s/../default_inputs/mz_blacklist.csv",getSrcDirectory(mz_tagging_blacklist)),
+                                 tolerance = 5e-6){
   if ( class(blacklist) == "character"){
     blacklist <- read.csv(blacklist)$mass
+  }
+  if (sum( blacklist < 0 ) > 0){
+    stop("ERROR: sumR::mz_filter_blacklist. Blacklist cannot have negative values.")
   }
   bool_list <- lapply(blacklist, function(x){abs(input_mz_obj$mz - x)/x > tolerance})
   out_mz <- input_mz_obj[as.logical(Reduce("*",bool_list)),]
