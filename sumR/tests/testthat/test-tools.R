@@ -38,6 +38,10 @@ test_that("mztools_filter: Drop MZ column", {
 
 test_that("mztools_filter: Filter By Custom Column", {
   load("../test_data/mz_neg.Rdata")
+  meta_csv <- read.csv("../test_data/meta_neg.csv")
+  load("../test_data/asserts/mztools_custom_filter.Rdata")
+  actual <- mztools_filter(mz_neg, meta_csv, 22, filter_name = "time")
+  expect_identical(actual, mztools_custom_filter)
 })
 
 test_that("mztools_filter: [negative tests]", {
