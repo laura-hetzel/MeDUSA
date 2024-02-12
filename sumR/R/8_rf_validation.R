@@ -3,7 +3,7 @@
 #' Train you model data within a mzLog_obj
 #'
 #' @param rf_obj \cr
-#'   List : from mzlog_rf: list(model, test, train)
+#'   List : from mzlog_rf: list(model, test, train):  Expects "phenotype"
 #' @param mtry_seed \cr
 #'   List: which seed to use.
 #' @param cores \cr
@@ -11,7 +11,7 @@
 #'
 #'
 #' @export
-rf_validate <- function(rf_obj, attribute = "phenotype", mtry_range = c(1:200), mtry_seed = 1984){
+rf_validate <- function(rf_obj, mtry_range = c(1:200), mtry_seed = 1984){
   pred_train <- rf.predict(rf_obj$model, rf_obj$train)
   pred_test <- rf.predict(rf_obj$model, rf_obj$test)
   results <- as.data.frame(cbind("actual" = rf_obj$test$phenotype,
@@ -37,7 +37,7 @@ rf_validate <- function(rf_obj, attribute = "phenotype", mtry_range = c(1:200), 
 #' Train you model data within a mzLog_obj
 #'
 #' @param rf_obj \cr
-#'   List : from mzlog_rf: list(model, test, train)
+#'   List : from mzlog_rf: list(model, test, train): Expects "phenotype"
 #' @param mtry_seed \cr
 #'   List: which seed to use.
 #' @param cores \cr
@@ -45,7 +45,7 @@ rf_validate <- function(rf_obj, attribute = "phenotype", mtry_range = c(1:200), 
 #'
 #'
 #' @export
-rf_permuted <- function(rf_obj, attribute = "phenotype", seed = 105.9){
+rf_permuted <- function(rf_obj, seed = 105.9){
   permuted <- cbind(rf_obj$train, rf_obj$test)
   attr <- as.vector(unique(permuted$phenotype))
   set.seed(seed)

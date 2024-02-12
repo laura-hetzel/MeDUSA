@@ -19,7 +19,7 @@ sed -z   's,> <EXACT_MASS>\n,SUMR_EM:,g' /usr/lipids.sdf | \
 
 sed -i 's/,/-/g' lipids_simple.tmp
 egrep "SUMR_EM.*|SUMR_ID.*|SUMR_NAME.*" lipids_simple.tmp > lipids_simple1.tmp
-echo "LM_ID, EXACT_MASS" > /home/rstudio/lipids_simple.csv
+echo "IDENTITY, EXACT_MASS" > /home/rstudio/lipids_simple.csv
 sed -z 's/SUMR_ID://g' lipids_simple1.tmp | \
   sed -z 's/\nSUMR_EM:/, /g' >> /home/rstudio/lipids_simple.csv
   #sed -z 's/\nSUMR_NAME:/, /g' | \
