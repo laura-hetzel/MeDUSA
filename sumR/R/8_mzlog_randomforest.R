@@ -29,16 +29,17 @@ mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
 #' @returns caret::rfe object
 #'
 #' @export
-mzlog_rf_select <- function(correlation_data, metadata, attribute = "phenotype", feat_size_seq = seq(50,1000, by=50), plot = T) {
+mzlog_rf_select <- function(correlation_data, metadata, feat_size_seq = seq(50,1000, by=50), plot = T) {
   metadata <- local.meta_polarity_fixer(correlation_data, metadata)
-  data <- dplyr::left_join(correlation_data, meta[c("sample_name", attribute)], by="sample_name")
-  att <- as.factor(data[[attribute]])
+  data <- dplyr::left_join(correlation_data, metadata[c("sample_name", "phenotype")], by="sample_name")
+  att <- as.factor(data$phenotype)
   control <- caret::rfeControl( functions = caret::rfFuncs,
                                 method = "repeatedcv",
                                 repeats = 5,
                                 number = 10)
-
-  feat_select <- caret::rfe(dplyr::select(data, -sample_name, -attribute),
+                                
+  print("INFO: caret::rfe() is time and resource heavy on large data sets")
+  feat_select <- caret::rfe(dplyr::select(data, -sample_name, -phenotype),
                             att,
                             rfeControl = control,
                             sizes = feat_size_seq )
@@ -104,8 +105,8 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
   master_split <- rf.seed_splitter(data_t,master_seeds[1],ratio)
 
   #TODO, better manage variables among threads
-  rf_vars <- list("master_split" = master_split, "ratio" = ratio,
-                  "rf_trees" = rf_trees, "pol" = pol,
+  rf_vars <- list("master_split" = master_split,
+                  "rf_trees" = rf_trees, "pol" = pol, "ratio" = ratio,
                   "mtry"= mtry, "tunegrid" = tunegrid, "control" = control)
 
   cl <- local.export_thread_env(cores, environment())
@@ -116,8 +117,8 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
   }, finally={
     local.kill_threads(cl)
   })
-  out
-
+  out <- out[order(-out$Overall),]
+  out = out[!duplicated(out$mz),]
   ##Validate
   train <- rf.transpose_massager(master_split$train)
   test <- rf.transpose_massager(master_split$test)
@@ -146,21 +147,20 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
     varImpPlot(model, col = "Blue", pch = 2, main = paste("Important Variables ",pol))
     local.save_plot(paste0("rf_varImp_",pol))
     pheno <- as.vector(unique(master_split$train$phenotype))
-    ggplot(mds_xxdata, aes(x = x, y = y, label = Sample)) +
+    ggplot(mds_data, aes(x = x, y = y, label = Sample)) +
       geom_point(aes(color = Phenotype), size = 3) +
       theme_classic() +
       theme(legend.position = "bottom",) +
       theme(text = element_text(size = 18)) +
-      xlab(paste("MDS1 - ", mds_var_neg[1], "%", sep = "")) +
-      ylab(paste("MDS2 - ", mds_var_neg[2], "%", sep = "")) +
+      xlab(paste("MDS1 - ", mds_var[1], "%", sep = "")) +
+      ylab(paste("MDS2 - ", mds_var[2], "%", sep = "")) +
       scale_color_manual(breaks = pheno,
                          values = c("red4", "deepskyblue2")) +
       ggtitle(paste0("MDS plot ", pol," using random forest proximities"))
       local.save_plot(paste0("rf_mds_",pol))
-
   }
 
-  list( model = model, test = master_split$test, train = master_split$train )
+  list( model = model, test = master_split$test, train = master_split$train, imp_mz = out )
 }
 
 
@@ -186,26 +186,22 @@ rf.seed_splitter <- function(data, seed, ratio){
 
 rf.run_train <- function( seed, rf_vars){
   #Split
-  split <- rf.seed_splitter(rf_vars$master_split$train, rf_vars$phenotype, seed, rf_vars$ratio)
-  #TODO Dumb workaround to make "as.factor()" work: (it doesn't like parameters)
-  tmp <- split$train
-  colnames(tmp)[colnames(tmp) == "phenotype"] <- "factor"
+  split <- rf.seed_splitter(rf_vars$master_split$train, seed, rf_vars$ratio)
   #Train
-  rf_fit <- caret::train( as.factor(factor) ~.,
-                   data = tmp,
+  rf_fit <- caret::train( as.factor(phenotype) ~.,
+                   data =  split$train,
                    method = 'rf',
                    tuneGrid = rf_vars$tunegrid,
                    trControl = rf_vars$control,
                    ntree = rf_vars$rf_trees ,
                    na.action = na.exclude)
-
-  rf_pred <- predict(rf_fit, split$train$phenotype )
+  rf_pred <- predict(rf_fit, split$test )
   acc <- caret::confusionMatrix(rf_pred, as.factor(split$test$phenotype))$overall
-  roc <- pROC::roc(tmp$phenotype, rf_pred)
+  roc <- pROC::roc(as.numeric(split$test$phenotype), as.numeric(rf_pred))
   auc <- pROC::auc(roc)
-  plot(roc, col = "Red", main = paste0("Fold_",pol,"_", seed),
-       sub = paste0("Acc:",acc," AUC:", as.character(round(auc, 3))))
-  local.save_plot(paste0("rf_train_",seed))
+  plot(roc, col = "Red", main = paste0(pol,"_RF_ROC Seed: ", seed),
+       sub = paste0("Acc:",acc["Accuracy"]," AUC:", as.character(round(auc, 3))))
+  local.save_plot(paste0(pol,"_RF_ROC_Seed_", seed))
 
   imp <- caret::varImp(rf_fit)$importance
   imp <- tibble::rownames_to_column(imp, "mz")

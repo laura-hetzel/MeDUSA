@@ -73,7 +73,7 @@ file: zz_[description].R
   -X mass defect windows debugging
   -X alignment fix
   -X unitTests capability
-  - unitTests content
+  -L unitTests content
   -2 lower dependencies (catools, tibble)
   -X config file (half-ish)
   -2 optional correlation RFs (cor() is optional?)
@@ -86,3 +86,5 @@ file: zz_[description].R
   - anova analysis
   -X ggpubr
   -2 reparameterize phenotype in randomforest
+  -L fill out commoon adducts
+  -L method descriptions
