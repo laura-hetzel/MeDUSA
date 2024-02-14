@@ -64,7 +64,7 @@ rf_permuted <- function(rf_obj, pol, seed = 105.9, plot = T){
 
   plot(roc_permuted, col = "Red", main = paste0(pol,"_RF_ROC Permuted"),
        sub = paste0("Acc:",pred_permuted$cm$overall["Accuracy"]," AUC:", as.character(round(auc_permuted, 3))))
-  local.save_plot(paste0(pol,"_RF_ROC Permuted"))
+  local.save_plot(paste0("randomForest_ROC_Permuted_",pol))
 
 
   list(permuted_confusionMatrix <- pred_permuted$cm)

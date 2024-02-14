@@ -5,7 +5,7 @@
 #'
 #' @export
 mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
-  print("INFO: cor() is time and resource heavy on large data sets")
+  print("INFO: cor() can be time and resource heavy on large data sets")
   data <- data.frame(t(dplyr::select(input_mzlog_obj,-mz)))
   high_cor_data <- caret::findCorrelation(cor(data), cutoff = correlation_cutoff)
   print(paste("INFO:mzlog_prep: ", length(high_cor_data)," of ", ncol(data) ," MZs are highly correlated ", sep=""))
@@ -113,7 +113,6 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
   tryCatch({
     out <- pbapply::pblapply(seeds, cl=cl, rf.run_train, rf_vars = rf_vars)
     out <- do.call(rbind,out)
-    #plot ImpVars
   }, finally={
     local.kill_threads(cl)
   })
@@ -124,7 +123,7 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
   test <- rf.transpose_massager(master_split$test)
 
   set.seed(master_seeds[2])
-  model <- randomForest(x = master_split$train[-1],
+  model <- randomForest(x = select(master_split$train, -phenotype),
                         y = master_split$train$phenotype,
                         data = master_split$train,
                         ntree = rf_trees,
@@ -141,11 +140,16 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
                              y = mds_values[,2],
                              Phenotype = master_split$train$phenotype)
   if(plot){
-    plot(model)
-    local.save_plot(paste0("rf_model_",pol))
-
-    varImpPlot(model, col = "Blue", pch = 2, main = paste("Important Variables ",pol))
-    local.save_plot(paste0("rf_varImp_",pol))
+    tmp <- as.data.frame(model$err.rate)
+    tmp$tree <- c(1:nrow(tmp))
+    tmp <- tidyr::pivot_longer(tmp, !tree )
+    ggpubr::ggline(tmp,x="tree",y="value", shape = "", line = "name", title=paste0("RandomForest Error: ",pol))
+    local.save_plot(paste0("rf_error_", pol))
+    
+    png(paste0(local.output_dir(),local.dir_sep(),"Important_Variables_",pol,".png"))
+    varImpPlot(model, col = "Blue", pch = 2, main = paste("Important Variables ", pol))
+    dev.off()
+    
     pheno <- as.vector(unique(master_split$train$phenotype))
     ggplot(mds_data, aes(x = x, y = y, label = Sample)) +
       geom_point(aes(color = Phenotype), size = 3) +
@@ -157,12 +161,62 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
       scale_color_manual(breaks = pheno,
                          values = c("red4", "deepskyblue2")) +
       ggtitle(paste0("MDS plot ", pol," using random forest proximities"))
-      local.save_plot(paste0("rf_mds_",pol))
+      local.save_plot(paste0("randomForest_mds_",pol))
   }
 
   list( model = model, test = master_split$test, train = master_split$train, imp_mz = out )
 }
 
+# *** RandomForest Correlation -----------------------------------------------------
+#' Find Correlation data within a mzLog_obj
+#'
+#' @param mzlog_obj \cr
+#'   DataFrame : mzlog : expects "phenotype"
+#' @param metadata \cr
+#'   DataFrame: metadata object
+#' @param polarity \cr
+#'   Character: "pos" | "neg"
+#' @returns List of important mz
+#'
+#' @export
+mzlog_rf_magic <- function(input_mzlog_obj, metadata, polarity){
+  tryCatch({
+    rf_cor <- mzlog_rf_correlation(input_mzlog_obj)
+    print("INFO: Correlation success")
+  }, error = function(e) {
+    print(e)
+    stop("ERROR: in mzlog_rf_correlation")
+  })
+  tryCatch({
+    rf_sel <- mzlog_rf_select(rf_cor, metadata)
+    print("INFO: Feature Select success")
+  }, error = function(e) {
+    print(e)
+    stop("ERROR: in mzlog_rf_select")
+  })
+  tryCatch({
+    rf_obj <- mzlog_rf(input_mzlog_obj, metadata, rfe_obj = rf_sel )
+    print("INFO: RandomForest success")
+  }, error = function(e) {
+    print(e)
+    stop("ERROR: in mzlog_rf")
+  })
+  tryCatch({
+    rf_validate <- rf_validate(rf_obj)
+    print("INFO: RF validation success")
+  }, error = function(e) {
+    print(e)
+    stop("ERROR: in rf_validate")
+  })
+  tryCatch({
+    rf_permuted <- rf_permuted(rf_obj, polarity)
+    print("INFO: RF permuted success")
+  }, error = function(e) {
+    print(e)
+    stop("ERROR: in rf_permuted")
+  })
+  rf_obj$imp_mz
+}
 
 rf.transpose_massager <- function(data){
   rand <- sample(1:nrow(data),nrow(data))
@@ -201,7 +255,7 @@ rf.run_train <- function( seed, rf_vars){
   auc <- pROC::auc(roc)
   plot(roc, col = "Red", main = paste0(pol,"_RF_ROC Seed: ", seed),
        sub = paste0("Acc:",acc["Accuracy"]," AUC:", as.character(round(auc, 3))))
-  local.save_plot(paste0(pol,"_RF_ROC_Seed_", seed))
+  local.save_plot(paste0("RF_ROC_",pol,"_", seed))
 
   imp <- caret::varImp(rf_fit)$importance
   imp <- tibble::rownames_to_column(imp, "mz")

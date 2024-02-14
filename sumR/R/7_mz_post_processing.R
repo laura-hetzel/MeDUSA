@@ -39,15 +39,15 @@ mz_pp_imputation <- function(input_mz_obj, low_noise=10, high_noise=5000){
 #' MZ-OBJ Normalization
 #'
 #' This function utilizes Probabilistic Quotient Normalization, or PQN, to limit
-#' the effects of general fluctuations and random effects on the results. In 
-#' single-cell measurements, this is important since the size of the cell as 
+#' the effects of general fluctuations and random effects on the results. In
+#' single-cell measurements, this is important since the size of the cell as
 #' well as the volume of media captured and measured with the cell are variable,
 #' thus impacting the overall dilution of the cellular material.
-#' 
-#' It is recommended to use PQN after samples and mz have been removed in the 
-#' standard filtering steps. 
-#' 
-#'The algorithm will choose one reference sample if one is not provided. This 
+#'
+#' It is recommended to use PQN after samples and mz have been removed in the
+#' standard filtering steps.
+#'
+#'The algorithm will choose one reference sample if one is not provided. This
 #'reference is then used to calculate ratios at each m/z in every sample, and this
 #'ratio is the dilution factor that is applied.
 #'
@@ -72,13 +72,13 @@ mz_pp_normalization <- function(input_mz_obj, metadata, plot = TRUE ){
   dilution <- dplyr::left_join(metadata, dilution, by = join_by)
 
   if(plot){
-    ggpubr::ggboxplot(dilution, x="phenotype", y="normal.dilution", 
+    ggpubr::ggboxplot(dilution, x="phenotype", y="normal.dilution",
                       ylab.    = "Dilution Factor",
                       xlab.    = "Phenotype",
                       title    = "Normalized Dilution Factor per Phenotype",
                       subtitle = local.mz_polarity_guesser(input_mz_obj),
                       legend = "none")
-    
+
     local.save_plot(paste("Normalization",local.mz_polarity_guesser(input_mz_obj),sep="-"))
   }
   normal <- data.frame(normal$X)
@@ -107,7 +107,7 @@ mz_pp_pivot_longer <- function(input_mz_obj, plot = TRUE) {
   input_mzlong <- input_mz_obj %>%
     tidyr::pivot_longer(!mz, names_to = "sample_name", values_to = "intensity")
     if(plot){
-      mzlongpp.plot(input_mzlong, local.mz_polarity_guesser(input_mz_obj), "PivotLonger") 
+      mzlongpp.plot(input_mzlong, local.mz_polarity_guesser(input_mz_obj), "PivotLonger")
     }
   data.frame(input_mzlong)
 }
