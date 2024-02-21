@@ -15,6 +15,7 @@
 #' Dependencies :dplyr
 #' @return Returns an MZ-OBJ
 #' @export
+#TODO why msg?
 mz_filter_blacklist <- function( input_mz_obj,
                                  blacklist = sprintf("%s/../default_inputs/mz_blacklist.csv",getSrcDirectory(mz_tagging_blacklist)),
                                  tolerance = 5e-6){
@@ -94,12 +95,12 @@ mz_filter_lowIntensity <- function(input_mz_obj, threshold, msg = ""){
 #' @return Returns an MZ-OBJ
 #' @export
 mz_filter_magic <- function(input_mz_obj, min_intensity, missingness_threshold=F, blacklist=F){
-  if( blacklist != F ){
-    if ( blacklist != T){
-      input_mz_obj <- mz_filter_blacklist(input_mz_obj, blacklist = blacklist)
-    }else{
+  if(is.logical(blacklist)){
+    if( blacklist != F ){
       input_mz_obj <- mz_filter_blacklist(input_mz_obj)
     }
+  } else {
+    input_mz_obj <- mz_filter_blacklist(input_mz_obj, blacklist=blacklist) 
   }
   if(hasArg(missingness_threshold)){
     input_mz_obj <- mz_filter_missingness(input_mz_obj, missingness_threshold)

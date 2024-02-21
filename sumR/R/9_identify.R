@@ -1,5 +1,5 @@
 # *** HMDB Identify -----------------------------------------------------
-#' MZLOG-OBJ PCA
+#' Identify a list of MZs in HMDB
 #'
 #' Not really sure
 #'  - Requires: ggplot2, tibble
@@ -38,7 +38,7 @@ identify_hmdb <- function( mzs, polarity, adducts = c("H"),hmdb_file = "/home/rs
 
 
 # *** Lipid Identify -----------------------------------------------------
-#' MZLOG-OBJ PCA
+#' Identify Lipids from a list of MZs
 #'
 #' Not really sure
 #'  - Requires: ggplot2, tibble
@@ -54,11 +54,11 @@ identify_hmdb <- function( mzs, polarity, adducts = c("H"),hmdb_file = "/home/rs
 #'
 #' @export
 identify_lipids <- function( mzs, adducts = c("H"), polarity, lipids_file = "/home/rstudio/lipids_simple.csv", tolerance = 5e-6) {
-  identify_from_csv(mzs, adducts, csv_file = lipids_file, tolerance)
+  identify_from_csv(mzs, adducts, csv_file = lipids_file, mz_colname = "EXACT_MASS", tolerance)
 }
 
 # *** Identify from csv-----------------------------------------------------
-#' MZLOG-OBJ PCA
+#' Identify a list of MZs in a CSV
 #'
 #' Not really sure
 #'  - Requires: ggplot2, tibble
@@ -73,20 +73,20 @@ identify_lipids <- function( mzs, adducts = c("H"), polarity, lipids_file = "/ho
 #'           DockerLocation: /home/rstudio/local/lipids_simple.csv
 #'
 #' @export
-identify_from_csv <- function( mzs, polarity, adducts = c("H") , csv_file, tolerance = 5e-6) {
+identify_from_csv <- function( mzs, polarity, adducts = c("H") , csv_file, mz_colname, tolerance = 5e-6) {
   adducts <- .identify_adducts(adducts, "identify_lipids")
 
   if (grepl("Rdata$",csv_file)){
     load(csv_file)
   } else {
     csv_file <- readr::read_csv(csv_file)
-    csv_file$EXACT_MASS <- as.numeric(csv_file$EXACT_MASS)
-    csv_file <- csv_file[!is.na(csv_file$EXACT_MASS),]
+    csv_file[[mz_colname]] <- as.numeric(csv_file[[mz_colname]])
+    csv_file <- csv_file[!is.na(csv_file[[mz_colname]]),]
   }
   mz_expanded = .identify_adduct_math(mz_expanded, adducts, polarity)
   cl <- local.export_thread_env(2,environment())
   out <- lapply(mz_expanded, function(x) 
-    csv_file[abs(csv_file$EXACT_MASS - x)/x < tolerance ,]
+    csv_file[abs(csv_file[[mz_colname]] - x)/x < tolerance ,]
   )
   local.kill_threads(cl)
   do.call(rbind,out)
