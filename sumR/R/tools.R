@@ -32,3 +32,49 @@ mztools_filter <- function(input_mzobj, metadata, filter_value , filter_name = "
 }
 
 
+# *** Get Default Data-----------------------------------------------------
+#' Show list of default values:
+#'    Available Adducts & masses
+#'    Default Blacklist & masses
+#'
+#' @param type \cr
+#'   Character : 'adduct' or 'blacklist'
+#'
+#' @returns dataframe( [adduct]name: Character,
+#'                     [adduct]value: Numeric ) 
+#'
+#' @export
+get_default_data <- function(type){
+  if( type == 'adducts'){
+    data_list <- list(
+      c( "M+H",   -1.0008   ),
+      c( "M-H",   +1.0008   ),
+      c( "M+NH4", -14.0067  ),
+      c( "2M+H",  -0.5004   ),
+      c( "2M-H",  +0.5004   ),
+      c( "M+Na",  -22.990   ),
+      c( "M+Cu",  -63.546   ),
+      c( "2M+Na", -11.4950  ),
+      c( "2M+Cu", -31.773   ),
+      c( "3M+Na", -7.663333 ),
+      c( "CN-",   +16.018   ),
+      c( "HCOO-", +46.0254  ),
+      c( "M+FormicAcid+H", -47.0262 ),
+      c( "M+DimethylFormamide+H", -74.0946 )
+    )
+  } else if (type == 'blacklist') {
+    data_list <- list(
+      c("dolphin", 50.123),
+      c("whale",   51.321),
+      c("narwhal", 100.000)
+    )
+  } else {
+    stop("ERROR: sumR::get_default_values: Could not guess positive or negative from colnames")
+  }
+  out <- data.frame(name = character(), value = numeric())
+  for(x in 1:length(data_list)){
+    out <- tibble::add_row(out, name=data_list[[x]][1], value=as.numeric(data_list[[x]][2]))
+  }
+  out
+}
+

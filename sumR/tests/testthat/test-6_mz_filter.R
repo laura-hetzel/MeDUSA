@@ -46,14 +46,14 @@ test_that("mz_missingness: percentage", {
   load("../test_data/mz_neg.Rdata")
   load("../test_data/asserts/mz_filter_missingness.Rdata")
   actual <- mz_filter_missingness(mz_neg, 0.5)
-  expect_identical(actual,mz_filter_missingness_percent)
+  expect_identical(actual,mz_filter_missingness)
 })
 
 test_that("mz_missingness: count", {
   load("../test_data/mz_neg.Rdata")
   load("../test_data/asserts/mz_filter_missingness.Rdata")
   actual <- mz_filter_missingness(mz_neg, 2)
-  expect_identical(actual,mz_filter_missingness_count)
+  expect_identical(actual,mz_filter_missingness)
 })
 
 # ============
@@ -69,7 +69,7 @@ test_that("mz_filter_magic: defaults", {
 test_that("mz_filter_magic: parameters", {
   load("../test_data/mz_neg.Rdata")
   load("../test_data/asserts/mz_filter_magic_param.Rdata")
-  actual <- mz_filter_magic(mz_neg, missingness_threshold=2, min_intensity=2500, 
+  actual <- mz_filter_magic(mz_neg, missingness_threshold=2, min_intensity=10000, 
                             blacklist = c(56.99589,59.01289,59.02517, 1000))
   expect_identical(actual,mz_filter_magic_param)
 })

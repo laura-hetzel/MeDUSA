@@ -16,7 +16,7 @@
 #'           DockerLocation: /home/rstudio/local/hmdb_simple.xml
 #'
 #' @export
-identify_hmdb <- function( mzs, polarity, adducts = c("H"),hmdb_file = "/home/rstudio/hmdb_xml.Rdata", tolerance = 5e-6) {
+identify_hmdb <- function( mzs, adducts = c("M+H"), hmdb_file = "/home/rstudio/local/hmdb_xml.Rdata", tolerance = 5e-6) {
   adducts <- .identify_adducts(adducts, "identify_hmdb")
   #xmlToDataFrame takes ~15mim.
   if (grepl("Rdata$",hmdb_file)){
@@ -27,12 +27,10 @@ identify_hmdb <- function( mzs, polarity, adducts = c("H"),hmdb_file = "/home/rs
     hmdb$monisotopic_molecular_weight <- as.numeric(hmdb$monisotopic_molecular_weight)
     hmdb <- hmdb[!is.na(hmdb$monisotopic_molecular_weight),]
   }
-  mz_expanded = .identify_adduct_math(mz_expanded, adducts, polarity)
-  cl <- local.export_thread_env(2,environment())
-  out <- lapply(mz_expanded, 1, function(x) 
+  mz_expanded = unlist(lapply(mzs ,function(x) x - adducts))
+  out <- lapply(mz_expanded, function(x)
     hmdb[abs(hmdb$monisotopic_molecular_weight - x)/x < tolerance ,]
   )
-  local.kill_threads(cl)
   do.call(rbind,out)
 }
 
@@ -53,7 +51,7 @@ identify_hmdb <- function( mzs, polarity, adducts = c("H"),hmdb_file = "/home/rs
 #'           DockerLocation: /home/rstudio/local/lipids_simple.csv
 #'
 #' @export
-identify_lipids <- function( mzs, adducts = c("H"), polarity, lipids_file = "/home/rstudio/lipids_simple.csv", tolerance = 5e-6) {
+identify_lipids <- function( mzs, adducts = c("M+H"), lipids_file = "/home/rstudio/lipids_simple.csv", tolerance = 5e-6) {
   identify_from_csv(mzs, adducts, csv_file = lipids_file, mz_colname = "EXACT_MASS", tolerance)
 }
 
@@ -73,7 +71,7 @@ identify_lipids <- function( mzs, adducts = c("H"), polarity, lipids_file = "/ho
 #'           DockerLocation: /home/rstudio/local/lipids_simple.csv
 #'
 #' @export
-identify_from_csv <- function( mzs, polarity, adducts = c("H") , csv_file, mz_colname, tolerance = 5e-6) {
+identify_from_csv <- function( mzs, polarity, adducts = c("M+H") , csv_file, mz_colname, tolerance = 5e-6) {
   adducts <- .identify_adducts(adducts, "identify_lipids")
 
   if (grepl("Rdata$",csv_file)){
@@ -83,37 +81,25 @@ identify_from_csv <- function( mzs, polarity, adducts = c("H") , csv_file, mz_co
     csv_file[[mz_colname]] <- as.numeric(csv_file[[mz_colname]])
     csv_file <- csv_file[!is.na(csv_file[[mz_colname]]),]
   }
-  mz_expanded = .identify_adduct_math(mz_expanded, adducts, polarity)
-  cl <- local.export_thread_env(2,environment())
-  out <- lapply(mz_expanded, function(x) 
+  mz_expanded =   unlist(lapply(mzs ,function(x) x - adducts))
+  out <- lapply(mz_expanded, function(x)
     csv_file[abs(csv_file[[mz_colname]] - x)/x < tolerance ,]
   )
-  local.kill_threads(cl)
   do.call(rbind,out)
 }
 
-.identify_adduct_math <- function(mzs, adducts, polarity){
-  if ( polarity == "neg"){
-    mz_expanded = unlist(lapply(mzs ,function(x) x - adducts))
-  } else if (polarity == "pos"){
-    mz_expanded = unlist(lapply(mzs ,function(x) x + adducts))
-  } else {
-    stop("sumR:: identify: Polarity not found. Use 'pos' or 'neg'")
-  }
-  mz_expanded
-}
 
 .identify_adducts <- function(adducts,source){
   if( is.vector(adducts)){
     if ( class(adducts) == "character"){
-      common_adducts <- data.frame( "name" = c("H","NH4","K"),
-                                    "mz"   = c(1.0008, 17.03052 ,39.0983 ))
-      adducts = common_adducts$mz[common_adducts$name %in% adducts]
+      common_adducts <- get_default_data('adducts')
+      adducts = common_adducts$value[common_adducts$name %in% adducts]
     } else if ( class(adducts) != "numeric"){
       stop(paste0("ERROR: sumR::identify::",source,"adducts cannot be:", class(adducts),". Examples of valid adducts: c(1.0008,17.03052) or c(\"H\")"))
     }
   } else {
     stop(paste0("ERROR: sumR::identify::",source,"adducts is not a vector. Examples of valid adducts: c(1.0008,17.03052) or c(\"H\")"))
-  } 
+  }
   adducts
 }
+

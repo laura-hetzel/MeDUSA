@@ -1,8 +1,3 @@
-test_that("multiplication works", {
-  expect_equal(2 * 2, 4)
-})
-
-
 # ============
 # mzlog_analysis_pca(input_mzlog_obj,metadata, sample_blacklist)
 # ============
