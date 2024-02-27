@@ -17,7 +17,7 @@
 #'
 #' @export
 identify_hmdb <- function( mzs, adducts = c("M+H"), hmdb_file = "/home/rstudio/local/hmdb_xml.Rdata", tolerance = 5e-6) {
-  adducts <- .identify_adducts(adducts, "identify_hmdb")
+  adducts <- identify.adducts(adducts, "identify_hmdb")
   #xmlToDataFrame takes ~15mim.
   if (grepl("Rdata$",hmdb_file)){
     load(hmdb_file)
@@ -27,7 +27,8 @@ identify_hmdb <- function( mzs, adducts = c("M+H"), hmdb_file = "/home/rstudio/l
     hmdb$monisotopic_molecular_weight <- as.numeric(hmdb$monisotopic_molecular_weight)
     hmdb <- hmdb[!is.na(hmdb$monisotopic_molecular_weight),]
   }
-  mz_expanded = unlist(lapply(mzs ,function(x) x - adducts))
+  mz_expanded <- unlist(lapply(mzs ,function(x) x - adducts))
+  #TODO PBL apply
   out <- lapply(mz_expanded, function(x)
     hmdb[abs(hmdb$monisotopic_molecular_weight - x)/x < tolerance ,]
   )
@@ -52,7 +53,7 @@ identify_hmdb <- function( mzs, adducts = c("M+H"), hmdb_file = "/home/rstudio/l
 #'
 #' @export
 identify_lipids <- function( mzs, adducts = c("M+H"), lipids_file = "/home/rstudio/lipids_simple.csv", tolerance = 5e-6) {
-  identify_from_csv(mzs, adducts, csv_file = lipids_file, mz_colname = "EXACT_MASS", tolerance)
+  identify_from_csv(mzs, adducts, lipids_file, mz_colname = "EXACT_MASS", tolerance)
 }
 
 # *** Identify from csv-----------------------------------------------------
@@ -71,8 +72,8 @@ identify_lipids <- function( mzs, adducts = c("M+H"), lipids_file = "/home/rstud
 #'           DockerLocation: /home/rstudio/local/lipids_simple.csv
 #'
 #' @export
-identify_from_csv <- function( mzs, polarity, adducts = c("M+H") , csv_file, mz_colname, tolerance = 5e-6) {
-  adducts <- .identify_adducts(adducts, "identify_lipids")
+identify_from_csv <- function( mzs, adducts = c("M+H") , csv_file, mz_colname, tolerance = 5e-6) {
+  adducts <- identify.adducts(adducts, "identify_lipids")
 
   if (grepl("Rdata$",csv_file)){
     load(csv_file)
@@ -81,15 +82,14 @@ identify_from_csv <- function( mzs, polarity, adducts = c("M+H") , csv_file, mz_
     csv_file[[mz_colname]] <- as.numeric(csv_file[[mz_colname]])
     csv_file <- csv_file[!is.na(csv_file[[mz_colname]]),]
   }
-  mz_expanded =   unlist(lapply(mzs ,function(x) x - adducts))
+  mz_expanded <- unlist(lapply(mzs ,function(x) x - adducts))
   out <- lapply(mz_expanded, function(x)
     csv_file[abs(csv_file[[mz_colname]] - x)/x < tolerance ,]
   )
   do.call(rbind,out)
 }
 
-
-.identify_adducts <- function(adducts,source){
+identify.adducts <- function(adducts,source){
   if( is.vector(adducts)){
     if ( class(adducts) == "character"){
       common_adducts <- get_default_data('adducts')
