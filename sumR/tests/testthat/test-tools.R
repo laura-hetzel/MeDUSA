@@ -1,7 +1,7 @@
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##     mztools_filter                                                   ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# ============
-# mztools_filter(input_mzobj, metadata, filter_value , filter_name = "phenotype", exclude = F, keep_mz = T)
-# ============
 test_that("mztools_filter: Filter By Phenotype", {
   load("../test_data/mz_neg.Rdata")
   load("../test_data/asserts/mztools_pheno_filter_red.Rdata")

@@ -1,11 +1,11 @@
-# ============
-# polarity_loop / polarity_final
-# ============
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##     polarity_loop / polarity_final                                       ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Highly coupled to extract_magic.
 
-# ============
-# fill_defaults(params)
-# ============
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##     magic.fill_defaults                                                        ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 test_that("fill_defaults: merges correctly",{
   expected <- list(
@@ -40,9 +40,9 @@ test_that("fill_defaults: fully replaces if needed",{
   expect_identical(actual,expected)
 })
 
-# ============
-# magic.binning(df, method, log_name, tolerance = 5e-6)
-# ============
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##     magic.binning                                                        ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 test_that("binning: handles custom params",{
   df <- data.frame( "mz"   = c(50, 51, 55, 200, 1000),
                     "sam1" = c(10, 20, 0,  0,   0),
@@ -60,18 +60,19 @@ test_that("binning: handles custom params",{
   expect_identical(actual,expected)
 })
 
-# ============
-# magic.file_list(data)
-# ============
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##     magic.file_list                                                      ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 test_that("file_list: lists from dir", {
-  expect <- c("../test_data/mzml_1.mzML",  "../test_data/mzml_2.mzML",
-              "../test_data/mzml_31.mzML", "../test_data/mzml_33.mzML")
-  actual <- magic.file_lister("../test_data")
+  expect <- c("testdata/mzml_1.mzML",  "testdata/mzml_2.mzML",
+              "testdata/mzml_31.mzML", "testdata/mzml_33.mzML")
+  actual <- magic.file_lister("testdata")
   expect_identical(actual,expect)
 })
 
 test_that("file_list: keeps file list", {
-  expect <- list.files("../test_data", pattern = "mzml_3.*mzML", full.names=T)
+  expect <- list.files("testdata", pattern = "mzml_3.*mzML", full.names=T)
   actual <- magic.file_lister(expect)
   expect_identical(actual,expect)
 })
@@ -82,9 +83,9 @@ test_that("file_list: does not accept non-mzml files", {
   )
 })
 
-# ============
-# magic.mz_format(data)
-# ============
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##     magic.mz_format                                                      ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 test_that("mz_format: flattens correctly", {
   input <- list(list(mz=c(1.1, 1.2, 5.3, 9.4), scan1=c(100.133252,200.1252352,300.5253252,400.853425)),
                 list(mz=c(1.1, 3.5111111, 9.88888888), scan2=c(700.541345,800.321344,900.9243525)))
