@@ -15,9 +15,7 @@
 #' Dependencies :dplyr
 #' @return Returns an MZ-OBJ
 #' @export
-mz_filter_blacklist <- function( input_mz_obj,
-                                 blacklist = "",
-                                 tolerance = 5e-6){
+mz_filter_blacklist <- function( input_mz_obj, blacklist = "", tolerance = 5e-6){
   if ( class(blacklist) == "character"){
     if (blacklist == ""){
       blacklist <- get_default_data('blacklist')$value
@@ -27,7 +25,7 @@ mz_filter_blacklist <- function( input_mz_obj,
   }
   if (sum( blacklist < 0 ) > 0){
     stop("ERROR: sumR::mz_filter_blacklist. Blacklist cannot have negative values.")
-  } else if( length(blacklist < 1)){
+  } else if( length(blacklist) < 1 ){
     stop("ERROR: sumR::mz_filter_blacklist. Blacklist is empty.")
   }
   bool_list <- lapply(blacklist, function(x){abs(input_mz_obj$mz - x)/x > tolerance})
@@ -105,7 +103,7 @@ mz_filter_magic <- function(input_mz_obj, min_intensity, missingness_threshold=F
       input_mz_obj <- mz_filter_blacklist(input_mz_obj)
     }
   } else {
-    input_mz_obj <- mz_filter_blacklist(input_mz_obj, blacklist=blacklist) 
+    input_mz_obj <- mz_filter_blacklist(input_mz_obj, blacklist=blacklist)
   }
   if(hasArg(missingness_threshold)){
     input_mz_obj <- mz_filter_missingness(input_mz_obj, missingness_threshold)

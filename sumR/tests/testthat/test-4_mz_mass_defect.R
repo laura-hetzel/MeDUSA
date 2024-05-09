@@ -1,6 +1,6 @@
-# ============
-# mz_mass_defect(mz, plot, magicNumber1, magicNumber2)
-# ============
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##     mz_mass_defect                                                       ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 test_that("mz_mass_defect: Happy Path", {
   load("testdata/mz_neg.Rdata")
   load("testdata/asserts/mass_defect_happy.Rdata")

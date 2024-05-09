@@ -13,25 +13,25 @@
 #'
 #' @returns MZ-OBJ
 #' @export
-mz_pp_imputation <- function(input_mz_obj, low_noise=10, high_noise=5000){
+mz_pp_imputation <- function(input_mz_obj, low_noise=10, high_noise=NULL){
   if(!hasArg(high_noise)){
     high_noise <- tryCatch({
       local.mz_polarity_guesser(input_mz_obj, pos_return=10000, neg_return=5000)
     }, error = function(e) {
       print(e)
       stop("ERROR: sumR::mz_pp_imputation: Could not guess positive or negative from colnames
-            Please specify min_intensity")
+            Please specify high_noise")
     })
   }
-  if (low_noise > 100 ){
-    warning("WARN: sumR::mz_PP_imputation: low_noise is < 100.
-      Make sure [input_mz_obj] does not have an mz column ")
+  if (low_noise < 50 ){
+    warning("WARN: sumR::mz_PP_imputation: low_noise is < 500. If [input_mz_obj] has an mz column, ensure it is labled 'mz'")
   }
-
-  mz_bool <- input_mz_obj < low_noise
-  input_mz_obj[mz_bool] <- sample(low_noise:high_noise,
-                                              sum(mz_bool),
-                                              replace = TRUE)
+  tmp <- input_mz_obj[colnames(input_mz_obj) != 'mz']
+  bool <- tmp < low_noise
+  tmp[bool]<-  sample(low_noise:high_noise,
+                                   sum(bool),
+                                   replace = TRUE)
+  input_mz_obj[colnames(input_mz_obj) != 'mz'] <- tmp
   input_mz_obj
 }
 
