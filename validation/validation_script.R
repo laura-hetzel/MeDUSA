@@ -1,7 +1,7 @@
 
 # 1. General Info ---------------------------------------------------------
-# The purpose of this script is to process and filter data in a way that is 
-# standard such that the results may be compared to results obtained with the 
+# The purpose of this script is to process and filter data in a way that is
+# standard such that the results may be compared to results obtained with the
 # sumr package. Ultimately, this script will help determine if sumr was written
 # in such a way as to conform to industry standards.
 
@@ -51,9 +51,9 @@ meta <- data.frame(read_excel(file1, sheet = "meta", col_names = TRUE))
 
 # *** 2.2 Technical quality check -----------------------------------------
 # establish empty dataframes
-summary_stats_p <- data.frame(name = character(length(df_pos)-1 ), 
-                              median_mz = numeric(length(df_pos)-1), 
-                              min_mz = numeric(length(df_pos)-1), 
+summary_stats_p <- data.frame(name = character(length(df_pos)-1 ),
+                              median_mz = numeric(length(df_pos)-1),
+                              min_mz = numeric(length(df_pos)-1),
                               max_mz = numeric(length(df_pos)-1),
                               n_peaks = numeric(length(df_pos)-1),
                               peaks_1k = numeric(length(df_pos)-1),
@@ -61,9 +61,9 @@ summary_stats_p <- data.frame(name = character(length(df_pos)-1 ),
                               peaks_100k = numeric(length(df_pos)-1),
                               stringsAsFactors = F)
 
-summary_stats_n <- data.frame(name = character(length(df_neg)-1 ), 
-                              median_mz = numeric(length(df_neg)-1), 
-                              min_mz = numeric(length(df_neg)-1), 
+summary_stats_n <- data.frame(name = character(length(df_neg)-1 ),
+                              median_mz = numeric(length(df_neg)-1),
+                              min_mz = numeric(length(df_neg)-1),
                               max_mz = numeric(length(df_neg)-1),
                               n_peaks = numeric(length(df_neg)-1),
                               peaks_1k = numeric(length(df_neg)-1),
@@ -75,10 +75,10 @@ summary_stats_n <- data.frame(name = character(length(df_neg)-1 ),
 for (i in seq_along(df_pos)[-1]) {
   summary_stats_p[i-1, ] <- cbind(mz_s = df_pos$mz, df_pos[i]) %>%
     filter(df_pos[i] > 0) %>%
-    dplyr::summarise(measurement = as.numeric(filter(meta, filename == colnames(df_pos[i]))$measurement), 
-                     median_mz = median(mz_s), 
+    dplyr::summarise(measurement = as.numeric(filter(meta, filename == colnames(df_pos[i]))$measurement),
+                     median_mz = median(mz_s),
                      min_mz = min(mz_s),
-                     max_mz = max(mz_s), 
+                     max_mz = max(mz_s),
                      n_peaks = n(),
                      peaks_1k = sum(df_pos[i] > 1000),
                      peaks_10k = sum(df_pos[i] > 10000),
@@ -88,10 +88,10 @@ for (i in seq_along(df_pos)[-1]) {
 for (i in seq_along(df_neg)[-1]) {
   summary_stats_n[i-1, ] <- cbind(mz_s = df_neg$mz, df_neg[i]) %>%
     filter(df_neg[i] > 0) %>%
-    dplyr::summarise(measurement = as.numeric(filter(meta, filename == colnames(df_neg[i]))$measurement), 
-                     median_mz = median(mz_s), 
+    dplyr::summarise(measurement = as.numeric(filter(meta, filename == colnames(df_neg[i]))$measurement),
+                     median_mz = median(mz_s),
                      min_mz = min(mz_s),
-                     max_mz = max(mz_s), 
+                     max_mz = max(mz_s),
                      n_peaks = n(),
                      peaks_1k = sum(df_neg[i] > 1000),
                      peaks_10k = sum(df_neg[i] > 10000),
@@ -99,58 +99,58 @@ for (i in seq_along(df_neg)[-1]) {
 }
 
 ggplot() +
-  geom_line(data = summary_stats_n, 
+  geom_line(data = summary_stats_n,
             aes(x = name, y = median_mz, colour = "neg", group = 1)) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-  geom_line(data = summary_stats_p, 
+  geom_line(data = summary_stats_p,
             aes(x = name, y = median_mz, colour = "pos", group = 1)) +
   ggtitle("Median_mz")
 
 ggplot() +
-  geom_line(data = summary_stats_n, 
+  geom_line(data = summary_stats_n,
             aes(x = name, y = min_mz, colour = "neg", group = 1)) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-  geom_line(data = summary_stats_p, 
+  geom_line(data = summary_stats_p,
             aes(x = name, y = min_mz, colour = "pos", group = 1)) +
   ggtitle("Min_mz")
 
 ggplot() +
-  geom_line(data = summary_stats_n, 
+  geom_line(data = summary_stats_n,
             aes(x = name, y = max_mz, colour = "neg", group = 1)) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-  geom_line(data = summary_stats_p, 
+  geom_line(data = summary_stats_p,
             aes(x = name, y = max_mz, colour = "pos", group = 1)) +
   ggtitle("Max_mz")
 
 ggplot() +
-  geom_line(data = summary_stats_n, 
+  geom_line(data = summary_stats_n,
             aes(x = name, y = n_peaks, colour = "neg", group = 1)) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-  geom_line(data = summary_stats_p, 
+  geom_line(data = summary_stats_p,
             aes(x = name, y = n_peaks, colour = "pos", group = 1)) +
   ggtitle("N_peaks")
 
 ggplot() +
-  geom_line(data = summary_stats_n, 
+  geom_line(data = summary_stats_n,
             aes(x = name, y = peaks_1k, colour = "neg", group = 1)) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-  geom_line(data = summary_stats_p, 
+  geom_line(data = summary_stats_p,
             aes(x = name, y = peaks_1k, colour = "pos", group = 1)) +
   ggtitle("Peaks_1k")
 
 ggplot() +
-  geom_line(data = summary_stats_n, 
+  geom_line(data = summary_stats_n,
             aes(x = name, y = peaks_10k, colour = "neg", group = 1)) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-  geom_line(data = summary_stats_p, 
+  geom_line(data = summary_stats_p,
             aes(x = name, y = peaks_10k, colour = "pos", group = 1)) +
   ggtitle("Peaks_10k")
 
 ggplot() +
-  geom_line(data = summary_stats_n, 
+  geom_line(data = summary_stats_n,
             aes(x = name, y = peaks_100k, colour = "neg", group = 1)) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-  geom_line(data = summary_stats_p, 
+  geom_line(data = summary_stats_p,
             aes(x = name, y = peaks_100k, colour = "pos", group = 1)) +
   ggtitle("Peaks_100k")
 
@@ -158,7 +158,7 @@ ggplot() +
 # sumr_media_100, sumr_hek_61 both had indications of severe ion suppression
 # due to contamination; sumr_media_147 consistently had low signal in pos mode
 df_pos_clean <- df_pos %>%
-  select(-c("sumr_media_100", 
+  select(-c("sumr_media_100",
             "sumr_hek_061",
             "sumr_media_147")) %>%
   filter_at(vars(-matches("mz")), any_vars(. > 0))
@@ -170,7 +170,7 @@ df_pos <- df_pos_clean
 # peaks removed by tech quality control: 38
 
 df_neg_clean <- df_neg %>%
-  select(-c("sumr_media_100", 
+  select(-c("sumr_media_100",
             "sumr_hek_061",
             "sumr_media_147")) %>%
   filter_at(vars(-matches("mz")), any_vars(. > 0))
@@ -199,12 +199,12 @@ rm(df_pos_clean)
 # *** 2.4 Blank Subtraction -----------------------------------------------
 blank_subt_local <- function(input_data, sample_filenames, blank_filenames, blank_thresh = 3) {
   input_data <- as.data.frame(input_data)
-  
+
   blanks_subset <- input_data[,blank_filenames$filename]
   blanks_subset$threshold <- apply(blanks_subset, 1, median) * blank_thresh
-  
+
   samples_subset <- input_data[,sample_filenames$filename]
-  
+
   blank_applyer <- function(input_data, blank = blanks_subset$threshold){
     (input_data > blank) * input_data
   }
@@ -241,11 +241,11 @@ filtered_pos_named <- bsub_pos_cells
 mass_defect_calculation <- function(dataframe) {
   dataframe$MD <-  as.numeric(row.names(dataframe)) %% 1
   dataframe$mz_filter <- 0.00112 * as.numeric(row.names(dataframe)) + 0.01953
-  
-  # Taken from the else of the SumR thing that was broken anyway 
+
+  # Taken from the else of the SumR thing that was broken anyway
   #   (revisit if hmdb...McMillan is important)
   md_filtered <- dataframe[which(dataframe$MD <= dataframe$mz_filter), ]
-  
+
   #Ripped from SumR:plot_mz_MD
   mz_removed <- nrow(dataframe) - nrow(md_filtered)
   plot(as.numeric(row.names(md_filtered)), md_filtered$MD,
@@ -257,11 +257,11 @@ mass_defect_calculation <- function(dataframe) {
   return(select(md_filtered, -MD, -mz_filter))
 }
 
-md_filtered_neg_df <- mass_defect_calculation(filtered_neg_named) 
+md_filtered_neg_df <- mass_defect_calculation(filtered_neg_named)
 # peaks before md filter: 114,170
 # peaks after md filter: 79,284
 # peaks removed with md filter: 24,786
-md_filtered_pos_df <- mass_defect_calculation(filtered_pos_named) 
+md_filtered_pos_df <- mass_defect_calculation(filtered_pos_named)
 # peaks before md filter: 102,710
 # peaks after md filter: 74,929
 # peaks removed with md filter: 27,781
@@ -311,11 +311,11 @@ rm(pos_int_filter)
 
 # *** 2.8 Imputation ------------------------------------------------------
 # replace all zeros with a value between 10 and noise
-filtered_neg_named[!filtered_neg_named] <- sample(10:5000, 
+filtered_neg_named[!filtered_neg_named] <- sample(10:5000,
                                                   sum(!filtered_neg_named),
                                                   replace = TRUE)
 
-filtered_pos_named[!filtered_pos_named] <- sample(10:10000, 
+filtered_pos_named[!filtered_pos_named] <- sample(10:10000,
                                                   sum(!filtered_pos_named),
                                                   replace = TRUE)
 
@@ -331,12 +331,12 @@ norm_neg <- quotNorm(norm_neg)
 # plot the dilution factor per sample
 dilution_neg <- data.frame(norm_neg$dilution)
 dilution_neg$sample <- rownames(dilution_neg)
-ggplot(dilution_neg, aes(sample, norm_neg.dilution)) + 
-  geom_point() + 
+ggplot(dilution_neg, aes(sample, norm_neg.dilution)) +
+  geom_point() +
   theme(axis.text.x = element_text(angle = 90))
 
 dilution_neg_df <- left_join(meta, dilution_neg, by = c('filename' = 'sample'))
-ggplot(dilution_neg_df, 
+ggplot(dilution_neg_df,
        aes(x = phenotype, y = norm_neg.dilution)) + geom_boxplot()
 
 norm_neg_df <- data.frame(norm_neg$X)
@@ -353,7 +353,7 @@ ggplot(dilution_pos, aes(sample, norm_pos.dilution)) + geom_point() + theme(axis
 
 dilution_pos_df <- left_join(meta, dilution_pos, by = c('filename' = 'sample'))
 
-ggplot(dilution_pos_df, 
+ggplot(dilution_pos_df,
        aes(x = phenotype, y = norm_pos.dilution)) + geom_boxplot()
 
 norm_pos_df <- data.frame(norm_pos$X)
@@ -374,11 +374,11 @@ meta$filtered_out[grep("081", meta$filename)] <- "yes"
 
 #rearrange the normalized data sets with pivot longer
 norm_neg_df$mz <- row.names(norm_neg_df)
-norm_neg_long <- norm_neg_df %>% 
+norm_neg_long <- norm_neg_df %>%
   pivot_longer(!mz, names_to = "sample", values_to = "intensity")
 
 norm_pos_df$mz <- row.names(norm_pos_df)
-norm_pos_long <- norm_pos_df %>% 
+norm_pos_long <- norm_pos_df %>%
   pivot_longer(!mz, names_to = "sample", values_to = "intensity")
 
 
@@ -390,14 +390,14 @@ norm_neg_long$log <- log2(norm_neg_long$intensity)
 norm_pos_long$mz <- gsub("X", "", norm_pos_long$mz)
 norm_neg_long$mz <- gsub("X", "", norm_neg_long$mz)
 
-ggplot(norm_neg_long, aes(x = sample, y = log)) + 
+ggplot(norm_neg_long, aes(x = sample, y = log)) +
   geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   ggtitle("Filtered, Normalized, Logged, Negative")
 
-ggplot(norm_pos_long, aes(x = sample, y = log)) + 
+ggplot(norm_pos_long, aes(x = sample, y = log)) +
   geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   ggtitle("Filtered, Normalized, Logged, Positive")
 
 
@@ -418,11 +418,11 @@ save(meta, file = "sumr_filtered_meta.Rdata")
 pca_input_neg <- as.data.frame(t(stat_neg))
 pca_input_neg <- scale(pca_input_neg)
 
-pca_input_neg <- merge(x = pca_input_neg, 
-                       y = subset(column_to_rownames(meta, "filename"), 
+pca_input_neg <- merge(x = pca_input_neg,
+                       y = subset(column_to_rownames(meta, "filename"),
                                   select = "phenotype"),
                        by = 0, all.x = TRUE)
-rownames(pca_input_neg) <- paste(pca_input_neg$Row.names, pca_input_neg$phenotype, 
+rownames(pca_input_neg) <- paste(pca_input_neg$Row.names, pca_input_neg$phenotype,
                                  sep = "&")
 
 pca_neg <- prcomp(subset(pca_input_neg, select = -c(Row.names, phenotype)))
@@ -444,11 +444,11 @@ pca_neg$x %>%
 pca_input_pos <- as.data.frame(t(stat_pos))
 pca_input_pos <- scale(pca_input_pos)
 
-pca_input_pos <- merge(x = pca_input_pos, 
-                       y = subset(column_to_rownames(meta, "filename"), 
+pca_input_pos <- merge(x = pca_input_pos,
+                       y = subset(column_to_rownames(meta, "filename"),
                                   select = "phenotype"),
                        by = 0, all.x = TRUE)
-rownames(pca_input_pos) <- paste(pca_input_pos$Row.names, pca_input_pos$phenotype, 
+rownames(pca_input_pos) <- paste(pca_input_pos$Row.names, pca_input_pos$phenotype,
                                  sep = "&")
 
 pca_pos <- prcomp(subset(pca_input_pos, select = -c(Row.names, phenotype)))
@@ -475,8 +475,8 @@ welch <- function(df, meta){
   samples_hek <- filter(meta, phenotype == "HEK293T" &
                             type == "cell" &
                             filtered_out == "no")
-  
-  a <- data.frame(p    = rep(Inf, nrow(df)), 
+
+  a <- data.frame(p    = rep(Inf, nrow(df)),
                   p_05 = rep(FALSE, nrow(df)),
                   p_10 = rep(FALSE, nrow(df)),
                   p_15 = rep(FALSE, nrow(df)),
@@ -489,7 +489,7 @@ welch <- function(df, meta){
   a$p_05 <- a$p < 0.05
   a$p_10 <- a$p < 0.10
   a$p_15 <- a$p < 0.15
-  
+
   a
 }
 
@@ -512,12 +512,12 @@ p05pos <- select(welch_pos[welch_pos$p_05,],p)
 # ***** Fold Change -------------------------------------------------------
 fold_change <- function(input_data, num_samples, den_samples) {
   input_data <- as.data.frame(input_data)
-  
+
   num_subset <- input_data[,num_samples$filename]
   den_subset <- input_data[,den_samples$filename]
   input_data$fold <- (apply(num_subset, 1, mean) /
                         apply(den_subset, 1, mean))
-  
+
   df_out <- select(input_data, fold)
 }
 
@@ -542,9 +542,9 @@ volcano_input_n$pvalue <- as.numeric(volcano_input_n$pvalue)
 volcano_input_n$fold <- as.numeric(volcano_input_n$fold)
 
 volcano_input_n$diff <- "NO"
-volcano_input_n$diff[log2(volcano_input_n$fold) > 0.6 & 
+volcano_input_n$diff[log2(volcano_input_n$fold) > 0.6 &
                        -log10(volcano_input_n$pvalue) > -log10(0.05)] <- "UP"
-volcano_input_n$diff[log2(volcano_input_n$fold) < -0.6 & 
+volcano_input_n$diff[log2(volcano_input_n$fold) < -0.6 &
                        -log10(volcano_input_n$pvalue) > -log10(0.05)] <- "DOWN"
 
 
@@ -565,9 +565,9 @@ volcano_input_p$pvalue <- as.numeric(volcano_input_p$pvalue)
 volcano_input_p$fold <- as.numeric(volcano_input_p$fold)
 
 volcano_input_p$diff <- "NO"
-volcano_input_p$diff[log2(volcano_input_p$fold) > 0.6 & 
+volcano_input_p$diff[log2(volcano_input_p$fold) > 0.6 &
                        -log10(volcano_input_p$pvalue) > -log10(0.05)] <- "UP"
-volcano_input_p$diff[log2(volcano_input_p$fold) < -0.6 & 
+volcano_input_p$diff[log2(volcano_input_p$fold) < -0.6 &
                        -log10(volcano_input_p$pvalue) > -log10(0.05)] <- "DOWN"
 
 
@@ -598,11 +598,11 @@ random_neg <- stat_neg_t %>%
 # force the row names to be a column to identify all of the samples
 random_neg$samples <- rownames(random_neg)
 random_neg <- dplyr:: left_join(random_neg, meta[c("filename", "phenotype")],
-                                by = c('samples' = 'filename')) 
+                                by = c('samples' = 'filename'))
 random_neg$phenotype <- as.factor(random_neg$phenotype)
 
-control_neg <- rfeControl(functions = rfFuncs, 
-                          method = "repeatedcv", 
+control_neg <- rfeControl(functions = rfFuncs,
+                          method = "repeatedcv",
                           repeats = 5,
                           number = 10)
 
@@ -633,14 +633,14 @@ rf_neg <- select(rf_neg, -samples)
 set.seed(42)
 split_neg <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
 train_neg <- subset(rf_neg, split_neg == TRUE)
-test_neg <- subset(rf_neg, split_neg == FALSE)  
+test_neg <- subset(rf_neg, split_neg == FALSE)
 
 #Train settings
 mtry <- c(sqrt(ncol(rf_neg)))
 tunegrid <- expand.grid(.mtry=mtry)
-control <- trainControl(method ='repeatedcv', 
-                        number = 10, 
-                        repeats = 4, 
+control <- trainControl(method ='repeatedcv',
+                        number = 10,
+                        repeats = 4,
                         search = 'grid',
                         allowParallel = TRUE)
 
@@ -660,7 +660,7 @@ confusionMatrix(rf_pred, as.factor(test_neg$phenotype))
 set.seed(111)
 split_neg1 <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
 train_neg1 <- subset(rf_neg, split_neg1 == TRUE)
-test_neg1 <- subset(rf_neg, split_neg1 == FALSE)  
+test_neg1 <- subset(rf_neg, split_neg1 == FALSE)
 
 #Train settings same as previous
 rf_fit_neg1 <- train(as.factor(phenotype) ~.,
@@ -678,7 +678,7 @@ confusionMatrix(rf_pred_neg1, as.factor(test_neg1$phenotype))
 set.seed(2e2)
 split_neg2 <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
 train_neg2 <- subset(rf_neg, split_neg2 == TRUE)
-test_neg2 <- subset(rf_neg, split_neg2 == FALSE)  
+test_neg2 <- subset(rf_neg, split_neg2 == FALSE)
 
 #Train settings same as previous
 
@@ -698,7 +698,7 @@ confusionMatrix(rf_pred_neg2, as.factor(test_neg2$phenotype))
 set.seed(3e3)
 split_neg3 <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
 train_neg3 <- subset(rf_neg, split_neg3 == TRUE)
-test_neg3 <- subset(rf_neg, split_neg3 == FALSE)  
+test_neg3 <- subset(rf_neg, split_neg3 == FALSE)
 
 #Train settings same as previous
 
@@ -719,7 +719,7 @@ confusionMatrix(rf_pred_neg3, as.factor(test_neg3$phenotype))
 set.seed(4e4)
 split_neg4 <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
 train_neg4 <- subset(rf_neg, split_neg4 == TRUE)
-test_neg4 <- subset(rf_neg, split_neg4 == FALSE)  
+test_neg4 <- subset(rf_neg, split_neg4 == FALSE)
 
 #Train settings same as previous
 
@@ -740,7 +740,7 @@ confusionMatrix(rf_pred_neg4, as.factor(test_neg4$phenotype))
 set.seed(5e5)
 split_neg5 <- sample.split(rf_neg$phenotype, SplitRatio = 0.8)
 train_neg5 <- subset(rf_neg, split_neg5 == TRUE)
-test_neg5 <- subset(rf_neg, split_neg5 == FALSE)  
+test_neg5 <- subset(rf_neg, split_neg5 == FALSE)
 
 #Train settings same as previous
 
@@ -774,7 +774,7 @@ random_pos <- stat_pos_t %>%
 # force the row names to be a column to identify all of the samples
 random_pos$samples <- rownames(random_pos)
 random_pos <- dplyr:: left_join(random_pos, meta[c("filename", "phenotype")],
-                                by = c('samples' = 'filename')) 
+                                by = c('samples' = 'filename'))
 random_pos$phenotype <- as.factor(random_pos$phenotype)
 
 feat_select_pos <- rfe(random_pos %>%
@@ -804,14 +804,14 @@ rf_pos <- select(rf_pos, -samples)
 set.seed(42)
 split_pos <- sample.split(rf_pos$phenotype, SplitRatio = 0.8)
 train_pos <- subset(rf_pos, split_pos == TRUE)
-test_pos <- subset(rf_pos, split_pos == FALSE)  
+test_pos <- subset(rf_pos, split_pos == FALSE)
 
 #Train settings
 mtry <- c(sqrt(ncol(rf_pos)))
 tunegrid <- expand.grid(.mtry=mtry)
-control <- trainControl(method ='repeatedcv', 
-                        number = 10, 
-                        repeats = 4, 
+control <- trainControl(method ='repeatedcv',
+                        number = 10,
+                        repeats = 4,
                         search = 'grid',
                         allowParallel = TRUE)
 
@@ -831,7 +831,7 @@ confusionMatrix(rf_pred_pos, as.factor(test_pos$phenotype))
 set.seed(111)
 split_pos1 <- sample.split(rf_pos$phenotype, SplitRatio = 0.8)
 train_pos1 <- subset(rf_pos, split_pos1 == TRUE)
-test_pos1 <- subset(rf_pos, split_pos1 == FALSE)  
+test_pos1 <- subset(rf_pos, split_pos1 == FALSE)
 
 rf_fit_pos1 <- train(as.factor(phenotype) ~.,
                      data = train_pos1,
@@ -849,7 +849,7 @@ confusionMatrix(rf_pred_pos1, as.factor(test_pos1$phenotype))
 set.seed(2e2)
 split_pos2 <- sample.split(rf_pos$phenotype, SplitRatio = 0.8)
 train_pos2 <- subset(rf_pos, split_pos2 == TRUE)
-test_pos2 <- subset(rf_pos, split_pos2 == FALSE)  
+test_pos2 <- subset(rf_pos, split_pos2 == FALSE)
 
 rf_fit_pos2 <- train(as.factor(phenotype) ~.,
                      data = train_pos2,
@@ -867,7 +867,7 @@ confusionMatrix(rf_pred_pos2, as.factor(test_pos2$phenotype))
 set.seed(3e3)
 split_pos3 <- sample.split(rf_pos$phenotype, SplitRatio = 0.8)
 train_pos3 <- subset(rf_pos, split_pos3 == TRUE)
-test_pos3 <- subset(rf_pos, split_pos3 == FALSE)  
+test_pos3 <- subset(rf_pos, split_pos3 == FALSE)
 
 rf_fit_pos3 <- train(as.factor(phenotype) ~.,
                      data = train_pos3,
@@ -885,7 +885,7 @@ confusionMatrix(rf_pred_pos3, as.factor(test_pos3$phenotype))
 set.seed(4e4)
 split_pos4 <- sample.split(rf_pos$phenotype, SplitRatio = 0.8)
 train_pos4 <- subset(rf_pos, split_pos4 == TRUE)
-test_pos4 <- subset(rf_pos, split_pos4 == FALSE)  
+test_pos4 <- subset(rf_pos, split_pos4 == FALSE)
 
 rf_fit_pos4 <- train(as.factor(phenotype) ~.,
                      data = train_pos4,
@@ -903,7 +903,7 @@ confusionMatrix(rf_pred_pos4, as.factor(test_pos4$phenotype))
 set.seed(5e5)
 split_pos5 <- sample.split(rf_pos$phenotype, SplitRatio = 0.8)
 train_pos5 <- subset(rf_pos, split_pos5 == TRUE)
-test_pos5 <- subset(rf_pos, split_pos5 == FALSE)  
+test_pos5 <- subset(rf_pos, split_pos5 == FALSE)
 
 rf_fit_pos5 <- train(as.factor(phenotype) ~.,
                      data = train_pos5,
@@ -1012,7 +1012,7 @@ imp_var_neg <- train_neg_t %>%
 imp_var_neg <- column_to_rownames(imp_var_neg, "mz")
 imp_var_neg_t <- as.data.frame(t(imp_var_neg))
 imp_var_neg_t <- rownames_to_column(imp_var_neg_t, "phenotype")
-imp_var_neg_t$phenotype <- as.factor(ifelse(grepl(imp_var_neg_t$phenotype, 
+imp_var_neg_t$phenotype <- as.factor(ifelse(grepl(imp_var_neg_t$phenotype,
                                                   pattern = "HepG2"),
                                             "HepG2", "HEK293T"))
 train_neg <- imp_var_neg_t
@@ -1031,7 +1031,7 @@ imp_var_pos <- train_pos_t %>%
 imp_var_pos <- column_to_rownames(imp_var_pos, "mz")
 imp_var_pos_t <- as.data.frame(t(imp_var_pos))
 imp_var_pos_t <- rownames_to_column(imp_var_pos_t, "phenotype")
-imp_var_pos_t$phenotype <- as.factor(ifelse(grepl(imp_var_pos_t$phenotype, 
+imp_var_pos_t$phenotype <- as.factor(ifelse(grepl(imp_var_pos_t$phenotype,
                                                   pattern = "HepG2"),
                                             "HepG2", "HEK293T"))
 train_pos <- imp_var_pos_t
@@ -1049,7 +1049,7 @@ test_neg_t <- test_neg_t %>%
 test_neg_t <- column_to_rownames(test_neg_t, "mz")
 test_neg <- as.data.frame(t(test_neg_t))
 test_neg <- rownames_to_column(test_neg, "phenotype")
-test_neg$phenotype <- as.factor(ifelse(grepl(test_neg$phenotype, 
+test_neg$phenotype <- as.factor(ifelse(grepl(test_neg$phenotype,
                                              pattern = "HepG2"),
                                        "HepG2", "HEK293T"))
 
@@ -1067,7 +1067,7 @@ test_pos_t <- test_pos_t %>%
 test_pos_t <- column_to_rownames(test_pos_t, "mz")
 test_pos <- as.data.frame(t(test_pos_t))
 test_pos <- rownames_to_column(test_pos, "phenotype")
-test_pos$phenotype <- as.factor(ifelse(grepl(test_pos$phenotype, 
+test_pos$phenotype <- as.factor(ifelse(grepl(test_pos$phenotype,
                                              pattern = "HepG2"),
                                        "HepG2", "HEK293T"))
 
@@ -1079,7 +1079,7 @@ model_neg <- randomForest(x = train_neg[-1],
                           data = train_neg,
                           ntree = 700,
                           mtry = 20,
-                          importance = TRUE, 
+                          importance = TRUE,
                           proximity = TRUE)
 
 print(model_neg)
@@ -1090,7 +1090,7 @@ model_pos <- randomForest(x = train_pos[-1],
                           data = train_pos,
                           ntree = 900,
                           mtry = 20,
-                          importance = TRUE, 
+                          importance = TRUE,
                           proximity = TRUE)
 
 print(model_pos)
@@ -1106,25 +1106,25 @@ confusionMatrix(data = pred_train_pos, reference = train_pos$phenotype)
 test_neg$phenotype <- as.factor(test_neg$phenotype)
 predict_train_neg <- predict(model_neg, newdata = test_neg, type = "class")
 confusionMatrix(table(data = predict_train_neg, reference = test_neg$phenotype))
-results_neg <- as.data.frame(cbind("actual" = test_neg$phenotype, 
+results_neg <- as.data.frame(cbind("actual" = test_neg$phenotype,
                                    "prediction" = predict_train_neg))
 
 test_pos$phenotype <- as.factor(test_pos$phenotype)
 predict_train_pos <- predict(model_pos, newdata = test_pos, type = "class")
 confusionMatrix(table(data = predict_train_pos, reference = test_pos$phenotype))
-results_pos <- as.data.frame(cbind("actual" = test_pos$phenotype, 
+results_pos <- as.data.frame(cbind("actual" = test_pos$phenotype,
                                    "prediction" = predict_train_pos))
 
 modellist_neg <- data.frame(mtry = 1:200)
+set.seed(1230)
 for (i in c(1:200)){
-  set.seed(1230)
   fit <- randomForest(x = (train_neg %>% dplyr :: select(-phenotype)),
                       y = train_neg$phenotype,
                       data = train_neg,
                       ntree = 500,
                       mtry = i,
                       importance = TRUE)
-  
+
   modellist_neg$err_rate[i] <- fit[["err.rate"]][nrow(fit[["err.rate"]]),1]
 }
 
@@ -1139,7 +1139,7 @@ for (i in c(1:240)){
                       ntree = 900,
                       mtry = i,
                       importance = TRUE)
-  
+
   modellist_pos$err_rate[i] <- fit[["err.rate"]][nrow(fit[["err.rate"]]),1]
 }
 # mtry = 3 has the lowest error rate,  approx 5.5%
@@ -1175,35 +1175,35 @@ roc_permuted_pos <- roc(results_permuted_pos$actual, results_permuted_pos$predic
 auc_permuted_pos <- auc(roc_permuted_pos)
 
 # AUC and ROC, first prep results from above models
-test_neg1$phenotype <- as.factor(ifelse(grepl(test_neg1$phenotype, 
+test_neg1$phenotype <- as.factor(ifelse(grepl(test_neg1$phenotype,
                                               pattern = "HepG2"),
                                         "HepG2", "HEK293T"))
-test_neg2$phenotype <- as.factor(ifelse(grepl(test_neg2$phenotype, 
+test_neg2$phenotype <- as.factor(ifelse(grepl(test_neg2$phenotype,
                                               pattern = "HepG2"),
                                         "HepG2", "HEK293T"))
-test_neg3$phenotype <- as.factor(ifelse(grepl(test_neg3$phenotype, 
+test_neg3$phenotype <- as.factor(ifelse(grepl(test_neg3$phenotype,
                                               pattern = "HepG2"),
                                         "HepG2", "HEK293T"))
-test_neg4$phenotype <- as.factor(ifelse(grepl(test_neg4$phenotype, 
+test_neg4$phenotype <- as.factor(ifelse(grepl(test_neg4$phenotype,
                                               pattern = "HepG2"),
                                         "HepG2", "HEK293T"))
-test_neg5$phenotype <- as.factor(ifelse(grepl(test_neg5$phenotype, 
+test_neg5$phenotype <- as.factor(ifelse(grepl(test_neg5$phenotype,
                                               pattern = "HepG2"),
                                         "HepG2", "HEK293T"))
 
-test_pos1$phenotype <- as.factor(ifelse(grepl(test_pos1$phenotype, 
+test_pos1$phenotype <- as.factor(ifelse(grepl(test_pos1$phenotype,
                                               pattern = "HepG2"),
                                         "HepG2", "HEK293T"))
-test_pos2$phenotype <- as.factor(ifelse(grepl(test_pos2$phenotype, 
+test_pos2$phenotype <- as.factor(ifelse(grepl(test_pos2$phenotype,
                                               pattern = "HepG2"),
                                         "HepG2", "HEK293T"))
-test_pos3$phenotype <- as.factor(ifelse(grepl(test_pos3$phenotype, 
+test_pos3$phenotype <- as.factor(ifelse(grepl(test_pos3$phenotype,
                                               pattern = "HepG2"),
                                         "HepG2", "HEK293T"))
-test_pos4$phenotype <- as.factor(ifelse(grepl(test_pos4$phenotype, 
+test_pos4$phenotype <- as.factor(ifelse(grepl(test_pos4$phenotype,
                                               pattern = "HepG2"),
                                         "HepG2", "HEK293T"))
-test_pos5$phenotype <- as.factor(ifelse(grepl(test_pos5$phenotype, 
+test_pos5$phenotype <- as.factor(ifelse(grepl(test_pos5$phenotype,
                                               pattern = "HepG2"),
                                         "HepG2", "HEK293T"))
 
@@ -1271,9 +1271,9 @@ plot(roc_neg2, col = "Red", main = paste("Fold_2, AUC:", as.character(round(auc_
 plot(roc_neg3, col = "Red", main = paste("Fold_3, AUC:", as.character(round(auc_neg3, 3))))
 plot(roc_neg4, col = "Red", main = paste("Fold_4, AUC:", as.character(round(auc_neg4, 3))))
 plot(roc_neg5, col = "Red", main = paste("Fold_5, AUC:", as.character(round(auc_neg5, 3))))
-plot(roc_neg_final, col = "Blue", main = paste("Final Model(neg), AUC:", 
+plot(roc_neg_final, col = "Blue", main = paste("Final Model(neg), AUC:",
                                                as.character(round(auc_neg_final, 3))))
-plot(roc_permuted_neg, col = "Green", main = paste("Permuted model(neg), AUC:", 
+plot(roc_permuted_neg, col = "Green", main = paste("Permuted model(neg), AUC:",
                                                    as.character(round(auc_permuted_neg, 3))))
 
 plot(roc_pos1, col = "Red", main = paste("Fold_1, AUC:", as.character(round(auc_pos1, 3))))
@@ -1281,9 +1281,9 @@ plot(roc_pos2, col = "Red", main = paste("Fold_2, AUC:", as.character(round(auc_
 plot(roc_pos3, col = "Red", main = paste("Fold_3, AUC:", as.character(round(auc_pos3, 3))))
 plot(roc_pos4, col = "Red", main = paste("Fold_4, AUC:", as.character(round(auc_pos4, 3))))
 plot(roc_pos5, col = "Red", main = paste("Fold_5, AUC:", as.character(round(auc_pos5, 3))))
-plot(roc_pos_final, col = "Blue", main = paste("Final Model(pos), AUC:", 
+plot(roc_pos_final, col = "Blue", main = paste("Final Model(pos), AUC:",
                                                as.character(round(auc_pos_final, 3))))
-plot(roc_permuted_pos, col = "Green", main = paste("Permuted model(pos), AUC:", 
+plot(roc_permuted_pos, col = "Green", main = paste("Permuted model(pos), AUC:",
                                                    as.character(round(auc_permuted_pos, 3))))
 
 # plot the important variables
@@ -1314,26 +1314,25 @@ mds_pos_data <- data.frame(Sample = rownames(mds_pos_values),
 
 ggplot(mds_neg_data, aes(x = x, y = y, label = Sample)) +
   geom_point(aes(color = Phenotype), size = 3) +
-  theme_classic() + 
+  theme_classic() +
   theme(legend.position = "bottom",) +
   theme(text = element_text(size = 18)) +
   xlab(paste("MDS1 - ", mds_var_neg[1], "%", sep = "")) +
   ylab(paste("MDS2 - ", mds_var_neg[2], "%", sep = "")) +
-  scale_color_manual(breaks = c("HepG2", "HEK293T"), 
+  scale_color_manual(breaks = c("HepG2", "HEK293T"),
                      values = c("red4", "deepskyblue2")) +
-  ggtitle("MDS plot (neg) using random forest proximities") 
+  ggtitle("MDS plot (neg) using random forest proximities")
 
 ggplot(mds_pos_data, aes(x = x, y = y, label = Sample)) +
   geom_point(aes(color = Phenotype), size = 3) +
-  theme_classic() + 
+  theme_classic() +
   theme(legend.position = "bottom",) +
   theme(text = element_text(size = 18)) +
   xlab(paste("MDS1 - ", mds_var_pos[1], "%", sep = "")) +
   ylab(paste("MDS2 - ", mds_var_pos[2], "%", sep = "")) +
-  scale_color_manual(breaks = c("HepG2", "HEK293T"), 
+  scale_color_manual(breaks = c("HepG2", "HEK293T"),
                      values = c("red4", "deepskyblue2")) +
-  ggtitle("MDS plot (pos) using random forest proximities") 
+  ggtitle("MDS plot (pos) using random forest proximities")
 
 save(mds_neg_data, file = "mds_neg_data.R")
 save(mds_pos_data, file = "mds_pos_data.R")
-

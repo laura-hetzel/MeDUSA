@@ -29,3 +29,25 @@ test_that("identfy_lipids: with default adduct(H)", {
   actual <- identify_lipids(mz,ad)
 	expect_identical(actual, lipid_filtered)
 })
+
+# ============
+# identify.adducts
+# ============
+test_that("identify.adducts: with named adducts", {
+  ad <- c("HCOO-", "M+H")
+  actual <- identify.adducts(ad,"testthat")
+  expected <- c( -1.0008, 46.0254)
+  expect_identical(actual, expected)
+})
+
+test_that("identify.adducts: with given mass", {
+  ad <- c(123.123, 1701.1701)
+  actual <- identify.adducts(ad,"testthat")
+  expect_identical(actual, ad)
+})
+
+test_that("identify.adducts: with single value", {
+  ad <- 100.012
+  expect_identical(identify.adducts(ad,"testthat"), ad)
+})
+
