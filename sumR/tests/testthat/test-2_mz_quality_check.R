@@ -1,7 +1,7 @@
 # ============
 # mz_quality_metrics(input_mz_obj, cores)
 # ============
-test_that("mz_quality_metrics: ", {
+test_that("mz_quality_metrics:  ", {
   load("../test_data/mz_neg.Rdata")
 	load("../test_data/asserts/quality_check.Rdata")
   actual <- mz_quality_metrics(mz_neg)
