@@ -1,4 +1,9 @@
 # ============
+# polarity_loop / polarity_final
+# ============
+# Highly coupled to extract_magic.
+
+# ============
 # fill_defaults(params)
 # ============
 
@@ -12,7 +17,7 @@ test_that("fill_defaults: merges correctly",{
     "missingness_threshold" = .1,
     "massWindow" = c(0, Inf)
   )
-  
+
   in_params <- list(
     "prebin_method" = acos,
     "intensity_threshold" = 1
@@ -50,7 +55,7 @@ test_that("binning: handles custom params",{
                           "sam3" = c(120, 140, 0),
                           "sam4" = c(0,   160, 180))
   max_double <- function(x, na.rm, na.action){ max(x) * 2 }
-                          
+
   actual <- magic.binning(df, max_double, tolerance = 0.5)
   expect_identical(actual,expected)
 })
@@ -59,7 +64,7 @@ test_that("binning: handles custom params",{
 # magic.file_list(data)
 # ============
 test_that("file_list: lists from dir", {
-  expect <- c("../test_data/mzml_1.mzML",  "../test_data/mzml_2.mzML", 
+  expect <- c("../test_data/mzml_1.mzML",  "../test_data/mzml_2.mzML",
               "../test_data/mzml_31.mzML", "../test_data/mzml_33.mzML")
   actual <- magic.file_lister("../test_data")
   expect_identical(actual,expect)
@@ -77,7 +82,14 @@ test_that("file_list: does not accept non-mzml files", {
   )
 })
 
-
 # ============
 # magic.mz_format(data)
 # ============
+test_that("mz_format: flattens correctly", {
+  input <- list(list(mz=c(1.1, 1.2, 5.3, 9.4), scan1=c(100.133252,200.1252352,300.5253252,400.853425)),
+                list(mz=c(1.1, 3.5111111, 9.88888888), scan2=c(700.541345,800.321344,900.9243525)))
+  expect <- data.frame( "mz" = c(1.1, 1.1, 1.2, 3.51111, 5.3, 9.4, 9.88889),
+                     "scan1" = c(100.133252, NA, 200.1252352, NA ,300.5253252, 400.853425, NA),
+                     "scan2" = c(NA, 700.541345 , NA ,800.321344, NA, NA, 900.9243525))
+  expect_identical(magic.mz_format(input), expect)
+})

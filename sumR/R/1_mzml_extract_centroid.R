@@ -1,5 +1,6 @@
 # ***  -----------------------------------------------------
 #' Create MzObj from directory or file
+#'
 #'   Current Defaults:
 #'      mzBinningMath: max
 #'      mzBinTolerance = 5e-6
@@ -202,8 +203,7 @@ magic.mz_format <- function(out){
   out <- dplyr::bind_rows(out)
   out <- out[order(out$mz),]
   out$mz <- round(out$mz, 5)
-  #rownames(out) <- NULL
-  out
+  as.data.frame(out)
 }
 
 magic.file_lister <- function(files) {
