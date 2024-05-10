@@ -1,4 +1,13 @@
 # *** MassDefect -----------------------------------------------------
+#' 
+#' This package assumes electrospray ionization, and as such, also assumes
+#' the salt clusters that are introduced to the sample as artifacts (McMillan A, 
+#' Renaud JB, Gloor GB, Reid G, Sumarah MW. Post-acquisition filtering of salt 
+#' cluster artefacts for LC-MS based human metabolomic studies. J Cheminform. 
+#' 2016 Sep 6;8(1):44. doi: 10.1186/s13321-016-0156-0. PMID: 27606010; 
+#' PMCID: PMC5013591.). The artifacts are removed from the data set as 
+#' prescribed by McMillan et al. via the mz_mass_defect function. 
+#' 
 #' MZ-OBJ MassDefect
 #'
 #' Mass Defect Calculation.\cr

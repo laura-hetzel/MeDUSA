@@ -1,4 +1,22 @@
 # ***  -----------------------------------------------------
+#'
+#' The mzml file contains data that is not aligned. Two alignments are 
+#' necessary for a proper comparison of data. 
+#' The first alignment compares data in one file, over multiple scans. This 
+#' alignment removes the time factor and creates one intensity per m/z value for 
+#' each file. The default is to create a mean of the intensity per m/z. A 
+#' missingness threshold is set so that an m/z must occur in a set percentage of 
+#' scans in order to not be filtered out as an artifact. The tolerance for an 
+#' m/z to be considered the same feature across multiple scans is referred to as 
+#' the mzBinTolerance. If m/z values within the bin differ, the mzBinningMath 
+#' will determine which method is used to determine the assigned m/z value.
+#' The second alignment compares the data in all of the files being processed. 
+#' The same steps and math are used to determine the m/z values for all files.
+#' The intensity does not undergo further math and is simply assigned to the 
+#' corresponding m/z value.
+#' The mzml_extract_magic function performs the above mentioned alignment in one
+#' function.
+#' 
 #' Create MzObj from directory or file
 #'
 #'   Current Defaults:
@@ -46,6 +64,25 @@ mzml_extract_magic <- function(files = getwd(), cores = 6,  params = NULL ){
 }
 
 # ***  -----------------------------------------------------
+#'
+#' The mzml file contains data that is not aligned. Two alignments are 
+#' necessary for a proper comparison of data. 
+#' The first alignment compares data in one file, over multiple scans. This 
+#' alignment removes the time factor and creates one intensity per m/z value for 
+#' each file. The default is to create a mean of the intensity per m/z. A 
+#' missingness threshold is set so that an m/z must occur in a set percentage of 
+#' scans in order to not be filtered out as an artifact. The tolerance for an 
+#' m/z to be considered the same feature across multiple scans is referred to as 
+#' the mzBinTolerance. If m/z values within the bin differ, the mzBinningMath 
+#' will determine which method is used to determine the assigned m/z value.
+#' The second alignment compares the data in all of the files being processed. 
+#' The same steps and math are used to determine the m/z values for all files.
+#' The intensity does not undergo further math and is simply assigned to the 
+#' corresponding m/z value.
+#' The mzml_extract_file function will only extract the data from the mzml files
+#' and create a dataframe that is compatible with the other functions in this
+#' package. No alignment or other processing is performed on the data.
+#' 
 #' Return mzT from a single file
 #'
 #' @param file \cr
@@ -108,6 +145,25 @@ mzml_extract_file <- function(file, polarity = "",  magic = T,  cl = NULL, param
 }
 
 # ***  -----------------------------------------------------
+#'
+#' The mzml file contains data that is not aligned. Two alignments are 
+#' necessary for a proper comparison of data. 
+#' The first alignment compares data in one file, over multiple scans. This 
+#' alignment removes the time factor and creates one intensity per m/z value for 
+#' each file. The default is to create a mean of the intensity per m/z. A 
+#' missingness threshold is set so that an m/z must occur in a set percentage of 
+#' scans in order to not be filtered out as an artifact. The tolerance for an 
+#' m/z to be considered the same feature across multiple scans is referred to as 
+#' the mzBinTolerance. If m/z values within the bin differ, the mzBinningMath 
+#' will determine which method is used to determine the assigned m/z value.
+#' The second alignment compares the data in all of the files being processed. 
+#' The same steps and math are used to determine the m/z values for all files.
+#' The intensity does not undergo further math and is simply assigned to the 
+#' corresponding m/z value.
+#' The mzT_filtering function will filter the data that is produced removing 
+#' m/z values that do not fulfill the missing requirement or the minimum
+#' intensity threshold.
+#' 
 #' MzTime filtering (Uses mz_filtering) & binning for an MzT obj.
 #'
 #' @param mzT \cr
@@ -128,6 +184,23 @@ mzT_filtering <- function(mzT, prebin_method = max, missingness_threshold = 1, i
 }
 
 # ***  -----------------------------------------------------
+#'
+#' The mzml file contains data that is not aligned. Two alignments are 
+#' necessary for a proper comparison of data. 
+#' The first alignment compares data in one file, over multiple scans. This 
+#' alignment removes the time factor and creates one intensity per m/z value for 
+#' each file. The default is to create a mean of the intensity per m/z. A 
+#' missingness threshold is set so that an m/z must occur in a set percentage of 
+#' scans in order to not be filtered out as an artifact. The tolerance for an 
+#' m/z to be considered the same feature across multiple scans is referred to as 
+#' the mzBinTolerance. If m/z values within the bin differ, the mzBinningMath 
+#' will determine which method is used to determine the assigned m/z value.
+#' The second alignment compares the data in all of the files being processed. 
+#' The same steps and math are used to determine the m/z values for all files.
+#' The intensity does not undergo further math and is simply assigned to the 
+#' corresponding m/z value.
+#' The mzT_squashTime object will align over the scans in a single file and 
+#' produce one intensity per m/z value per sample.
 #' Squash MzT obj (many scans) into a single mz|intensity dataframe
 #'
 #' @param mzT \cr

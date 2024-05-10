@@ -1,7 +1,12 @@
 # *** HMDB Identify -----------------------------------------------------
-#' Identify a list of MZs in HMDB
+#' 
+#' A list of m/z values is not necessary helpful in metabolomic studies; these
+#' values must be assigned to something meaningful. The identify_hmdb function
+#' compares the m/z values previously identified as "relevant to phenotype 
+#' prediction" to the Human Metabolome Database (HMDB). Adducts may be added as 
+#' a list to improve the results of the search. Additionally, a tolerance is 
+#' set by the user for identifying matches with the database.
 #'
-#' Not really sure
 #'  - Requires: ggplot2, tibble
 #'
 #' @param mzs \cr
@@ -37,9 +42,14 @@ identify_hmdb <- function( mzs, adducts = c("M+H"), hmdb_file = "/home/rstudio/l
 
 
 # *** Lipid Identify -----------------------------------------------------
-#' Identify Lipids from a list of MZs
+#' 
+#' A list of m/z values is not necessary helpful in lipidomic studies; these
+#' values must be assigned to something meaningful. The identify_lipids function
+#' compares the m/z values previously identified as "relevant to phenotype 
+#' prediction" to a lipids database. Adducts may be added as 
+#' a list to improve the results of the search. Additionally, a tolerance is 
+#' set by the user for identifying matches with the database.
 #'
-#' Not really sure
 #'  - Requires: ggplot2, tibble
 #'
 #' @param mzs \cr
@@ -57,9 +67,14 @@ identify_lipids <- function( mzs, adducts = c("M+H"), lipids_file = "/home/rstud
 }
 
 # *** Identify from csv-----------------------------------------------------
-#' Identify a list of MZs in a CSV
+#' 
+#' A list of m/z values is not necessary helpful in metabolomic studies; these
+#' values must be assigned to something meaningful. It is possible to download
+#' the desired databases for comparison and compare the data sets to the stored
+#' CSV file with the identify_from_csv function. Adducts may be added as 
+#' a list to improve the results of the search. Additionally, a tolerance is 
+#' set by the user for identifying matches with the database.
 #'
-#' Not really sure
 #'  - Requires: ggplot2, tibble
 #'
 #' @param mzs \cr

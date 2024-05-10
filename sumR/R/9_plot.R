@@ -1,6 +1,10 @@
 
 # *** Volcano Plot -----------------------------------------------------
-#' Welch & FoldChange Volcano Plot
+#' 
+#' A volcano plot plots the fold change on the x-axis and the p-value of the 
+#' t-test on the y-axis. The function plot_volcano assumes the user has already
+#' performed fold change and t-test, so these values must be passed into the 
+#' function.
 #'
 #' Compare two phenotypes
 #'
@@ -35,8 +39,11 @@ plot_volcano <- function(welch, fold_change, title = "Volcano_Plot"){
 }
 
 # *** Volcano Magic -----------------------------------------------------
-#' MZLOG-OBJ Volcano Magic
-#' Create Welch, Fold & Volcano plot, with default inputs
+#' 
+#' A volcano plot plots the fold change on the x-axis and the p-value of the 
+#' t-test on the y-axis. The function mz_analysis_volcano_magic uses the m/z 
+#' data set and performs fold change and t-test on the data to populate the 
+#' plot.
 #'
 #' @param input_mzlog_obj \cr
 #'   DataFrame : Log2 of Input MZ-Obj
@@ -66,9 +73,12 @@ mz_analysis_volcano_magic <- function(input_mzlog_obj, phenotype_a, phenotype_b,
 }
 
 # *** Heat Map  -----------------------------------------------------
-#' MZLOG-OBJ Plot Heat map
-#'
-#' Create Welch, Fold & Volcano plot, with default inputs
+#' 
+#' A heat map is a great way to visualize how a large data set compares over
+#' many metabolites. The plot_heatmap function can be used at any point in the 
+#' processing pipeline to evaluate the phenotypes over all m/z values. It is 
+#' recommended to only input the data after processing.
+#' 
 #'
 #' @param input_mz_obj \cr
 #'   DataFrame : Input MZ-Obj

@@ -1,8 +1,13 @@
 # *** Log Transform -----------------------------------------------------
 #' MZLONG-OBJ Log Transform
 #'
-#' Convert intensities of MZLong to log2
-#'  For normal "mz_obj" use log2(mz_obj)
+#' The mzlong_pp_log function log2 transforms the intensities of the data set,
+#' after the data set has been restructured via the pivot_longer function. Log
+#' transformation of the data is highly recommended so that the observed m/z 
+#' relationships are proportional and not additive, making the statistical 
+#' analysis and interpretation more biologically relevant. Note that this 
+#' function works with the pivot_longer object, not the standard mz_object.
+#' 
 #'  - Requires: ggplot2
 #'
 #' @param input_mzlong \cr

@@ -2,7 +2,10 @@
 # *** Filter MZs by meta Phenotypes  -----------------------------------------------------
 #' MZLOG-OBJ Plot Heat map
 #'
-#' Create Welch, Fold & Volcano plot, with default inputs
+#' The mztools_filter function is used to filter the m/z values by phenotype. 
+#' This filtering is useful for t-test, fold change, and volcano plots. For 
+#' optimal results, the metadata should have a properly populated "phenotype"
+#' column.
 #'
 #' @param input_mz_obj \cr
 #'   DataFrame : Input MZ-Obj
@@ -32,9 +35,10 @@ mztools_filter <- function(input_mzobj, metadata, filter_value , filter_name = "
 }
 
 # *** Get Default Data-----------------------------------------------------
-#' Show list of default values:
-#'    Available Adducts & masses
-#'    Default Blacklist & masses
+#' 
+#' The get_default_data function will return a list of default values including
+#' available adducts and their corresponding masses as well as default blacklist
+#' of features to exclude and their corresponding masses.
 #'
 #' @param type \cr
 #'   Character : 'adduct' or 'blacklist'
