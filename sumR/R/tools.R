@@ -34,7 +34,6 @@ mztools_filter <- function(input_mzobj, metadata, filter_value , filter_name = "
   out
 }
 
-
 # *** Get Default Data-----------------------------------------------------
 #' 
 #' The get_default_data function will return a list of default values including
@@ -45,7 +44,7 @@ mztools_filter <- function(input_mzobj, metadata, filter_value , filter_name = "
 #'   Character : 'adduct' or 'blacklist'
 #'
 #' @returns dataframe( [adduct]name: Character,
-#'                     [adduct]value: Numeric ) 
+#'                     [adduct]value: Numeric )
 #'
 #' @export
 get_default_data <- function(type){
@@ -68,12 +67,10 @@ get_default_data <- function(type){
     )
   } else if (type == 'blacklist') {
     data_list <- list(
-      c("dolphin", 50.123),
-      c("whale",   51.321),
-      c("narwhal", 100.000)
+      c("Polysiloxane", 536.17)
     )
   } else {
-    stop("ERROR: sumR::get_default_values: Could not guess positive or negative from colnames")
+    stop("ERROR: sumR::get_default_values: Data type not found.")
   }
   out <- data.frame(name = character(), value = numeric())
   for(x in 1:length(data_list)){
@@ -81,4 +78,3 @@ get_default_data <- function(type){
   }
   out
 }
-

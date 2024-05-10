@@ -1,6 +1,7 @@
-# ============
-# mzlog_analysis_pca(input_mzlog_obj,metadata, sample_blacklist)
-# ============
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##      mzlog_analysis_pca                                                  ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 test_that("mzlog_analysis_pca: HappyPath", {
   mz <- ##create/find test-data
   meta <- ##create/find test-data
