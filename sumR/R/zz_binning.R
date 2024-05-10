@@ -1,3 +1,5 @@
+## Heavily borrowed from Maldi-Kwant
+
 #' @title Deletion of unwanted samples
 #' @description binning dependency 1
 #' delete any duplication of a samples

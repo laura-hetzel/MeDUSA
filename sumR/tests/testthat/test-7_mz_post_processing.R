@@ -5,7 +5,7 @@
 test_that("mz_pp_imputation: Happy path", {
   load("testdata/mz_neg.Rdata")
   suppressWarnings(
-    actual <- mz_pp_imputation(mz_neg[0:10,]) 
+    actual <- mz_pp_imputation(mz_neg[0:10,])
   )
   expect_lt( sum(actual<10) , 1 )
 })
@@ -21,13 +21,29 @@ test_that("mz_pp_imputation: Parameters", {
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##     mz_pp_normalization                                                  ----
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+test_that("mz_pp_normalization: HappyPath", {
+  load("testdata/mz_neg.Rdata")
+  load("testdata/asserts/normalization_happy.Rdata")
+  meta <- data.frame(read.csv("testdata/meta_neg.csv"))
+  expect_identical(mz_pp_normalization(mz_neg, meta, F), normalization_happy)
+})
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##     mz_pp_pivot_longer                                                   ----
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+test_that("mz_pp_normalization: HappyPath", {
+  load("testdata/mz_neg.Rdata")
+  load("testdata/asserts/pivot_longer_happy.Rdata")
+  meta <- data.frame(read.csv("testdata/meta_neg.csv"))
+  expect_identical(mz_pp_pivot_longer(mz_neg, F), pivot_longer_happy)
+})
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##     mz_pp_magic                                                          ----
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+test_that("mz_pp_normalization: HappyPath", {
+  load("testdata/mz_neg.Rdata")
+  load("testdata/asserts/pp_magic_happy.Rdata")
+  meta <- data.frame(read.csv("testdata/meta_neg.csv"))
+  expect_identical(mz_pp_magic(mz_neg, meta, noise = c(0,1), F), pp_magic_happy)
+})

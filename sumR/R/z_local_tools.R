@@ -27,14 +27,21 @@ local.mz_log_removed_rows <- function( in_mz, out_mz, method){
 local.mz_polarity_guesser <- function(input, pos_return = "Positive", neg_return = "Negative"){
   input <- head(input)
   try({input[3,] <- colnames(input)})
+  count <- 0
   if (sum(grep("[^A-Za-z|^][Nn]eg|[Nn]egative",input)) > 0){
     print("INFO:sumR::polarity_guess: Detected Negative")
+    count <- count + 1
     ret <- neg_return
-  } else if(sum(grep("[^A-Za-z|^][Pp]os|[Pp]ositive",input)) >0){
+  }
+  if(sum(grep("[^A-Za-z|^][Pp]os|[Pp]ositive",input)) >0){
+    count <- count + 1
     ret <- pos_return
     print("INFO:sumR::polarity_guess: Detected Positive")
-  } else {
-    stop("ERROR: sumR::polarity_guess: Could not guess positive or negative from colnames")
+  }
+  if( count > 1) {
+    stop("ERROR: sumR::polarity_guesser: Detected both Positive & Negative from colnames")
+  } else if ( count < 1) {
+    stop("ERROR: sumR::polarity_guesser: Could not guess Positive or Negative from colnames")
   }
   ret
 }
@@ -66,11 +73,11 @@ local.export_thread_env <- function(cores, env = environment()){
 local.kill_threads <- function(cl = NULL){
   tryCatch(parallel::stopCluster(cl),
            error = function(e){print(paste("WARN: Thread kill error:",e))},
-           finally = {print("INFO: Killing threads. Often throws odd errors.")
+           finally = {print("INFO: Killing threads. May throw odd errors.")
                      suppressWarnings(try(closeAllConnections(),silent=TRUE))})
 }
 
-local.ensure_mz <- function(input_a, input_b, source){
+local.ensure_mz <- function(input_a, input_b, source ){
   if (nrow(input_a) != nrow(input_b)){
     stop(paste0("ERROR: ", source, ": Dataframes have a different number of mz"))
   }
@@ -86,9 +93,7 @@ local.ensure_mz <- function(input_a, input_b, source){
   } else {
     stop(paste0("ERROR: ", source, ": neither input dataframes have column mz"))
   }
-  list(mz   = as.data.frame(mz), 
-       df_a = as.data.frame(input_a), 
-       df_b = as.data.frame(input_b)) 
+  list(mz   = as.data.frame(mz),
+       df_a = as.data.frame(input_a),
+       df_b = as.data.frame(input_b))
 }
-
-

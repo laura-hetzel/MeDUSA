@@ -23,8 +23,8 @@ mz_pp_imputation <- function(input_mz_obj, low_noise=10, high_noise=NULL){
             Please specify high_noise")
     })
   }
-  if (low_noise < 50 ){
-    warning("WARN: sumR::mz_PP_imputation: low_noise is < 500. If [input_mz_obj] has an mz column, ensure it is labled 'mz'")
+  if (low_noise < 500 ){
+    print("WARN: sumR::mz_PP_imputation: low_noise is < 500. If [input_mz_obj] has an mz column, ensure it is labled 'mz'")
   }
   tmp <- input_mz_obj[colnames(input_mz_obj) != 'mz']
   bool <- tmp < low_noise
@@ -64,7 +64,7 @@ mz_pp_normalization <- function(input_mz_obj, metadata, plot = TRUE ){
   metadata <- local.meta_polarity_fixer(input_mz_obj, metadata)
   #TODO revisit, for a refactor
   rownames(input_mz_obj) <- input_mz_obj$mz
-  normal <- quotNorm(t(select(input_mz_obj,-mz)))
+  normal <- quotNorm(t(dplyr::select(input_mz_obj,-mz)))
   dilution <- data.frame(normal$dilution)
   dilution$sample <- rownames(dilution)
   join_by <- c('sample')
@@ -104,8 +104,7 @@ mz_pp_normalization <- function(input_mz_obj, metadata, plot = TRUE ){
 #' @export
 mz_pp_pivot_longer <- function(input_mz_obj, plot = TRUE) {
   row.names(input_mz_obj) <- input_mz_obj$mz
-  input_mzlong <- input_mz_obj %>%
-    tidyr::pivot_longer(!mz, names_to = "sample_name", values_to = "intensity")
+  input_mzlong <- tidyr::pivot_longer(input_mz_obj, !mz, names_to = "sample_name", values_to = "intensity")
     if(plot){
       mzlongpp.plot(input_mzlong, local.mz_polarity_guesser(input_mz_obj), "PivotLonger")
     }

@@ -16,9 +16,9 @@ plot_volcano <- function(welch, fold_change, title = "Volcano_Plot"){
   if ( sum(round(welch$mz,6) != round(fold_change$mz,6)) > 0){
     stop("ERROR: plot_volcano : Welch mz does not match FoldChange mz")
   }
-  df <- data.frame("mz"   =  welch$mz, 
-                   "p"    = -log10(welch$p), 
-                   "fold" =  log2(fold_change$fold), 
+  df <- data.frame("mz"   =  welch$mz,
+                   "p"    = -log10(welch$p),
+                   "fold" =  log2(fold_change$fold),
                    "diff" =  rep("NONE",nrow(welch)))
 
   df$diff[df$fold > 0.6 & df$p > -log10(0.05)] <- "UP"
@@ -63,7 +63,6 @@ mz_analysis_volcano_magic <- function(input_mzlog_obj, phenotype_a, phenotype_b,
   fold  <- mzlog_analysis_fold(input_mzlog_obj, phenotype_a, phenotype_b)
 
   plot_volcano(welch, fold)
-
 }
 
 # *** Heat Map  -----------------------------------------------------
