@@ -1,4 +1,11 @@
 # *** IsotopeTagging -----------------------------------------------------
+#' 
+#' In mass spectrometry it is well known that every m/z value measured may not
+#' be a unique feature, largely due to isotopes. The mz_tag_isotope_hunter 
+#' function analyzes all m/z features and identifies values that are likely an
+#' isotope instead of a unique feature. It is up to the user to remove these
+#' m/z values if desired.
+#' 
 #' MZ-OBJ IsotopeTagging
 #'
 #' Hunts for isotopes. Defaults to Carbon13

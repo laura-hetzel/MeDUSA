@@ -1,4 +1,15 @@
 # *** Quality Metrics -----------------------------------------------------
+#'
+#' The methods of single cell mass spectrometry have multiple challenges 
+#' associated with them, some of which may lead to a poor measurement that 
+#' does not accurately reflect the biological status of the sample. It is 
+#' recommended that these samples are removed from the data set. Before removal
+#' from the data set, the entire data set can undergo a quality check. The user is 
+#' expected to be able to identify outliers from the data provided with the 
+#' mz_quality_metrics function. It is recommended that the user check the raw 
+#' files of identified outliers and confirm a likely poor measurement before 
+#' removing the file from the data set.
+#' 
 #' MZ-OBJ Quality Metrics
 #'
 #' Get Statistical Mz Data\cr

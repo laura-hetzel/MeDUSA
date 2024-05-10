@@ -1,6 +1,10 @@
 
 # *** Anova Analysis -----------------------------------------------------
-#' Anova my shiz
+#' 
+#' The Welch t-test is only applicable for univariate analysis, so if the 
+#' experiment is comparing more than two phenotypes, ANOVA should be used in
+#' place of the t-test. The mzlong_analysis_anova function utilizes the anova
+#' function available in the Stats package to perform the analysis.
 #'
 #' @param input_mzlong_obj \cr
 #'   DataFrame : LongLog2 of Input MZ-Obj

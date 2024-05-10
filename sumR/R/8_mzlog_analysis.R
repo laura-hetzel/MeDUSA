@@ -1,7 +1,12 @@
 # *** PCA -----------------------------------------------------
 #' MZLOG-OBJ PCA
 #'
-#' Not really sure
+#' A PCA plot is a relatively simple and well received method to compare samples
+#' and determine if they can be grouped by phenotype. The mzlog_analysis_pca 
+#' function scales the log transformed data, removes any blacklisted m/z from
+#' consideration, and incorporates the metadata to create a PCA plot that is 
+#' colored by phenotype for easy interpretation.
+#' 
 #'  - Requires: ggplot2, tibble
 #'
 #' @param input_mzlog_obj \cr
@@ -48,7 +53,12 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() 
 # *** Welch [T-Test] -----------------------------------------------------
 #' MZLOG-OBJ T-Test
 #'
-#' Welch T-test, input should be an log2 of mz_obj
+#' To determine if there is a statistical difference between phenotypes, the 
+#' Welch T-rest is often used. The user is expected to isolate two phenotypes in
+#' the data (example provided for code to isolate) to pass into the 
+#' mzlog_analysis_welch function, which uses Welch t-test function and an FDR
+#' correction to output the p-vale for each m/z.
+#' 
 #'  - Requires: dplyr
 #''
 #' @param phenoA_mz_obj \cr
@@ -115,7 +125,14 @@ mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', c
 # *** Fold [change] -----------------------------------------------------
 #' MZLOG-OBJ Fold Change
 #'
-#' Compare two phenotypes
+#' Fold change is one method of comparing two phenotypes, dividing one phenotype
+#' by the other. The user is expected to isolate two phenotypes in the data 
+#' (example provided for code to isolate) to pass into the mzlog_analysis_fold 
+#' function, which will calculate the mean intensity (default, user defined) of 
+#' each phenotype per m/z. The mean of one phenotype is then divided by the 
+#' mean of the other phenotype, yielding one unitless fold change value for 
+#' each m/z. This allows the user to determine which m/z values are highly 
+#' up/down regulated or mildly up/down regulated.
 #'
 #' @param phenoA_mz_obj \cr
 #'   DataFrame: mz_obj of phenoA samples

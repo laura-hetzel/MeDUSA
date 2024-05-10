@@ -1,4 +1,11 @@
 # *** Blacklist -----------------------------------------------------
+#' 
+#' Filtering of the data is necessary to remove noise and contaminants from the
+#' data set before statistical analysis. The mz_filter_blacklist function 
+#' accepts a list of m/z values that have been previously identified as 
+#' contaminants and removes them from the data set. This function can be used
+#' to exclude any m/z values for any reason, but was designed for contaminants.
+#' 
 #' MZ-OBJ Blacklist
 #'
 #' Removed Blacklisted MZs .\cr
@@ -37,6 +44,12 @@ mz_filter_blacklist <- function( input_mz_obj,
 }
 
 # *** Misingness -----------------------------------------------------
+#' 
+#' Filtering of the data is necessary to remove noise and contaminants from the
+#' data set before statistical analysis. The mz_filter_missingness function 
+#' removes m/z values that have a zero value in a specified percentage of the 
+#' samples. 
+#' 
 #' MZ-OBJ or MZT-OBJ Filter Missingness
 #'
 #' Remove if peaks are significantly present.\cr
@@ -59,6 +72,13 @@ mz_filter_missingness <- function(input_mz_obj, threshold = 0.1, msg = ""){
 }
 
 # *** LowIntensity -----------------------------------------------------
+#' 
+#' Filtering of the data is necessary to remove noise and contaminants from the
+#' data set before statistical analysis. The mz_filter_lowIntensity function 
+#' will filter out noise by eliminating low intensity values. The user can set a
+#' threshold for the minimum intensity, and any intensity below this value will
+#' be set to zero.
+#' 
 #' MZ-OBJ or MZT-OBJ Filter LowIntensity
 #'
 #' Remove if intensity is too low\cr
@@ -84,6 +104,17 @@ mz_filter_lowIntensity <- function(input_mz_obj, threshold, msg = ""){
 }
 
 # *** Filter-Magic -----------------------------------------------------
+#' 
+#' Filtering of the data is necessary to remove noise and contaminants from the
+#' data set before statistical analysis. The mz_filter_magic function will 
+#' filter the data based on three parameters: the minimum intensity, a
+#' missingness threshold, and a blacklist. The minimum intensity will set any
+#' intensity value that is below the minimum to zero in an attempt to decrease
+#' the statistical impact of noise. The missingness threshold will eliminate 
+#' m/z values that do not occur in a sufficient number of the samples. The 
+#' blacklist will eliminate m/z values that have been previously identified as
+#' contaminants.
+#' 
 #' MZ-OBJ Filter-Magic
 #'
 #' Apply all filters as suggested by SumR.

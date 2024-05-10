@@ -1,4 +1,12 @@
 # *** Imputation -----------------------------------------------------
+#' 
+#' After filtering the data set, there may be zero values as intensity in some
+#' instances. Unfortunately, this will hinder the statistical analysis as 
+#' some of the mathematical functions cannot accept zero values. To accommodate
+#' this without impacting the statistical outcome, the mz_pp_imputation function
+#' is used to replace the zero values with a random number between 1 and a set 
+#' noise value.
+#' 
 #' MZ-OBJ Imputation
 #'
 #' Replace all <[low_noise] ("mostly zeros") with a randomized value
@@ -38,11 +46,12 @@ mz_pp_imputation <- function(input_mz_obj, low_noise=10, high_noise=5000){
 # *** Normalization -----------------------------------------------------
 #' MZ-OBJ Normalization
 #'
-#' This function utilizes Probabilistic Quotient Normalization, or PQN, to limit
-#' the effects of general fluctuations and random effects on the results. In
-#' single-cell measurements, this is important since the size of the cell as
-#' well as the volume of media captured and measured with the cell are variable,
-#' thus impacting the overall dilution of the cellular material.
+#' The mz_pp_normalization function utilizes Probabilistic Quotient 
+#' Normalization, or PQN, to limit the effects of general fluctuations and 
+#' random effects on the results. In single cell measurements, this is important 
+#' since the size of the cell as well as the volume of media captured and 
+#' measured with the cell are variable, thus impacting the overall dilution of 
+#' the cellular material.
 #'
 #' It is recommended to use PQN after samples and mz have been removed in the
 #' standard filtering steps.
@@ -90,9 +99,13 @@ mz_pp_normalization <- function(input_mz_obj, metadata, plot = TRUE ){
 }
 
 # *** PivotLonger -----------------------------------------------------
-#' MZ-OBJ Pivot Longer (Does not Log2)
+#' MZ-OBJ Pivot Longer 
 #'
-#' Not really sure what this does
+#' The mz_pp_pivot_longer function does not filter the data at all, but rather
+#' rearranges it in preparation for some of the mathematical statistical 
+#' functions. Instead of a column for each sample, there will be only three 
+#' columns: m/z, sample, and intensity. Each m/z will appear as many times as
+#' there are samples. 
 #'  - Requires: ggplot2, ggpubr, tidyr
 #'
 #' @param input_mz_obj \cr
@@ -116,6 +129,12 @@ mz_pp_pivot_longer <- function(input_mz_obj, plot = TRUE) {
 #' MZ-OBJ Log2
 
 #'
+#' The mz_pp_log function log2 transforms the intensities of the data set. Log
+#' transformation of the data is highly recommended so that the observed m/z 
+#' relationships are proportional and not additive, making the statistical 
+#' analysis and interpretation more biologically relevant. Note that this 
+#' function works with the standard mz_object, not the pivot_longer object.
+#' 
 #' @param input_mz_obj \cr
 #'   DataFrame : Input MZ-Obj
 #'
@@ -129,8 +148,14 @@ mz_pp_log <- function(input_mz_obj) {
 
 # *** Process Magic -----------------------------------------------------
 #' MZ-OBJ Process Magic
-#'
-#' Do all the recommended post processing
+#' 
+#' The mz_pp_magic function will perform all of the recommended post-processing, 
+#' including imputation to elimate intenstiy values of zero, PQN normalization
+#' to reduce the effects of dilution not attributed to the phenotype, 
+#' pivot_longer to get the data structurally ready for statistical analysis, 
+#' and a log2 transform for a biologically relevant proportional comparison of 
+#' the data.
+#' 
 #'  - Requires: ggplot2, tidyrx
 #'
 #' @param input_mz_obj \cr
