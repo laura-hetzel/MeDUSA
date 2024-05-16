@@ -9,6 +9,11 @@ meta <- data.frame(readxl::read_excel(file_meta, sheet = "meta", col_names = TRU
 meta$sample_name <- meta$filename
 meta <- dplyr::select(meta,-filename)
 
+mzL2 <- mzml_extract_magic("data")
+## debugging without magic
+#files <- list.files(path=getwd("data"), pattern="*.mzML")
+#mzT <- pbapply::pblapply(files, function(x) mzml_extract_file(x, polarity=0, cl = NULL, magic=F))
+
 load("mzL.Rdata")
 
 mz_obj_p <- mzL$pos

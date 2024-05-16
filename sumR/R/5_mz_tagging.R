@@ -1,11 +1,11 @@
 # *** IsotopeTagging -----------------------------------------------------
-#' 
+#'
 #' In mass spectrometry it is well known that every m/z value measured may not
-#' be a unique feature, largely due to isotopes. The mz_tag_isotope_hunter 
+#' be a unique feature, largely due to isotopes. The mz_tag_isotope_hunter
 #' function analyzes all m/z features and identifies values that are likely an
 #' isotope instead of a unique feature. It is up to the user to remove these
 #' m/z values if desired.
-#' 
+#'
 #' MZ-OBJ IsotopeTagging
 #'
 #' Hunts for isotopes. Defaults to Carbon13
@@ -13,9 +13,9 @@
 #'   input_mz_obj[input_mz_obj$mz %in% output[['100.12345']],]
 #'
 #' @param input_mz_obj \cr
-#'   DataFrame : Input MZ-Obj
+#'   DataFrame : Input MZ-Obj ( Only MZ column required )
 #' @param iso_target \cr
-#'   Float : Dalton diff of isotope to hunt
+#'   Float : Dalton diff of isotope to hunt.
 #' @param iso_iter \cr
 #'   Integer     : How many 'iterations' of iso_target should we look
 #' @param tol_ppm \cr

@@ -31,8 +31,8 @@
 #'   List: of mzML files (i.e. list.files(".",pattern = "qc_.*mzML"))
 #' @param cores
 #'   Integer: Can I has multithreading? (Need parallel)
-#' @param verbose Which Parallization method: parLapply is faster (on Win), but no active output)
-#'   Boolean: T=pblapply; F=parLapply
+#' @param params
+#'   List: override any subset (or all) default parameters
 #' @returns MzObj
 #' @export
 mzml_extract_magic <- function(files = getwd(), cores = 6,  params = NULL ){
@@ -139,7 +139,7 @@ mzml_extract_file <- function(file, polarity = "",  magic = T,  cl = NULL, param
                           missingness_threshold = params$missingness_threshold,
                           intensity_threshold = params$intensity_threshold,
                           log_name = paste(file,polarity))
-    out <- mzT_squashTime(out, timeSquash_method = params$timeSquash_method)
+    out <- mzT_squash_time(out, timeSquash_method = params$timeSquash_method)
   }else{
     out
   }
@@ -182,7 +182,7 @@ mzml_extract_file <- function(file, polarity = "",  magic = T,  cl = NULL, param
 # Note missingness_threshold is very low
 mzT_filtering <- function(mzT, prebin_method = max, missingness_threshold = 1, intensity_threshold = 1000, log_name = "" ){
   mzT <- magic.binning(mzT,prebin_method,log_name)
-  mzT <- mz_filter_lowIntensity(mzT,threshold = intensity_threshold, log_name)
+  mzT <- mz_filter_low_intensity(mzT,threshold = intensity_threshold, log_name)
   mzT <- mz_filter_missingness(mzT,threshold = missingness_threshold,log_name)
 }
 
@@ -204,7 +204,7 @@ mzT_filtering <- function(mzT, prebin_method = max, missingness_threshold = 1, i
 #' The same steps and math are used to determine the m/z values for all files.
 #' The intensity does not undergo further math and is simply assigned to the
 #' corresponding m/z value.
-#' The mzT_squashTime object will align over the scans in a single file and
+#' The mzT_squash_time object will align over the scans in a single file and
 #' produce one intensity per m/z value per sample.
 #' Squash MzT obj (many scans) into a single mz|intensity dataframe
 #'
@@ -216,7 +216,7 @@ mzT_filtering <- function(mzT, prebin_method = max, missingness_threshold = 1, i
 #'   Boolean: Should we set 0 <- NA (to not affect the math)
 #' @returns MzObj of one sample column
 #' @export
-mzT_squashTime <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl = NULL){
+mzT_squash_time <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl = NULL){
   # This should be handled by filter low intesity
   if( ignore_zeros ){
     mzT[mzT == 0] <- NA
@@ -296,6 +296,7 @@ magic.file_lister <- function(files) {
   files
 }
 
+#TODO move to tools get_defaults
 magic.fill_defaults <- function(params = NULL){
   defaults <- list(
     "prebin_method" = max,
