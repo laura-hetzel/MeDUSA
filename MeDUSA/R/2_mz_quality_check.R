@@ -125,8 +125,7 @@ mz_quality_meta_check <- function(input_mz_obj, meta){
   meta_columns_expected <- c("measurement",
                              "sample_name",
                              "type",
-                             "phenotype",
-                             "filtered_out")
+                             "phenotype")
 
   error <- .subset_check(meta_columns_expected,colnames(meta),"MetaColumns missing: ")
   error <- .subset_check(meta$sample_name,colnames(input_mz_obj),"MetaSamples not in data: ")

@@ -47,11 +47,10 @@ RUN R -e 'devtools::install(dependencies="never")'
 
 
 ### TO BUILD
-# docker build . -f Dockerfile-localR -t lacdr/medusa
+# docker build . -f Dockerfile -t lacdr/medusa
 ### TO BUILD without MeDUSA (i.e. to develop it)
-# docker build . -f Dockerfile-localR -t lacdr/medusa --target package_base
+# docker build . -f Dockerfile -t lacdr/medusa --target package_base
 
-### TO RUN:
 ### TO RUN RSTUDIO: user=rstudio, pwd=medusa
 # docker run -e PASSWORD=medusa -p 8787:8787 -v .:/home/rstudio/local lacdr/medusa
 # Navigate to localhost:8787 in your browser
@@ -59,7 +58,6 @@ RUN R -e 'devtools::install(dependencies="never")'
 ### TO RUN R terminal:
 #[Unix/Mac] docker run --rm -it --name localR -v $(pwd):/local  lacdr/medusa /bin/bash
 #[Win?]     docker run --rm -it --name localR -v .:/local  lacdr/medusa /bin/bash
-
 ### To enter a running container (use "docker ps" to make sure there is only one)
 # docker exec --it localR /bin/bash
 #[Unix/Mac] docker exec -it $(docker ps | grep medusa | awk '{print $1}') /bin/bash

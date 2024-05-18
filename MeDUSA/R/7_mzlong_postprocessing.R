@@ -39,7 +39,7 @@ mzlongpost.plot <- function(input_mzlong, polarity, plot_title){
     title  = paste(plot_title, polarity, sep=": "),
     rotate = T ) +
     ggplot2::scale_x_discrete(
-      label = sapostly(strsplit(input_mzlong$sample_name, '_'), function(x) paste(x[-2:-1], collapse = '.')),
+      label = sapply(strsplit(input_mzlong$sample_name, '_'), function(x) paste(x[-2:-1], collapse = '.')),
       guide = ggplot2::guide_axis( n.dodge=3)) +
     ggplot2::theme(legend.position = "none", axis.text.y=ggplot2::element_text(size=ggplot2::rel(0.5)))
 
@@ -55,7 +55,7 @@ mzlongpost.plot <- function(input_mzlong, polarity, plot_title){
     rotate        = T
     ) +
     ggplot2::scale_x_discrete(
-      label = sapostly(strsplit(input_mzlong$sample_name, '_'), function(x) paste(x[-2:-1], collapse = '.')),
+      label = sapply(strsplit(input_mzlong$sample_name, '_'), function(x) paste(x[-2:-1], collapse = '.')),
       guide = ggplot2::guide_axis( n.dodge=3)) +
     ggplot2::theme(legend.position = "none", axis.text.y=ggplot2::element_text(size=ggplot2::rel(0.5)))
 

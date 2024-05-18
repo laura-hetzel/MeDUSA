@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2024-05-18T10:39:00.636Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0" etag="fnL3VwBba_BIU7B-kox6" version="24.4.1" type="device" pages="5">
+<mxfile host="app.diagrams.net" modified="2024-05-18T12:06:30.535Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0" etag="N1eKtc3TKChD0NTResLO" version="24.4.1" type="device" pages="5">
   <diagram id="8ESx_5yLAKoN8qAS1jF6" name="medusa">
     <mxGraphModel dx="651" dy="473" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -354,7 +354,7 @@
     </mxGraphModel>
   </diagram>
   <diagram name="medusa_detailed" id="DOBXTkU44riz8Ig5bA6L">
-    <mxGraphModel dx="2455" dy="1183" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1593" dy="556" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="FAiBACSbsbh2R8-8JHN5-0" />
         <mxCell id="FAiBACSbsbh2R8-8JHN5-1" parent="FAiBACSbsbh2R8-8JHN5-0" />
@@ -594,7 +594,7 @@
         <mxCell id="v9AVE5IH6e-QtJ-1Ino3-17" value="MzObj" style="ellipse;whiteSpace=wrap;html=1;" parent="FAiBACSbsbh2R8-8JHN5-1" vertex="1">
           <mxGeometry x="-561" y="536.52" width="50" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="v9AVE5IH6e-QtJ-1Ino3-21" value="&amp;nbsp;mz_filter_magic" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d0cee2;strokeColor=#190033;verticalAlign=top;align=left;sketch=1;curveFitting=1;jiggle=2;shadow=1;" parent="FAiBACSbsbh2R8-8JHN5-1" vertex="1">
+        <mxCell id="v9AVE5IH6e-QtJ-1Ino3-21" value="&amp;nbsp;mz_filter_magic" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d0cee2;strokeColor=#190033;verticalAlign=top;align=left;sketch=1;curveFitting=1;jiggle=2;shadow=0;" parent="FAiBACSbsbh2R8-8JHN5-1" vertex="1">
           <mxGeometry x="-466" y="587.77" width="285" height="118.75" as="geometry" />
         </mxCell>
         <mxCell id="v9AVE5IH6e-QtJ-1Ino3-22" value="&lt;font color=&quot;#330066&quot;&gt;mz_filter_low_intensity&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#9673a6;fillColor=#e1d5e7;fontSize=10;" parent="FAiBACSbsbh2R8-8JHN5-1" vertex="1">
