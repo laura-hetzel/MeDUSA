@@ -29,13 +29,13 @@ test_that("mz_polarity_guesser: Custom Return",  {
 test_that("mz_polarity_guesser: Errors on both",  {
     load("testdata/mz_neg.Rdata")
     colnames(mz_neg) <- c('mz',"sample1","sample2","sample3", "sample4")
-    expect_error(local.mz_polarity_guesser(mz_neg), "ERROR: sumR::polarity_guesser: Could not guess Positive or Negative from colnames")
+    expect_error(local.mz_polarity_guesser(mz_neg), "ERROR: MeDUSA::polarity_guesser: Could not guess Positive or Negative from colnames")
 })
 
 test_that("mz_polarity_guesser: Errors on both",  {
     load("testdata/mz_neg.Rdata")
     colnames(mz_neg) <- c('mz',"neg_sample1","Positive_sample2","Positive_sample3", "Positive_sample4")
-    expect_error(local.mz_polarity_guesser(mz_neg), "ERROR: sumR::polarity_guesser: Detected both Positive & Negative from colnames")
+    expect_error(local.mz_polarity_guesser(mz_neg), "ERROR: MeDUSA::polarity_guesser: Detected both Positive & Negative from colnames")
 })
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##     local.meta_polarity_fixer                                                   ----

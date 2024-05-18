@@ -1,13 +1,13 @@
 # *** RandomForest Correlation -----------------------------------------------------
-#' 
+#'
 #' Random Forest is a robust tool for identifying the features that contribute
 #' to correct phenotype prediction. For optimal performance of the model, it is
-#' recommended to remove the highly correlated features before training and 
-#' testing the model. The mzlog_rf_correlation function utilizes the 
-#' findCorrelation function of the Caret package to isolate and remove the 
+#' recommended to remove the highly correlated features before training and
+#' testing the model. The mzlog_rf_correlation function utilizes the
+#' findCorrelation function of the Caret package to isolate and remove the
 #' highly correlated features. The new data set with these feature removed will
 #' be used for the remaining functions of random forest.
-#' 
+#'
 #' @returns Transposed mzlog_obj of correlation_data
 #'
 #' @export
@@ -25,15 +25,15 @@ mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
 #'
 #' Random Forest is a robust tool for identifying the features that contribute
 #' to correct phenotype prediction. For optimal performance of the model, it is
-#' recommended to remove the highly correlated features before training and 
-#' testing the model. The mzlog_rf_correlation function utilizes the 
-#' findCorrelation function of the Caret package to isolate and remove the 
+#' recommended to remove the highly correlated features before training and
+#' testing the model. The mzlog_rf_correlation function utilizes the
+#' findCorrelation function of the Caret package to isolate and remove the
 #' highly correlated features. The new data set with these feature removed will
-#' be used for the remaining functions of random forest. The mzlog_rf_select 
-#' function utilizes the Caret rfeControl function to determine which features 
-#' of the data set are the best predictors for phenotype and how many features 
-#' should be considered in the model. Using the reduced, likely predictors only 
-#' data set will reduce the resources needed for the remainder of random forest 
+#' be used for the remaining functions of random forest. The mzlog_rf_select
+#' function utilizes the Caret rfeControl function to determine which features
+#' of the data set are the best predictors for phenotype and how many features
+#' should be considered in the model. Using the reduced, likely predictors only
+#' data set will reduce the resources needed for the remainder of random forest
 #' processing.
 #'
 #' @param correlation_data \cr
@@ -56,7 +56,7 @@ mzlog_rf_select <- function(correlation_data, metadata, feat_size_seq = seq(50,1
                                 method = "repeatedcv",
                                 repeats = 5,
                                 number = 10)
-                                
+
   print("INFO: caret::rfe() is time and resource heavy on large data sets")
   feat_select <- caret::rfe(dplyr::select(data, -sample_name, -phenotype),
                             att,
@@ -74,22 +74,22 @@ mzlog_rf_select <- function(correlation_data, metadata, feat_size_seq = seq(50,1
 
 
 # *** RandomForest model -----------------------------------------------------
-#' 
+#'
 #' Random Forest is a robust tool for identifying the features that contribute
 #' to correct phenotype prediction. For optimal performance of the model, it is
-#' recommended to remove the highly correlated features before training and 
-#' testing the model. The mzlog_rf_correlation function utilizes the 
-#' findCorrelation function of the Caret package to isolate and remove the 
+#' recommended to remove the highly correlated features before training and
+#' testing the model. The mzlog_rf_correlation function utilizes the
+#' findCorrelation function of the Caret package to isolate and remove the
 #' highly correlated features. The new data set with these feature removed will
-#' be used for the remaining functions of random forest. The mzlog_rf_select 
-#' function utilizes the Caret rfeControl function to determine which features 
-#' of the data set are the best predictors for phenotype and how many features 
-#' should be considered in the model. Using the reduced, likely predictors only 
-#' data set will reduce the resources needed for the remainder of random forest 
+#' be used for the remaining functions of random forest. The mzlog_rf_select
+#' function utilizes the Caret rfeControl function to determine which features
+#' of the data set are the best predictors for phenotype and how many features
+#' should be considered in the model. Using the reduced, likely predictors only
+#' data set will reduce the resources needed for the remainder of random forest
 #' processing. The mzlog_rf function divides the data set randomly into sections
-#' for training and testing the model. The model will output a coefficient of 
+#' for training and testing the model. The model will output a coefficient of
 #' relevance for each feature, essentially ranking the features based on how
-#' fundamental the feature was in predicting the phenotype. The accuracy of the 
+#' fundamental the feature was in predicting the phenotype. The accuracy of the
 #' model is also output.
 #'
 #' @param mzlog_obj \cr
@@ -105,7 +105,7 @@ mzlog_rf_select <- function(correlation_data, metadata, feat_size_seq = seq(50,1
 #' @param cores \cr
 #'   Int: can I haz multithreading
 #'
-#' @returns list(model, test, train)
+#' @returns list(model, test, train, imp_mz)
 #'
 #' @export
 mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, master_seeds = c(42,1701),
@@ -180,11 +180,11 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
     tmp <- tidyr::pivot_longer(tmp, !tree )
     ggpubr::ggline(tmp,x="tree",y="value", shape = "", line = "name", title=paste0("RandomForest Error: ",pol))
     local.save_plot(paste0("rf_error_", pol))
-    
+
     png(paste0(local.output_dir(),local.dir_sep(),"Important_Variables_",pol,".png"))
     varImpPlot(model, col = "Blue", pch = 2, main = paste("Important Variables ", pol))
     dev.off()
-    
+
     pheno <- as.vector(unique(master_split$train$phenotype))
     ggplot(mds_data, aes(x = x, y = y, label = Sample)) +
       geom_point(aes(color = Phenotype), size = 3) +
@@ -203,30 +203,30 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
 }
 
 # *** RandomForest Correlation -----------------------------------------------------
-#' 
+#'
 #' Random Forest is a robust tool for identifying the features that contribute
 #' to correct phenotype prediction. For optimal performance of the model, it is
-#' recommended to remove the highly correlated features before training and 
-#' testing the model. The mzlog_rf_correlation function utilizes the 
-#' findCorrelation function of the Caret package to isolate and remove the 
+#' recommended to remove the highly correlated features before training and
+#' testing the model. The mzlog_rf_correlation function utilizes the
+#' findCorrelation function of the Caret package to isolate and remove the
 #' highly correlated features. The new data set with these feature removed will
-#' be used for the remaining functions of random forest. The mzlog_rf_select 
-#' function utilizes the Caret rfeControl function to determine which features 
-#' of the data set are the best predictors for phenotype and how many features 
-#' should be considered in the model. Using the reduced, likely predictors only 
-#' data set will reduce the resources needed for the remainder of random forest 
+#' be used for the remaining functions of random forest. The mzlog_rf_select
+#' function utilizes the Caret rfeControl function to determine which features
+#' of the data set are the best predictors for phenotype and how many features
+#' should be considered in the model. Using the reduced, likely predictors only
+#' data set will reduce the resources needed for the remainder of random forest
 #' processing. The mzlog_rf function divides the data set randomly into sections
-#' for training and testing the model. The model will output a coefficient of 
+#' for training and testing the model. The model will output a coefficient of
 #' relevance for each feature, essentially ranking the features based on how
-#' fundamental the feature was in predicting the phenotype. The accuracy of the 
-#' model is also output. The rf_validate function is used to compare the 
-#' predictions of the model to the actual phenotype of the sample. The accuracy 
-#' of the model is also output. To ensure the accuracy of the model is truly 
-#' based on biological phenotype, a permutation of the data is used. The 
-#' rf_permuted function randomly assigns a phenotype to each of the samples and 
-#' feeds this permuted data set through the model. If the accuracy is 
+#' fundamental the feature was in predicting the phenotype. The accuracy of the
+#' model is also output. The rf_validate function is used to compare the
+#' predictions of the model to the actual phenotype of the sample. The accuracy
+#' of the model is also output. To ensure the accuracy of the model is truly
+#' based on biological phenotype, a permutation of the data is used. The
+#' rf_permuted function randomly assigns a phenotype to each of the samples and
+#' feeds this permuted data set through the model. If the accuracy is
 #' significantly greater than 50%, the user should reconsider the model.
-#' The mzlog_rf_magic function incorporates all of the mentioned functions of 
+#' The mzlog_rf_magic function incorporates all of the mentioned functions of
 #' random forest into one seamless function for the user.
 #'
 #' @param mzlog_obj \cr

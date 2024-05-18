@@ -16,7 +16,8 @@
 #' @param sample_blacklist \cr
 #'   List?     : c("bad1", "bad2")
 #'
-#' @returns null (only plots)
+#' @returns
+#' null (only plots)
 #'
 #' @export
 mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() ) {
@@ -75,8 +76,8 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() 
 #' @examples
 #' To t.test values from "phenoA" over "phenoB"
 #'
-#' phenoA_mz_obj  <- sumR::mztools_filter(input_mzObj,metadata,"phenoA")
-#' phenoB_mz_obj  <- sumR::mztools_filter(input_mzObj,metadata,"phenoB")
+#' phenoA_mz_obj  <- MeDUSA::mztools_filter(input_mzObj,metadata,"phenoA")
+#' phenoB_mz_obj  <- MeDUSA::mztools_filter(input_mzObj,metadata,"phenoB")
 #'
 #' @param cores
 #'   Integer: Can I has multithreading? (Need parallel)
@@ -91,7 +92,7 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() 
 #'
 #' @export
 mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', cores = 2){
-  df_l <- local.ensure_mz(phenoA_mz_obj,phenoB_mz_obj, "sumR::mzlog_analysis_welch")
+  df_l <- local.ensure_mz(phenoA_mz_obj,phenoB_mz_obj, "MeDUSA::mzlog_analysis_welch")
 
   cl <- local.export_thread_env(cores, environment())
   tryCatch({
@@ -146,8 +147,8 @@ mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', c
 #' @examples
 #' To fold values from "phenoA" over "phenoB"
 #'
-#' phenoA_mz_obj  <- sumR::mztools_filter(input_mzObj,metadata,"phenoA")
-#' phenoB_mz_obj  <- sumR::mztools_filter(input_mzObj,metadata,"phenoB")
+#' phenoA_mz_obj  <- MeDUSA::mztools_filter(input_mzObj,metadata,"phenoA")
+#' phenoB_mz_obj  <- MeDUSA::mztools_filter(input_mzObj,metadata,"phenoB")
 #'
 #' @returns DataFrame with columns:
 #'  - mz   : Float
@@ -155,7 +156,7 @@ mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', c
 #'
 #' @export
 mzlog_analysis_fold <- function(phenoA_mz_obj, phenoB_mz_obj, fold_math = "mean"){
-  df_l <- local.ensure_mz(phenoA_mz_obj,phenoB_mz_obj, "sumR::mzlog_analysis_fold")
+  df_l <- local.ensure_mz(phenoA_mz_obj,phenoB_mz_obj, "MeDUSA::mzlog_analysis_fold")
   out <- df_l$mz
   out$fold <- (apply(df_l$df_a, 1, fold_math) /
                apply(df_l$df_b, 1, fold_math))

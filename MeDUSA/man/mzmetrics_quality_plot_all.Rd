@@ -8,7 +8,7 @@ mzmetrics_quality_plot_all(mz_metrics)
 }
 \arguments{
 \item{mz_metrics}{\cr
-DataFrame : from "sumR::mz_quality_metrics"}
+DataFrame : from "MeDUSA::mz_quality_metrics"}
 }
 \description{
 MZ_METRICS plot all statistics

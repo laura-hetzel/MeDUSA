@@ -2,8 +2,8 @@
 # *** Filter MZs by meta Phenotypes  -----------------------------------------------------
 #' MZLOG-OBJ Plot Heat map
 #'
-#' The mztools_filter function is used to filter the m/z values by phenotype. 
-#' This filtering is useful for t-test, fold change, and volcano plots. For 
+#' The mztools_filter function is used to filter the m/z values by phenotype.
+#' This filtering is useful for t-test, fold change, and volcano plots. For
 #' optimal results, the metadata should have a properly populated "phenotype"
 #' column.
 #'
@@ -35,7 +35,7 @@ mztools_filter <- function(input_mzobj, metadata, filter_value , filter_name = "
 }
 
 # *** Get Default Data-----------------------------------------------------
-#' 
+#'
 #' The get_default_data function will return a list of default values including
 #' available adducts and their corresponding masses as well as default blacklist
 #' of features to exclude and their corresponding masses.
@@ -70,7 +70,7 @@ get_default_data <- function(type){
       c("Polysiloxane", 536.17)
     )
   } else {
-    stop("ERROR: sumR::get_default_values: Data type not found.")
+    stop("ERROR: MeDUSA::get_default_values: Data type not found.")
   }
   out <- data.frame(name = character(), value = numeric())
   for(x in 1:length(data_list)){

@@ -28,5 +28,5 @@ Dependencies : dplyr}
 Returns an MZ-OBJ
 }
 \description{
-Apply all filters as suggested by SumR.
+Apply all filters as suggested by MeDUSA.
 }

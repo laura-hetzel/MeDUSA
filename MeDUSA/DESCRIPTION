@@ -1,5 +1,5 @@
-Package: sumR
-Title: Metabolomic Analysis of Single-cell Direct-injection in R
+Package: MeDUSA
+Title: Metabolomics Direct Infusion Untarged Single-cell Analysis
 Version: 0.0.0.9000
 Authors@R:
     c(person(given = "Laura", family = "Hetzel", email = "l.a.hetzel@lacdr.leidenuniv.nl", role = c("aut"),

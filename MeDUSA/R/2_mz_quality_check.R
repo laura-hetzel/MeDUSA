@@ -1,15 +1,15 @@
 # *** Quality Metrics -----------------------------------------------------
 #'
-#' The methods of single cell mass spectrometry have multiple challenges 
-#' associated with them, some of which may lead to a poor measurement that 
-#' does not accurately reflect the biological status of the sample. It is 
+#' The methods of single cell mass spectrometry have multiple challenges
+#' associated with them, some of which may lead to a poor measurement that
+#' does not accurately reflect the biological status of the sample. It is
 #' recommended that these samples are removed from the data set. Before removal
-#' from the data set, the entire data set can undergo a quality check. The user is 
-#' expected to be able to identify outliers from the data provided with the 
-#' mz_quality_metrics function. It is recommended that the user check the raw 
-#' files of identified outliers and confirm a likely poor measurement before 
+#' from the data set, the entire data set can undergo a quality check. The user is
+#' expected to be able to identify outliers from the data provided with the
+#' mz_quality_metrics function. It is recommended that the user check the raw
+#' files of identified outliers and confirm a likely poor measurement before
 #' removing the file from the data set.
-#' 
+#'
 #' MZ-OBJ Quality Metrics
 #'
 #' Get Statistical Mz Data\cr
@@ -58,7 +58,7 @@ mz_quality_metrics <- function(input_mz_obj, cores = 2){
 #' MZ_METRICS plot all statistics
 #'
 #' @param mz_metrics \cr
-#'   DataFrame : from "sumR::mz_quality_metrics"
+#'   DataFrame : from "MeDUSA::mz_quality_metrics"
 #' @export
 mzmetrics_quality_plot_all <- function(mz_metrics){
   for (f in colnames(mz_metrics[-1])){
@@ -70,7 +70,7 @@ mzmetrics_quality_plot_all <- function(mz_metrics){
 #' MZ_METRICS plot a single statistic
 #'
 #' @param mz_metrics \cr
-#'   DataFrame : from "sumR::mz_quality_metrics"
+#'   DataFrame : from "MeDUSA::mz_quality_metrics"
 #' @param focus \cr
 #'   String : which metric to plot (i.e. median_mz)
 #' @param title \cr
@@ -82,20 +82,20 @@ mzmetrics_quality_plot <- function(mz_metrics, focus, title = F, plot_dim = c(8,
   if(title == F ){
     title <- focus
   }
-  
+
   ggpubr::ggbarplot(mz_metrics, x = "name", y = focus,
                     title = title,
                     fill  = focus,
-                    color = focus,    
+                    color = focus,
                     xlab = "Sample_Name",
-                    ylab = title) + 
-    ggpubr::rotate(ylim = c( min(mz_metrics[[focus]][is.finite(mz_metrics[[focus]])]), 
+                    ylab = title) +
+    ggpubr::rotate(ylim = c( min(mz_metrics[[focus]][is.finite(mz_metrics[[focus]])]),
                              max(mz_metrics[[focus]][is.finite(mz_metrics[[focus]])]) )) +
     ggplot2::scale_x_discrete(
-      label = sapply(strsplit(mz_metrics$name, '_'), function(x) paste(x[-2:-1], collapse = '.')), 
+      label = sapply(strsplit(mz_metrics$name, '_'), function(x) paste(x[-2:-1], collapse = '.')),
       guide = ggplot2::guide_axis( n.dodge=3 )) +
     ggplot2::theme(legend.position = "none", axis.text.y=ggplot2::element_text(size=ggplot2::rel(0.5)))
-  
+
   local.save_plot(paste("QualityCheck", title, local.mz_polarity_guesser(mz_metrics),sep="-"), dim = plot_dim)
 }
 
@@ -139,7 +139,7 @@ mz_quality_meta_check <- function(input_mz_obj, meta){
 
 
   if (length(error) > 0){
-    stop(paste0("ERROR: sumR::mz_quality_meta_check: ", error, "\n"))
+    stop(paste0("ERROR: MeDUSA::mz_quality_meta_check: ", error, "\n"))
   }
 }
 

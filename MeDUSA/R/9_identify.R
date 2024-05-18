@@ -1,10 +1,10 @@
 # *** HMDB Identify -----------------------------------------------------
-#' 
+#'
 #' A list of m/z values is not necessary helpful in metabolomic studies; these
 #' values must be assigned to something meaningful. The identify_hmdb function
-#' compares the m/z values previously identified as "relevant to phenotype 
-#' prediction" to the Human Metabolome Database (HMDB). Adducts may be added as 
-#' a list to improve the results of the search. Additionally, a tolerance is 
+#' compares the m/z values previously identified as "relevant to phenotype
+#' prediction" to the Human Metabolome Database (HMDB). Adducts may be added as
+#' a list to improve the results of the search. Additionally, a tolerance is
 #' set by the user for identifying matches with the database.
 #'
 #'  - Requires: ggplot2, tibble
@@ -42,12 +42,12 @@ identify_hmdb <- function( mzs, adducts = c("M+H"), hmdb_file = "/home/rstudio/l
 
 
 # *** Lipid Identify -----------------------------------------------------
-#' 
+#'
 #' A list of m/z values is not necessary helpful in lipidomic studies; these
 #' values must be assigned to something meaningful. The identify_lipids function
-#' compares the m/z values previously identified as "relevant to phenotype 
-#' prediction" to a lipids database. Adducts may be added as 
-#' a list to improve the results of the search. Additionally, a tolerance is 
+#' compares the m/z values previously identified as "relevant to phenotype
+#' prediction" to a lipids database. Adducts may be added as
+#' a list to improve the results of the search. Additionally, a tolerance is
 #' set by the user for identifying matches with the database.
 #'
 #'  - Requires: ggplot2, tibble
@@ -67,12 +67,12 @@ identify_lipids <- function( mzs, adducts = c("M+H"), lipids_file = "/home/rstud
 }
 
 # *** Identify from csv-----------------------------------------------------
-#' 
+#'
 #' A list of m/z values is not necessary helpful in metabolomic studies; these
 #' values must be assigned to something meaningful. It is possible to download
 #' the desired databases for comparison and compare the data sets to the stored
-#' CSV file with the identify_from_csv function. Adducts may be added as 
-#' a list to improve the results of the search. Additionally, a tolerance is 
+#' CSV file with the identify_from_csv function. Adducts may be added as
+#' a list to improve the results of the search. Additionally, a tolerance is
 #' set by the user for identifying matches with the database.
 #'
 #'  - Requires: ggplot2, tibble
@@ -110,11 +110,10 @@ identify.adducts <- function(adducts,source){
       common_adducts <- get_default_data('adducts')
       adducts = common_adducts$value[common_adducts$name %in% adducts]
     } else if ( class(adducts) != "numeric"){
-      stop(paste0("ERROR: sumR::identify::",source,"adducts cannot be:", class(adducts),". Examples of valid adducts: c(1.0008,17.03052) or c(\"H\")"))
+      stop(paste0("ERROR: MeDUSA::identify::",source,"adducts cannot be:", class(adducts),". Examples of valid adducts: c(1.0008,17.03052) or c(\"H\")"))
     }
   } else {
-    stop(paste0("ERROR: sumR::identify::",source,"adducts is not a vector. Examples of valid adducts: c(1.0008,17.03052) or c(\"H\")"))
+    stop(paste0("ERROR: MeDUSA::identify::",source,"adducts is not a vector. Examples of valid adducts: c(1.0008,17.03052) or c(\"H\")"))
   }
   adducts
 }
-

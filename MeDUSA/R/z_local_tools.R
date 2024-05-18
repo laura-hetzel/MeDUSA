@@ -29,19 +29,19 @@ local.mz_polarity_guesser <- function(input, pos_return = "Positive", neg_return
   try({input[3,] <- colnames(input)})
   count <- 0
   if (sum(grep("[^A-Za-z|^][Nn]eg|[Nn]egative",input)) > 0){
-    print("INFO:sumR::polarity_guess: Detected Negative")
+    print("INFO:MeDUSA::polarity_guess: Detected Negative")
     count <- count + 1
     ret <- neg_return
   }
   if(sum(grep("[^A-Za-z|^][Pp]os|[Pp]ositive",input)) >0){
     count <- count + 1
     ret <- pos_return
-    print("INFO:sumR::polarity_guess: Detected Positive")
+    print("INFO:MeDUSA::polarity_guess: Detected Positive")
   }
   if( count > 1) {
-    stop("ERROR: sumR::polarity_guesser: Detected both Positive & Negative from colnames")
+    stop("ERROR: MeDUSA::polarity_guesser: Detected both Positive & Negative from colnames")
   } else if ( count < 1) {
-    stop("ERROR: sumR::polarity_guesser: Could not guess Positive or Negative from colnames")
+    stop("ERROR: MeDUSA::polarity_guesser: Could not guess Positive or Negative from colnames")
   }
   ret
 }

@@ -23,7 +23,7 @@ Dependencies :dplyr}
 \item{blacklist}{\cr
 List/Vector : List of Blacklisted mzs, i.e. c(50.123,55.321)
 String      : Filename of Blacklisted mzs (csv: name,mass)
-Default     : Uses SumR default_inputs}
+Default     : Uses MeDUSA default_inputs}
 }
 \value{
 Returns an MZ-OBJ

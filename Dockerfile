@@ -31,12 +31,12 @@ RUN R -e 'remotes::install_version("testthat", version = "3.2.0")'
 
 
 FROM package_base AS db_base
-COPY db_massager.sh db_massager.sh
+COPY scripts/db_massager.sh db_massager.sh
 RUN sh db_massager.sh
 
 FROM db_base
-COPY sumR sumR
-WORKDIR sumR
+COPY MeDUSA MeDUSA
+WORKDIR MeDUSA
 
 ## Create a more manageable hmdb xml file
 
@@ -47,19 +47,19 @@ RUN R -e 'devtools::install(dependencies="never")'
 
 
 ### TO BUILD
-# docker build . -f Dockerfile-localR -t lacdr/sumr
-### TO BUILD without sumR (i.e. to develop it)
-# docker build . -f Dockerfile-localR -t lacdr/sumr --target package_base
+# docker build . -f Dockerfile-localR -t lacdr/medusa
+### TO BUILD without MeDUSA (i.e. to develop it)
+# docker build . -f Dockerfile-localR -t lacdr/medusa --target package_base
 
 ### TO RUN:
-### TO RUN RSTUDIO: user=rstudio, pwd=sumr
-# docker run -e PASSWORD=sumr -p 8787:8787 -v .:/home/rstudio/local lacdr/sumr
+### TO RUN RSTUDIO: user=rstudio, pwd=medusa
+# docker run -e PASSWORD=medusa -p 8787:8787 -v .:/home/rstudio/local lacdr/medusa
 # Navigate to localhost:8787 in your browser
 
 ### TO RUN R terminal:
-#[Unix/Mac] docker run --rm -it --name localR -v $(pwd):/local  lacdr/sumr /bin/bash
-#[Win?]     docker run --rm -it --name localR -v .:/local  lacdr/sumr /bin/bash
+#[Unix/Mac] docker run --rm -it --name localR -v $(pwd):/local  lacdr/medusa /bin/bash
+#[Win?]     docker run --rm -it --name localR -v .:/local  lacdr/medusa /bin/bash
 
 ### To enter a running container (use "docker ps" to make sure there is only one)
 # docker exec --it localR /bin/bash
-#[Unix/Mac] docker exec -it $(docker ps | grep sumr | awk '{print $1}') /bin/bash
+#[Unix/Mac] docker exec -it $(docker ps | grep medusa | awk '{print $1}') /bin/bash

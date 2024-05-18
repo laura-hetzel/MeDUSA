@@ -8,7 +8,7 @@ mzmetrics_quality_plot(mz_metrics, focus, title = focus)
 }
 \arguments{
 \item{mz_metrics}{\cr
-DataFrame : from "sumR::mz_quality_metrics"}
+DataFrame : from "MeDUSA::mz_quality_metrics"}
 
 \item{focus}{\cr
 String : which metric to plot (i.e. median_mz)}
