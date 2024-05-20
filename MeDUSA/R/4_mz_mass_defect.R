@@ -1,13 +1,13 @@
 # *** MassDefect -----------------------------------------------------
-#' 
+#'
 #' This package assumes electrospray ionization, and as such, also assumes
-#' the salt clusters that are introduced to the sample as artifacts (McMillan A, 
-#' Renaud JB, Gloor GB, Reid G, Sumarah MW. Post-acquisition filtering of salt 
-#' cluster artefacts for LC-MS based human metabolomic studies. J Cheminform. 
-#' 2016 Sep 6;8(1):44. doi: 10.1186/s13321-016-0156-0. PMID: 27606010; 
-#' PMCID: PMC5013591.). The artifacts are removed from the data set as 
-#' prescribed by McMillan et al. via the mz_mass_defect function. 
-#' 
+#' the salt clusters that are introduced to the sample as artifacts (McMillan A,
+#' Renaud JB, Gloor GB, Reid G, Sumarah MW. Post-acquisition filtering of salt
+#' cluster artefacts for LC-MS based human metabolomic studies. J Cheminform.
+#' 2016 Sep 6;8(1):44. doi: 10.1186/s13321-016-0156-0. PMID: 27606010;
+#' PMCID: PMC5013591.). The artifacts are removed from the data set as
+#' prescribed by McMillan et al. via the mz_mass_defect function.
+#'
 #' MZ-OBJ MassDefect
 #'
 #' Mass Defect Calculation.\cr
@@ -30,11 +30,11 @@ mz_mass_defect <- function(input_mz_obj, plot = TRUE, magicNumber1 = 0.00112, ma
   input_mz_obj$MD <-  as.numeric(input_mz_obj$mz) %% 1
   input_mz_obj$mz_filter <- magicNumber1 * as.numeric(input_mz_obj$mz) + magicNumber2
 
-  #(revisit if original SUMR hmdb/McMillan is important)
+  #(revisit if original MeDUSA hmdb/McMillan is important)
   md_filtered <- input_mz_obj[which(input_mz_obj$MD <= input_mz_obj$mz_filter), ]
 
   mz_removed <- local.mz_log_removed_rows(input_mz_obj,md_filtered,
-                  "sumR::mz_mass_defect")["mz_removed"]
+                  "MeDUSA::mz_mass_defect")["mz_removed"]
 
   tryCatch({
     if(plot) {

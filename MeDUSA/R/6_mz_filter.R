@@ -15,7 +15,7 @@
 #' @param blacklist \cr
 #'   List/Vector : List of Blacklisted mzs, i.e. c(50.123,55.321)
 #'   String      : Filename of Blacklisted mzs (csv: name,mass)
-#'   Default     : Uses SumR default_inputs
+#'   Default     : Uses MeDUSA default_inputs
 #' @param tolerance \cr
 #'   Float   : Remove MZs +/- tolerance in ppm
 #'
@@ -31,13 +31,13 @@ mz_filter_blacklist <- function( input_mz_obj, blacklist = "", tolerance = 5e-6)
     }
   }
   if (sum( blacklist < 0 ) > 0){
-    stop("ERROR: sumR::mz_filter_blacklist. Blacklist cannot have negative values.")
+    stop("ERROR: MeDUSA::mz_filter_blacklist. Blacklist cannot have negative values.")
   } else if( length(blacklist) < 1 ){
-    stop("ERROR: sumR::mz_filter_blacklist. Blacklist is empty.")
+    stop("ERROR: MeDUSA::mz_filter_blacklist. Blacklist is empty.")
   }
   bool_list <- lapply(blacklist, function(x){abs(input_mz_obj$mz - x)/x > tolerance})
   out_mz <- input_mz_obj[as.logical(Reduce("*",bool_list)),]
-  local.mz_log_removed_rows(input_mz_obj, out_mz, "sumR::mz_filter_blacklist")
+  local.mz_log_removed_rows(input_mz_obj, out_mz, "MeDUSA::mz_filter_blacklist")
   out_mz
 }
 
@@ -65,7 +65,7 @@ mz_filter_missingness <- function(input_mz_obj, threshold = 0.1, msg = ""){
     threshold <- threshold * (length(input_mz_obj)-1)
   }
   keep_peaks <- input_mz_obj[rowSums( dplyr::select(input_mz_obj, -mz) > 0 ) >= threshold,]
-  local.mz_log_removed_rows(input_mz_obj,keep_peaks,paste("sumR::mz_filter_missingness",msg))
+  local.mz_log_removed_rows(input_mz_obj,keep_peaks,paste("MeDUSA::mz_filter_missingness",msg))
   keep_peaks
 }
 
@@ -97,7 +97,7 @@ mz_filter_low_intensity <- function(input_mz_obj, threshold, msg = ""){
   input_mz_obj[ input_mz_obj <= threshold ] <- 0
   input_mz_obj$mz <- mz
   out_mz <- input_mz_obj[ rowSums(dplyr::select(input_mz_obj ,-mz)) > 0, ]
-  local.mz_log_removed_rows(input_mz_obj, out_mz, paste("sumR::mz_filter_lowIntensity",msg))
+  local.mz_log_removed_rows(input_mz_obj, out_mz, paste("MeDUSA::mz_filter_lowIntensity",msg))
   out_mz
 }
 
@@ -115,7 +115,7 @@ mz_filter_low_intensity <- function(input_mz_obj, threshold, msg = ""){
 #'
 #' MZ-OBJ Filter-Magic
 #'
-#' Apply all filters as suggested by SumR.
+#' Apply all filters as suggested by MeDUSA.
 #'
 #' @param input_mz_obj \cr
 #'   DataFrame : Input MZ-Obj
@@ -146,7 +146,7 @@ mz_filter_magic <- function(input_mz_obj, min_intensity, missingness_threshold=F
       local.mz_polarity_guesser(input_mz_obj, pos_return=10000, neg_return=5000)
     }, error = function(e) {
       print(e)
-      stop("ERROR: sumR::mz_filter_magic: Could not guess positive or negative from colnames
+      stop("ERROR: MeDUSA::mz_filter_magic: Could not guess positive or negative from colnames
         Please specify min_intensity")
     })
   }

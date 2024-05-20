@@ -6,7 +6,7 @@ DataFrame where:
   - Colnames = String: sample_names
   - Data     = Float: Intensities
 
-mzT-OBJ: An "MZ Object" rebranded to represent scan-time.
+MzT-OBJ: An "MZ Object" rebranded to represent scan-time.
 DataFrame where:
   - Rownames = Float: MZ
   - Colnames = String: ScanTime
@@ -27,20 +27,19 @@ DataFrame where columns are:
   - Float : intensity
 
 METADATA: The standard "MZ Metadata object"
-Dataframe where the columns are:
+Dataframe required columns are:
   - Integer: measurement
   - String : sample_name (Must match above)
   - String : type (i.e. cell, media_cell, solvent)
-  - Integer: sample_number
   - String : phenotype
+Additional columns could be helpful. Such as:
   - Integer: time
   - Integer: plate
   - Integer: cell_count
   - String : sampler
   - String : polarity
   - String : sampling_day
-  - String : filtered_out (yes, no) #todo turn this into a boolean
-
+  - String : filtered_out
 
 ----Project Structure----
 file: [input object type]_[suggested order]_[category].R (i.e. "mz_7_post_processing.R")
@@ -56,7 +55,7 @@ file: zz_[description].R
 
 
 ---- TODO Oct31
-  -X docker image, including sumr
+  -X docker image, including MeDUSA
   -X fix trycatch in massdefect
   -X why missingness drop rows with value of 1
   -X mz_random_forest (stemcell)
@@ -73,7 +72,7 @@ file: zz_[description].R
   -X mass defect windows debugging
   -X alignment fix
   -X unitTests capability
-  -L unitTests content
+  - unitTests content
   -2 lower dependencies (catools, tibble)
   -X config file (half-ish)
   -2 optional correlation RFs (cor() is optional?)
@@ -86,5 +85,6 @@ file: zz_[description].R
   - anova analysis
   -X ggpubr
   -2 reparameterize phenotype in randomforest
-  -L fill out commoon adducts
-  -L method descriptions
+  -X fill out commoon adducts
+  -X method descriptions
+  -X rename to medusa

@@ -12,7 +12,7 @@ sed -z   's,> <EXACT_MASS>\n,SUMR_EM:,g' /usr/lipids.sdf | \
 
 #not all entries have NAME, some only have SYSTEMATIC_NAME
    \ #sed -z 's,> <NAME>\n,SUMR_NAME:,g' | \
-   
+
 
 #   sed -z 's,> <NAME>\n,SUMR_NAME:,g' \
 #   > lipids_simple.tmp
@@ -23,6 +23,6 @@ echo "IDENTITY, EXACT_MASS" > /home/rstudio/lipids_simple.csv
 sed -z 's/SUMR_ID://g' lipids_simple1.tmp | \
   sed -z 's/\nSUMR_EM:/, /g' >> /home/rstudio/lipids_simple.csv
   #sed -z 's/\nSUMR_NAME:/, /g' | \
-    
+rm /usr/hmdb_metabolites.xml
+rm /usr/lipids.sdf
 rm *.tmp
-

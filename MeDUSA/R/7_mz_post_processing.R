@@ -27,12 +27,12 @@ mz_post_imputation <- function(input_mz_obj, low_noise=10, high_noise=NULL){
       local.mz_polarity_guesser(input_mz_obj, pos_return=10000, neg_return=5000)
     }, error = function(e) {
       print(e)
-      stop("ERROR: sumR::mz_post_imputation: Could not guess positive or negative from colnames
+      stop("ERROR: MeDUSA::mz_post_imputation: Could not guess positive or negative from colnames
             Please specify high_noise")
     })
   }
   if (low_noise < 500 ){
-    print("WARN: sumR::mz_post_imputation: low_noise is < 500. If [input_mz_obj] has an mz column, ensure it is labled 'mz'")
+    print("WARN: MeDUSA::mz_post_imputation: low_noise is < 500. If [input_mz_obj] has an mz column, ensure it is labled 'mz'")
   }
   tmp <- input_mz_obj[colnames(input_mz_obj) != 'mz']
   bool <- tmp < low_noise

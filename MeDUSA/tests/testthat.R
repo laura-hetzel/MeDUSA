@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(sumR)
+library(MeDUSA)
 
-test_check("sumR")
+test_check("MeDUSA")
