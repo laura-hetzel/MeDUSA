@@ -32,6 +32,7 @@ RUN R -e 'remotes::install_version("testthat", version = "3.2.0")'
 
 FROM package_base AS db_base
 COPY scripts/db_massager.sh db_massager.sh
+RUN chmod 777 /usr/hmdb_metabolites.xml;  chmod 777 /usr/lipids.sdf
 RUN sh db_massager.sh
 
 FROM db_base
@@ -54,6 +55,8 @@ RUN R -e 'devtools::install(dependencies="never")'
 ### TO RUN RSTUDIO: user=rstudio, pwd=medusa
 # docker run -e PASSWORD=medusa -p 8787:8787 -v .:/home/rstudio/local lacdr/medusa
 # Navigate to localhost:8787 in your browser
+# Note, this creates a shared volume. So best to run this from the directory of your data.
+#     (But not so high of a directory that it will consume unnecessary resources)
 
 ### TO RUN R terminal:
 #[Unix/Mac] docker run --rm -it --name localR -v $(pwd):/local  lacdr/medusa /bin/bash
