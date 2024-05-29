@@ -28,12 +28,13 @@ plot_volcano <- function(welch, fold_change, title = "Volcano_Plot"){
   df$diff[df$fold > 0.6 & df$p > -log10(0.05)] <- "UP"
   df$diff[df$fold < -0.6 & df$p > -log10(0.05)] <- "DOWN"
 
-  ggplot( data = df,
-          aes(x = fold, y = p, col = diff)) +
-        geom_point() +
-          scale_color_manual(values = c("blue", "black", "red")) +
-          geom_vline(xintercept = c(-0.6, 0.6), col = "red") +
-          geom_hline(yintercept = -log10(0.05), col = "red") +
-          ggtitle(title)
-  local.save_plot(paste(title,sep="-"))
+ggpubr::ggscatter( data = df,
+                    x = "fold",y="p",
+                    title = title,
+                    shape = "diff",
+                    color ="diff", palette = c("blue", "black", "red")) +
+                    geom_vline(xintercept = c(-0.6, 0.6), col = "green") +
+                    geom_hline(yintercept = -log10(0.05), col = "green")
+
+  local.save_plot(title)
 }

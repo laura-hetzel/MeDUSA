@@ -1133,9 +1133,9 @@ for (i in c(1:200)){
 modellist_pos <- data.frame(mtry = 1:240)
 for (i in c(1:240)){
   set.seed(1230)
-  fit <- randomForest(x = (train_neg %>% dplyr :: select(-phenotype)),
-                      y = train_neg$phenotype,
-                      data = train_neg,
+  fit <- randomForest(x = (train_pos %>% dplyr :: select(-phenotype)),
+                      y = train_pos$phenotype,
+                      data = train_pos,
                       ntree = 900,
                       mtry = i,
                       importance = TRUE)

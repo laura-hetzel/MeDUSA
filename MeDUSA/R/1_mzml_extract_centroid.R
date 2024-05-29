@@ -37,23 +37,23 @@
 #' @export
 mzml_extract_magic <- function(files = getwd(), cores = 6,  params = NULL ){
   start <- Sys.time()
-  params <- magic.fill_defaults(params)
-  files <- magic.file_lister(files)
+  params <- extract.fill_defaults(params)
+  files <- extract.file_lister(files)
 
   tryCatch({
     if (cores > 1){
       cl <- local.export_thread_env(2)
-      out <- parallel::parLapply(cl, c(0,1), function(x) magic.polarity_loop(polarity = x, files, cores, params))
+      out <- parallel::parLapply(cl, c(0,1), function(x) extract.polarity_loop(polarity = x, files, cores, params))
       names(out) <- c('neg','pos')
       local.kill_threads(cl)
       gc()
       cl <- local.export_thread_env(2)
-      out <- parallel::parLapply(cl, c("neg","pos"), function(x) magic.polarity_final(x, out, files, params))
+      out <- parallel::parLapply(cl, c("neg","pos"), function(x) extract.polarity_final(x, out, files, params))
       names(out) <- c('neg','pos')
     } else {
-      mz_pos <- magic.polarity_loop(files,1,params)
+      mz_pos <- extract.polarity_loop(files,1,params)
       print("INFO: mzml_extract_magic: Positive Complete")
-      mz_neg <- magic.polarity_loop(files,0,params)
+      mz_neg <- extract.polarity_loop(files,0,params)
       out <- list(pos=mz_pos, neg=mz_neg)
     }
     print(paste("INFO: mzml_extract_magic SUCCESS, execution complete in:",round(as.numeric(Sys.time()-start, units="mins"),3),"minutes"))
@@ -97,7 +97,7 @@ mzml_extract_magic <- function(files = getwd(), cores = 6,  params = NULL ){
 #' @returns MzT object
 #' @export
 mzml_extract_file <- function(file, polarity = "",  magic = T,  cl = NULL, params = NULL) {
-  params <- magic.fill_defaults(params)
+  params <- extract.fill_defaults(params)
 
   if (!is.null(cl)) {
     pbo <- pbapply::pboptions(type = "none")
@@ -132,7 +132,7 @@ mzml_extract_file <- function(file, polarity = "",  magic = T,  cl = NULL, param
   rts <-lapply(meta$retentionTime, function(x){c("mz",x)})
   l <- pbapply::pblapply(p, cl = cl, centroid.singleScan)
   for( i in seq_along(l) ){ colnames(l[[i]]) <- rts[[i]] }
-  out <- magic.mz_format(l)
+  out <- extract.mz_format(l)
   if (magic) {
     out <- mzT_filtering( out,
                           prebin_method = params$prebin_method,
@@ -181,7 +181,7 @@ mzml_extract_file <- function(file, polarity = "",  magic = T,  cl = NULL, param
 #' @export
 # Note missingness_threshold is very low
 mzT_filtering <- function(mzT, prebin_method = max, missingness_threshold = 1, intensity_threshold = 1000, log_name = "" ){
-  mzT <- magic.binning(mzT,prebin_method,log_name)
+  mzT <- extract.binning(mzT,prebin_method,log_name)
   mzT <- mz_filter_low_intensity(mzT,threshold = intensity_threshold, log_name)
   mzT <- mz_filter_missingness(mzT,threshold = missingness_threshold,log_name)
 }
@@ -229,7 +229,7 @@ mzT_squash_time <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl 
 }
 
 #[0|1]: 0=Negative, 1=Positive
-magic.polarity_loop <- function(files, polarity, cores, params){
+extract.polarity_loop <- function(files, polarity, cores, params){
   if(polarity){
     pol_eng="pos"
   }else{
@@ -243,7 +243,7 @@ magic.polarity_loop <- function(files, polarity, cores, params){
       cl <- cores- cl
     }
     print(paste("cores",polarity,cl))
-    cl <- local.export_thread_env(cl , environment(magic.polarity_loop))
+    cl <- local.export_thread_env(cl , environment(extract.polarity_loop))
     mzT <- parallel::parLapplyLB(cl, files, function(file) mzml_extract_file(file, polarity, T,  NULL , params))
   } else {
     mzT <- pbapply::pblapply(files,  function(x) mzml_extract_file(x, polarity, T, NULL, params))
@@ -254,19 +254,19 @@ magic.polarity_loop <- function(files, polarity, cores, params){
   mzT
 }
 
-magic.polarity_final <- function(pol,mzT,files,params){
+extract.polarity_final <- function(pol,mzT,files,params){
   mzT <- mzT[[pol]]
   for( i in seq_along(mzT) ){
     #crappy gsub to change col names to [polarity]_[filename(without extension)]
     #  Needs to be a for loop, because all the "intensity" columns have to be; lest they be overwritten by mz_format
     colnames(mzT[[i]]) <- c("mz", gsub("(^.*/|^)(.*).mzML",paste(pol,"\\2",sep="_"),files[i]))
   }
-  mz <- magic.mz_format(mzT)
-  mz <- magic.binning(mz, params$postbin_method)
+  mz <- extract.mz_format(mzT)
+  mz <- extract.binning(mz, params$postbin_method)
   #colnames(mz) <- c("mz", gsub("^(.*)\\.(.*)",paste(pol,"\\1",sep="_"),files))
 }
 
-magic.binning <- function(df, method = max, log_name = "", tolerance = 5e-6){
+extract.binning <- function(df, method = max, log_name = "", tolerance = 5e-6){
   bin <- binning(df$mz, tolerance = tolerance)
   #local.mz_log_removed_rows((bin), unique(bin), paste("Binning",log_name))
   df <- suppressWarnings(aggregate(dplyr::select(df,-mz),list(bin), method, na.rm = T, na.action=NULL))
@@ -277,14 +277,14 @@ magic.binning <- function(df, method = max, log_name = "", tolerance = 5e-6){
 }
 
 #convert annoying mzR::list[[mz,i],[mz,i],[mz,i]] into usuable dataframe
-magic.mz_format <- function(out){
+extract.mz_format <- function(out){
   out <- dplyr::bind_rows(out)
   out <- out[order(out$mz),]
   out$mz <- round(out$mz, 5)
   as.data.frame(out)
 }
 
-magic.file_lister <- function(files) {
+extract.file_lister <- function(files) {
   #if string, and not an mzml file, treat as directory
   if (class(files) ==  "character" & any(!grepl('\\.mzML$',files))){
     files <- list.files(path=files, pattern="*.mzML", full.names=T)
@@ -297,7 +297,7 @@ magic.file_lister <- function(files) {
 }
 
 #TODO move to tools get_defaults
-magic.fill_defaults <- function(params = NULL){
+extract.fill_defaults <- function(params = NULL){
   defaults <- list(
     "prebin_method" = max,
     "postbin_method" = max,

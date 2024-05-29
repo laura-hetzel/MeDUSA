@@ -9,13 +9,13 @@
 #' MZ-OBJ IsotopeTagging
 #'
 #' Hunts for isotopes. Defaults to Carbon13
-#'   You may use the return to compare intensities of isotopes.
+#'   You may use the return to compare intensities of isotopes; mind trunctation.
 #'   input_mz_obj[input_mz_obj$mz %in% output[['100.12345']],]
 #'
-#' @param input_mz_obj \cr
-#'   DataFrame : Input MZ-Obj ( Only MZ column required )
+#' @param input_mz \cr
+#'   DataFrame : Input MZ-Obj (Can take a full mz_obj or mm_obj$mz)
 #' @param iso_target \cr
-#'   Float : Dalton diff of isotope to hunt.
+#'   Float : Mass of isotope to hunt.
 #' @param iso_iter \cr
 #'   Integer     : How many 'iterations' of iso_target should we look
 #' @param tol_ppm \cr
@@ -27,15 +27,18 @@
 #' @return Returns a List of MZ that are isotopes of each other
 #' @export
 
-mz_tag_isotope_hunter <- function(input_mz_obj, iso_target = 1.0034, iso_iter = 5, tol_ppm = 5e-6, cores = 4, ...){
-  input_mz_obj$tol <- input_mz_obj$mz - (input_mz_obj$mz/( tol_ppm + 1 ))
-  sub_set <- dplyr::select(input_mz_obj, c(mz, tol))
+mz_tag_isotope_hunter <- function(input_mz, iso_target = 1.0034, iso_iter = 5, tol_ppm = 5e-6, cores = 4, ...){
+  if( !is.null(ncol(input_mz)) ){
+    input_mz <- input_mz$mz
+  }
+  input_mz <- data.frame(mz  = input_mz,
+                         tol = input_mz - (input_mz/( tol_ppm + 1 )))
   out <- list()
 
   cl <- local.export_thread_env(cores, environment())
   tryCatch({
-    out <- pbapply::pbapply(sub_set, 1,cl=cl,function(mz_target){
-      hunt_zone  <- dplyr::filter(sub_set, (mz_target[1] - iso_target * (iso_iter + 0.1)) < mz
+    out <- pbapply::pbapply(input_mz, 1,cl=cl,function(mz_target){
+      hunt_zone  <- dplyr::filter(input_mz, (mz_target[1] - iso_target * (iso_iter + 0.1)) < mz
                             & mz <  (mz_target[1] + iso_target * (iso_iter + 0.1)))
       x <- hunt_zone$mz[(((abs(hunt_zone$mz - mz_target[1]) + mz_target[2]) %% iso_target )
                             - mz_target[2] ) < mz_target[2]]
@@ -58,6 +61,5 @@ mz_tag_isotope_hunter <- function(input_mz_obj, iso_target = 1.0034, iso_iter = 
 #      x <- apply(select(input_mz_obj[input_mz_obj$mz %in% x,], -mz),2, method)
 #  })
 #}
-
 
 #TODO FLATTEN?

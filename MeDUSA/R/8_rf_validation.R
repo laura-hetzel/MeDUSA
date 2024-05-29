@@ -28,7 +28,7 @@
 #'
 #'
 #' @export
-rf_validate <- function(rf_obj, mtry_range = c(1:200), mtry_seed = 1984, cores = 2){
+rf_validate <- function(rf_obj, mtry_range = c(1:200), trees = 500, mtry_seed = 1984, cores = 2){
   pred_train <- rf.predict(rf_obj$model, rf_obj$train)
   if( sum(!(pred_train$pred == rf_obj$train$phenotype)) ){
     warning("MeDUSA:: rf_validate: Train prediction did not match train model")
@@ -87,7 +87,7 @@ rf_validate <- function(rf_obj, mtry_range = c(1:200), mtry_seed = 1984, cores =
 #'
 #'
 #' @export
-rf_permuted <- function(rf_obj, pol, seed = 105.9, plot = T){
+rf_permuted <- function(rf_obj, pol, seed = 2540.632, plot = T){
   permuted <- rbind(rf_obj$train, rf_obj$test)
   attr <- as.vector(unique(permuted$phenotype))
   set.seed(seed)
@@ -101,20 +101,20 @@ rf_permuted <- function(rf_obj, pol, seed = 105.9, plot = T){
   roc_permuted <- pROC::roc(results_permuted$actual, results_permuted$prediction)
   auc_permuted <- pROC::auc(roc_permuted)
 
+  plot_file <- paste0(output_dir,local.dir_sep(),"RF_ROC_Permuted_",pol,".png")
   plot(roc_permuted, col = "Red", main = paste0(pol,"_RF_ROC Permuted"),
        sub = paste0("Acc:",pred_permuted$cm$overall["Accuracy"]," AUC:", as.character(round(auc_permuted, 3))))
-  local.save_plot(paste0("randomForest_ROC_Permuted_",pol))
-
+  dev.off()
 
   list(permuted_confusionMatrix <- pred_permuted$cm)
 }
 
-rf.mtry_fit <- function(mtry, data, seed){
+rf.mtry_fit <- function(mtry, data, seed, trees){
   set.seed(seed)
   fit <- randomForest::randomForest(x = ( dplyr::select(data, -phenotype)),
                       y = data$phenotype,
                       data = data,
-                      ntree = 500,
+                      ntree = trees,
                       mtry = mtry,
                       importance = TRUE)
   fit[["err.rate"]][nrow(fit[["err.rate"]]),1]

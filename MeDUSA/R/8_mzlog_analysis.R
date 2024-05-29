@@ -191,11 +191,11 @@ mzlog_analysis_fold <- function(phenoA_mz_obj, phenoB_mz_obj, fold_math = "mean"
 #' @returns null (only plots)
 #'
 #' @export
-mzlog_analysis_volcano_magic <- function(input_mzlog_obj, phenotype_a, phenotype_b, cores = 2 ){
-  welch <- mzlog_analysis_welch(input_mzlog_obj, phenotype_a, phenotype_b, cores)
-  fold  <- mzlog_analysis_fold(input_mzlog_obj, phenotype_a, phenotype_b)
-
-  plot_volcano(welch, fold)
+mzlog_analysis_volcano_magic <- function(phenotype_a, phenotype_b, cores = 2 ){
+  welch <- mzlog_analysis_welch(phenotype_a, phenotype_b, cores)
+  fold  <- mzlog_analysis_fold(phenotype_a, phenotype_b)
+  title <- paste("VolcanoPlot", local.mz_polarity_guesser(phenotype_a),sep="-")
+  plot_volcano(welch, fold, title)
 }
 
 # *** Heat Map  -----------------------------------------------------

@@ -21,23 +21,26 @@ load("mzL.Rdata")
 #mzT <- pbapply::pblapply(files, function(x) mzml_extract_file(x, polarity=0, cl = NULL, magic=F))
 
 mz_obj_p <- mzL$pos
-
 tech_quality_p <- mz_quality_magic(mz_obj_p, meta)
-
 mz_obj_p <- mz_subtraction(mztools_filter(mz_obj_p, meta,"IS_Blank","type",T,T),
                            mztools_filter(mz_obj_p, meta,"IS_Blank","type",F,T))
-
 mz_obj_p <- mz_mass_defect(mz_obj_p, plot = TRUE)
 mz_obj_p <- mz_filter_magic(mz_obj_p, blacklist= F)
 pp_out <- mz_post_magic(mz_obj_p, metadata = meta, plot = TRUE)
 
-mzlog_analysis_pca(pp_out$mzLog, meta)
+#mzlog_analysis_pca(pp_out$mzLog, meta)
+mzlog_analysis_pca(mztools_filter(pp_out$mzLog,meta,"cell","type"), meta)
+
+
+mzlog_analysis_volcano_magic(mztools_filter(pp_out$mzLog,meta,"HepG2"),
+                             mztools_filter(pp_out$mzLog,meta,"HEK293T"))
 
 welch_p <- mzlog_analysis_welch( mztools_filter(pp_out$mzLog,meta,"HepG2"),
                                  mztools_filter(pp_out$mzLog,meta,"HEK293T"))
 
 fold_p <- mzlog_analysis_fold(mztools_filter(pp_out$mzLog,meta,"HepG2"),
                               mztools_filter(pp_out$mzLog,meta,"HEK293T"))
+
 
 plot_volcano(welch_p, fold_p)
 
@@ -54,10 +57,23 @@ rf_mag <- mzlog_rf_magic(rf_data, meta, "pos")
 
 anova <- mzlong_analysis_anova(pp_out$mzLong, meta, phenotypes=c("HepG2","HEK293T"))
 
-hmdb_rf <- identify_hmdb(rf_mag$mz, c("M-H","M+Na")) 
-hmdb_anova <- identify_hmdb(anova$imp_mz) 
+hmdb_rf <- identify_hmdb(rf_mag$mz, c("M-H","M+Na"))
+hmdb_anova <- identify_hmdb(anova$imp_mz)
 lipids_rf <- identify_lipids(rf_mag$mz)
 lipids_rf <- identify_lipids(anova$imp_mz)
 
 
-
+####Neg
+mz_obj_n <- mzL$neg
+tech_quality_n <- mz_quality_magic(mz_obj_n, meta)
+mz_obj_n <- mz_subtraction(mztools_filter(mz_obj_n, meta,"IS_Blank","type",T,T),
+                           mztools_filter(mz_obj_n, meta,"IS_Blank","type",F,T))
+mz_obj_n <- mz_mass_defect(mz_obj_n, plot = TRUE)
+mz_obj_n <- mz_filter_magic(mz_obj_n, blacklist= F)
+post_n <- mz_post_magic(mz_obj_n, metadata = meta, plot = TRUE)
+mzlog_analysis_pca(mztools_filter(post_n$mzLog,meta,"cell","type"), meta)
+mzlog_analysis_volcano_magic(mztools_filter(post_n$mzLog,meta,"HepG2"),
+                             mztools_filter(post_n$mzLog,meta,"HEK293T"))
+mzlog_analysis_heatmap(post_n, meta)
+rf_data <- mztools_filter(post_n$mzLog, meta, c("HepG2","HEK293T"))
+rf_mag <- mzlog_rf_magic(rf_data, meta, "neg")

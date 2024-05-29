@@ -8,13 +8,21 @@
 #' highly correlated features. The new data set with these feature removed will
 #' be used for the remaining functions of random forest.
 #'
-#' @returns Transposed mzlog_obj of correlation_data
+#' @param input_mzlog_obj \cr
+#'   DataFrame : MzLog object
+#' @param correlation_cutoff \cr
+#'   Float: Decimal percentage. Higher cutoff = less correlation
+#'
+#' @returns Transposed mzlog_obj of non-correlated_data
 #'
 #' @export
 mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
   print("INFO: cor() can be time and resource heavy on large data sets")
   data <- data.frame(t(dplyr::select(input_mzlog_obj,-mz)))
   high_cor_data <- caret::findCorrelation(cor(data), cutoff = correlation_cutoff)
+  if ( ncol(data) - length(high_cor_data) < 2 ) {
+    stop("ERROR:mzlog_rf_correlation: No, or only 1 non-correlated MZs found; try increasing 'correlation_cutoff'")
+  }
   print(paste("INFO:mzlog_prep: ", length(high_cor_data)," of ", ncol(data) ," MZs are highly correlated ", sep=""))
   data <- data.frame(data[,-high_cor_data])
   colnames(data) <- input_mzlog_obj[-high_cor_data,"mz"]
@@ -37,7 +45,7 @@ mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
 #' processing.
 #'
 #' @param correlation_data \cr
-#'   DataFrame : from rf_correlation
+#'   DataFrame : from rf_correlation (is a transposed mz_obj)
 #' @param metadata \cr
 #'   DataFrame: metadata object
 #' @param attribute \cr
@@ -178,8 +186,8 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
     tmp <- as.data.frame(model$err.rate)
     tmp$tree <- c(1:nrow(tmp))
     tmp <- tidyr::pivot_longer(tmp, !tree )
-    ggpubr::ggline(tmp,x="tree",y="value", shape = "", line = "name", title=paste0("RandomForest Error: ",pol))
-    local.save_plot(paste0("rf_error_", pol))
+    ggpubr::ggline(tmp,x="tree",y="value", shape = "", colro = "name", line = "name", title=paste0("RandomForest Error: ",pol))
+    local.save_plot(paste0("RF_error", pol))
 
     png(paste0(local.output_dir(),local.dir_sep(),"Important_Variables_",pol,".png"))
     varImpPlot(model, col = "Blue", pch = 2, main = paste("Important Variables ", pol))
@@ -261,7 +269,7 @@ mzlog_rf_magic <- function(input_mzlog_obj, metadata, polarity){
     stop("ERROR: in mzlog_rf")
   })
   tryCatch({
-    rf_validate <- rf_validate(rf_obj)
+    rf_validate <- rf_validate(rf_obj, trees = rf_sel$bestSubset * 1.1)
     print("INFO: RF validation success")
   }, error = function(e) {
     print(e)
@@ -312,9 +320,10 @@ rf.run_train <- function( seed, rf_vars){
   acc <- caret::confusionMatrix(rf_pred, as.factor(split$test$phenotype))$overall
   roc <- pROC::roc(as.numeric(split$test$phenotype), as.numeric(rf_pred))
   auc <- pROC::auc(roc)
+  plot_file <- paste0(output_dir,local.dir_sep(),"RF_ROC_",pol,"_", seed,".png")
   plot(roc, col = "Red", main = paste0(pol,"_RF_ROC Seed: ", seed),
        sub = paste0("Acc:",acc["Accuracy"]," AUC:", as.character(round(auc, 3))))
-  local.save_plot(paste0("RF_ROC_",pol,"_", seed))
+  dev.off()
 
   imp <- caret::varImp(rf_fit)$importance
   imp <- tibble::rownames_to_column(imp, "mz")

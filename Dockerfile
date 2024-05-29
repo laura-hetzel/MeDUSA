@@ -9,7 +9,6 @@ RUN unzip lipids.zip; mv structures.sdf /usr/lipids.sdf
 
 
 FROM bioc_base AS package_base
-
 RUN R -e 'remotes::install_version("dplyr",        version = "1.1.2")'
 RUN R -e 'remotes::install_version("ggplot2",      version = "3.4.2")'
 RUN R -e 'remotes::install_version("tibble",       version = "3.2.1")'
