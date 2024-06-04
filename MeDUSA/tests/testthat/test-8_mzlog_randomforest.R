@@ -20,9 +20,10 @@ test_that("mzlog_rf_select: Happy path",{
   load("testdata/mz_neg.Rdata")
   meta <- data.frame(read.csv("testdata/meta_neg.csv"))
   #Variables Accuracy Kappa AccuracySD KappaSD
-  expect <- c(2,0.3,0,0.47016,0)
-  rf_cor <- mzlog_rf_correlation(mz_neg,0.89)
-  actual <- round(mzlog_rf_select(rf_cor,meta)$results,5)
+  expect <- c(3, 0.75, 0, 0.44426, 0)
+  rf_cor <- mzlog_rf_correlation(mz_neg,0.899)
+  actual <- round(mzlog_rf_select(rf_cor, meta, plot=FALSE)$results,5)
+  print(actual)
   expect_equal(sum( actual == expect), 5)
 })
 

@@ -39,7 +39,7 @@ test_that("mz_low_intensity: happy path", {
   load("testdata/mz_neg.Rdata")
   load("testdata/asserts/mz_filter_lowIntensity.Rdata")
   actual <- mz_filter_lowIntensity(mz_neg, 2500)
-  expect_identical(actual,mz_filter_lowIntensity)
+  expect_identical(actual,mz_filter_low_intensity)
 })
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
