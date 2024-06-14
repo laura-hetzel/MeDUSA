@@ -1,5 +1,4 @@
-Object Desciptions/expectations:
-
+----Object Desciptions/expectations----
 
 MZ-OBJ: The standard "MZ Object"
 DataFrame where:
@@ -7,55 +6,85 @@ DataFrame where:
   - Colnames = String: sample_names
   - Data     = Float: Intensities
 
+MzT-OBJ: An "MZ Object" rebranded to represent scan-time.
+DataFrame where:
+  - Rownames = Float: MZ
+  - Colnames = Float: ScanTime
+  - Data     = Float: Intensities
+
+mzLog-OBJ: A log2 of "MZ Object."
+DataFrame where:
+  - Rownames = Float: MZ
+  - Colnames = String: sample_names
+  - Data     = Float: log2(Intensities)
+
+Programatically: the methods for [mz-obj, mzT-obj, mzLog-obj] are all interchangeable....proceed with caution.
+
+mzLong-OBJ: A pivot longer of an "MZ Object"
+DataFrame where columns are:
+  - Float : MZ
+  - String: ScanTime
+  - Float : intensity
+
 METADATA: The standard "MZ Metadata object"
-Dataframe where the columns are:
+Dataframe required columns are:
   - Integer: measurement
   - String : sample_name (Must match above)
   - String : type (i.e. cell, media_cell, solvent)
-  - Integer: sample_number
   - String : phenotype
+Additional columns could be helpful. Such as:
   - Integer: time
   - Integer: plate
   - Integer: cell_count
   - String : sampler
   - String : polarity
   - String : sampling_day
-  - String : filtered_out (yes, no) #todo turn this into a boolean
+  - String : filtered_out
 
-TODOS:
-  - Docker -> Raw-MZML : msconvert doesnt play well with mac-M1 (apple silcon docker compatibility issue)
-  - MZML_1 -> Try using sapply rather than for loops
-  - MZML_1 -> Refactor: Improve Memory and Speed (could be Docker limitation)
-               -> Refactor away from joins
-               -> Write more to disk
-               -> Output in progress files
-  - MZML_1 -> Binning is too simple
-------- : ^^ Fixed with original scripts
-  - MZML_2 -> PeakPicking ===>> PeakShapeFiltering
-  - MZML_3 -> Generate MetaData???
-  - MZ_1 -> Fix
-  - MZ_6 -> Add Random Forest
-  - MZ_7 -> Migrate HMDB script
+----Project Structure----
+file: [suggested order]_[input object type]_[description].R (i.e. "2_mz_quality_check.R")
+ - public function : [input_object]_[category]_magic
+    - suggested method to handle everything in the file category (i.e. "mz_post_magic")
+ - public function : [input object]_[subcategory]_[description] (i.e. "mzlog_analysis_fold")
+ - private funciton: [type].[description] (i.e. "extract.binning")
 
------ Ahmed
-  -x MZML_1-old -> Binning (intensity) math (avg, max, median)
-  -x MZML_1-old -> Add tolerance to binning params
-  -x MZML_1-old -> Make it more obvious when using binning/centroiding classes
-  -x Binning -> Choose bin mz by intesity math (average, max, and **weighted-intensity**)
-  -x 1st Centroid -> TimeSquash ( filter out ( "missingness across scans" , " " )
-                             allow other math on time-scans)
+file: z_[description].R
+  - common methods written by ehetzel
+file: zz_[description].R
+  - common methods written by others
 
----- Ahmed todo2
-  -x Missingness by # of Scans
-  -x LowIntensity in mzML ## ( didn't add to squashTime; feels repeditive)
-  -x tagging list
-  -x tagging isotope
 
----- Laura todo
-  - extract_magic, all the parameters
-  -X docker image, including sumr
+---- TODO Oct31
+  -X docker image, including MeDUSA
   -X fix trycatch in massdefect
   -X why missingness drop rows with value of 1
-  - blanksubtraction, validation
-  - hmdb/lipidmaps
-  - mz_random_forest
+  -X mz_random_forest (stemcell)
+  - iso_tag output, 1 filtered(mz_obj sans isos), one original (iso_obj with mappings) [sucks]
+  -X pca variable bug [need data]
+  -X volcano plot (look at hypoxia)
+  -X t-test "FDR correct" (stemcell)
+  -X hmdb
+  -X heatmap
+  -X quality check [bug in plots]
+  -X metadata file naming validation
+  -X extract_magic, all the parameters
+  -X fix file managment when meta & data & scripts are seperate
+  -X mass defect windows debugging
+  -X alignment fix
+  -X unitTests capability
+  - unitTests content
+  -2 lower dependencies (catools, tibble)
+  -X config file (half-ish)
+  -2 optional correlation RFs (cor() is optional?)
+  -X lipidmaps
+  -X lipidmaps search
+  -X search by csv (targeted)
+  -X blanksubtraction, validation (need better data) ...
+  -Xbetter pheno/blank filtering
+  -Xhandle meta neg/pos better
+  -X anova analysis
+  -X ggpubr
+  -2 reparameterize phenotype in randomforest
+  -X fill out commoon adducts
+  -X method descriptions
+  -X rename to medusa

@@ -1,0 +1,5 @@
+measurement,sample_name,type,sample_number,time,plate,cell_count,sampler,polarity,sampling_day,measurement_day,filtered_out
+1,neg_mzml_1,cell,1,22,1,1,LH,negative,1,1,no
+2,neg_mzml_211,cell,2,35,1,2,LH,negative,1,1,no
+3,neg_mzml_31,cell,2,35,1,2,LH,negative,1,1,no
+

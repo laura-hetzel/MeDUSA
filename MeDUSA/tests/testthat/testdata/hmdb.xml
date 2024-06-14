@@ -1,0 +1,123 @@
+<hmdb xmlns="http://www.hmdb.ca">
+<metabolite>
+  <accession>HMDB0000001</accession>
+  <name>1-Methylhistidine</name>
+  <monisotopic_molecular_weight>169.085126611</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000002</accession>
+  <name>1,3-Diaminopropane</name>
+  <monisotopic_molecular_weight>74.08439833</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000005</accession>
+  <name>2-Ketobutyric acid</name>
+  <monisotopic_molecular_weight>102.031694058</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000008</accession>
+  <name>2-Hydroxybutyric acid</name>
+  <monisotopic_molecular_weight>104.047344118</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000010</accession>
+  <name>2-Methoxyestrone</name>
+  <monisotopic_molecular_weight>300.172544634</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000011</accession>
+  <name>3-Hydroxybutyric acid</name>
+  <monisotopic_molecular_weight>104.047344122</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000012</accession>
+  <name>Deoxyuridine</name>
+  <monisotopic_molecular_weight>228.074621504</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000014</accession>
+  <name>Deoxycytidine</name>
+  <monisotopic_molecular_weight>227.090605919</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000015</accession>
+  <name>Cortexolone</name>
+  <monisotopic_molecular_weight>346.214409448</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000016</accession>
+  <name>Deoxycorticosterone</name>
+  <monisotopic_molecular_weight>330.219494826</monisotopic_molecular_weight>
+root@f17cb131e25e:/home/rstudio# head -n 75 hmdb_simple.xml
+<hmdb xmlns="http://www.hmdb.ca">
+<metabolite>
+  <accession>HMDB0000001</accession>
+  <name>1-Methylhistidine</name>
+  <monisotopic_molecular_weight>169.085126611</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000002</accession>
+  <name>1,3-Diaminopropane</name>
+  <monisotopic_molecular_weight>74.08439833</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000005</accession>
+  <name>2-Ketobutyric acid</name>
+  <monisotopic_molecular_weight>102.031694058</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000008</accession>
+  <name>2-Hydroxybutyric acid</name>
+  <monisotopic_molecular_weight>104.047344118</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000010</accession>
+  <name>2-Methoxyestrone</name>
+  <monisotopic_molecular_weight>300.172544634</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000011</accession>
+  <name>3-Hydroxybutyric acid</name>
+  <monisotopic_molecular_weight>104.047344122</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000012</accession>
+  <name>Deoxyuridine</name>
+  <monisotopic_molecular_weight>228.074621504</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000014</accession>
+  <name>Deoxycytidine</name>
+  <monisotopic_molecular_weight>227.090605919</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000015</accession>
+  <name>Cortexolone</name>
+  <monisotopic_molecular_weight>346.214409448</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000016</accession>
+  <name>Deoxycorticosterone</name>
+  <monisotopic_molecular_weight>330.219494826</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000017</accession>
+  <name>4-Pyridoxic acid</name>
+  <monisotopic_molecular_weight>183.053157781</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000019</accession>
+  <name>alpha-Ketoisovaleric acid</name>
+  <monisotopic_molecular_weight>116.047344122</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000020</accession>
+  <name>p-Hydroxyphenylacetic acid</name>
+  <monisotopic_molecular_weight>152.047344122</monisotopic_molecular_weight>
+</metabolite>
+<metabolite>
+  <accession>HMDB0000021</accession>
+  <name>Iodotyrosine</name>
+  <monisotopic_molecular_weight>306.970536611</monisotopic_molecular_weight>
+</metabolite>
+</hmdb>

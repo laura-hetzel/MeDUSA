@@ -1,5 +1,0 @@
-measurement,sample_name,type,sample_number,phenotype,time,plate,cell_count,sampler,polarity,sampling_day,measurement_day,filtered_out
-1,neg_sumr_blank_001,cell,1,differentiated,22,1,1,LH,negative,1,1,no
-2,neg_sumr_blank_048,cell,2,differentiated,35,1,2,LH,negative,1,1,no
-3,neg_sumr_blank_052,blank,3,differentiated,41,1,0,LH,negative,1,1,no
-4,neg_sumr_blank_095,blank,4,differentiated,50,1,1,LH,negative,1,1,no
