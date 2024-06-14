@@ -10,13 +10,14 @@ tags:
 authors:
   - name: Laura Ann Hetzel
     orcid: 0000-0002-6922-9423
-    corresponding: true
     equal-contrib: true
     affiliation: 1
   - name: Eric Hetzel
     equal-contrib: true
+    corresponding: true
     affiliation: 2
   - name: Ahmed Ali
+    orcid: 0000-0003-2157-4399
     affiliation: 1
 affiliations:
  - name: Leiden University, Leiden, Netherlands
@@ -59,5 +60,7 @@ Current research projects relating to single cell metabolic profiling of the cel
 This research was funded in part by the European Union’s Horizon 2020 research and innovation program under the Marie Skladowska-Curie grant agreement number 861196.
 
 Rosa (species = Canine Familiaris, breed = Catahoula Leopard) was essential to the mental well-being and creativity of the authors, and therefore essential to the project.
+
+We would like to thank Alida Kindt and Thomas Hankemeier for their support and direction on this project.
 
 # References
