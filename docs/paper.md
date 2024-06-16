@@ -25,7 +25,7 @@ affiliations:
  - name: Independent Researcher, Netherlands
    index: 2
 date: 4 June 2024
-bibliography: joss.bib
+bibliography: paper.bib
 ---
 
 # Summary
