@@ -20,9 +20,10 @@
 #' null (only plots)
 #'
 #' @export
-mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() ) {
+mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c(), plot_title = "PCA"  ) {
   metadata <- local.meta_polarity_fixer(input_mzlog_obj,metadata)
   rownames(input_mzlog_obj) <- input_mzlog_obj$mz
+  rownames(metadata) <- NULL
   t_mz_obj <- scale(t(dplyr::select(input_mzlog_obj,-mz)))
   t_mz_obj <- t_mz_obj[!row.names(t_mz_obj) %in% sample_blacklist ,]
   t_mz_obj <- merge(x = t_mz_obj,
@@ -50,7 +51,7 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() 
                       xlab = paste0("PC1: ",round(var_explained[1]*100,1),"%"),
                       ylab = paste0("PC2: ",round(var_explained[2]*100,1),"%"))
 
-  local.save_plot(paste("PCA",local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
+  local.save_plot(paste(plot_title,local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
 }
 
 # *** Welch [T-Test] -----------------------------------------------------

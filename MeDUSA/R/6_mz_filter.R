@@ -143,7 +143,7 @@ mz_filter_magic <- function(input_mz_obj, min_intensity, missingness_threshold=F
   }
   if(!hasArg(min_intensity)){
     min_intensity <- tryCatch({
-      local.mz_polarity_guesser(input_mz_obj, pos_return=10000, neg_return=5000)
+      local.mz_polarity_guesser(input_mz_obj, pos_return=5000, neg_return=2000)
     }, error = function(e) {
       print(e)
       stop("ERROR: MeDUSA::mz_filter_magic: Could not guess positive or negative from colnames

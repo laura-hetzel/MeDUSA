@@ -24,7 +24,7 @@
 mz_post_imputation <- function(input_mz_obj, low_noise=10, high_noise=NULL){
   if(!hasArg(high_noise)){
     high_noise <- tryCatch({
-      local.mz_polarity_guesser(input_mz_obj, pos_return=10000, neg_return=5000)
+      local.mz_polarity_guesser(input_mz_obj, pos_return=1000, neg_return=500)
     }, error = function(e) {
       print(e)
       stop("ERROR: MeDUSA::mz_post_imputation: Could not guess positive or negative from colnames
