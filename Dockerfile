@@ -23,13 +23,21 @@ RUN R -e 'remotes::install_version("dplyr",        version = "1.1.2")'   \
 &&  R -e 'remotes::install_version("readxl",       version = "1.4.3")'   \
 &&  R -e 'remotes::install_version("testthat",     version = "3.2.1.1")'
 
-FROM bioc_base
+FROM bioc_base AS medusa_test
+COPY MeDUSA MeDUSA
+WORKDIR MeDUSA
+RUN chown rstudio /home/rstudio/*.xml
+RUN R -e 'devtools::test()' \
+&&  R -e 'devtools::install(dependencies="never")'
+
+FROM bioc_base AS medusa_image
 COPY MeDUSA MeDUSA
 WORKDIR MeDUSA
 RUN chown rstudio /home/rstudio/*.xml
 
 RUN R -e 'devtools::document()' \
 &&  R -e 'devtools::install(dependencies="never")'
+
 
 ### TO BUILD
 # docker build . -f Dockerfile -t lacdr/medusa

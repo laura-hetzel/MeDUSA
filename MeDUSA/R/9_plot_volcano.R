@@ -1,6 +1,7 @@
-
 # *** Volcano Plot -----------------------------------------------------
+#' welch: create volcano plot
 #'
+#' @description
 #' A volcano plot plots the fold change on the x-axis and the p-value of the
 #' t-test on the y-axis. The function plot_volcano assumes the user has already
 #' performed fold change and t-test, so these values must be passed into the

@@ -1,5 +1,7 @@
 # *** RandomForest Correlation -----------------------------------------------------
+#' MzLog: RandomrForest generate correlation data
 #'
+#' @description
 #' Random Forest is a robust tool for identifying the features that contribute
 #' to correct phenotype prediction. For optimal performance of the model, it is
 #' recommended to remove the highly correlated features before training and
@@ -13,7 +15,7 @@
 #' @param correlation_cutoff \cr
 #'   Float: Decimal percentage. Higher cutoff = less correlation
 #'
-#' @returns Transposed mzlog_obj of non-correlated_data
+#' @returns correlation_data: a Transposed mzlog_obj of non-correlated_data
 #'
 #' @export
 mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
@@ -30,7 +32,9 @@ mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
 }
 
 # *** RandomForest Select -----------------------------------------------------
+#' correlation_data: RandomrForest rfe_select
 #'
+#' @description
 #' Random Forest is a robust tool for identifying the features that contribute
 #' to correct phenotype prediction. For optimal performance of the model, it is
 #' recommended to remove the highly correlated features before training and
@@ -80,9 +84,10 @@ mzlog_rf_select <- function(correlation_data, metadata, feat_size_seq = seq(50,1
   feat_select
 }
 
-
 # *** RandomForest model -----------------------------------------------------
+#' MzLog & rfe_select: Run random forest
 #'
+#' @description
 #' Random Forest is a robust tool for identifying the features that contribute
 #' to correct phenotype prediction. For optimal performance of the model, it is
 #' recommended to remove the highly correlated features before training and
@@ -210,8 +215,10 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
   list( model = model, test = master_split$test, train = master_split$train, imp_mz = out )
 }
 
-# *** RandomForest Correlation -----------------------------------------------------
+# *** RandomForest  -----------------------------------------------------------
+#' MzLog: Run random forest
 #'
+#' @description
 #' Random Forest is a robust tool for identifying the features that contribute
 #' to correct phenotype prediction. For optimal performance of the model, it is
 #' recommended to remove the highly correlated features before training and

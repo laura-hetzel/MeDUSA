@@ -1,5 +1,7 @@
 # *** HMDB Identify -----------------------------------------------------
+#' mz: Identify mzs in HMDB
 #'
+#' @description
 #' A list of m/z values is not necessary helpful in metabolomic studies; these
 #' values must be assigned to something meaningful. The identify_hmdb function
 #' compares the m/z values previously identified as "relevant to phenotype
@@ -42,7 +44,9 @@ identify_hmdb <- function( mzs, adducts = c("M+H"), hmdb_file = "/home/rstudio/l
 
 
 # *** Lipid Identify -----------------------------------------------------
+#' mz: Identify mzs in Lipids
 #'
+#' @description
 #' A list of m/z values is not necessary helpful in lipidomic studies; these
 #' values must be assigned to something meaningful. The identify_lipids function
 #' compares the m/z values previously identified as "relevant to phenotype
@@ -67,7 +71,9 @@ identify_lipids <- function( mzs, adducts = c("M+H"), lipids_file = "/home/rstud
 }
 
 # *** Identify from csv-----------------------------------------------------
+#' mz: Identify mzs in a provided csv
 #'
+#' @description
 #' A list of m/z values is not necessary helpful in metabolomic studies; these
 #' values must be assigned to something meaningful. It is possible to download
 #' the desired databases for comparison and compare the data sets to the stored

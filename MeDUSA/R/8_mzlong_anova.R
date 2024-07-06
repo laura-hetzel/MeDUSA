@@ -1,7 +1,9 @@
 
 # *** Anova Analysis -----------------------------------------------------
-#' 
-#' The Welch t-test is only applicable for univariate analysis, so if the 
+#' MzLong: Anova analysis
+#'
+#' @description
+#' The Welch t-test is only applicable for univariate analysis, so if the
 #' experiment is comparing more than two phenotypes, ANOVA should be used in
 #' place of the t-test. The mzlong_analysis_anova function utilizes the anova
 #' function available in the Stats package to perform the analysis.
@@ -16,11 +18,11 @@
 #'   Float : Maximum p for a "imporant M/Z"
 #' @param cores
 #'   Integer: Can I has multithreading? (Need parallel)
-#' @returns 
+#' @returns
 #'
 #' @export
 mzlong_analysis_anova <- function(input_mzlong_obj, metadata, phenotypes, p_cutoff = 0.1, cores = 2){
-  metadata <- local.meta_polarity_fixer(input_mzlong_obj, metadata)  
+  metadata <- local.meta_polarity_fixer(input_mzlong_obj, metadata)
   mzlong <- dplyr::left_join(input_mzlong_obj, metadata[c("sample_name", "phenotype")], by = "sample_name")
   mzlong<-mzlong[mzlong$phenotype %in% phenotypes,]
   uniq_mz <- unique(mzlong$mz)

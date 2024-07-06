@@ -1,5 +1,7 @@
 # *** IsotopeTagging -----------------------------------------------------
+#' Find Isotopes (default c13)
 #'
+#' @description
 #' In mass spectrometry it is well known that every m/z value measured may not
 #' be a unique feature, largely due to isotopes. The mz_tag_isotope_hunter
 #' function analyzes all m/z features and identifies values that are likely an
