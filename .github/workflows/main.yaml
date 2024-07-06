@@ -5,27 +5,51 @@ on:
     branches: [ "main" , "rproj"]
 
 jobs:
+  R_build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Setup R
+      uses: r-lib/actions/setup-r@v2
+      with:
+        use-public-rspm: true
+    - name: Install dependencies
+      uses: r-lib/actions/setup-r-dependencies@v2
+      with:
+        extra-packages: any::roxygen2
+        needs: roxygen2
+    - uses: r-lib/actions/check-r-package@v2
+      with:
+        upload-snapshots: true
+        build_args: 'c("--no-manual")'
 
-  build:
+  docker_build:
     runs-on: ubuntu-latest
     steps:
     - name: Check out the repo
       uses: actions/checkout@v4
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - name: Extract metadata (tags, labels) for Docker
-      id: meta
-      uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
-      with:
-        images: my-docker-hub-namespace/my-docker-hub-repository
-    - name: Build the Docker image
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+ #   - name: Log in to Docker Hub
+ #     uses: docker/login-action@v3
+ #     with:
+ #       username: ${{ secrets.DOCKERHUB_USERNAME }}
+ #       password: ${{ secrets.DOCKERHUB_TOKEN }}
+ #   - name: Extract metadata (tags, labels) for Docker
+ #     id: meta
+ #     uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+ #     with:
+ #       images: thefollyallama/medusa
+    - name: Build & push the Docker image
       uses: docker/build-push-action@v6
-      target: medusa_image
-      push: true
-      tags: ${{ steps.meta.outputs.tags }}
-      labels: ${{ steps.meta.outputs.labels }}
-    - name: Test Medusa
+      with:
+        target: medusa_image
+        context: .
+#      push: true
+#      tags: ${{ steps.meta.outputs.tags }}
+#      labels: ${{ steps.meta.outputs.labels }}
+    - name: Test & publish R package
       run: docker build . --target medusa_test
