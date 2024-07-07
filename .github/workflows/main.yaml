@@ -2,7 +2,7 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "main" , "rproj"]
+    branches: [ "main" ]
 
 jobs:
   docker_build:
