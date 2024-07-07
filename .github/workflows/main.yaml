@@ -19,10 +19,12 @@ jobs:
     - name: Install dependencies
       uses: r-lib/actions/setup-r-dependencies@v2
       with:
+        working-directory: MeDUSA
         extra-packages: any::roxygen2
         needs: roxygen2
     - uses: r-lib/actions/check-r-package@v2
       with:
+        working-directory: MeDUSA
         upload-snapshots: true
         build_args: 'c("--no-manual")'
 
@@ -48,6 +50,7 @@ jobs:
       with:
         target: medusa_image
         context: .
+        tags: lacdr/medusa:latest
 #      push: true
 #      tags: ${{ steps.meta.outputs.tags }}
 #      labels: ${{ steps.meta.outputs.labels }}
