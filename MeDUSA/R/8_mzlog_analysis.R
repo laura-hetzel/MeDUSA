@@ -28,9 +28,9 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, qual_col = "phenotype",
   t_mz_obj <- scale(t(dplyr::select(input_mzlog_obj,-mz)))
   t_mz_obj <- t_mz_obj[!row.names(t_mz_obj) %in% sample_blacklist ,]
   t_mz_obj <- merge(x = t_mz_obj,
-        y = subset(tibble::column_to_rownames(metadata, "sample_name"), select = qual_col),
+        y = subset(tibble::column_to_rownames(metadata, "sample_name"), select =  qual_col),
         by = 0, all.x = TRUE)
-  rownames(t_mz_obj) <- paste(t_mz_obj$Row.names, t_mz_obj$phenotype, sep = "&")
+  rownames(t_mz_obj) <- paste(t_mz_obj$Row.names, t_mz_obj[[ qual_col ]], sep = "&")
 
   t_mz_obj <- prcomp(subset(t_mz_obj, select = -c(Row.names, get(qual_col))))
   summary(t_mz_obj)
@@ -39,12 +39,12 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, qual_col = "phenotype",
 
   t_mz_obj$x %>%
     as.data.frame %>%
-    rownames_to_column("sample_phenotype") %>%
-    separate(sample_phenotype, c("sample", get(qual_col), "&" )) %>%
+    rownames_to_column("sample_qual") %>%
+    separate(sample_qual, c("sample", qual_col), "&" ) %>%
 
     ggpubr::ggscatter(x = "PC1",y="PC2",
                       title = paste("PCA: ", local.mz_polarity_guesser(input_mzlog_obj)),
-                      color =get(qual_col),
+                      color = qual_col,
                       size  = 0.5,
                       ellipse = TRUE,
                       mean.point = TRUE,
