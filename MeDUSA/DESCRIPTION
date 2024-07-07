@@ -17,7 +17,7 @@ Depends:
     dplyr        (>= 1.1.2),
     ggplot2      (>= 3.4.2),
     ggpubr       (== 0.6.0),
-    mzR          (== 2.34.0),
+    mzR          (>= 2.34.0),
     pbapply      (== 1.7-2),
     pheatmap     (== 1.0.12),
     pROC         (>= 1.18.5),
