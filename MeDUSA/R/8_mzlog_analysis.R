@@ -21,7 +21,7 @@
 #' null (only plots)
 #'
 #' @export
-mzlog_analysis_pca <- function(input_mzlog_obj,metadata, qual_col = "phenotype", sample_blacklist = c(), plot_title = "PCA"  ) {
+mzlog_analysis_pca <- function(input_mzlog_obj,metadata, qual_col = "phenotype",  plot_title = "PCA", sample_blacklist = c() ) {
   metadata <- local.meta_polarity_fixer(input_mzlog_obj,metadata)
   rownames(input_mzlog_obj) <- input_mzlog_obj$mz
   rownames(metadata) <- NULL

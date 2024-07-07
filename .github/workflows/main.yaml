@@ -5,29 +5,6 @@ on:
     branches: [ "main" , "rproj"]
 
 jobs:
-  R_build:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - name: Setup R
-      uses: r-lib/actions/setup-r@v2
-      with:
-        use-public-rspm: true
-    - name: Install dependencies
-      uses: r-lib/actions/setup-r-dependencies@v2
-      with:
-        working-directory: MeDUSA
-        extra-packages: any::roxygen2
-        needs: roxygen2
-    - uses: r-lib/actions/check-r-package@v2
-      with:
-        working-directory: MeDUSA
-        upload-snapshots: true
-        build_args: 'c("--no-manual")'
-
   docker_build:
     runs-on: ubuntu-latest
     steps:
@@ -35,23 +12,22 @@ jobs:
       uses: actions/checkout@v4
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
- #   - name: Log in to Docker Hub
- #     uses: docker/login-action@v3
- #     with:
- #       username: ${{ secrets.DOCKERHUB_USERNAME }}
- #       password: ${{ secrets.DOCKERHUB_TOKEN }}
- #   - name: Extract metadata (tags, labels) for Docker
- #     id: meta
- #     uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
- #     with:
- #       images: thefollyallama/medusa
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USER }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+#    - name: Extract metadata (tags, labels) for Docker
+#      id: meta
+#      uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+#      with:
+#        images: thefollyllama/medusa
     - name: Build & push the Docker image
       uses: docker/build-push-action@v6
       with:
-        target: medusa_image
         context: .
-        tags: lacdr/medusa:latest
-#      push: true
+        tags: thefollyllama/medusa:latest
+        push: true
 #      tags: ${{ steps.meta.outputs.tags }}
 #      labels: ${{ steps.meta.outputs.labels }}
     - name: Test & publish R package
