@@ -1,6 +1,7 @@
 # *** PCA -----------------------------------------------------
 #' MZLOG-OBJ PCA
 #'
+#' @description
 #' A PCA plot is a relatively simple and well received method to compare samples
 #' and determine if they can be grouped by phenotype. The mzlog_analysis_pca
 #' function scales the log transformed data, removes any blacklisted m/z from
@@ -20,29 +21,30 @@
 #' null (only plots)
 #'
 #' @export
-mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() ) {
+mzlog_analysis_pca <- function(input_mzlog_obj,metadata, qual_col = "phenotype",  plot_title = "PCA", sample_blacklist = c() ) {
   metadata <- local.meta_polarity_fixer(input_mzlog_obj,metadata)
   rownames(input_mzlog_obj) <- input_mzlog_obj$mz
+  rownames(metadata) <- NULL
   t_mz_obj <- scale(t(dplyr::select(input_mzlog_obj,-mz)))
   t_mz_obj <- t_mz_obj[!row.names(t_mz_obj) %in% sample_blacklist ,]
   t_mz_obj <- merge(x = t_mz_obj,
-        y = subset(tibble::column_to_rownames(metadata, "sample_name"), select = "phenotype"),
+        y = subset(tibble::column_to_rownames(metadata, "sample_name"), select =  qual_col),
         by = 0, all.x = TRUE)
-  rownames(t_mz_obj) <- paste(t_mz_obj$Row.names, t_mz_obj$phenotype, sep = "&")
+  rownames(t_mz_obj) <- paste(t_mz_obj$Row.names, t_mz_obj[[ qual_col ]], sep = "&")
 
-  t_mz_obj <- prcomp(subset(t_mz_obj, select = -c(Row.names, phenotype)))
+  t_mz_obj <- prcomp(subset(t_mz_obj, select = -c(Row.names, get(qual_col))))
   summary(t_mz_obj)
 
   var_explained <- t_mz_obj$sdev^2/sum(t_mz_obj$sdev^2)
 
   t_mz_obj$x %>%
     as.data.frame %>%
-    rownames_to_column("sample_phenotype") %>%
-    separate(sample_phenotype, c("sample", "phenotype"), "&") %>%
+    rownames_to_column("sample_qual") %>%
+    separate(sample_qual, c("sample", qual_col), "&" ) %>%
 
     ggpubr::ggscatter(x = "PC1",y="PC2",
                       title = paste("PCA: ", local.mz_polarity_guesser(input_mzlog_obj)),
-                      color ="phenotype",
+                      color = qual_col,
                       size  = 0.5,
                       ellipse = TRUE,
                       mean.point = TRUE,
@@ -50,12 +52,13 @@ mzlog_analysis_pca <- function(input_mzlog_obj,metadata, sample_blacklist = c() 
                       xlab = paste0("PC1: ",round(var_explained[1]*100,1),"%"),
                       ylab = paste0("PC2: ",round(var_explained[2]*100,1),"%"))
 
-  local.save_plot(paste("PCA",local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
+  local.save_plot(paste(plot_title,local.mz_polarity_guesser(input_mzlog_obj),sep="-"))
 }
 
 # *** Welch [T-Test] -----------------------------------------------------
 #' MZLOG-OBJ T-Test
 #'
+#' @description
 #' To determine if there is a statistical difference between phenotypes, the
 #' Welch T-rest is often used. The user is expected to isolate two phenotypes in
 #' the data (example provided for code to isolate) to pass into the
@@ -128,6 +131,7 @@ mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', c
 # *** Fold [change] -----------------------------------------------------
 #' MZLOG-OBJ Fold Change
 #'
+#' @description
 #' Fold change is one method of comparing two phenotypes, dividing one phenotype
 #' by the other. The user is expected to isolate two phenotypes in the data
 #' (example provided for code to isolate) to pass into the mzlog_analysis_fold
@@ -164,14 +168,14 @@ mzlog_analysis_fold <- function(phenoA_mz_obj, phenoB_mz_obj, fold_math = "mean"
 }
 
 # *** Volcano Magic -----------------------------------------------------
+#' Volcano plot from filtered mz data
 #'
+#' @description
 #' A volcano plot plots the fold change on the x-axis and the p-value of the
 #' t-test on the y-axis. The function mz_analysis_volcano_magic uses the m/z
 #' data set and performs fold change and t-test on the data to populate the
 #' plot.
-#'
-#' @param input_mzlog_obj \cr
-#'   DataFrame : Log2 of Input MZ-Obj
+#''
 #' @param phenotype_a \cr
 #'   DataFrame: Filtered metadata for phenotypeA
 #' @param phenotype_b \cr
@@ -180,14 +184,9 @@ mzlog_analysis_fold <- function(phenoA_mz_obj, phenoB_mz_obj, fold_math = "mean"
 #'   Integer: Can I has multithreading? (Need parallel)
 #'
 #' @examples
-#' To remove values from "samples" that are lower than "blanks" * "threshold"
+#' phenotype_a <- mztools_filter(mzLog, metadata, "PhenoA")
+#' phenotype_b <- mztools_filter(mzLog, metadata, "PhenoB")
 #'
-#' phenotype_a <- filter(metadata, phenotype == "phenoA" &
-#'                       ionmode == ionmode_val & phase == phase_val &
-#'                       filtered_out == "no")
-#' phenotype_b <- filter(metadata, phenotype == "phenoB &
-#'                       ionmode == ionmode_val  & phase == phase_val &
-#'                       filtered_out == "no")
 #' @returns null (only plots)
 #'
 #' @export
@@ -199,12 +198,13 @@ mzlog_analysis_volcano_magic <- function(phenotype_a, phenotype_b, cores = 2 ){
 }
 
 # *** Heat Map  -----------------------------------------------------
+#' MzLog Generate Heat Map
 #'
+#' @description
 #' A heat map is a great way to visualize how a large data set compares over
 #' many metabolites. The mzlog_analysis_heatmap function can be used at any
 #' point in the processing pipeline to evaluate the phenotypes over all m/z values.
 #' It is recommended to only input the data after processing.
-#'
 #'
 #' @param input_mz_obj \cr
 #'   DataFrame : Input MZ-Obj

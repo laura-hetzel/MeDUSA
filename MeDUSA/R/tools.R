@@ -1,7 +1,7 @@
-
 # *** Filter MZs by meta Phenotypes  -----------------------------------------------------
-#' MZLOG-OBJ Plot Heat map
+#' MzObj: filter out samples via meta queries
 #'
+#' @description
 #' The mztools_filter function is used to filter the m/z values by phenotype.
 #' This filtering is useful for t-test, fold change, and volcano plots. For
 #' optimal results, the metadata should have a properly populated "phenotype"

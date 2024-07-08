@@ -1,6 +1,7 @@
-
 # *** RandomForest Validate-----------------------------------------------------
+#' rf_obj: Validate randomforest model
 #'
+#' @description
 #' Random Forest is a robust tool for identifying the features that contribute
 #' to correct phenotype prediction. For optimal performance of the model, it is
 #' recommended to remove the highly correlated features before training and
@@ -54,7 +55,9 @@ rf_validate <- function(rf_obj, mtry_range = c(1:200), trees = 500, mtry_seed = 
 
 
 # *** RandomForest Permuted -----------------------------------------------------
+#' Rf_obj: Randomize phenotypes to negatively validate rf-model
 #'
+#' @description
 #' Random Forest is a robust tool for identifying the features that contribute
 #' to correct phenotype prediction. For optimal performance of the model, it is
 #' recommended to remove the highly correlated features before training and

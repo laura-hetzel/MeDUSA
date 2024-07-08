@@ -1,4 +1,7 @@
 # *** Subtraction -----------------------------------------------------
+#' Subtract data (i.e. blanks) from the rest of the data
+#'
+#' @description
 #' The methods of single cell sampling will often lead to the capture of cell
 #' media along with the cell itself. The media contains a significant number of
 #' metabolites, so the signal from the media should be isolated from the

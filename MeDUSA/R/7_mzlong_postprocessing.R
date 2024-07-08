@@ -1,6 +1,7 @@
 # *** Log Transform -----------------------------------------------------
 #' MZLONG-OBJ Log Transform
 #'
+#' @description
 #' The mzlong_post_log function log2 transforms the intensities of the data set,
 #' after the data set has been restructured via the pivot_longer function. Log
 #' transformation of the data is highly recommended so that the observed m/z

@@ -1,13 +1,13 @@
 # *** Imputation -----------------------------------------------------
+#' MZ-OBJ Imputation
 #'
+#' @description
 #' After filtering the data set, there may be zero values as intensity in some
 #' instances. Unfortunately, this will hinder the statistical analysis as
 #' some of the mathematical functions cannot accept zero values. To accommodate
 #' this without impacting the statistical outcome, the mz_post_imputation function
 #' is used to replace the zero values with a random number between 1 and a set
 #' noise value.
-#'
-#' MZ-OBJ Imputation
 #'
 #' Replace all <[low_noise] ("mostly zeros") with a randomized value
 #'   between [low_noise] and [high_noise]
@@ -24,7 +24,7 @@
 mz_post_imputation <- function(input_mz_obj, low_noise=10, high_noise=NULL){
   if(!hasArg(high_noise)){
     high_noise <- tryCatch({
-      local.mz_polarity_guesser(input_mz_obj, pos_return=10000, neg_return=5000)
+      local.mz_polarity_guesser(input_mz_obj, pos_return=1000, neg_return=500)
     }, error = function(e) {
       print(e)
       stop("ERROR: MeDUSA::mz_post_imputation: Could not guess positive or negative from colnames
@@ -46,6 +46,7 @@ mz_post_imputation <- function(input_mz_obj, low_noise=10, high_noise=NULL){
 # *** Normalization -----------------------------------------------------
 #' MZ-OBJ Normalization
 #'
+#' @description
 #' The mz_post_normalization function utilizes Probabilistic Quotient
 #' Normalization, or PQN, to limit the effects of general fluctuations and
 #' random effects on the results. In single cell measurements, this is important
@@ -101,6 +102,7 @@ mz_post_normalization <- function(input_mz_obj, metadata, plot = TRUE ){
 # *** PivotLonger -----------------------------------------------------
 #' MZ-OBJ Pivot Longer
 #'
+#' @description
 #' The mz_post_pivot_longer function does not filter the data at all, but rather
 #' rearranges it in preparation for some of the mathematical statistical
 #' functions. Instead of a column for each sample, there will be only three
@@ -127,6 +129,7 @@ mz_post_pivot_longer <- function(input_mz_obj, plot = TRUE) {
 # *** post Log2 -----------------------------------------------------
 #' MZ-OBJ Log2
 #'
+#' @description
 #' The mz_post_log function log2 transforms the intensities of the data set. Log
 #' transformation of the data is highly recommended so that the observed m/z
 #' relationships are proportional and not additive, making the statistical
@@ -147,6 +150,7 @@ mz_post_log <- function(input_mz_obj) {
 # *** Process Magic -----------------------------------------------------
 #' MZ-OBJ Process Magic
 #'
+#' @description
 #' The mz_post_magic function will perform all of the recommended post-processing,
 #' including imputation to elimate intenstiy values of zero, PQN normalization
 #' to reduce the effects of dilution not attributed to the phenotype,

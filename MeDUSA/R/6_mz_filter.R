@@ -1,14 +1,12 @@
 # *** Blacklist -----------------------------------------------------
+#' MZ-OBJ : Remove Blacklisted MZs
 #'
+#' @description
 #' Filtering of the data is necessary to remove noise and contaminants from the
 #' data set before statistical analysis. The mz_filter_blacklist function
 #' accepts a list of m/z values that have been previously identified as
 #' contaminants and removes them from the data set. This function can be used
 #' to exclude any m/z values for any reason, but was designed for contaminants.
-#'
-#' MZ-OBJ Blacklist
-#'
-#' Removed Blacklisted MZs .\cr
 #'
 #' @param input_mz_obj \cr
 #'   DataFrame : Input MZ-Obj
@@ -42,14 +40,14 @@ mz_filter_blacklist <- function( input_mz_obj, blacklist = "", tolerance = 5e-6)
 }
 
 # *** Misingness -----------------------------------------------------
-#'
+#' MZ-OBJ or MZT-OBJ Filter Missingness
+#
+#' @description
 #' Filtering of the data is necessary to remove noise and contaminants from the
 #' data set before statistical analysis. The mz_filter_missingness function
 #' removes m/z values that have a zero value in a specified percentage of the
 #' samples.
-#'
-#' MZ-OBJ or MZT-OBJ Filter Missingness
-#'
+#'s
 #' Remove if peaks are significantly present.\cr
 #'     Zeros any intensities that are not in [Threshold]% of samples
 #'
@@ -70,14 +68,14 @@ mz_filter_missingness <- function(input_mz_obj, threshold = 0.1, msg = ""){
 }
 
 # *** LowIntensity -----------------------------------------------------
+#' MZ-OBJ or MZT-OBJ Filter LowIntensity
 #'
+#' @description
 #' Filtering of the data is necessary to remove noise and contaminants from the
 #' data set before statistical analysis. The mz_filter_lowIntensity function
 #' will filter out noise by eliminating low intensity values. The user can set a
 #' threshold for the minimum intensity, and any intensity below this value will
 #' be set to zero.
-#'
-#' MZ-OBJ or MZT-OBJ Filter LowIntensity
 #'
 #' Remove if intensity is too low\cr
 #'     Zeros any intensities that below [intensity].
@@ -102,7 +100,9 @@ mz_filter_low_intensity <- function(input_mz_obj, threshold, msg = ""){
 }
 
 # *** Filter-Magic -----------------------------------------------------
+#' MZ-OBJ Filter-Magic
 #'
+#' @description
 #' Filtering of the data is necessary to remove noise and contaminants from the
 #' data set before statistical analysis. The mz_filter_magic function will
 #' filter the data based on three parameters: the minimum intensity, a
@@ -112,8 +112,6 @@ mz_filter_low_intensity <- function(input_mz_obj, threshold, msg = ""){
 #' m/z values that do not occur in a sufficient number of the samples. The
 #' blacklist will eliminate m/z values that have been previously identified as
 #' contaminants.
-#'
-#' MZ-OBJ Filter-Magic
 #'
 #' Apply all filters as suggested by MeDUSA.
 #'
@@ -143,7 +141,7 @@ mz_filter_magic <- function(input_mz_obj, min_intensity, missingness_threshold=F
   }
   if(!hasArg(min_intensity)){
     min_intensity <- tryCatch({
-      local.mz_polarity_guesser(input_mz_obj, pos_return=10000, neg_return=5000)
+      local.mz_polarity_guesser(input_mz_obj, pos_return=5000, neg_return=2000)
     }, error = function(e) {
       print(e)
       stop("ERROR: MeDUSA::mz_filter_magic: Could not guess positive or negative from colnames

@@ -1,5 +1,7 @@
 # *** MassDefect -----------------------------------------------------
+#' Run MassDefect
 #'
+#' @description
 #' This package assumes electrospray ionization, and as such, also assumes
 #' the salt clusters that are introduced to the sample as artifacts (McMillan A,
 #' Renaud JB, Gloor GB, Reid G, Sumarah MW. Post-acquisition filtering of salt

@@ -1,5 +1,7 @@
 # *** Quality Metrics -----------------------------------------------------
+#' Run basic statictics over an mz_obj
 #'
+#' @description
 #' The methods of single cell mass spectrometry have multiple challenges
 #' associated with them, some of which may lead to a poor measurement that
 #' does not accurately reflect the biological status of the sample. It is
@@ -69,6 +71,8 @@ mzmetrics_quality_plot_all <- function(mz_metrics){
 # *** Metrics Quality Plot -----------------------------------------------------
 #' MZ_METRICS plot a single statistic
 #'
+#' @description
+#' Plot a single quality statistic;
 #' @param mz_metrics \cr
 #'   DataFrame : from "MeDUSA::mz_quality_metrics"
 #' @param focus \cr

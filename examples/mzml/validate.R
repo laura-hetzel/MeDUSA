@@ -1,8 +1,8 @@
 library('MeDUSA')
 
-# 2. Data Processing (filtering) ------------------------------------------
+# Assumes Docker environment
 # set the working directory to where the mzml files are located
-setwd("~/local/testData/mzml")
+setwd("~/local/examples/mzml")
 # introduce the meta data to use for filtering
 file_meta <- "meta.xlsx"
 meta <- data.frame(readxl::read_excel(file_meta, sheet = "meta", col_names = TRUE))
@@ -16,10 +16,11 @@ meta <- dplyr::select(meta,-filename)
 load("mzL.Rdata")
 #Magic
 #mzL <- mzml_extract_magic("data")
-## debugging without magic
+## MzT without Magic (Good for debugging)
 #files <- list.files(path=getwd("data"), pattern="*.mzML")
 #mzT <- pbapply::pblapply(files, function(x) mzml_extract_file(x, polarity=0, cl = NULL, magic=F))
 
+# Quality, filtering & post processing
 mz_obj_p <- mzL$pos
 tech_quality_p <- mz_quality_magic(mz_obj_p, meta)
 mz_obj_p <- mz_subtraction(mztools_filter(mz_obj_p, meta,"IS_Blank","type",T,T),
@@ -28,7 +29,21 @@ mz_obj_p <- mz_mass_defect(mz_obj_p, plot = TRUE)
 mz_obj_p <- mz_filter_magic(mz_obj_p, blacklist= F)
 pp_out <- mz_post_magic(mz_obj_p, metadata = meta, plot = TRUE)
 
-#mzlog_analysis_pca(pp_out$mzLog, meta)
+#mmetadata <- local.meta_polarity_fixer(input_mzlog_obj,metadata)
+rownames(input_mzlog_obj) <- input_mzlog_obj$mz
+rownames(metadata) <- NULL
+t_mz_obj <- scale(t(dplyr::select(input_mzlog_obj,-mz)))
+t_mz_obj <- t_mz_obj[!row.names(t_mz_obj) %in% sample_blacklist ,]
+t_mz_obj <- merge(x = t_mz_obj,
+                  y = subset(tibble::column_to_rownames(metadata, "sample_name"), select =  "phenotype"),
+                  by = 0, all.x = TRUE)
+rownames(t_mz_obj) <- paste(t_mz_obj$Row.names, t_mz_obj$phenotype, sep = "&")
+
+t_mz_obj <- prcomp(subset(t_mz_obj, select = -c(Row.names, phenotype)))
+summary(t_mz_obj)
+
+var_explained <- t_mz_obj$sdev^2/sum(t_mz_obj$sdev^2)
+
 mzlog_analysis_pca(mztools_filter(pp_out$mzLog,meta,"cell","type"), meta)
 
 
@@ -41,12 +56,10 @@ welch_p <- mzlog_analysis_welch( mztools_filter(pp_out$mzLog,meta,"HepG2"),
 fold_p <- mzlog_analysis_fold(mztools_filter(pp_out$mzLog,meta,"HepG2"),
                               mztools_filter(pp_out$mzLog,meta,"HEK293T"))
 
-
 plot_volcano(welch_p, fold_p)
 
-rf_data <- mztools_filter(pp_out$mzLog, meta, c("HepG2","HEK293T"))
-
 ##RandomForest:Magic
+rf_data <- mztools_filter(pp_out$mzLog, meta, c("HepG2","HEK293T"))
 rf_mag <- mzlog_rf_magic(rf_data, meta, "pos")
 ##RandomForest: without magic
 #rf_cor <- mzlog_rf_correlation(rf_data)
@@ -62,18 +75,3 @@ hmdb_anova <- identify_hmdb(anova$imp_mz)
 lipids_rf <- identify_lipids(rf_mag$mz)
 lipids_rf <- identify_lipids(anova$imp_mz)
 
-
-####Neg
-mz_obj_n <- mzL$neg
-tech_quality_n <- mz_quality_magic(mz_obj_n, meta)
-mz_obj_n <- mz_subtraction(mztools_filter(mz_obj_n, meta,"IS_Blank","type",T,T),
-                           mztools_filter(mz_obj_n, meta,"IS_Blank","type",F,T))
-mz_obj_n <- mz_mass_defect(mz_obj_n, plot = TRUE)
-mz_obj_n <- mz_filter_magic(mz_obj_n, blacklist= F)
-post_n <- mz_post_magic(mz_obj_n, metadata = meta, plot = TRUE)
-mzlog_analysis_pca(mztools_filter(post_n$mzLog,meta,"cell","type"), meta)
-mzlog_analysis_volcano_magic(mztools_filter(post_n$mzLog,meta,"HepG2"),
-                             mztools_filter(post_n$mzLog,meta,"HEK293T"))
-mzlog_analysis_heatmap(post_n, meta)
-rf_data <- mztools_filter(post_n$mzLog, meta, c("HepG2","HEK293T"))
-rf_mag <- mzlog_rf_magic(rf_data, meta, "neg")

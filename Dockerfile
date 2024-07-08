@@ -27,9 +27,9 @@ FROM bioc_base
 COPY MeDUSA MeDUSA
 WORKDIR MeDUSA
 RUN chown rstudio /home/rstudio/*.xml
-
-RUN R -e 'devtools::document()' \
-&&  R -e 'devtools::install(dependencies="never")'
+RUN R -e 'devtools::document()'
+RUN  R -e 'devtools::test()'
+RUN  R -e 'devtools::install(dependencies="never")'
 
 ### TO BUILD
 # docker build . -f Dockerfile -t lacdr/medusa
