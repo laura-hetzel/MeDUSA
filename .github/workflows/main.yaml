@@ -3,6 +3,8 @@ name: Docker Image CI
 on:
   push:
     branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   docker_build:
@@ -34,3 +36,4 @@ jobs:
       run: docker build  -f Dockerfile . -t thefollyllama/medusa
     - name: Push image
       run: docker push thefollyllama/medusa
+      if: github.event_name != 'pull_request'
