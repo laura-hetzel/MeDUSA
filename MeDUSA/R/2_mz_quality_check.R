@@ -106,6 +106,17 @@ mzmetrics_quality_plot <- function(mz_metrics, focus, title = F, plot_dim = c(8,
 # *** Metrics Quality Metadata Check -----------------------------------------------------
 #' Does the metadata seem ok
 #'
+#' @description
+#' The metadata file is used to filter the mz_obj to easily idetify samples by phenotype,
+#' type (i.e. blank/cell/media), fltered_out (blacklisting), or anything else that the user
+#' chooses to differentiate samples by.
+#' Metadata requirements are:
+#'   Includes at least : data.frame(sample_name("character),
+#'                                  type("character"),
+#'                                  phenotype("character"),
+#'                                  filtered_out("logical"))
+#'   Ignoring polarity in mz_obj. All mz_obj columns must be found in metadata$sample_name and vice-versa.
+#'
 #' @param input_mz_obj \cr
 #'   DataFrame : Input MZ-Obj
 #' @param meta \cr
@@ -125,21 +136,24 @@ mz_quality_meta_check <- function(input_mz_obj, meta){
 
   error <- list()
 
-  #Many more are expected for good science, but these are the ones that absence will actively break
-  meta_columns_expected <- c("measurement",
-                             "sample_name",
-                             "type",
-                             "phenotype")
+  #Many more can be expected for "good science", but these are the ones that absence will cause issue
+    meta_columns_expected <- c( "sample_name",
+                                "type",
+                                "phenotype",
+                                "filtered_out" )
+
 
   error <- .subset_check(meta_columns_expected,colnames(meta),"MetaColumns missing: ")
   error <- .subset_check(meta$sample_name,colnames(input_mz_obj),"MetaSamples not in data: ")
   error <- .subset_check(colnames(dplyr::select(input_mz_obj,-mz)), meta$sample_name,"DataSamples not in meta: ")
+  if ( class(meta$filtered_out) != 'logical' ){
+    error <- append(paste0("filtered_out column must be a logical (boolean)")
+  }
 
   sample_diff <- nrow(meta) - ncol(dplyr::select(input_mz_obj, -mz))
   if ( sample_diff != 0){
     error <- append(paste0(sample_diff,": more meta samples than data ones."),error)
   }
-
 
   if (length(error) > 0){
     stop(paste0("ERROR: MeDUSA::mz_quality_meta_check: ", error, "\n"))
