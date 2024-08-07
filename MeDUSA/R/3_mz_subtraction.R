@@ -34,10 +34,10 @@
 #'
 #' To remove values from "samples" that are lower than "blanks" * "threshold"
 #'
-#' sample_mz   <- MeDUSA::mztools_filter(input_mzObj,metadata,"blanks","type",F)
-#' subtract_mz <- MeDUSA::mztools_filter(input_mzObj,metadata,"blanks","type",T)
+#' sample_mz_obj   <- MeDUSA::mztools_filter(input_mzObj,metadata,"blanks","type",F)
+#' subtract_mz_obj <- MeDUSA::mztools_filter(input_mzObj,metadata,"blanks","type",T)
 #'
-#' mz_subtraction(input_mz_obj, samples_meta, blanks_meta, threshold = "5" )
+#' mz_subtraction(sample_mz_obj, subtract_mz_obj, threshold = 5 )
 #
 #' @export
 mz_subtraction <- function(sample_mz_obj, subtract_mz_obj , method = mean, threshold = 3) {
