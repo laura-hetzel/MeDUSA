@@ -137,17 +137,17 @@ mz_quality_meta_check <- function(input_mz_obj, meta){
   error <- list()
 
   #Many more can be expected for "good science", but these are the ones that absence will cause issue
-    meta_columns_expected <- c( "sample_name",
-                                "type",
-                                "phenotype",
-                                "filtered_out" )
+  meta_columns_expected <- c( "sample_name",
+                              "type",
+                              "phenotype",
+                              "filtered_out" )
 
 
   error <- .subset_check(meta_columns_expected,colnames(meta),"MetaColumns missing: ")
   error <- .subset_check(meta$sample_name,colnames(input_mz_obj),"MetaSamples not in data: ")
   error <- .subset_check(colnames(dplyr::select(input_mz_obj,-mz)), meta$sample_name,"DataSamples not in meta: ")
   if ( class(meta$filtered_out) != 'logical' ){
-    error <- append(paste0("filtered_out column must be a logical (boolean)")
+    error <- append("metadata$filtered_out column must be a logical (boolean)")
   }
 
   sample_diff <- nrow(meta) - ncol(dplyr::select(input_mz_obj, -mz))
