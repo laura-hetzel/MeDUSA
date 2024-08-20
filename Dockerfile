@@ -47,3 +47,7 @@ RUN  R -e 'devtools::install(dependencies="never")'
 ### To enter a running container (use "docker ps" to make sure there is only one)
 # docker exec --it localR /bin/bash
 #[Unix/Mac] docker exec -it $(docker ps | grep medusa | awk '{print $1}') /bin/bash
+
+### TO RUN VIA DOCKERHUB: (much quicker)
+# docker pull thefollyllama/medusa
+# docker run -e PASSWORD=medusa -p 8787:8787 -v .:/home/rstudio/local thefollyllama/medusa
