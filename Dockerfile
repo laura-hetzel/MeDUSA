@@ -30,6 +30,7 @@ RUN chown rstudio /home/rstudio/*.xml
 RUN R -e 'devtools::document()'
 RUN  R -e 'devtools::test()'
 RUN  R -e 'devtools::install(dependencies="never")'
+#RUN R -e 'devtools::document()' &&  R -e 'devtools::check()'
 
 ### TO BUILD
 # docker build . -f Dockerfile -t lacdr/medusa
