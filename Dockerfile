@@ -32,11 +32,13 @@ RUN  R -e 'devtools::test()'
 RUN  R -e 'devtools::install(dependencies="never")'
 #RUN R -e 'devtools::document()' &&  R -e 'devtools::check()'
 
+COPY scripts/run_unauth.sh /etc/services.d/rstudio/run
+
 ### TO BUILD
 # docker build . -f Dockerfile -t lacdr/medusa
 
 ### TO RUN RSTUDIO: user=rstudio, pwd=medusa
-# docker run -e PASSWORD=medusa -p 8787:8787 -v .:/home/rstudio/local lacdr/medusa
+# docker run -p 8787:8787 -v .:/home/rstudio/local lacdr/medusa
 # Navigate to localhost:8787 in your browser
 # Note, this creates a shared volume. So best to run this from the directory of your data.
 #     (But not so high of a directory that it will consume unnecessary resources)

@@ -1,0 +1,10 @@
+*.DS_Store
+
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+.git
+.config
+examples/**/output

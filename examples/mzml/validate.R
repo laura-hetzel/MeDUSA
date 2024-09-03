@@ -17,7 +17,7 @@ load("mzL.Rdata")
 #Magic
 #mzL <- mzml_extract_magic("data")
 ## MzT without Magic (Good for debugging)
-#files <- list.files(path=getwd("data"), pattern="*.mzML")
+#files <- list.files(path=paste(getwd(),"data", sep="/"), pattern="*.mzML")
 #mzT <- pbapply::pblapply(files, function(x) mzml_extract_file(x, polarity=0, cl = NULL, magic=F))
 
 # Quality, filtering & post processing
