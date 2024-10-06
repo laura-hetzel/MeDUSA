@@ -62,6 +62,8 @@ mz_filter_missingness <- function(input_mz_obj, threshold = 0.1, msg = ""){
   if ( threshold < 1){
     threshold <- threshold * (length(input_mz_obj)-1)
   }
+  input_mz_obj[is.na(input_mz_obj)] <- 0
+
   keep_peaks <- input_mz_obj[rowSums( dplyr::select(input_mz_obj, -mz) > 0 ) >= threshold,]
   local.mz_log_removed_rows(input_mz_obj,keep_peaks,paste("MeDUSA::mz_filter_missingness",msg))
   keep_peaks
