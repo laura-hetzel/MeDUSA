@@ -6,6 +6,8 @@
 # This script will place .mzML in that folder with the same name
 # If no argument is given, the script will assume the .RAW is in the current directory from which this script is called
 
+#If on linux: export PATH=$PATH:[[medusa_directory]]medusa/scripts
+
 # Set base variables for pipeline
 DATA_FOLDER="$PWD"
 

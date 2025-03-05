@@ -57,7 +57,7 @@ mzml_extract_magic <- function(files = getwd(), cores = 6,  params = NULL ){
       out <- list(pos=mz_pos, neg=mz_neg)
     }
     print(paste("INFO: mzml_extract_magic SUCCESS, execution complete in:",round(as.numeric(Sys.time()-start, units="mins"),3),"minutes"))
-    return(out)
+    return(as.data.frame(out))
   },
   finally={
     local.kill_threads()
@@ -96,7 +96,7 @@ mzml_extract_magic <- function(files = getwd(), cores = 6,  params = NULL ){
 #'   parallel::threadCluster (optional)
 #' @returns MzT object
 #' @export
-mzml_extract_file <- function(file, polarity = "",  magic = T,  cl = NULL, params = NULL) {
+mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL , params = NULL) {
   params <- extract.fill_defaults(params)
 
   if (!is.null(cl)) {
@@ -134,13 +134,18 @@ mzml_extract_file <- function(file, polarity = "",  magic = T,  cl = NULL, param
   for( i in seq_along(l) ){ colnames(l[[i]]) <- rts[[i]] }
   out <- extract.mz_format(l)
   if (magic) {
+    print(sprintf("INFO: Binning & Filtering %s %s",file, polarity))
     out <- mzT_filtering( out,
                           prebin_method = params$prebin_method,
                           missingness_threshold = params$missingness_threshold,
                           intensity_threshold = params$intensity_threshold,
                           log_name = paste(file,polarity))
+    print(sprintf("INFO: TimeSquashing %s %s",file, polarity))
     out <- mzT_squash_time(out, timeSquash_method = params$timeSquash_method)
-  }else{
+  }
+  if (class(params$dbconn) == 'duckdb_connection'){
+    duckdb::duckdb_register(params$dbconn, paste(polarity,file,sep="_"), out)
+  } else {
     out
   }
 }
@@ -181,9 +186,9 @@ mzml_extract_file <- function(file, polarity = "",  magic = T,  cl = NULL, param
 #' @export
 # Note missingness_threshold is very low
 mzT_filtering <- function(mzT, prebin_method = max, missingness_threshold = 1, intensity_threshold = 1000, log_name = "" ){
-  mzT <- extract.binning(mzT,prebin_method,log_name)
   mzT <- mz_filter_low_intensity(mzT,threshold = intensity_threshold, log_name)
   mzT <- mz_filter_missingness(mzT,threshold = missingness_threshold,log_name)
+  mzT <- extract.binning(mzT,prebin_method,log_name)
 }
 
 # ***  -----------------------------------------------------
@@ -223,7 +228,7 @@ mzT_squash_time <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl 
   }
   squash <- pbapply::pbapply(dplyr::select(mzT, -mz),1, timeSquash_method, na.rm=T, cl=cl)
   squash[is.na(squash)] <- 0
-  out <- as.data.frame(cbind(mzT$mz, squash))
+  out <- data.table::as.data.table(cbind(mzT$mz, squash))
   names(out) <- c("mz","intensity")
   out
 }
@@ -268,7 +273,8 @@ extract.polarity_final <- function(pol,mzT,files,params){
 
 extract.binning <- function(df, method = max, log_name = "", tolerance = 5e-6){
   bin <- binning(df$mz, tolerance = tolerance)
-  #local.mz_log_removed_rows((bin), unique(bin), paste("Binning",log_name))
+  
+  local.mz_log_removed_rows((bin), unique(bin), paste("Binning",log_name))
   df <- suppressWarnings(aggregate(dplyr::select(df,-mz),list(bin), method, na.rm = T, na.action=NULL))
   names(df)[1] <- "mz"
   df[df < 0] <- 0
@@ -281,7 +287,7 @@ extract.mz_format <- function(out){
   out <- dplyr::bind_rows(out)
   out <- out[order(out$mz),]
   out$mz <- round(out$mz, 5)
-  as.data.frame(out)
+  data.table::as.data.table(out)
 }
 
 extract.file_lister <- function(files) {
@@ -299,11 +305,12 @@ extract.file_lister <- function(files) {
 #TODO move to tools get_defaults
 extract.fill_defaults <- function(params = NULL){
   defaults <- list(
+    "dbconn" = NULL,
     "prebin_method" = max,
     "postbin_method" = max,
     "tolerance" = 5e-6,
     "timeSquash_method" = mean,
-    "missingness_threshold" = .1,
+    "missingness_threshold" = 1,
     "intensity_threshold" = 1000,
     "massWindow" = c(0, Inf)
   )
