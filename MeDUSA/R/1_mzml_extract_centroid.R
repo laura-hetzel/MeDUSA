@@ -20,11 +20,12 @@
 #' function.
 #'
 #'   Current Defaults:
-#'      mzBinningMath: max
-#'      mzBinTolerance = 5e-6
-#'      timeSquashMath: mean
-#'      missingness_threshold: 0.02 (2%)
-#'      massWindow: c(0,Inf)
+#'      "postbin_method" = max,
+#'      "tolerance" = 5e-6,
+#'      "timeSquash_method" = mean,
+#'      "missingness_threshold" = .1,
+#'      "intensity_threshold" = 1000,
+#'      "target_list" = c()
 #'
 #' @param files \cr
 #'   String: File or directory of mzmL files
@@ -119,6 +120,14 @@ mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL , param
     range <- abs(meta$scanWindowUpperLimit - meta$scanWindowLowerLimit)
     scans <- range >= params$massWindow[1] & range <= params$massWindow[2]
     p <- mzR::peaks(z)
+    if ( length(params$target_list) > 0 ){
+      p <- lapply(p,function(pi){
+          pi_df <- as.data.frame(pi)
+          target_bool <- lapply(params$target_list, function(x){abs(pi_df$mz - x)/x < params$target_list_tolerance});
+          target_bool <- Reduce("|",target_bool)
+          pi[target_bool,]
+      })
+    }
     if ( !polarity == "" ) {
       #meta$polarity == 1 == Positive
       p <- p[meta["polarity"] == polarity]
@@ -235,7 +244,9 @@ mzT_squash_time <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl 
   out
 }
 
-extract.binning <- function(df, method = 'max', log_name = "", tolernace = 5e-6){
+##TODO add notes
+#' @export
+mzT_binning <- function(df, method = 'max', log_name = "", tolernace = 5e-6){
   db_name <- paste0("Binning_", log_name)
   db_file <- paste0(local.output_dir(),'/tmp-',db_name,'.duckdb')
   bin <- binning(df$mz, tolerance = 5e-6)
@@ -305,7 +316,8 @@ extract.fill_defaults <- function(params = NULL, db_prefix = "all"){
     "missingness_threshold" = 1,
     "missingness_threshold" = .1,
     "intensity_threshold" = 1000,
-    "massWindow" = c(0, Inf)
+    "target_list" = c(),
+    "target_list_tolerance" = 5e-5
   )
 
   out <- append( params, defaults[is.na(is.na(params)[names(defaults)])] )

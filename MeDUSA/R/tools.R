@@ -60,8 +60,8 @@ get_default_data <- function(type){
       c( "2M+Na", -11.4950  ),
       c( "2M+Cu", -31.773   ),
       c( "3M+Na", -7.663333 ),
-      c( "CN-",   +16.018   ),
-      c( "HCOO-", +46.0254  ),
+      c( "CN-",   -16.018   ),
+      c( "HCOO-", -46.0254  ),
       c( "M+FormicAcid+H", -47.0262 ),
       c( "M+DimethylFormamide+H", -74.0946 )
     )
