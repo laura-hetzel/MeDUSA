@@ -47,23 +47,29 @@ mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), params = NULL
     pbapply::pblapply(files, function(file) mzml_extract_file(file, polarity=pol, cl = NULL, magic=T, params=params))
     print(paste0("INFO: mzml_extract_magic : Extraction of [",pol_eng,"], complete"))
     tables <- DBI::dbGetQuery(params$dbconn, "SELECT table_name FROM duckdb_tables;")
-    query <- paste0("SELECT * FROM ", paste(tables[,] ,collapse=" UNION ALL BY NAME SELECT * FROM "), " ORDER BY mz")
-    print(paste0("INFO: mzml_extract_magic : MZ_OBJ of [",pol_eng,"], created"))
-    out <- DBI::dbGetQuery(params$dbconn, query)
-    duckdb::dbWriteTable(params$dbconn ,paste0("PREFINAL_",pol_eng) , out,append = TRUE)
+    query <- paste0("CREATE TABLE ",paste0("PREFINAL_",pol_eng), " AS (SELECT * FROM ", paste(tables[,] ,collapse=" UNION ALL BY NAME SELECT * FROM "), " ORDER BY mz)")
+    print(paste0("INFO: mzml_extract_magic : creating initial MZ_OBJ of [",pol_eng,"]"))
+    DBI::dbGetQuery(params$dbconn, query)
     print(paste0("INFO: mzml_extract_magic : Final Binning [",pol_eng,"], starting"))
     #params <- extract.fill_defaults(params, pol_eng)
     #df[pol_eng] <- DBI::dbGetQuery(params$dbconn, query)
     gc()
+    out <- DBI::dbGetQuery(params$dbconn, paste0("select * from PREFINAL_", pol_eng))
     out <- extract.mz_format(out)
-    out <- extract.binning(out, params$postbin_method, paste0('extract_magic_',pol_eng))
+    out <- mzT_binning(out, params$postbin_method, paste0('extract_magic_',pol_eng))
     duckdb::dbWriteTable(params$dbconn ,paste0("FINAL_",pol_eng) , out,append = TRUE)
     print(paste0("INFO: mzml_extract_magic : Final Binning [",pol_eng,"], complete"))
     gc()
     out
   })
+  out <- list()
+  for( i in 1:length(polarity)) {
+    name <- extract.pol_english(polarity[i])
+    out[name] <- df[i]
+  } 
+
   print(paste("INFO: mzml_extract_magic SUCCESS, execution complete in:",round(as.numeric(Sys.time()-start, units="mins"),3),"minutes"))
-  df
+  out
 }
 
 # ***  -----------------------------------------------------
@@ -103,13 +109,13 @@ mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL , param
   params <- extract.fill_defaults(params,pol_eng)
   name <- strsplit(basename(file),"\\.")[[1]][1]
   name <- paste(pol_eng,name,sep="_")
-  if(! name %in% DBI::dbGetQuery(params$dbconn, "show tables")[[1]] ) {
+  if( is.null(params$dbconn) || ! name %in% DBI::dbGetQuery(params$dbconn, "show tables")[[1]] ) {
     if (!is.null(cl)) {
       pbo <- pbapply::pboptions(type = "none")
       on.exit(pbapply::pboptions(pbo), add = TRUE)
     }
 
-    file <- file.path(file)
+    #file <- file.path(file)
 
     if (!file.exists(file)) {
       warning(sprintf("Cannot find file %s", file))
@@ -136,7 +142,9 @@ mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL , param
     print(sprintf("INFO: Scans found in %s: %i",name, nrow(meta)))
     rts <-lapply(meta$retentionTime, function(x){c("mz",x)})
     l <- pbapply::pblapply(p, cl = cl, centroid.singleScan)
-    for( i in seq_along(l) ){ colnames(l[[i]]) <- rts[[i]] }
+    for( i in seq_along(l) ){ 
+      colnames(l[[i]]) <- rts[[i]] 
+    }
     out <- extract.mz_format(l)
     if (magic) {
       print(sprintf("INFO: Binning & Filtering %s", name))
@@ -196,7 +204,7 @@ mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL , param
 # Note missingness_threshold is very low
 mzT_filtering <- function(mzT, prebin_method = max, missingness_threshold = 1, intensity_threshold = 1000, log_name = "" ){
   if ( !is.null(prebin_method)) {
-    mzT <- extract.binning(mzT,prebin_method,log_name)
+    mzT <- mzT_binning(mzT,prebin_method,log_name)
   }
   mzT <- mz_filter_low_intensity(mzT,threshold = intensity_threshold, log_name)
   mzT <- mz_filter_missingness(mzT,threshold = missingness_threshold,log_name)
@@ -251,8 +259,8 @@ mzT_binning <- function(df, method = 'max', log_name = "", tolernace = 5e-6){
   db_file <- paste0(local.output_dir(),'/tmp-',db_name,'.duckdb')
   bin <- binning(df$mz, tolerance = 5e-6)
   local.mz_log_removed_rows((bin), unique(bin), db_name)
-  rm(bin); gc()
   df$mz <- bin
+  rm(bin); gc()
   #TODO see if we can eliminate this check (scanTime as string from extract_file gets weird)
   if (regexpr("extract_magic.*",log_name)){
     cols <- colnames(dplyr::select(df, -mz))
@@ -277,9 +285,8 @@ mzT_binning <- function(df, method = 'max', log_name = "", tolernace = 5e-6){
 
 #convert annoying mzR::list[[mz,i],[mz,i],[mz,i]] into usuable dataframe
 extract.mz_format <- function(out){
-  #Should be handled by SQL now
-  #out <- dplyr::bind_rows(out)
-  #out <- out[order(out$mz),]
+  out <- dplyr::bind_rows(out)
+  out <- out[order(out$mz),]
   out$mz <- as.numeric(out$mz)
   out$mz <- round(out$mz, 5)
   data.table::as.data.table(out)
