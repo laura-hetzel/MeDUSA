@@ -39,35 +39,50 @@
 mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), params = NULL ){
   start <- Sys.time()
   files <- extract.file_lister(files)
-  # Parallelizing pos/neg is too much for reasonable laptop memory
-  df <- pblapply( polarity, function(pol){
-    pol_eng <- extract.pol_english(pol)
-    params <- extract.fill_defaults(params, pol_eng)
-    print(paste0("INFO: mzml_extract_magic : Extraction of [",pol_eng,"], beginning"))
-    pbapply::pblapply(files, function(file) mzml_extract_file(file, polarity=pol, cl = NULL, magic=T, params=params))
-    print(paste0("INFO: mzml_extract_magic : Extraction of [",pol_eng,"], complete"))
-    tables <- DBI::dbGetQuery(params$dbconn, "SELECT table_name FROM duckdb_tables;")
-    query <- paste0("CREATE TABLE ",paste0("PREFINAL_",pol_eng), " AS (SELECT * FROM ", paste(tables[,] ,collapse=" UNION ALL BY NAME SELECT * FROM "), " ORDER BY mz)")
-    print(paste0("INFO: mzml_extract_magic : creating initial MZ_OBJ of [",pol_eng,"]"))
-    DBI::dbGetQuery(params$dbconn, query)
-    print(paste0("INFO: mzml_extract_magic : Final Binning [",pol_eng,"], starting"))
-    #params <- extract.fill_defaults(params, pol_eng)
-    #df[pol_eng] <- DBI::dbGetQuery(params$dbconn, query)
-    gc()
-    out <- DBI::dbGetQuery(params$dbconn, paste0("select * from PREFINAL_", pol_eng))
-    out <- extract.mz_format(out)
-    out <- mzT_binning(out, params$postbin_method, paste0('extract_magic_',pol_eng))
-    duckdb::dbWriteTable(params$dbconn ,paste0("FINAL_",pol_eng) , out,append = TRUE)
-    print(paste0("INFO: mzml_extract_magic : Final Binning [",pol_eng,"], complete"))
-    gc()
-    out
-  })
+  #TODO: Fix threaded db connections
+  #if (parallel && length(polarity) > 1){
+    #cl <- local.export_thread_env(2)
+  #} else {
+    cl <- NULL
+  #}
+  #tryCatch({
+    df <- pblapply( polarity, cl=cl, function(pol){
+      pol_eng <- extract.pol_english(pol)
+      params <- extract.fill_defaults(params, pol_eng)
+      print(paste0("INFO: mzml_extract_magic : Extraction of [",pol_eng,"], beginning"))
+      pbapply::pblapply(files, function(file) mzml_extract_file(file, polarity=pol, cl = NULL, magic=T, params=params))
+      print(paste0("INFO: mzml_extract_magic : Extraction of [",pol_eng,"], complete"))
+      tables <- DBI::dbGetQuery(params$dbconn, "SELECT table_name FROM duckdb_tables;")
+      if (! paste0("PREFINAL_",pol_eng) %in% tables[,]) {
+        query <- paste0("CREATE TABLE ",paste0("PREFINAL_",pol_eng), " AS (SELECT * FROM ", tables[1,], paste(" FULL OUTER JOIN", tables[2:length(tables[,]),], collapse = " USING (mz)"), " USING (mz) ORDER BY mz)")
+        print(paste0("INFO: mzml_extract_magic : creating initial MZ_OBJ of [",pol_eng,"]"))
+        DBI::dbExecute(params$dbconn, query)
+      } else {
+        print(paste0("INFO: mzml_extract_magic : initial MZ_OBJ of [",pol_eng,"], already exists"))
+      }
+      print(paste0("INFO: mzml_extract_magic : Final Binning [",pol_eng,"], starting"))
+      gc()
+      out <- DBI::dbGetQuery(params$dbconn, paste0("select * from PREFINAL_", pol_eng))
+      #out <- extract.mz_format(out)
+      out <- mzT_binning(out, params$postbin_method, paste0('extract_magic_',pol_eng))
+      duckdb::dbWriteTable(params$dbconn ,paste0("FINAL_",pol_eng) , out,append = TRUE)
+      print(paste0("INFO: mzml_extract_magic : Final Binning [",pol_eng,"], complete"))
+      gc()
+      #TODO, move "Select * final_" returns outside of this loop. (So neg doesn't bog up memory)
+      return(out)
+    })
+  #TODO: Fix threaded db connections
+  #}, finally={
+  # 
+  #  if (parallel){
+  #    local.kill_threads(cl)
+  #  }
+  #})
   out <- list()
   for( i in 1:length(polarity)) {
     name <- extract.pol_english(polarity[i])
     out[name] <- df[i]
   } 
-
   print(paste("INFO: mzml_extract_magic SUCCESS, execution complete in:",round(as.numeric(Sys.time()-start, units="mins"),3),"minutes"))
   out
 }
@@ -269,12 +284,14 @@ mzT_binning <- function(df, method = 'max', log_name = "", tolernace = 5e-6){
   }
   cols <- sprintf('%s("%s")', method, paste(cols ,collapse=paste0('"),',method,'("')))
   #TODO: investigate possible duplications
-  query <- paste0("SELECT mz, ",cols," FROM ", db_name, " GROUP BY mz ORDER by mz" )
+  query <- paste0("CREATE TABLE final_tmp AS (SELECT mz, ",cols," FROM ", db_name, " GROUP BY mz ORDER by mz)" )
   #Create tmp db to perform binning much quicker via SQL (and with limited memory usage)
   dbconn <- DBI::dbConnect(duckdb::duckdb(db_file))
   duckdb::duckdb_register(dbconn, db_name, df, overwrite = T)
   rm(df); gc()
-  df <- DBI::dbGetQuery(dbconn, query)
+  DBI::dbExecute(dbconn, query)
+  df <- DBI::dbGetQuery(dbconn, "SELECT * FROM final_tmp")
+  DBI::dbExecute(dbconn, "DROP TABLE final_tmp")
   DBI::dbDisconnect(dbconn)
   unlink(db_file)
   colnames(df)<- gsub(paste0(method,"\\((.*)\\)"),"\\1",colnames(df))
