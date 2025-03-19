@@ -25,6 +25,8 @@ RUN R -e 'remotes::install_version("AICcmodavg",   version = "2.3-2")'
 RUN R -e 'remotes::install_version("Matrix",       version = "1.6.0")'
 RUN R -e 'remotes::install_version("ggpubr",       version = "0.6.0")'
 RUN R -e 'remotes::install_version("pROC",         version = "1.18.5")'
+RUN R -e 'remotes::install_version("duckdb",       version = "1.2.0")'
+
 
 #User Tools
 RUN R -e 'remotes::install_version("readxl",   version = "1.4.3")'

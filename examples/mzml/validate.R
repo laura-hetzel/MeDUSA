@@ -17,6 +17,8 @@ load("mzL.Rdata")
 #Magic
 #mzL <- mzml_extract_magic("data")
 ## MzT without Magic (Good for debugging)
+#setwd("~/local/examples/mzml/data")
+
 #files <- list.files(path=getwd("data"), pattern="*.mzML")
 #mzT <- pbapply::pblapply(files, function(x) mzml_extract_file(x, polarity=0, cl = NULL, magic=F))
 
@@ -74,4 +76,32 @@ hmdb_rf <- identify_hmdb(rf_mag$mz, c("M-H","M+Na"))
 hmdb_anova <- identify_hmdb(anova$imp_mz)
 lipids_rf <- identify_lipids(rf_mag$mz)
 lipids_rf <- identify_lipids(anova$imp_mz)
+
+
+library('MeDUSA')
+library('duckdb')
+setwd("~/local/examples/raw/out")
+files <- list.files(getwd(), pattern="*.mzML")
+out <- mzml_extract_file(files[1], magic=T, params=list('dbconn'=NULL)) 
+mzT <- pbapply::pblapply(files, function(x) mzml_extract_file(x, polarity=0, cl = NULL, magic=T))
+mz <- mzml_extract_magic(files)
+
+method <- 'max'
+extract.binning(out)
+
+bin <- binning(out$mz, tolerance = 5e-6)
+out$mz <- bin
+cols <- as.numeric(colnames(select(out, -mz)))
+cols <- sprintf('%s("%s")', method, paste(cols ,collapse=paste0('"),',method,'("')))
+query <- paste0("SELECT mz, ",cols," FROM out GROUP BY mz" )
+
+setwd("~/local/examples/raw/")
+dbconn <- dbConnect(duckdb('tmp.duckdb'))
+duckdb::duckdb_register(dbconn, "out", out)
+rm(out)
+
+out2 <- dbGetQuery(dbconn, query)
+
+
+
 

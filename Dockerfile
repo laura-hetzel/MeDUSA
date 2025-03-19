@@ -20,8 +20,9 @@ RUN R -e 'remotes::install_version("dplyr",        version = "1.1.2")'   \
 &&  R -e 'remotes::install_version("Matrix",       version = "1.6.0")'   \
 &&  R -e 'remotes::install_version("ggpubr",       version = "0.6.0")'   \
 &&  R -e 'remotes::install_version("pROC",         version = "1.18.5")'  \
+&&  R -e 'remotes::install_version("duckdb",       version = "1.2.0")'    \
 &&  R -e 'remotes::install_version("readxl",       version = "1.4.3")'   \
-&&  R -e 'remotes::install_version("testthat",     version = "3.2.1.1")'
+&&  R -e 'remotes::install_version("testthat",     version = "3.2.1.1")' 
 
 FROM bioc_base
 COPY MeDUSA MeDUSA
@@ -33,7 +34,14 @@ RUN  R -e 'devtools::install(dependencies="never")'
 #RUN R -e 'devtools::document()' &&  R -e 'devtools::check()'
 
 ### TO BUILD
-# docker build . -f Dockerfile -t lacdr/medusa
+#TAG=v3
+#docker build . -f Dockerfile -t thefollyllama/medusa:${TAG}-arm64  --platform linux/arm64/v8
+#docker build . -f Dockerfile -t thefollyllama/medusa:${TAG}-amd64bn    --platform linux/amd64
+
+#docker manifest create thefollyllama/medusa:${TAG} \
+# --amend thefollyllama/medusa:${TAG}-arm64 \
+# --amend thefollyllama/medusa:${TAG}-amd64
+#docker manifest push thefollyllama/medusa:${TAG}
 
 ### TO RUN RSTUDIO: user=rstudio, pwd=medusa
 # docker run -e PASSWORD=medusa -p 8787:8787 -v .:/home/rstudio/local lacdr/medusa
