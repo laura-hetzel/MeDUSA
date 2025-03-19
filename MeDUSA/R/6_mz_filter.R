@@ -91,7 +91,7 @@ mz_filter_missingness <- function(input_mz_obj, threshold = 0.1, msg = ""){
 #'
 #' @return Returns an MZ-OBJ
 #' @export
-mz_filter_low_intensity <- function(input_mz_obj, threshold, msg = ""){
+mz_filter_low_intensity <- function(input_mz_obj, threshold = 500, msg = ""){
   #TODO make this better
   mz <- input_mz_obj$mz
   input_mz_obj[is.na(input_mz_obj)] <- 0
@@ -129,20 +129,22 @@ mz_filter_low_intensity <- function(input_mz_obj, threshold, msg = ""){
 #' Dependencies : dplyr
 #' @return Returns an MZ-OBJ
 #' @export
-mz_filter_magic <- function(input_mz_obj, min_intensity, missingness_threshold=F, blacklist=F){
-  if(is.logical(blacklist)){
-    if( blacklist != F ){
+mz_filter_magic <- function(input_mz_obj, min_intensity = NULL, missingness_threshold = NULL, blacklist = NULL){
+  if(!is.null(blacklist)){
+    if( blacklist == TRUE ){
       input_mz_obj <- mz_filter_blacklist(input_mz_obj)
+    } else {
+      input_mz_obj <- mz_filter_blacklist(input_mz_obj, blacklist=blacklist)
     }
-  } else {
-    input_mz_obj <- mz_filter_blacklist(input_mz_obj, blacklist=blacklist)
   }
-  if(hasArg(missingness_threshold)){
+  if(!is.null(missingness_threshold)){
     input_mz_obj <- mz_filter_missingness(input_mz_obj, missingness_threshold)
   } else {
-    input_mz_obj <- mz_filter_missingness(input_mz_obj)
+    default_missingness <- 0.1
+    print(paste0("INFO: MeDUSA::mz_filter_magic: Using 'magic' missingness_threshold:",  default_missingness))
+    input_mz_obj <- mz_filter_missingness(input_mz_obj, threshold = default_missingness )
   }
-  if(!hasArg(min_intensity)){
+  if(is.null(min_intensity)){
     min_intensity <- tryCatch({
       local.mz_polarity_guesser(input_mz_obj, pos_return=5000, neg_return=2000)
     }, error = function(e) {
@@ -150,6 +152,7 @@ mz_filter_magic <- function(input_mz_obj, min_intensity, missingness_threshold=F
       stop("ERROR: MeDUSA::mz_filter_magic: Could not guess positive or negative from colnames
         Please specify min_intensity")
     })
+    print(paste0("INFO: MeDUSA::mz_filter_magic: Using 'magic' min_intensity: ", min_intensity))
   }
   input_mz_obj <- mz_filter_low_intensity(input_mz_obj,min_intensity)
   input_mz_obj

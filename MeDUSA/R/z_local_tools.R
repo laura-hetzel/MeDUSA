@@ -24,6 +24,7 @@ local.mz_log_removed_rows <- function( in_mz, out_mz, method){
   print(paste0("INFO: ", method, ": Before Rows  : ", mz_before))
   print(paste0("INFO: ", method, ": After Rows   : ", mz_after))
   print(paste0("INFO: ", method, ": Dropped Rows : ", mz_removed))
+  return(list('mz_before' = mz_before, 'mz_after'= mz_after, 'mz_removed' = mz_removed))
 }
 
 local.mz_polarity_guesser <- function(input, pos_return = "Positive", neg_return = "Negative"){

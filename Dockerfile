@@ -34,13 +34,14 @@ RUN  R -e 'devtools::install(dependencies="never")'
 #RUN R -e 'devtools::document()' &&  R -e 'devtools::check()'
 
 ### TO BUILD
-# docker build . -f Dockerfile -t thefollyllama/medusa:v2-arm64  --platform linux/arm64/v8 .
-# docker build . -f Dockerfile -t thefollyllama/medusa:v2-amd64  --platform linux/amd64 .
+#TAG=v3
+#docker build . -f Dockerfile -t thefollyllama/medusa:${TAG}-arm64  --platform linux/arm64/v8
+#docker build . -f Dockerfile -t thefollyllama/medusa:${TAG}-amd64bn    --platform linux/amd64
 
-# docker manifest create thefollyllama/medusa:v2 \
-# thefollyllama/medusa:v2-arm64 \
-# thefollyllama/medusa:v2-amd64
-# docker manifest create thefollyllama/medusa:v2
+#docker manifest create thefollyllama/medusa:${TAG} \
+# --amend thefollyllama/medusa:${TAG}-arm64 \
+# --amend thefollyllama/medusa:${TAG}-amd64
+#docker manifest push thefollyllama/medusa:${TAG}
 
 ### TO RUN RSTUDIO: user=rstudio, pwd=medusa
 # docker run -e PASSWORD=medusa -p 8787:8787 -v .:/home/rstudio/local lacdr/medusa
