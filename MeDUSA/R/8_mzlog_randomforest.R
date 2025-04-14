@@ -327,7 +327,7 @@ rf.run_train <- function( seed, rf_vars){
   acc <- caret::confusionMatrix(rf_pred, as.factor(split$test$phenotype))$overall
   roc <- pROC::roc(as.numeric(split$test$phenotype), as.numeric(rf_pred))
   auc <- pROC::auc(roc)
-  plot_file <- paste0(output_dir,local.dir_sep(),"RF_ROC_",pol,"_", seed,".png")
+  plot_file <- paste0(local.output_dir(),local.dir_sep(),"RF_ROC_",pol,"_", seed,".png")
   plot(roc, col = "Red", main = paste0(pol,"_RF_ROC Seed: ", seed),
        sub = paste0("Acc:",acc["Accuracy"]," AUC:", as.character(round(auc, 3))))
   dev.off()

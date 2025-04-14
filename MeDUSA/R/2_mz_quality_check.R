@@ -19,7 +19,7 @@
 #' @param input_mz_obj \cr
 #'   DataFrame : Input MZ-Obj
 #' @param cores
-#'   Integer: Can I has multithreading? (Need parallel)
+#'   Integer: Can I has multithreading? (Requires parallel)
 #'
 #' Dependencies : dplyr
 #' @return Returns a dataframe of samples by metrics
@@ -79,6 +79,8 @@ mzmetrics_quality_plot_all <- function(mz_metrics){
 #'   String : which metric to plot (i.e. median_mz)
 #' @param title \cr
 #'   String : title of plot
+#' @param plot_dim \cr
+#'   c(Int,Int) : Dimensions of plot
 #'
 #' Dependencies : ggplot2, ggpubr, dplyr, parallel
 #' @export

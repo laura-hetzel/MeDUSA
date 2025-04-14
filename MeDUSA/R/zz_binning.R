@@ -1,4 +1,4 @@
-## Heavily borrowed from Maldi-Kwant
+## Heavily utilizes code from Maldi-Kwant
 
 #' @title Deletion of unwanted samples
 #' @description binning dependency 1

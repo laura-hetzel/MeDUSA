@@ -23,7 +23,7 @@ plot_volcano <- function(welch, fold_change, title = "Volcano_Plot"){
   }
   df <- data.frame("mz"   =  welch$mz,
                    "p"    = -log10(welch$p),
-                   "fold" =  log2(fold_change$fold),
+                   "fold" =  fold_change$fold,
                    "diff" =  rep("NONE",nrow(welch)))
 
   df$diff[df$fold > 0.6 & df$p > -log10(0.05)] <- "UP"

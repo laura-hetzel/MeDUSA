@@ -162,7 +162,7 @@ mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', c
 mzlog_analysis_fold <- function(phenoA_mz_obj, phenoB_mz_obj, fold_math = "mean"){
   df_l <- local.ensure_mz(phenoA_mz_obj,phenoB_mz_obj, "MeDUSA::mzlog_analysis_fold")
   out <- df_l$mz
-  out$fold <- (apply(df_l$df_a, 1, fold_math) /
+  out$fold <- (apply(df_l$df_a, 1, fold_math) -
                apply(df_l$df_b, 1, fold_math))
   return(out)
 }

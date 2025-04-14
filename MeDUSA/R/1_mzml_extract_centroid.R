@@ -19,24 +19,40 @@
 #' The mzml_extract_magic function performs the above mentioned alignment in one
 #' function.
 #'
-#'   Current Defaults:
-#'      "postbin_method" = max,
-#'      "tolerance" = 5e-6,
-#'      "timeSquash_method" = mean,
-#'      "missingness_threshold" = .1,
-#'      "intensity_threshold" = 1000,
-#'      "target_list" = c()
 #'
-#' @param files \cr
+#' @param files
 #'   String: File or directory of mzmL files
 #'   List: of mzML files (i.e. list.files(".",pattern = "qc_.*mzML"))
-#' @param parallel
-#'   Integer: Can I has multithreading? (Need parallel)
+#' @param polarity
+#'   0=negative, 1=positive, c(0,1)=both
+#' @param cores
+#'   Integer: Can I has multithreading? (Requires parallel and significant memory)
 #' @param params
 #'   List: override any subset (or all) default parameters
-#' @returns MzObj
+#'   Default Descriptions:
+#'     "dbconn" connection object to a database. Or NULL to ignore database features
+#'     "prebin_method" which sql_method(min, max, sum, avg) to combine intensities within the same mz bin per sample mzTs
+#'     "postbin_method" which sql_method(min, max, sum, avg) to combine intensities within the same mz bin on the final mzObj
+#'     "tolerance" tolerance for binning
+#'     "timeSquash_method" which R_method(min, max, median, mean) to comibine intensities across scans
+#'     "missingness_threshold" see mz_filter_missingness()
+#'     "intensity_threashold" see mz_filter_low_intensity()
+#'     "target_list" list of mzs to target
+#'     "target_list_tolerance" tolerance of the mz target list
+#'   Defaults Values:
+#'     "dbconn" = duckdb::dbConnect(duckdb::duckdb(paste0(local.output_dir(),'/',db_prefix,'_extract.duckdb'))),
+#'     "prebin_method" = "max",
+#'     "postbin_method" = "max",
+#'     "tolerance" = 5e-6,
+#'     "timeSquash_method" = mean,
+#'     "missingness_threshold" = 1,
+#'     "missingness_threshold" = .1,
+#'     "intensity_threshold" = 1000,
+#'     "target_list" = c(),
+#'     "target_list_tolerance" = 5e-5
+#' @returns MzObj & Database file in the output directory
 #' @export
-mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), params = NULL ){
+mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), cores=1, params = NULL ){
   start <- Sys.time()
   files <- extract.file_lister(files)
   #TODO: Fix threaded db connections
@@ -117,6 +133,8 @@ mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), params = NULL
 #'   [0|1]: 0=Negative, 1=Positive, NULL=both
 #' @param cl \cr
 #'   parallel::threadCluster (optional)
+#' @param params
+#'   list of params, see mzml_extract_magic()
 #' @returns MzT object
 #' @export
 mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL , params = NULL) {
@@ -217,9 +235,9 @@ mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL , param
 #' @returns MzT object
 #' @export
 # Note missingness_threshold is very low
-mzT_filtering <- function(mzT, prebin_method = max, missingness_threshold = 1, intensity_threshold = 1000, log_name = "" ){
+mzT_filtering <- function(mzT, prebin_method = 'max', missingness_threshold = 1, intensity_threshold = 1000, log_name = "" ){
   if ( !is.null(prebin_method)) {
-    mzT <- mzT_binning(mzT,prebin_method,log_name)
+    mzT <- mzT_binning(mzT, prebin_method,log_name)
   }
   mzT <- mz_filter_low_intensity(mzT,threshold = intensity_threshold, log_name)
   mzT <- mz_filter_missingness(mzT,threshold = missingness_threshold,log_name)
@@ -267,37 +285,46 @@ mzT_squash_time <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl 
   out
 }
 
-##TODO add notes
+# ***  -----------------------------------------------------
+#' Combine mzs within a tolerance of other mzs
+#'
+#' @param mzT \cr
+#'   MzT : MzT object (also will work on MzObj)
+#' @param method \cr
+#'   [Sql method] : i.e. (avg, max, median)
+#' @param tolerance \cr
+#'   Tolerance for binning
+#' @returns MzObj of combined mz rows
 #' @export
-mzT_binning <- function(df, method = 'max', log_name = "", tolernace = 5e-6){
+mzT_binning <- function(mzT, method = 'max', log_name = "", tolernace = 5e-6){
   db_name <- paste0("Binning_", log_name)
   db_file <- paste0(local.output_dir(),'/tmp-',db_name,'.duckdb')
-  bin <- binning(df$mz, tolerance = 5e-6)
+  bin <- binning(mzT$mz, tolerance = 5e-6)
   local.mz_log_removed_rows((bin), unique(bin), db_name)
-  df$mz <- bin
+  mzT$mz <- bin
   rm(bin); gc()
   #TODO see if we can eliminate this check (scanTime as string from extract_file gets weird)
   if (regexpr("extract_magic.*",log_name)){
-    cols <- colnames(dplyr::select(df, -mz))
+    cols <- colnames(dplyr::select(mzT, -mz))
   } else {
-    cols <- as.numeric(colnames(dplyr::select(df, -mz)))
+    cols <- as.numeric(colnames(dplyr::select(mzT, -mz)))
   }
   cols <- sprintf('%s("%s")', method, paste(cols ,collapse=paste0('"),',method,'("')))
   #TODO: investigate possible duplications
   query <- paste0("CREATE TABLE final_tmp AS (SELECT mz, ",cols," FROM ", db_name, " GROUP BY mz ORDER by mz)" )
   #Create tmp db to perform binning much quicker via SQL (and with limited memory usage)
   dbconn <- DBI::dbConnect(duckdb::duckdb(db_file))
-  duckdb::duckdb_register(dbconn, db_name, df, overwrite = T)
-  rm(df); gc()
+  duckdb::duckdb_register(dbconn, db_name, mzT, overwrite = T)
+  rm(mzT); gc()
   DBI::dbExecute(dbconn, query)
-  df <- DBI::dbGetQuery(dbconn, "SELECT * FROM final_tmp")
+  mzT <- DBI::dbGetQuery(dbconn, "SELECT * FROM final_tmp")
   DBI::dbExecute(dbconn, "DROP TABLE final_tmp")
   DBI::dbDisconnect(dbconn)
   unlink(db_file)
-  colnames(df)<- gsub(paste0(method,"\\((.*)\\)"),"\\1",colnames(df))
-  df[df < 0] <- 0
-  df[is.na(df)] <- 0
-  df
+  colnames(mzT)<- gsub(paste0(method,"\\((.*)\\)"),"\\1",colnames(mzT))
+  mzT[mzT < 0] <- 0
+  mzT[is.na(mzT)] <- 0
+  mzT
 }
 
 #convert annoying mzR::list[[mz,i],[mz,i],[mz,i]] into usuable dataframe
