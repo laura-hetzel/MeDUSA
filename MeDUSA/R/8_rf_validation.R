@@ -104,7 +104,7 @@ rf_permuted <- function(rf_obj, pol, seed = 2540.632, plot = T){
   roc_permuted <- pROC::roc(results_permuted$actual, results_permuted$prediction)
   auc_permuted <- pROC::auc(roc_permuted)
 
-  plot_file <- paste0(output_dir,local.dir_sep(),"RF_ROC_Permuted_",pol,".png")
+  plot_file <- paste0(local.output_dir(),local.dir_sep(),"RF_ROC_Permuted_",pol,".png")
   plot(roc_permuted, col = "Red", main = paste0(pol,"_RF_ROC Permuted"),
        sub = paste0("Acc:",pred_permuted$cm$overall["Accuracy"]," AUC:", as.character(round(auc_permuted, 3))))
   dev.off()
