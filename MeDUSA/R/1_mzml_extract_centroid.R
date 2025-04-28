@@ -25,8 +25,6 @@
 #'   List: of mzML files (i.e. list.files(".",pattern = "qc_.*mzML"))
 #' @param polarity
 #'   0=negative, 1=positive, c(0,1)=both
-#' @param cores
-#'   Integer: Can I has multithreading? (Requires parallel and significant memory)
 #' @param params
 #'   List: override any subset (or all) default parameters
 #'   Default Descriptions:
@@ -52,7 +50,7 @@
 #'     "target_list_tolerance" = 5e-5
 #' @returns MzObj & Database file in the output directory
 #' @export
-mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), cores=1, params = NULL ){
+mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), params = NULL ){
   start <- Sys.time()
   files <- extract.file_lister(files)
   #TODO: Fix threaded db connections
@@ -133,11 +131,13 @@ mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), cores=1, para
 #'   [0|1]: 0=Negative, 1=Positive, NULL=both
 #' @param cl \cr
 #'   parallel::threadCluster (optional)
+#' @param return_mz
+#'   Boolean: Should this return mz_obj. True takes requires more memory, but is user friendly
 #' @param params
 #'   list of params, see mzml_extract_magic()
 #' @returns MzT object
 #' @export
-mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL , params = NULL) {
+mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL, return_mz = F , params = NULL) {
   pol_eng <- extract.pol_english(polarity)
   params <- extract.fill_defaults(params,pol_eng)
   name <- strsplit(basename(file),"\\.")[[1]][1]
@@ -192,6 +192,9 @@ mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL , param
     }
     if (class(params$dbconn) == 'duckdb_connection'){
       duckdb::dbWriteTable(params$dbconn ,name , out,append = TRUE)
+      if ( return_mz ){
+        return(out)
+      }
     } else {
       return(out)
     }
@@ -225,13 +228,15 @@ mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL , param
 #'
 #' @param mzT \cr
 #'   MzT : MzT object
-#' @param method \cr
-#'   [Math] : i.e. (mean, max, median)
+#' @param prebin_method \cr
+#'   [R Method] : i.e. (mean, max, median)
 #' @param missingness_threshold \cr
 #'   Numeric   : If Decimal : Threshold % to blank data under. (as a decimal 10% = 0.1)
 #'             : If Whole : Number of scans required to be nonzero ( Value required in at least 2 scans )
 #' @param intensity_threshold \cr
 #'   Numeric   : Lowest allowed intensity
+#' @param log_name \cr
+#'   String    : Identifier for log and plot outputs
 #' @returns MzT object
 #' @export
 # Note missingness_threshold is very low
@@ -267,10 +272,10 @@ mzT_filtering <- function(mzT, prebin_method = 'max', missingness_threshold = 1,
 #'
 #' @param mzT \cr
 #'   MzT : MzT object
-#' @param method \cr
-#'   [Math] : i.e. (mean, max, median)
+#' @param timeSquash_method \cr
+#'   [R method] : i.e. (mean, max, median)
 #' @param ignore_zeros \cr
-#'   Boolean: Should we set 0 <- NA (to not affect the math)
+#'   Boolean: Should we set 0s to NA (to avoid effecting the math)
 #' @returns MzObj of one sample column
 #' @export
 mzT_squash_time <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl = NULL){
@@ -294,6 +299,8 @@ mzT_squash_time <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl 
 #'   [Sql method] : i.e. (avg, max, median)
 #' @param tolerance \cr
 #'   Tolerance for binning
+#' @param log_name \cr
+#'   String    : Identifier for log and plot outputs
 #' @returns MzObj of combined mz rows
 #' @export
 mzT_binning <- function(mzT, method = 'max', log_name = "", tolernace = 5e-6){

@@ -54,8 +54,10 @@ mz_filter_blacklist <- function( input_mz_obj, blacklist = "", tolerance = 5e-6)
 #' @param input_mz_obj \cr
 #'   DataFrame : Input MZ-Obj
 #' @param threshold \cr
-#'   Numeric   : If Decimal : Threshold % to blank data under. (as a decimal 10% = 0.1)
-#'             : If Integer : Number of scans required to be nonzero ( i.e. Value required in at least 2 samples )
+#'   Numeric   : If Decimal : Threshold % to blank data under. (as a decimal 0.1 = 10%)
+#'             : If Integer : Number of scans required to be nonzero ( 2 = Value required in at least 2 samples )
+#' @param msg \cr
+#'   String    : Identifier for log and plot outputs
 #' @return Returns an MZ-OBJ
 #' @export
 mz_filter_missingness <- function(input_mz_obj, threshold = 0.1, msg = ""){
@@ -88,7 +90,8 @@ mz_filter_missingness <- function(input_mz_obj, threshold = 0.1, msg = ""){
 #' @param threshold \cr
 #'   Float     : Threshold to blank data under. (as an intensity.)
 #'             : Suggested values: (Pos=10000, Neg=5000)
-#'
+#' @param log_name \cr
+#'   String    : Identifier for log and plot outputs
 #' @return Returns an MZ-OBJ
 #' @export
 mz_filter_low_intensity <- function(input_mz_obj, threshold = 500, msg = ""){
@@ -125,7 +128,10 @@ mz_filter_low_intensity <- function(input_mz_obj, threshold = 500, msg = ""){
 #'             : Default values: (Pos=10000, Neg=5000)
 #' @param missingness_thresholds \cr
 #'   Float     : Threshold to blank data under. (as a decimal 10% = 0.1)
-#'
+#' @param blacklist \cr
+#'   List/Vector : List of Blacklisted mzs, i.e. c(50.123,55.321)
+#'   String      : Filename of Blacklisted mzs (csv: name,mass)
+#'   Default     : Uses MeDUSA default_inputs
 #' Dependencies : dplyr
 #' @return Returns an MZ-OBJ
 #' @export
@@ -135,7 +141,7 @@ mz_filter_magic <- function(input_mz_obj, min_intensity = NULL, missingness_thre
       input_mz_obj <- mz_filter_blacklist(input_mz_obj)
     } else {
       input_mz_obj <- mz_filter_blacklist(input_mz_obj, blacklist=blacklist)
-    }
+    } 
   }
   if(!is.null(missingness_threshold)){
     input_mz_obj <- mz_filter_missingness(input_mz_obj, missingness_threshold)

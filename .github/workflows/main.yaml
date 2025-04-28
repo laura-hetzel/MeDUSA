@@ -1,5 +1,8 @@
 name: Docker Image CI
 
+env:
+  DOCKER_TAG: v4
+
 on:
   push:
     branches: [ "main" ]
@@ -33,7 +36,10 @@ jobs:
 #      tags: ${{ steps.meta.outputs.tags }}
 #      labels: ${{ steps.meta.outputs.labels }}
     - name: Build Docker
-      run: docker build  -f Dockerfile . -t thefollyllama/medusa
+      run: |
+        docker build . -f Dockerfile -t thefollyllama/medusa:${DOCKER_TAG}-amd64  --platform linux/amd64 --provenance=FALSE
+        docker build . -f Dockerfile -t thefollyllama/medusa:${DOCKER_TAG}-arm64  --platform linux/arm64 --provenance=FALSE
+        docker manifest create thefollyllama/medusa:${DOCKER_TAG}  --amend thefollyllama/medusa:${DOCKER_TAG}-arm64  --amend thefollyllama/medusa:${DOCKER_TAG}-amd64
     - name: Push image
-      run: docker push thefollyllama/medusa
+      run: docker manifest push thefollyllama/medusa:${DOCKER_TAG}
       if: github.event_name != 'pull_request'

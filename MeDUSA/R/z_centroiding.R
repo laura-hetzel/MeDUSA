@@ -1,3 +1,4 @@
+### z_* written by ehetzel zz_* relied on others
 
 #Return MZ,I list for single scan
 centroid.singleScan <- function(spectrum, halfWindowSize = 2) {

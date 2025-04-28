@@ -52,11 +52,10 @@ mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
 #'   DataFrame : from rf_correlation (is a transposed mz_obj)
 #' @param metadata \cr
 #'   DataFrame: metadata object
-#' @param attribute \cr
-#'   String: which metadata attribute to compare
 #' @param feat_size_seq \cr
 #'   Sequence to find optimal "number_of_variables"
-#'
+#' @param plot \cr
+#'   Boolean   : To plot or not to plot.
 #' @returns caret::rfe object
 #'
 #' @export
@@ -107,17 +106,14 @@ mzlog_rf_select <- function(correlation_data, metadata, feat_size_seq = seq(50,1
 #'
 #' @param mzlog_obj \cr
 #'   DataFrame : mzlog : expects "phenotype"
-#' @param rfe_obj \cr
-#'   carat::rfe_obj (see rf_select)
 #' @param metadata \cr
 #'   DataFrame: metadata object
+#' @param rfe_obj \cr
+#'   carat::rfe_obj (see rf_select)
 #' @param feat_size_seq \cr
 #'   Sequence to find optimal "number_of_variables"
-#' @param seeds \cr
+#' @param master_seeds \cr
 #'   List: which seeds to use. Also how many runs to do
-#' @param cores \cr
-#'   Int: can I haz multithreading
-#'
 #' @returns list(model, test, train, imp_mz)
 #'
 #' @export

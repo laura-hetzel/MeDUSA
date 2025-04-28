@@ -14,14 +14,17 @@
 #'   DataFrame : Log2 of Input MZ-Obj
 #' @param metadata \cr
 #'   DataFrame: MZ_metadata
-#' @param sample_blacklist \cr
+#' @param qual_col \cr
 #'   List?     : c("bad1", "bad2")
-#'
+#' @param plot_title \cr
+#'   String : Title of the plot.
+#' @param sample_blacklist \cr
+#'   List     : c("bad1", "bad2")
 #' @returns
 #' null (only plots)
 #'
 #' @export
-mzlog_analysis_pca <- function(input_mzlog_obj,metadata, qual_col = "phenotype",  plot_title = "PCA", sample_blacklist = c() ) {
+mzlog_analysis_pca <- function(input_mzlog_obj, metadata, qual_col = "phenotype",  plot_title = "PCA", sample_blacklist = c() ) {
   metadata <- local.meta_polarity_fixer(input_mzlog_obj,metadata)
   rownames(input_mzlog_obj) <- input_mzlog_obj$mz
   rownames(metadata) <- NULL

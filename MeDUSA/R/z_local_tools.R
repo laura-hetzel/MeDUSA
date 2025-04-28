@@ -1,4 +1,4 @@
-### z_* written by ehetzel zz_* written by others
+### z_* written by ehetzel zz_* relied on others
 
 local.dir_sep <- function() {
   if ( .Platform$OS.type == "unix" ){
