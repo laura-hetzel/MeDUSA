@@ -1,5 +1,5 @@
-### This image is quite heavy. Can take over an hour to build.
-FROM  bioconductor/bioconductor_docker:RELEASE_3_17-R-4.3.0 AS bioc_base
+### This image is quite heavy. Can take over an hour to initially build.
+FROM  bioconductor/bioconductor_docker:RELEASE_3_21-R-4.5.0 AS bioc_base
 
 RUN R -e 'BiocManager::install("mzR")'
 COPY scripts/db_download.sh scripts/db_massager.sh ./
