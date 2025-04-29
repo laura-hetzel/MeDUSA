@@ -13,20 +13,24 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Depends:
     R            (>= 4.0),
-    caret        (== 6.0-94),
-    dplyr        (>= 1.1.2),
-    ggplot2      (>= 3.4.2),
-    ggpubr       (== 0.6.0),
     mzR          (>= 2.34.0),
-    pbapply      (== 1.7-2),
-    pheatmap     (== 1.0.12),
+    AICcmodavg   (>= 2.3-4),
+    caret        (>= 7.0-1),
+    caTools      (>= 1.18.3),
+    dplyr        (>= 1.1.4),
+    ggplot2      (>= 3.5.2),
+    ggpubr       (>= 0.6.0),
+    Matrix       (>= 1.7-3),
+    pbapply      (>= 1.7-2),
+    pheatmap     (>= 1.0.12),
     pROC         (>= 1.18.5),
-    randomForest (== 4.7-1.1),
+    randomForest (>= 4.7-1.2),
     tidyr        (>= 1.3.0),
-    tibble       (== 3.2.1),
-    XML          (== 3.99-0.14)
+    tibble       (>= 3.2.1),
+    XML          (>= 3.99-0.18)
 Suggests:
     devtools (== 2.4.5),
+    duckdb   (>= 1.2.1),
     parallel (== 4.3.0),
     readxl   (== 1.4.3),
     testthat (>= 3.0.0)
