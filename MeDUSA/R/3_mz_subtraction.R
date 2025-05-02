@@ -20,9 +20,9 @@
 #'     Zeros any sample-intensities
 #'     that are lower  than "Threshold"*"ComparedIntensities"
 #'
-#' @param sample_mz \cr
+#' @param sample_mz_obj \cr
 #'   DataFrame : Input MZ-Obj of Samples
-#' @param subtract_mz \cr
+#' @param subtract_mz_obj \cr
 #'   DataFrame : Metadata-Obj of Samples to subtract from
 #' @param method: \cr
 #'   String : method to apply to compare samples before threshold

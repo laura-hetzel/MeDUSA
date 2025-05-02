@@ -1,4 +1,4 @@
-### z_* written by ehetzel zz_* written by others
+### z_* written by ehetzel zz_* relied on others
 
 local.dir_sep <- function() {
   if ( .Platform$OS.type == "unix" ){
@@ -10,7 +10,9 @@ local.dir_sep <- function() {
 }
 
 local.output_dir <- function(){
-  paste0("output", local.dir_sep() ,Sys.Date())
+  out <- paste0("output", local.dir_sep() ,Sys.Date())
+  dir.create(file.path(getwd(),out), showWarnings = FALSE, recursive = T)
+  out
 }
 
 #Show zeros requres full mzobjs
@@ -19,9 +21,10 @@ local.mz_log_removed_rows <- function( in_mz, out_mz, method){
   mz_after <- nrow(as.data.frame(out_mz))
   mz_removed <- mz_before - mz_after
 
-  print(paste0("INFO:", method, ": Before Rows  : ", mz_before))
-  print(paste0("INFO:", method, ": After Rows   : ", mz_after))
-  print(paste0("INFO:", method, ": Dropped Rows : ", mz_removed))
+  print(paste0("INFO: ", method, ": Before Rows  : ", mz_before))
+  print(paste0("INFO: ", method, ": After Rows   : ", mz_after))
+  print(paste0("INFO: ", method, ": Dropped Rows : ", mz_removed))
+  return(list('mz_before' = mz_before, 'mz_after'= mz_after, 'mz_removed' = mz_removed))
 }
 
 local.mz_polarity_guesser <- function(input, pos_return = "Positive", neg_return = "Negative"){

@@ -14,14 +14,17 @@
 #'   DataFrame : Log2 of Input MZ-Obj
 #' @param metadata \cr
 #'   DataFrame: MZ_metadata
-#' @param sample_blacklist \cr
+#' @param qual_col \cr
 #'   List?     : c("bad1", "bad2")
-#'
+#' @param plot_title \cr
+#'   String : Title of the plot.
+#' @param sample_blacklist \cr
+#'   List     : c("bad1", "bad2")
 #' @returns
 #' null (only plots)
 #'
 #' @export
-mzlog_analysis_pca <- function(input_mzlog_obj,metadata, qual_col = "phenotype",  plot_title = "PCA", sample_blacklist = c() ) {
+mzlog_analysis_pca <- function(input_mzlog_obj, metadata, qual_col = "phenotype",  plot_title = "PCA", sample_blacklist = c() ) {
   metadata <- local.meta_polarity_fixer(input_mzlog_obj,metadata)
   rownames(input_mzlog_obj) <- input_mzlog_obj$mz
   rownames(metadata) <- NULL
@@ -162,7 +165,7 @@ mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', c
 mzlog_analysis_fold <- function(phenoA_mz_obj, phenoB_mz_obj, fold_math = "mean"){
   df_l <- local.ensure_mz(phenoA_mz_obj,phenoB_mz_obj, "MeDUSA::mzlog_analysis_fold")
   out <- df_l$mz
-  out$fold <- (apply(df_l$df_a, 1, fold_math) /
+  out$fold <- (apply(df_l$df_a, 1, fold_math) -
                apply(df_l$df_b, 1, fold_math))
   return(out)
 }

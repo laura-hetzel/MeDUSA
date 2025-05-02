@@ -67,7 +67,8 @@ mz_post_imputation <- function(input_mz_obj, low_noise=10, high_noise=NULL){
 #'   DataFrame : Input MZ-Obj
 #' @param plot \cr
 #'   Boolean   : to plot or not to plot
-#'
+#' @param meta \cr
+#'   DataFrame : metadata object
 #' @returns Returns an MZ-OBJ
 #' @export
 mz_post_normalization <- function(input_mz_obj, metadata, plot = TRUE ){
@@ -163,7 +164,7 @@ mz_post_log <- function(input_mz_obj) {
 #' @param input_mz_obj \cr
 #'   DataFrame : Input MZ-Obj
 #' @param metadata \cr
-#'   DataFrame : Input MZ-Metadata
+#'   DataFrame : metadata object
 #' @param plot \cr
 #'   Boolean   : to plot or not to plot
 #'

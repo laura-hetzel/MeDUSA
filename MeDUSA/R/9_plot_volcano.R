@@ -9,12 +9,12 @@
 #'
 #' Compare two phenotypes
 #'
-#' @param input_mzlog_obj \cr
-#'   DataFrame : Log2 of Input MZ-Obj
-#' @param phenotype_a \cr
-#'   DataFrame: Filtered metadata for phenotypeA
-#' @param phenotype_b \cr
-#'   DataFrame: Filtered metadata for phenotypeB
+#' @param welch \cr
+#'   DataFrame : Output of Welch T test
+#' @param fold_change \cr
+#'   DataFrame: Output of Fold change
+#' @param title \cr
+#'   String: Title of the plot
 #'
 #' @export
 plot_volcano <- function(welch, fold_change, title = "Volcano_Plot"){
@@ -23,7 +23,7 @@ plot_volcano <- function(welch, fold_change, title = "Volcano_Plot"){
   }
   df <- data.frame("mz"   =  welch$mz,
                    "p"    = -log10(welch$p),
-                   "fold" =  log2(fold_change$fold),
+                   "fold" =  fold_change$fold,
                    "diff" =  rep("NONE",nrow(welch)))
 
   df$diff[df$fold > 0.6 & df$p > -log10(0.05)] <- "UP"

@@ -19,50 +19,86 @@
 #' The mzml_extract_magic function performs the above mentioned alignment in one
 #' function.
 #'
-#'   Current Defaults:
-#'      "postbin_method" = max,
-#'      "tolerance" = 5e-6,
-#'      "timeSquash_method" = mean,
-#'      "missingness_threshold" = .1,
-#'      "intensity_threshold" = 1000,
-#'      "target_list" = c()
 #'
-#' @param files \cr
+#' @param files
 #'   String: File or directory of mzmL files
 #'   List: of mzML files (i.e. list.files(".",pattern = "qc_.*mzML"))
-#' @param cores
-#'   Integer: Can I has multithreading? (Need parallel)
+#' @param polarity
+#'   0=negative, 1=positive, c(0,1)=both
 #' @param params
 #'   List: override any subset (or all) default parameters
-#' @returns MzObj
+#'   Default Descriptions:
+#'     "dbconn" connection object to a database. Or NULL to ignore database features
+#'     "prebin_method" which sql_method(min, max, sum, avg) to combine intensities within the same mz bin per sample mzTs
+#'     "postbin_method" which sql_method(min, max, sum, avg) to combine intensities within the same mz bin on the final mzObj
+#'     "tolerance" tolerance for binning
+#'     "timeSquash_method" which R_method(min, max, median, mean) to comibine intensities across scans
+#'     "missingness_threshold" see mz_filter_missingness()
+#'     "intensity_threashold" see mz_filter_low_intensity()
+#'     "target_list" list of mzs to target
+#'     "target_list_tolerance" tolerance of the mz target list
+#'   Defaults Values:
+#'     "dbconn" = duckdb::dbConnect(duckdb::duckdb(paste0(local.output_dir(),'/',db_prefix,'_extract.duckdb'))),
+#'     "prebin_method" = "max",
+#'     "postbin_method" = "max",
+#'     "tolerance" = 5e-6,
+#'     "timeSquash_method" = mean,
+#'     "missingness_threshold" = 1,
+#'     "missingness_threshold" = .1,
+#'     "intensity_threshold" = 1000,
+#'     "target_list" = c(),
+#'     "target_list_tolerance" = 5e-5
+#' @returns MzObj & Database file in the output directory
 #' @export
-mzml_extract_magic <- function(files = getwd(), cores = 6,  params = NULL ){
+mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), params = NULL ){
   start <- Sys.time()
-  params <- extract.fill_defaults(params)
   files <- extract.file_lister(files)
-
-  tryCatch({
-    if (cores > 1){
-      cl <- local.export_thread_env(2)
-      out <- parallel::parLapply(cl, c(0,1), function(x) extract.polarity_loop(polarity = x, files, cores, params))
-      names(out) <- c('neg','pos')
-      local.kill_threads(cl)
+  #TODO: Fix threaded db connections
+  #if (parallel && length(polarity) > 1){
+    #cl <- local.export_thread_env(2)
+  #} else {
+    cl <- NULL
+  #}
+  #tryCatch({
+    df <- pblapply( polarity, cl=cl, function(pol){
+      pol_eng <- extract.pol_english(pol)
+      params <- extract.fill_defaults(params, pol_eng)
+      print(paste0("INFO: mzml_extract_magic : Extraction of [",pol_eng,"], beginning"))
+      pbapply::pblapply(files, function(file) mzml_extract_file(file, polarity=pol, cl = NULL, magic=T, params=params))
+      print(paste0("INFO: mzml_extract_magic : Extraction of [",pol_eng,"], complete"))
+      tables <- DBI::dbGetQuery(params$dbconn, "SELECT table_name FROM duckdb_tables;")
+      if (! paste0("PREFINAL_",pol_eng) %in% tables[,]) {
+        query <- paste0("CREATE TABLE ",paste0("PREFINAL_",pol_eng), " AS (SELECT * FROM ", tables[1,], paste(" FULL OUTER JOIN", tables[2:length(tables[,]),], collapse = " USING (mz)"), " USING (mz) ORDER BY mz)")
+        print(paste0("INFO: mzml_extract_magic : creating initial MZ_OBJ of [",pol_eng,"]"))
+        DBI::dbExecute(params$dbconn, query)
+      } else {
+        print(paste0("INFO: mzml_extract_magic : initial MZ_OBJ of [",pol_eng,"], already exists"))
+      }
+      print(paste0("INFO: mzml_extract_magic : Final Binning [",pol_eng,"], starting"))
       gc()
-      cl <- local.export_thread_env(2)
-      out <- parallel::parLapply(cl, c("neg","pos"), function(x) extract.polarity_final(x, out, files, params))
-      names(out) <- c('neg','pos')
-    } else {
-      mz_pos <- extract.polarity_loop(files,1,params)
-      print("INFO: mzml_extract_magic: Positive Complete")
-      mz_neg <- extract.polarity_loop(files,0,params)
-      out <- list(pos=mz_pos, neg=mz_neg)
-    }
-    print(paste("INFO: mzml_extract_magic SUCCESS, execution complete in:",round(as.numeric(Sys.time()-start, units="mins"),3),"minutes"))
-    return(out)
-  },
-  finally={
-    local.kill_threads()
-  })
+      out <- DBI::dbGetQuery(params$dbconn, paste0("select * from PREFINAL_", pol_eng))
+      #out <- extract.mz_format(out)
+      out <- mzT_binning(out, params$postbin_method, paste0('extract_magic_',pol_eng))
+      duckdb::dbWriteTable(params$dbconn ,paste0("FINAL_",pol_eng) , out,append = TRUE)
+      print(paste0("INFO: mzml_extract_magic : Final Binning [",pol_eng,"], complete"))
+      gc()
+      #TODO, move "Select * final_" returns outside of this loop. (So neg doesn't bog up memory)
+      return(out)
+    })
+  #TODO: Fix threaded db connections
+  #}, finally={
+  # 
+  #  if (parallel){
+  #    local.kill_threads(cl)
+  #  }
+  #})
+  out <- list()
+  for( i in 1:length(polarity)) {
+    name <- extract.pol_english(polarity[i])
+    out[name] <- df[i]
+  } 
+  print(paste("INFO: mzml_extract_magic SUCCESS, execution complete in:",round(as.numeric(Sys.time()-start, units="mins"),3),"minutes"))
+  out
 }
 
 # ***  -----------------------------------------------------
@@ -95,64 +131,75 @@ mzml_extract_magic <- function(files = getwd(), cores = 6,  params = NULL ){
 #'   [0|1]: 0=Negative, 1=Positive, NULL=both
 #' @param cl \cr
 #'   parallel::threadCluster (optional)
+#' @param return_mz
+#'   Boolean: Should this return mz_obj. True takes requires more memory, but is user friendly
+#' @param params
+#'   list of params, see mzml_extract_magic()
 #' @returns MzT object
 #' @export
-mzml_extract_file <- function(file, polarity = "",  magic = T,  cl = NULL, params = NULL) {
-  params <- extract.fill_defaults(params)
-  if (!is.null(cl)) {
-    pbo <- pbapply::pboptions(type = "none")
-    on.exit(pbapply::pboptions(pbo), add = TRUE)
-  }
+mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL, return_mz = F , params = NULL) {
+  pol_eng <- extract.pol_english(polarity)
+  params <- extract.fill_defaults(params,pol_eng)
+  name <- strsplit(basename(file),"\\.")[[1]][1]
+  name <- paste(pol_eng,name,sep="_")
+  if( is.null(params$dbconn) || ! name %in% DBI::dbGetQuery(params$dbconn, "show tables")[[1]] ) {
+    if (!is.null(cl)) {
+      pbo <- pbapply::pboptions(type = "none")
+      on.exit(pbapply::pboptions(pbo), add = TRUE)
+    }
 
-  file <- file.path(file)
+    #file <- file.path(file)
 
-  if (!file.exists(file)) {
-    warning(sprintf("Cannot find file %s", file))
-    return(NULL)
-  }
-  z <- mzR::openMSfile(file)
-  meta <- mzR::header(z)
-  #range <- abs(meta$scanWindowUpperLimit - meta$scanWindowLowerLimit)
-  #scans <- range >= params$massWindow[1] & range <= params$massWindow[2]
-  p <- mzR::peaks(z)
-  if ( length(params$target_list) > 0 ){
+    if (!file.exists(file)) {
+      warning(sprintf("Cannot find file %s", file))
+      return(NULL)
+    }
+    z <- mzR::openMSfile(file)
+    meta <- mzR::header(z)
+    range <- abs(meta$scanWindowUpperLimit - meta$scanWindowLowerLimit)
+    scans <- range >= params$massWindow[1] & range <= params$massWindow[2]
+    p <- mzR::peaks(z)
+    if ( length(params$target_list) > 0 ){
       p <- lapply(p,function(pi){
-          pie <- as.data.frame(pi)
-          target_bool <- lapply(params$target_list, function(x){abs(pie$mz - x)/x < params$target_list_tolerance});
+          pi_df <- as.data.frame(pi)
+          target_bool <- lapply(params$target_list, function(x){abs(pi_df$mz - x)/x < params$target_list_tolerance});
           target_bool <- Reduce("|",target_bool)
           pi[target_bool,]
       })
-  }
-  if ( !polarity == "" ) {
-    #meta$polarity == 1 == Positive
-    p <- p[meta["polarity"] == polarity]
-    meta <- meta[ meta["polarity"] == polarity,]
-
-    if(polarity){
-      polarity="pos"
-    }else{
-      polarity="neg"
     }
-  }
-
-  print(sprintf("INFO: Scans found in %s %s: %i",file, polarity, nrow(meta)))
-  rts <-lapply(meta$retentionTime, function(x){c("mz",x)})
-  l <- pbapply::pblapply(p, cl = cl, centroid.singleScan)
-  for( i in seq_along(l) ){
-    if (length(l[[i]]) > 0) {
-        colnames(l[[i]]) <- rts[[i]]
+    if ( !polarity == "" ) {
+      #meta$polarity == 1 == Positive
+      p <- p[meta["polarity"] == polarity]
+      meta <- meta[ meta["polarity"] == polarity,]
     }
-  }
-  out <- extract.mz_format(l)
-  if (magic) {
-    out <- mzT_filtering( out,
-                          prebin_method = params$prebin_method,
-                          missingness_threshold = params$missingness_threshold,
-                          intensity_threshold = params$intensity_threshold,
-                          log_name = paste(file,polarity))
-    out <- mzT_squash_time(out, timeSquash_method = params$timeSquash_method)
-  }else{
-    out
+    print(sprintf("INFO: Scans found in %s: %i",name, nrow(meta)))
+    rts <-lapply(meta$retentionTime, function(x){c("mz",x)})
+    l <- pbapply::pblapply(p, cl = cl, centroid.singleScan)
+    for( i in seq_along(l) ){ 
+      colnames(l[[i]]) <- rts[[i]] 
+    }
+    out <- extract.mz_format(l)
+    if (magic) {
+      print(sprintf("INFO: Binning & Filtering %s", name))
+      out <- mzT_filtering( out,
+                            prebin_method = params$prebin_method,
+                            missingness_threshold = params$missingness_threshold,
+                            intensity_threshold = params$intensity_threshold,
+                            log_name = name)
+      print(sprintf("INFO: TimeSquashing %s",name))
+      out <- mzT_squash_time(out, timeSquash_method = params$timeSquash_method)
+      colnames(out) <- c('mz',name)
+    }
+    if (class(params$dbconn) == 'duckdb_connection'){
+      duckdb::dbWriteTable(params$dbconn ,name , out,append = TRUE)
+      if ( return_mz ){
+        return(out)
+      }
+    } else {
+      return(out)
+    }
+  } else {
+    print(paste0("INFO: [", name, "] found in db, skipping"))
   }
 }
 
@@ -181,18 +228,22 @@ mzml_extract_file <- function(file, polarity = "",  magic = T,  cl = NULL, param
 #'
 #' @param mzT \cr
 #'   MzT : MzT object
-#' @param method \cr
-#'   [Math] : i.e. (mean, max, median)
+#' @param prebin_method \cr
+#'   [R Method] : i.e. (mean, max, median)
 #' @param missingness_threshold \cr
 #'   Numeric   : If Decimal : Threshold % to blank data under. (as a decimal 10% = 0.1)
 #'             : If Whole : Number of scans required to be nonzero ( Value required in at least 2 scans )
 #' @param intensity_threshold \cr
 #'   Numeric   : Lowest allowed intensity
+#' @param log_name \cr
+#'   String    : Identifier for log and plot outputs
 #' @returns MzT object
 #' @export
 # Note missingness_threshold is very low
-mzT_filtering <- function(mzT, prebin_method = max, missingness_threshold = 1, intensity_threshold = 1000, log_name = "" ){
-  mzT <- mzT_binning(mzT,prebin_method,log_name)
+mzT_filtering <- function(mzT, prebin_method = 'max', missingness_threshold = 1, intensity_threshold = 1000, log_name = "" ){
+  if ( !is.null(prebin_method)) {
+    mzT <- mzT_binning(mzT, prebin_method,log_name)
+  }
   mzT <- mz_filter_low_intensity(mzT,threshold = intensity_threshold, log_name)
   mzT <- mz_filter_missingness(mzT,threshold = missingness_threshold,log_name)
 }
@@ -221,10 +272,10 @@ mzT_filtering <- function(mzT, prebin_method = max, missingness_threshold = 1, i
 #'
 #' @param mzT \cr
 #'   MzT : MzT object
-#' @param method \cr
-#'   [Math] : i.e. (mean, max, median)
+#' @param timeSquash_method \cr
+#'   [R method] : i.e. (mean, max, median)
 #' @param ignore_zeros \cr
-#'   Boolean: Should we set 0 <- NA (to not affect the math)
+#'   Boolean: Should we set 0s to NA (to avoid effecting the math)
 #' @returns MzObj of one sample column
 #' @export
 mzT_squash_time <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl = NULL){
@@ -234,67 +285,62 @@ mzT_squash_time <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl 
   }
   squash <- pbapply::pbapply(dplyr::select(mzT, -mz),1, timeSquash_method, na.rm=T, cl=cl)
   squash[is.na(squash)] <- 0
-  out <- as.data.frame(cbind(mzT$mz, squash))
+  out <- data.table::as.data.table(cbind(mzT$mz, squash))
   names(out) <- c("mz","intensity")
   out
 }
 
-##TODO add notes
+# ***  -----------------------------------------------------
+#' Combine mzs within a tolerance of other mzs
+#'
+#' @param mzT \cr
+#'   MzT : MzT object (also will work on MzObj)
+#' @param method \cr
+#'   [Sql method] : i.e. (avg, max, median)
+#' @param tolerance \cr
+#'   Tolerance for binning
+#' @param log_name \cr
+#'   String    : Identifier for log and plot outputs
+#' @returns MzObj of combined mz rows
 #' @export
-mzT_binning <- function(df, method = max, log_name = "", tolerance = 5e-6){
-  bin <- binning(df$mz, tolerance = tolerance)
-  #local.mz_log_removed_rows((bin), unique(bin), paste("Binning",log_name))
-  df <- suppressWarnings(aggregate(dplyr::select(df,-mz),list(bin), method, na.rm = T, na.action=NULL))
-  names(df)[1] <- "mz"
-  df[df < 0] <- 0
-  df[is.na(df)] <- 0
-  df
-}
-
-#[0|1]: 0=Negative, 1=Positive
-extract.polarity_loop <- function(files, polarity, cores, params){
-  if(polarity){
-    pol_eng="pos"
-  }else{
-    pol_eng="neg"
-  }
-  print(sprintf("INFO: %s.TIVE",toupper(pol_eng)))
-  if(cores > 3 && polarity ){
-    #Give Pos an extra core
-    cl <- trunc(cores/2)+1
-    if(!polarity){
-      cl <- cores- cl
-    }
-    print(paste("cores",polarity,cl))
-    cl <- local.export_thread_env(cl , environment(extract.polarity_loop))
-    mzT <- parallel::parLapplyLB(cl, files, function(file) mzml_extract_file(file, polarity, T,  NULL , params))
+mzT_binning <- function(mzT, method = 'max', log_name = "", tolernace = 5e-6){
+  db_name <- paste0("Binning_", log_name)
+  db_file <- paste0(local.output_dir(),'/tmp-',db_name,'.duckdb')
+  bin <- binning(mzT$mz, tolerance = 5e-6)
+  local.mz_log_removed_rows((bin), unique(bin), db_name)
+  mzT$mz <- bin
+  rm(bin); gc()
+  #TODO see if we can eliminate this check (scanTime as string from extract_file gets weird)
+  if (regexpr("extract_magic.*",log_name)){
+    cols <- colnames(dplyr::select(mzT, -mz))
   } else {
-    mzT <- pbapply::pblapply(files,  function(x) mzml_extract_file(x, polarity, T, NULL, params))
+    cols <- as.numeric(colnames(dplyr::select(mzT, -mz)))
   }
-  print(paste0("INFO: mzml_extract_magic : Extraction of [",pol_eng,"] complete, now formatting data."))
-  #Useful for debugging
-  #save(mzT, file = paste(Sys.Date(),"-mzT-preBin",pol_eng,".Rdata", sep=""))
+  cols <- sprintf('%s("%s")', method, paste(cols ,collapse=paste0('"),',method,'("')))
+  #TODO: investigate possible duplications
+  query <- paste0("CREATE TABLE final_tmp AS (SELECT mz, ",cols," FROM ", db_name, " GROUP BY mz ORDER by mz)" )
+  #Create tmp db to perform binning much quicker via SQL (and with limited memory usage)
+  dbconn <- DBI::dbConnect(duckdb::duckdb(db_file))
+  duckdb::duckdb_register(dbconn, db_name, mzT, overwrite = T)
+  rm(mzT); gc()
+  DBI::dbExecute(dbconn, query)
+  mzT <- DBI::dbGetQuery(dbconn, "SELECT * FROM final_tmp")
+  DBI::dbExecute(dbconn, "DROP TABLE final_tmp")
+  DBI::dbDisconnect(dbconn)
+  unlink(db_file)
+  colnames(mzT)<- gsub(paste0(method,"\\((.*)\\)"),"\\1",colnames(mzT))
+  mzT[mzT < 0] <- 0
+  mzT[is.na(mzT)] <- 0
   mzT
-}
-
-extract.polarity_final <- function(pol,mzT,files,params){
-  mzT <- mzT[[pol]]
-  for( i in seq_along(mzT) ){
-    #crappy gsub to change col names to [polarity]_[filename(without extension)]
-    #  Needs to be a for loop, because all the "intensity" columns have to be; lest they be overwritten by mz_format
-    colnames(mzT[[i]]) <- c("mz", gsub("(^.*/|^)(.*).mzML",paste(pol,"\\2",sep="_"),files[i]))
-  }
-  mz <- extract.mz_format(mzT)
-  mz <- mzT_binning(mz, params$postbin_method)
-  #colnames(mz) <- c("mz", gsub("^(.*)\\.(.*)",paste(pol,"\\1",sep="_"),files))
 }
 
 #convert annoying mzR::list[[mz,i],[mz,i],[mz,i]] into usuable dataframe
 extract.mz_format <- function(out){
   out <- dplyr::bind_rows(out)
   out <- out[order(out$mz),]
+  out$mz <- as.numeric(out$mz)
   out$mz <- round(out$mz, 5)
-  as.data.frame(out)
+  data.table::as.data.table(out)
 }
 
 extract.file_lister <- function(files) {
@@ -309,17 +355,33 @@ extract.file_lister <- function(files) {
   files
 }
 
+extract.pol_english <- function(polarity){
+  if(polarity == 1){
+    return("pos")
+  }else if(polarity == 0){
+    return("neg")
+  }
+}
+
 #TODO move to tools get_defaults
-extract.fill_defaults <- function(params = NULL){
+extract.fill_defaults <- function(params = NULL, db_prefix = "all"){
   defaults <- list(
-    "prebin_method" = max,
-    "postbin_method" = max,
+    "dbconn" = duckdb::dbConnect(duckdb::duckdb(paste0(local.output_dir(),'/',db_prefix,'_extract.duckdb'))),
+    "prebin_method" = "max",
+    "postbin_method" = "max",
     "tolerance" = 5e-6,
     "timeSquash_method" = mean,
+    "missingness_threshold" = 1,
     "missingness_threshold" = .1,
     "intensity_threshold" = 1000,
     "target_list" = c(),
     "target_list_tolerance" = 5e-5
   )
-  append( params, defaults[is.na(is.na(params)[names(defaults)])] )
+
+  out <- append( params, defaults[is.na(is.na(params)[names(defaults)])] )
+  if (! out$prebin_method %in% c('max','min','sum','avg') & out$postbin_method %in% c('max','min','sum','avg')) {
+    warning("WARN: fill_defaults: Binning method should be SQL aggregate function (max, min, sum, avg)")
+  }
+
+  out
 }

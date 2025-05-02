@@ -13,15 +13,14 @@
 #'
 #' @param mzs \cr
 #'   List : List of MZs to Identify
-#' @param polarity \cr
-#'   String: 'pos' | 'neg'
 #' @param adduct \cr
-#'   String: Name of a common adduct
-#'   Integer: Atomic mass of an adduct
+#'   c( String ): Name of a common adduct
+#'   c( Integer ): Atomic mass of an adduct
 #' @param hmdb_file \cr
 #'   String: Location of hmdb.xml, or hmdb.Rdata download file:
 #'           DockerLocation: /home/rstudio/local/hmdb_simple.xml
-#'
+#' @param tolerance \cr
+#'   Tolerance for binning
 #' @export
 identify_hmdb <- function( mzs, adducts = c("M+H"), hmdb_file = "/home/rstudio/local/hmdb_xml.Rdata", tolerance = 5e-6) {
   adducts <- identify.adducts(adducts, "identify_hmdb")

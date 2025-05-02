@@ -11,8 +11,10 @@
 #'   DataFrame : Input MZ-Obj
 #' @param metadata \cr
 #'   DataFrame : Metadata-Obj of Samples
-#' @param phenotype \cr
-#'   String: Phenotype to filter on
+#' @param filter_value \cr
+#'   String: Value of the metadata column to filter
+#' @param filter_name \cr
+#'   String: Name of the metadata column to filter
 #' @param exclude \cr
 #'.  Boolean: F = return values that do not match filter
 #' @param keep_mz \cr
