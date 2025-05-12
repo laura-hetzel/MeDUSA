@@ -1,5 +1,5 @@
 ---
-title: 'Staring down direct infusion metabolomics datasets with MeDUSA'
+title: 'Taming your metabolic datasets with MeDUSA'
 tags:
   - R
   - Single Cell Metabalomics
