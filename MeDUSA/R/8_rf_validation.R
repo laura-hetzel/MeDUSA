@@ -42,7 +42,7 @@ rf_validate <- function(rf_obj, mtry_range = c(1:200), trees = 500, mtry_seed = 
   cl <- local.export_thread_env(cores, environment())
   tryCatch({
     ml$err_rate <- pbapply::pbapply(ml, 1, rf.mtry_fit, cl = cl,
-                                   data = rf_obj$train, seed = mtry_seed)
+                                   data = rf_obj$train, seed = mtry_seed, trees = trees)
     best_mtry <- ml[ml$err_rate == min(ml$err_rate),]
     print(paste0("INFO: MeDUSA::rf_validate: Lowest error:", best_mtry$err_rate,
                 " At mtry:", best_mtry$mtry ))
