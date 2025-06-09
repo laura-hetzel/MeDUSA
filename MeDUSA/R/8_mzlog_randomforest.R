@@ -76,9 +76,9 @@ mzlog_rf_select <- function(correlation_data, metadata, feat_size_seq = seq(50,1
 
   if(plot){
     ggplot(data = feat_select, metric = "Accuracy") + theme_bw()
-    local.save_plot(paste("RandomForest Accuracy",local.mz_polarity_guesser(correlation_data),sep="-"))
+    local.save_plot(paste0("RandomForest Accuracy-",local.mz_polarity_guesser(correlation_data)))
     ggplot(data = feat_select, metric = "Kappa") + theme_bw()
-    local.save_plot(paste("RandomForest Kappa",local.mz_polarity_guesser(correlation_data),sep="-"))
+    local.save_plot(paste0("RandomForest Kappa-",local.mz_polarity_guesser(correlation_data)))
   }
   feat_select
 }
@@ -145,7 +145,6 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
                           repeats = 4,
                           search = 'grid',
                           allowParallel = TRUE)
-
   master_split <- rf.seed_splitter(data_t,master_seeds[1],ratio)
 
   #TODO, better manage variables among threads
@@ -191,7 +190,7 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
     local.save_plot(paste0("RF_error", pol))
 
     png(paste0(local.output_dir(),local.dir_sep(),"Important_Variables_",pol,".png"))
-    varImpPlot(model, col = "Blue", pch = 2, main = paste("Important Variables ", pol))
+    varImpPlot(model, col = "Blue", pch = 2, main = paste0("Important Variables ", pol))
     dev.off()
 
     pheno <- as.vector(unique(master_split$train$phenotype))
@@ -200,8 +199,8 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
       theme_classic() +
       theme(legend.position = "bottom",) +
       theme(text = element_text(size = 18)) +
-      xlab(paste("MDS1 - ", mds_var[1], "%", sep = "")) +
-      ylab(paste("MDS2 - ", mds_var[2], "%", sep = "")) +
+      xlab(paste0("MDS1 - ", mds_var[1], "%")) +
+      ylab(paste0("MDS2 - ", mds_var[2], "%")) +
       scale_color_manual(breaks = pheno,
                          values = c("red4", "deepskyblue2")) +
       ggtitle(paste0("MDS plot ", pol," using random forest proximities"))
@@ -323,10 +322,13 @@ rf.run_train <- function( seed, rf_vars){
   acc <- caret::confusionMatrix(rf_pred, as.factor(split$test$phenotype))$overall
   roc <- pROC::roc(as.numeric(split$test$phenotype), as.numeric(rf_pred))
   auc <- pROC::auc(roc)
-  plot_file <- paste0(local.output_dir(),local.dir_sep(),"RF_ROC_",pol,"_", seed,".png")
-  plot(roc, col = "Red", main = paste0(pol,"_RF_ROC Seed: ", seed),
-       sub = paste0("Acc:",acc["Accuracy"]," AUC:", as.character(round(auc, 3))))
-  dev.off()
+  
+  rf_train_data <- list('acc'=acc, 'roc'=roc, 'auc'=auc)
+  save(rf_train_data, file = paste0(local.output_dir(), local.dir_sep(), "RF_train", pol, "_", seed,".rf_data"))
+
+  pROC::ggroc(roc, color='red') +
+      ggtitle( label = paste0("ROC: ", pol), subtitle = paste0("Seed:", seeds[1]))
+  local.save_plot(paste("RF_ROC",pol, seed, sep="_"))
 
   imp <- caret::varImp(rf_fit)$importance
   imp <- tibble::rownames_to_column(imp, "mz")
