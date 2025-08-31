@@ -319,12 +319,12 @@ rf.run_train <- function( seed, rf_vars){
                    ntree = rf_vars$rf_trees ,
                    na.action = na.exclude)
   rf_pred <- predict(rf_fit, split$test )
-  acc <- caret::confusionMatrix(rf_pred, as.factor(split$test$phenotype))$overall
+  acc <- caret::confusionMatrix(rf_pred, as.factor(split$test$phenotype))
   roc <- pROC::roc(as.numeric(split$test$phenotype), as.numeric(rf_pred))
   auc <- pROC::auc(roc)
-  
+
   rf_train_data <- list('acc'=acc, 'roc'=roc, 'auc'=auc)
-  save(rf_train_data, file = paste0(local.output_dir(), local.dir_sep(), "RF_train", pol, "_", seed,".rf_data"))
+  save(rf_train_data, file = paste0(local.output_dir(), local.dir_sep(), "RF_train", pol, "_", seed,".Rdata"))
 
   pROC::ggroc(roc, color='red') +
       ggtitle( label = paste0("ROC: ", pol), subtitle = paste0("Seed:", seeds[1]))

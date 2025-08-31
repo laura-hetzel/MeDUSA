@@ -27,6 +27,10 @@
 #'
 #' Dependencies : pbapply, dplyr
 #' @return Returns a List of MZ that are isotopes of each other
+#' @examples
+#'   mz_tag_isotope_hunter(input_mz) : Find isotopes of carbon 13
+#'   mz_tag_isotope_hunter(input_mz, iso_target = 100.123, iso_iter = 8, tol_ppm = 1e-7)
+#'     : Find isotopes on a different isotope, with a wider range, and stricter tolerance
 #' @export
 
 mz_tag_isotope_hunter <- function(input_mz, iso_target = 1.0034, iso_iter = 5, tol_ppm = 5e-6, cores = 4, ...){

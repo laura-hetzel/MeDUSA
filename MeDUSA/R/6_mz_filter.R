@@ -19,6 +19,9 @@
 #'
 #' Dependencies :dplyr
 #' @returns MZ-OBJ
+#' @examples
+#'   mz_filter_blacklist(input_mz, blacklist = c(100.111, 200.222), tolerance = 1e-7)
+#'     : Remove blacklisted mzs within a given tolerance
 #' @export
 mz_filter_blacklist <- function( input_mz_obj, blacklist = "", tolerance = 5e-6){
   if ( class(blacklist) == "character"){
@@ -59,6 +62,10 @@ mz_filter_blacklist <- function( input_mz_obj, blacklist = "", tolerance = 5e-6)
 #' @param msg \cr
 #'   String    : Identifier for log and plot outputs
 #' @return Returns an MZ-OBJ
+#' @examples
+#'   mz_filter_missingness(input_mz_obj) : Run missingness filtering with custom values
+#'   mz_filter_missingness(input_mz_obj, threshold = 3, msg = '3 thres')
+#'     : Filter with custom missingness and logging message
 #' @export
 mz_filter_missingness <- function(input_mz_obj, threshold = 0.1, msg = ""){
   if ( threshold < 1){
@@ -93,6 +100,10 @@ mz_filter_missingness <- function(input_mz_obj, threshold = 0.1, msg = ""){
 #' @param log_name \cr
 #'   String    : Identifier for log and plot outputs
 #' @return Returns an MZ-OBJ
+#' @examples
+#'   mz_filter_low_intensity(input_mz_obj) : Run low intensity filtering with custom values
+#'   mz_filter_low_intensity(input_mz_obj, threshold = 5000, msg = '5000 thres')
+#'     : Filter with custom intensity and logging message
 #' @export
 mz_filter_low_intensity <- function(input_mz_obj, threshold = 500, msg = ""){
   #TODO make this better
@@ -134,6 +145,10 @@ mz_filter_low_intensity <- function(input_mz_obj, threshold = 500, msg = ""){
 #'   Default     : Uses MeDUSA default_inputs
 #' Dependencies : dplyr
 #' @return Returns an MZ-OBJ
+#' @examples
+#'   mz_filter_magic(input_mz_obj) : Run all filtering with default values
+#'   mz_filter_magic(input_mz_obj, min_intensity = 5000, missingness_threshold = 2, blacklist = c(100.111, 200.222))
+#'     : Run all filtering with custom values
 #' @export
 mz_filter_magic <- function(input_mz_obj, min_intensity = NULL, missingness_threshold = NULL, blacklist = NULL){
   if(!is.null(blacklist)){
