@@ -32,9 +32,9 @@ mz_filter_blacklist <- function( input_mz_obj, blacklist = "", tolerance = 5e-6)
     }
   }
   if (sum( blacklist < 0 ) > 0){
-    stop("ERROR: MeDUSA::mz_filter_blacklist. Blacklist cannot have negative values.")
+    stop("ERROR:MeDUSA::mz_filter_blacklist. Blacklist cannot have negative values.")
   } else if( length(blacklist) < 1 ){
-    stop("ERROR: MeDUSA::mz_filter_blacklist. Blacklist is empty.")
+    stop("ERROR:MeDUSA::mz_filter_blacklist. Blacklist is empty.")
   }
   bool_list <- lapply(blacklist, function(x){abs(input_mz_obj$mz - x)/x > tolerance})
   out_mz <- input_mz_obj[as.logical(Reduce("*",bool_list)),]
@@ -162,7 +162,7 @@ mz_filter_magic <- function(input_mz_obj, min_intensity = NULL, missingness_thre
     input_mz_obj <- mz_filter_missingness(input_mz_obj, missingness_threshold)
   } else {
     default_missingness <- 0.1
-    print(paste0("INFO: MeDUSA::mz_filter_magic: Using 'magic' missingness_threshold:",  default_missingness))
+    print(paste0("INFO:MeDUSA::mz_filter_magic: Using 'magic' missingness_threshold:",  default_missingness))
     input_mz_obj <- mz_filter_missingness(input_mz_obj, threshold = default_missingness )
   }
   if(is.null(min_intensity)){
@@ -170,10 +170,10 @@ mz_filter_magic <- function(input_mz_obj, min_intensity = NULL, missingness_thre
       local.mz_polarity_guesser(input_mz_obj, pos_return=5000, neg_return=2000)
     }, error = function(e) {
       print(e)
-      stop("ERROR: MeDUSA::mz_filter_magic: Could not guess positive or negative from colnames
+      stop("ERROR:MeDUSA::mz_filter_magic: Could not guess positive or negative from colnames
         Please specify min_intensity")
     })
-    print(paste0("INFO: MeDUSA::mz_filter_magic: Using 'magic' min_intensity: ", min_intensity))
+    print(paste0("INFO:MeDUSA::mz_filter_magic: Using 'magic' min_intensity: ", min_intensity))
   }
   input_mz_obj <- mz_filter_low_intensity(input_mz_obj,min_intensity)
   input_mz_obj

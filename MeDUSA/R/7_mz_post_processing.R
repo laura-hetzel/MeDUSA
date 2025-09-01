@@ -173,31 +173,31 @@ mz_post_log <- function(input_mz_obj) {
 mz_post_magic <- function(input_mz_obj, metadata, noise = c(10,5000), plot = TRUE){
   tryCatch({
     input_mz_obj <- mz_post_imputation(input_mz_obj, noise[1], noise[2])
-    print("INFO: imputation success")
+    print("INFO:MeDUSA::mz_post_magic: imputation success")
   }, error = function(e) {
     print(e)
     stop("ERROR: in mz_post_imputation")
   })
   tryCatch({
     input_mz_obj <- mz_post_normalization(input_mz_obj, metadata, plot)
-    print("INFO: normalization success")
+    print("INFO:MeDUSA::mz_post_magic: normalization success")
   }, error = function(e) {
     print(e)
-    stop("ERROR: in mz_post_normalization")
+    stop("ERROR:MeDUSA::mz_post_magic: in mz_post_normalization")
   })
   tryCatch({
     input_mzlong <- mz_post_pivot_longer(input_mz_obj, plot)
-    print("INFO: pivot_longer success")
+    print("INFO:MeDUSA::mz_post_magic: pivot_longer success")
   }, error = function(e) {
     print(e)
-    stop("ERROR: in mz_post_pivot_longer")
+    stop("ERROR:MeDUSA::mz_post_magic: in mz_post_pivot_longer")
   })
   tryCatch({
     input_mzlong <- mzlong_post_log(input_mzlong, plot)
-    print("INFO: mzlong_log_transform success")
+    print("INFO:MeDUSA::mz_post_magic: mzlong_log_transform success")
   }, error = function(e) {
     print(e)
-    stop("ERROR: in mzlong_post_log")
+    stop("ERROR:MeDUSA::mz_post_magic: in mzlong_post_log")
   })
   out <- mz_post_log(input_mz_obj)
   list("mzLong" = input_mzlong ,"mzLog" = out)

@@ -221,13 +221,16 @@ mzlog_analysis_volcano_magic <- function(phenotype_a, phenotype_b, cores = 2 ){
 #'   String: Path to save the plot.
 #'   TRUE: Save to default output directory
 #'   NA: Do not save
+#' @param plot_label_size
+#'   c( Int, Int): Define size of lables for c(mz, samples). Set to 0 to remove a label.
 #' @param cluster
 #'   c("row"=Boolean,"col"=Boolean): Cluster data? Defaults to False
 #'
 #' @returns null (only plots)
 #' @export
 mzlog_analysis_heatmap <- function(input_mzlog_obj, metadata = NULL, annotation = "phenotype",
-                          title = "HeatMap of intensities", save_file = TRUE, cluster = NULL, ...){
+                          title = "HeatMap of intensities", save_file = TRUE, cluster = NULL, 
+                          plot_label_size = c(2,1), ...){
 
   plot_obj <- dplyr::select(input_mzlog_obj, -mz)
   row.names(plot_obj) <- input_mzlog_obj$mz
@@ -235,7 +238,7 @@ mzlog_analysis_heatmap <- function(input_mzlog_obj, metadata = NULL, annotation 
   if (!is.null(annotation) && !is.null(metadata)){
     if (sum( sort(metadata$sample_name) !=
              sort(colnames(plot_obj)))) {
-      stop("ERROR: plot_heatmap: annotation sample_name does not match mz_obj data")
+      stop("ERROR:MeDUSA::mzlog_analysis_heatmap: annotation sample_name does not match mz_obj data")
     }
     annotation_int = data.frame(row.names = metadata$sample_name, metadata[annotation])
   } else {
@@ -252,6 +255,10 @@ mzlog_analysis_heatmap <- function(input_mzlog_obj, metadata = NULL, annotation 
                       cluster_rows = cluster["row"],
                       cluster_cols = cluster["col"],
                       annotation_row = annotation_int,
+                      show_rownames = plot_label_size[2] > 0,
+                      show_colnames = plot_label_size[1] > 0,
+                      fontsize_row = plot_label_size[2],
+                      fontsize_col = plot_label_size[1],
                       main = title,
                       filename = save_file)
 }

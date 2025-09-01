@@ -19,7 +19,7 @@
 #' @export
 plot_volcano <- function(welch, fold_change, title = "Volcano_Plot"){
   if ( sum(round(welch$mz,6) != round(fold_change$mz,6)) > 0){
-    stop("ERROR: plot_volcano : Welch mz does not match FoldChange mz")
+    stop("ERROR:MeDUSA::plot_volcano : Welch mz does not match FoldChange mz")
   }
   df <- data.frame("mz"   =  welch$mz,
                    "p"    = -log10(welch$p),

@@ -57,7 +57,7 @@ mz_mass_defect <- function(input_mz_obj, plot = TRUE, magicNumber1 = 0.00112, ma
       local.save_plot(paste("MassDefect",local.mz_polarity_guesser(input_mz_obj),sep="-"))
     }
   }, error = function(e) {
-      print("WARN: mz_mass_defect did not filter out anything to plot")
+      print("WARN:MeDUSA::mz_mass_defect: did not filter out anything to plot")
       print(e)
   }, finally = {
     return(dplyr::select(md_filtered, -MD, -mz_filter))

@@ -135,7 +135,7 @@ mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), params = NULL
 #'   [0|1]: 0=Negative, 1=Positive, NULL=both
 #' @param cl \cr
 #'   parallel::threadCluster (optional)
-#' @param return_mz
+#' @param return_mzobj
 #'   Boolean: Should this return mz_obj. True takes requires more memory, but is user friendly
 #' @param params
 #'   list of params, see mzml_extract_magic()
@@ -149,7 +149,7 @@ mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), params = NULL
 #'      : list mzml files in directory "data". Loop over mzml_extract, only negative values, single threaded, and without any additional filtering.
 #'          This is good for troubleshooting, it will return a list of mzT objects with limited no additional processing.
 #' @export
-mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL, return_mz = F , params = NULL) {
+mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL, return_mzobj = F , params = NULL) {
   pol_eng <- extract.pol_english(polarity)
   params <- extract.fill_defaults(params,pol_eng)
   name <- strsplit(basename(file),"\\.")[[1]][1]
@@ -184,7 +184,7 @@ mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL, return
       p <- p[meta["polarity"] == polarity]
       meta <- meta[ meta["polarity"] == polarity,]
     }
-    print(sprintf("INFO: Scans found in %s: %i",name, nrow(meta)))
+    print(sprintf("INFO:MeDUSA::mzml_extract_file: Scans found in %s: %i",name, nrow(meta)))
     rts <-lapply(meta$retentionTime, function(x){c("mz",x)})
     l <- pbapply::pblapply(p, cl = cl, centroid.singleScan)
     for( i in seq_along(l) ){ 
@@ -192,26 +192,26 @@ mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL, return
     }
     out <- extract.mz_format(l)
     if (magic) {
-      print(sprintf("INFO: Binning & Filtering %s", name))
+      print(sprintf("INFO:MeDUSA::mzml_extract_file: Binning & Filtering %s", name))
       out <- mzT_filtering( out,
                             prebin_method = params$prebin_method,
                             missingness_threshold = params$missingness_threshold,
                             intensity_threshold = params$intensity_threshold,
                             log_name = name)
-      print(sprintf("INFO: TimeSquashing %s",name))
+      print(sprintf("INFO:MeDUSA::mzml_extract_file: TimeSquashing %s",name))
       out <- mzT_squash_time(out, timeSquash_method = params$timeSquash_method)
       colnames(out) <- c('mz',name)
     }
     if (class(params$dbconn) == 'duckdb_connection'){
       duckdb::dbWriteTable(params$dbconn ,name , out,append = TRUE)
-      if ( return_mz ){
+      if ( return_mzobj ){
         return(out)
       }
     } else {
       return(out)
     }
   } else {
-    print(paste0("INFO: [", name, "] found in db, skipping"))
+    print(paste0("INFO:MeDUSA::mzml_extract_file: [", name, "] found in db, skipping"))
   }
 }
 
@@ -375,7 +375,7 @@ extract.file_lister <- function(files) {
     files <- list.files(path=files, pattern="*.mzML", full.names=T)
   }
   if (length(files) == 0) {
-    warning("ERROR: mzml_extract_magic: Cannot find mzML files in given files.")
+    warning("ERROR:MeDUSA::mzml_extract_magic: Cannot find mzML files in given files.")
     return(NULL)
   }
   files
@@ -406,7 +406,7 @@ extract.fill_defaults <- function(params = NULL, db_prefix = "all"){
 
   out <- append( params, defaults[is.na(is.na(params)[names(defaults)])] )
   if (! out$prebin_method %in% c('max','min','sum','avg') & out$postbin_method %in% c('max','min','sum','avg')) {
-    warning("WARN: fill_defaults: Binning method should be SQL aggregate function (max, min, sum, avg)")
+    warning("WARN:MeDUSA::fill_defaults: Binning method should be SQL aggregate function (max, min, sum, avg)")
   }
 
   out
