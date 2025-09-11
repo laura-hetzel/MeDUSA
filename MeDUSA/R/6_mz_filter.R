@@ -19,6 +19,9 @@
 #'
 #' Dependencies :dplyr
 #' @returns MZ-OBJ
+#' @examples
+#'   mz_filter_blacklist(input_mz, blacklist = c(100.111, 200.222), tolerance = 1e-7)
+#'     : Remove blacklisted mzs within a given tolerance
 #' @export
 mz_filter_blacklist <- function( input_mz_obj, blacklist = "", tolerance = 5e-6){
   if ( class(blacklist) == "character"){
@@ -29,9 +32,9 @@ mz_filter_blacklist <- function( input_mz_obj, blacklist = "", tolerance = 5e-6)
     }
   }
   if (sum( blacklist < 0 ) > 0){
-    stop("ERROR: MeDUSA::mz_filter_blacklist. Blacklist cannot have negative values.")
+    stop("ERROR:MeDUSA::mz_filter_blacklist. Blacklist cannot have negative values.")
   } else if( length(blacklist) < 1 ){
-    stop("ERROR: MeDUSA::mz_filter_blacklist. Blacklist is empty.")
+    stop("ERROR:MeDUSA::mz_filter_blacklist. Blacklist is empty.")
   }
   bool_list <- lapply(blacklist, function(x){abs(input_mz_obj$mz - x)/x > tolerance})
   out_mz <- input_mz_obj[as.logical(Reduce("*",bool_list)),]
@@ -59,6 +62,10 @@ mz_filter_blacklist <- function( input_mz_obj, blacklist = "", tolerance = 5e-6)
 #' @param msg \cr
 #'   String    : Identifier for log and plot outputs
 #' @return Returns an MZ-OBJ
+#' @examples
+#'   mz_filter_missingness(input_mz_obj) : Run missingness filtering with custom values
+#'   mz_filter_missingness(input_mz_obj, threshold = 3, msg = '3 thres')
+#'     : Filter with custom missingness and logging message
 #' @export
 mz_filter_missingness <- function(input_mz_obj, threshold = 0.1, msg = ""){
   if ( threshold < 1){
@@ -93,6 +100,10 @@ mz_filter_missingness <- function(input_mz_obj, threshold = 0.1, msg = ""){
 #' @param log_name \cr
 #'   String    : Identifier for log and plot outputs
 #' @return Returns an MZ-OBJ
+#' @examples
+#'   mz_filter_low_intensity(input_mz_obj) : Run low intensity filtering with custom values
+#'   mz_filter_low_intensity(input_mz_obj, threshold = 5000, msg = '5000 thres')
+#'     : Filter with custom intensity and logging message
 #' @export
 mz_filter_low_intensity <- function(input_mz_obj, threshold = 500, msg = ""){
   #TODO make this better
@@ -134,6 +145,10 @@ mz_filter_low_intensity <- function(input_mz_obj, threshold = 500, msg = ""){
 #'   Default     : Uses MeDUSA default_inputs
 #' Dependencies : dplyr
 #' @return Returns an MZ-OBJ
+#' @examples
+#'   mz_filter_magic(input_mz_obj) : Run all filtering with default values
+#'   mz_filter_magic(input_mz_obj, min_intensity = 5000, missingness_threshold = 2, blacklist = c(100.111, 200.222))
+#'     : Run all filtering with custom values
 #' @export
 mz_filter_magic <- function(input_mz_obj, min_intensity = NULL, missingness_threshold = NULL, blacklist = NULL){
   if(!is.null(blacklist)){
@@ -147,7 +162,7 @@ mz_filter_magic <- function(input_mz_obj, min_intensity = NULL, missingness_thre
     input_mz_obj <- mz_filter_missingness(input_mz_obj, missingness_threshold)
   } else {
     default_missingness <- 0.1
-    print(paste0("INFO: MeDUSA::mz_filter_magic: Using 'magic' missingness_threshold:",  default_missingness))
+    print(paste0("INFO:MeDUSA::mz_filter_magic: Using 'magic' missingness_threshold:",  default_missingness))
     input_mz_obj <- mz_filter_missingness(input_mz_obj, threshold = default_missingness )
   }
   if(is.null(min_intensity)){
@@ -155,10 +170,10 @@ mz_filter_magic <- function(input_mz_obj, min_intensity = NULL, missingness_thre
       local.mz_polarity_guesser(input_mz_obj, pos_return=5000, neg_return=2000)
     }, error = function(e) {
       print(e)
-      stop("ERROR: MeDUSA::mz_filter_magic: Could not guess positive or negative from colnames
+      stop("ERROR:MeDUSA::mz_filter_magic: Could not guess positive or negative from colnames
         Please specify min_intensity")
     })
-    print(paste0("INFO: MeDUSA::mz_filter_magic: Using 'magic' min_intensity: ", min_intensity))
+    print(paste0("INFO:MeDUSA::mz_filter_magic: Using 'magic' min_intensity: ", min_intensity))
   }
   input_mz_obj <- mz_filter_low_intensity(input_mz_obj,min_intensity)
   input_mz_obj

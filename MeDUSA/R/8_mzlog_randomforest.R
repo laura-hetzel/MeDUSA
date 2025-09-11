@@ -23,7 +23,7 @@ mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
   data <- data.frame(t(dplyr::select(input_mzlog_obj,-mz)))
   high_cor_data <- caret::findCorrelation(cor(data), cutoff = correlation_cutoff)
   if ( ncol(data) - length(high_cor_data) < 2 ) {
-    stop("ERROR:mzlog_rf_correlation: No, or only 1 non-correlated MZs found; try increasing 'correlation_cutoff'")
+    stop("ERROR:MeDUSA::mzlog_rf_correlation: No, or only 1 non-correlated MZs found; try increasing 'correlation_cutoff'")
   }
   print(paste("INFO:mzlog_prep: ", length(high_cor_data)," of ", ncol(data) ," MZs are highly correlated ", sep=""))
   data <- data.frame(data[,-high_cor_data])
@@ -68,7 +68,7 @@ mzlog_rf_select <- function(correlation_data, metadata, feat_size_seq = seq(50,1
                                 repeats = 5,
                                 number = 10)
 
-  print("INFO: caret::rfe() is time and resource heavy on large data sets")
+  print("INFO:MeDUSA::mzlog_rf_select: caret::rfe() is time and resource heavy on large data sets")
   feat_select <- caret::rfe(dplyr::select(data, -sample_name, -phenotype),
                             att,
                             rfeControl = control,
@@ -124,7 +124,7 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
   }
   if (is.null(rf_trees)){
     if( is.null(rfe_obj)){
-      stop("ERROR: mzlog_rf_train: both rfe_obj & rf_trees are null")
+      stop("ERROR:MeDUSA::mzlog_rf: both rfe_obj & rf_trees are null")
     }
     rf_trees <- rfe_obj$bestSubset
   }
@@ -251,38 +251,43 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
 mzlog_rf_magic <- function(input_mzlog_obj, metadata, polarity){
   tryCatch({
     rf_cor <- mzlog_rf_correlation(input_mzlog_obj)
-    print("INFO: Correlation success")
+    gc()
+    print("INFO:MeDUSA::mzlog_rf_magic: Correlation success")
   }, error = function(e) {
     print(e)
     stop("ERROR: in mzlog_rf_correlation")
   })
   tryCatch({
     rf_sel <- mzlog_rf_select(rf_cor, metadata)
-    print("INFO: Feature Select success")
+    gc()
+    print("INFO:MeDUSA::mzlog_rf_magic: Feature Select success")
   }, error = function(e) {
     print(e)
-    stop("ERROR: in mzlog_rf_select")
+    stop("ERROR:MeDUSA::mzlog_rf_magic: in mzlog_rf_select")
   })
   tryCatch({
     rf_obj <- mzlog_rf(input_mzlog_obj, metadata, rfe_obj = rf_sel )
-    print("INFO: RandomForest success")
+    gc()
+    print("INFO:MeDUSA::mzlog_rf_magic: RandomForest success")
   }, error = function(e) {
     print(e)
-    stop("ERROR: in mzlog_rf")
+    stop("ERROR:MeDUSA::mzlog_rf_magic: in mzlog_rf")
   })
   tryCatch({
     rf_validate <- rf_validate(rf_obj, trees = rf_sel$bestSubset * 1.1)
-    print("INFO: RF validation success")
+    gc()
+    print("INFO:MeDUSA::mzlog_rf_magic: RF validation success")
   }, error = function(e) {
     print(e)
-    stop("ERROR: in rf_validate")
+    stop("ERROR:MeDUSA::mzlog_rf_magic: in rf_validate")
   })
   tryCatch({
     rf_permuted <- rf_permuted(rf_obj, polarity)
-    print("INFO: RF permuted success")
+    gc()
+    print("INFO:MeDUSA::mzlog_rf_magic: RF permuted success")
   }, error = function(e) {
     print(e)
-    stop("ERROR: in rf_permuted")
+    stop("ERROR:MeDUSA::mzlog_rf_magic: in rf_permuted")
   })
   rf_obj$imp_mz
 }
@@ -319,12 +324,12 @@ rf.run_train <- function( seed, rf_vars){
                    ntree = rf_vars$rf_trees ,
                    na.action = na.exclude)
   rf_pred <- predict(rf_fit, split$test )
-  acc <- caret::confusionMatrix(rf_pred, as.factor(split$test$phenotype))$overall
+  acc <- caret::confusionMatrix(rf_pred, as.factor(split$test$phenotype))
   roc <- pROC::roc(as.numeric(split$test$phenotype), as.numeric(rf_pred))
   auc <- pROC::auc(roc)
-  
+
   rf_train_data <- list('acc'=acc, 'roc'=roc, 'auc'=auc)
-  save(rf_train_data, file = paste0(local.output_dir(), local.dir_sep(), "RF_train", pol, "_", seed,".rf_data"))
+  save(rf_train_data, file = paste0(local.output_dir(), local.dir_sep(), "RF_train", pol, "_", seed,".Rdata"))
 
   pROC::ggroc(roc, color='red') +
       ggtitle( label = paste0("ROC: ", pol), subtitle = paste0("Seed:", seeds[1]))

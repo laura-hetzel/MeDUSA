@@ -8,8 +8,17 @@ MeDUSA is modular, customizable, and user friendly toolset in R to ease the data
 ### Via Dockerhub
 Included is a dockerfile that compiles all R requirements, some common compound databases, and an Rstudio.
 `docker pull thefollyllama/medusa`
-`docker run -e PASSWORD=medusa -p 8787:8787 -v .:/home/rstudio/local thefollyllama/medusa`
+`docker run -e PASSWORD=medusa -p 8787:8787 --name medusa -v .:/home/rstudio/local thefollyllama/medusa`
 in a browser navigate to "localhost:8787" usr:rstudio pwd:medusa
+
+To debug or develop within the container:
+`docker exec -it medusa /bin/bash`
+
+From here you can run things such as 
+`RUN R -e 'devtools::document()'` : Use roxygen to generate documentation
+`RUN  R -e 'devtools::test()'`    : Use testthat to run unit tests
+`RUN  R -e 'devtools::install(dependencies="never")'` : Build the Medusa package
+
 ### Via Docker
 It is suggested to run via dockerhub, as building the image can take over an hour. However, local build instructions can be found in the Dockerfile
 

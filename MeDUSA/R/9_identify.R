@@ -115,10 +115,10 @@ identify.adducts <- function(adducts,source){
       common_adducts <- get_default_data('adducts')
       adducts = common_adducts$value[common_adducts$name %in% adducts]
     } else if ( class(adducts) != "numeric"){
-      stop(paste0("ERROR: MeDUSA::identify::",source,"adducts cannot be:", class(adducts),". Examples of valid adducts: c(1.0008,17.03052) or c(\"H\")"))
+      stop(paste0("ERROR:MeDUSA::identify::",source,"adducts cannot be:", class(adducts),". Examples of valid adducts: c(1.0008,17.03052) or c(\"H\")"))
     }
   } else {
-    stop(paste0("ERROR: MeDUSA::identify::",source,"adducts is not a vector. Examples of valid adducts: c(1.0008,17.03052) or c(\"H\")"))
+    stop(paste0("ERROR:MeDUSA::identify::",source,"adducts is not a vector. Examples of valid adducts: c(1.0008,17.03052) or c(\"H\")"))
   }
   adducts
 }

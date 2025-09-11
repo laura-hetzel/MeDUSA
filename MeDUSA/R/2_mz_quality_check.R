@@ -23,6 +23,8 @@
 #'
 #' Dependencies : dplyr
 #' @return Returns a dataframe of samples by metrics
+#' @examples
+#'   mz_quality_metrics(input_mz_obj) : Perform quality metrics
 #' @export
 mz_quality_metrics <- function(input_mz_obj, cores = 2){
   no_mz <- dplyr::select(input_mz_obj, -mz)
@@ -61,6 +63,9 @@ mz_quality_metrics <- function(input_mz_obj, cores = 2){
 #'
 #' @param mz_metrics \cr
 #'   DataFrame : from "MeDUSA::mz_quality_metrics"
+#' @returns plots of all quality metrics
+#' @examples
+#'   mzmetrics_quality_plot_all(mz_metrics) : Plot all metrics
 #' @export
 mzmetrics_quality_plot_all <- function(mz_metrics){
   for (f in colnames(mz_metrics[-1])){
@@ -76,13 +81,18 @@ mzmetrics_quality_plot_all <- function(mz_metrics){
 #' @param mz_metrics \cr
 #'   DataFrame : from "MeDUSA::mz_quality_metrics"
 #' @param focus \cr
-#'   String : which metric to plot (i.e. median_mz)
+#'   String : which metric to plot:
+#'     ( median_mz min_mz max_mz n_peaks peaks_1k peaks_10k peaks_100k )
 #' @param title \cr
 #'   String : title of plot; defaults to set to "focus"
 #' @param plot_dim \cr
 #'   c(Int,Int) : Dimensions of plot
-#'
 #' Dependencies : ggplot2, ggpubr, dplyr, parallel
+#' @returns plots of a provided quality metrics
+#' @examples
+#'   mzmetrics_quality_plot(mz_metrics, 'peaks_1k') : Plot all metrics
+#'   mzmetrics_quality_plot(mz_metrics, 'n_peaks', title = "Custom_npeaks", plot_dim = c(10,10)) 
+#'     : Plot n_peaks with a custom title and dimensions
 #' @export
 mzmetrics_quality_plot <- function(mz_metrics, focus, title = F, plot_dim = c(8,8)){
   if(title == F ){
@@ -123,8 +133,9 @@ mzmetrics_quality_plot <- function(mz_metrics, focus, title = F, plot_dim = c(8,
 #'   DataFrame : Input MZ-Obj
 #' @param meta \cr
 #'   DataFrame : metadata object
-#'
 #' Dependencies : dplyr
+#' @examples
+#'   mz_quality_meta_check(input_mz_obj, meta) : run meta checks
 #' @export
 mz_quality_meta_check <- function(input_mz_obj, meta){
   meta <- local.meta_polarity_fixer(input_mz_obj, meta)
@@ -164,6 +175,7 @@ mz_quality_meta_check <- function(input_mz_obj, meta){
 
 # *** Quality Magic -----------------------------------------------------
 #' MZ-OBJ Quality Magic
+#' Run all the quality things. Quality metrics, meta checks & generate plots
 #'
 #' @param input_mz_obj \cr
 #'   DataFrame : Input MZ-Obj
@@ -174,6 +186,8 @@ mz_quality_meta_check <- function(input_mz_obj, meta){
 #'
 #' Dependencies : dplyr
 #' @return Returns a dataframe of samples by metrics
+#' @examples
+#'   mz_quality_magic(input_mz_obj, meta) : run all the things
 #' @export
 mz_quality_magic <- function(input_mz_obj, meta, cores = 2){
   mz_quality_meta_check(input_mz_obj, meta)

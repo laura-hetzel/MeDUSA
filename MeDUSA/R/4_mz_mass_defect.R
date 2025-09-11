@@ -26,6 +26,10 @@
 #'
 #' Dependencies : ggplot2, ggpubr, dplyr
 #' @return Returns an MZ-OBJ
+#' @examples
+#'   mz_mass_defect(input_mz_obj) : Run mass defect
+#'   mz_mass_defect(input_mz_obj, magicNumber1 = 0.003, magicNumber2 = 0.03)
+#'     : Run mass defect with different parameters.
 #' @export
 
 mz_mass_defect <- function(input_mz_obj, plot = TRUE, magicNumber1 = 0.00112, magicNumber2 = 0.01953) {
@@ -53,7 +57,7 @@ mz_mass_defect <- function(input_mz_obj, plot = TRUE, magicNumber1 = 0.00112, ma
       local.save_plot(paste("MassDefect",local.mz_polarity_guesser(input_mz_obj),sep="-"))
     }
   }, error = function(e) {
-      print("WARN: mz_mass_defect did not filter out anything to plot")
+      print("WARN:MeDUSA::mz_mass_defect: did not filter out anything to plot")
       print(e)
   }, finally = {
     return(dplyr::select(md_filtered, -MD, -mz_filter))
