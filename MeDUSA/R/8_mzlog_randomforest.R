@@ -14,9 +14,10 @@
 #'   DataFrame : MzLog object
 #' @param correlation_cutoff \cr
 #'   Float: Decimal percentage. Higher cutoff = less correlation
-#'
-#' @returns correlation_data: a Transposed mzlog_obj of non-correlated_data
-#'
+#' @examples
+#'   mzlog_rf_correlation(input_mzlog_obj) : run standard correlation
+#'   mzlog_rf_correlation(input_mzlog_obj, correlation_cutoff = 0.8) : run correlation with custom cutoff percentage
+#' @return correlation_data: a Transposed mzlog_obj of non-correlated_data
 #' @export
 mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
   print("INFO: cor() can be time and resource heavy on large data sets")
@@ -56,8 +57,10 @@ mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
 #'   Sequence to find optimal "number_of_variables"
 #' @param plot \cr
 #'   Boolean   : To plot or not to plot.
-#' @returns caret::rfe object
-#'
+#' @examples
+#'   mzlog_rf_select(correlation_data, metadata) : run standard rf_select
+#'   mzlog_rf_select(correlation_data, metadata, seq(100,1000), by=100)) : run rf_seelct with custom feature sizes
+#' @return caret::rfe object
 #' @export
 mzlog_rf_select <- function(correlation_data, metadata, feat_size_seq = seq(50,1000, by=50), plot = T) {
   metadata <- local.meta_polarity_fixer(correlation_data, metadata)
@@ -113,9 +116,19 @@ mzlog_rf_select <- function(correlation_data, metadata, feat_size_seq = seq(50,1
 #' @param feat_size_seq \cr
 #'   Sequence to find optimal "number_of_variables"
 #' @param master_seeds \cr
-#'   List: which seeds to use. Also how many runs to do
-#' @returns list(model, test, train, imp_mz)
-#'
+#'   List: Two seeds to use for training
+#' @param seeds \cr
+#'   List: How many training runs to do, and which seeds to use.
+#' @param ratio \cr
+#'   List: Ratio of training vs test data
+#' @param cores \cr
+#'   Int: Can I haz multi-threading
+#' @param plot \cr
+#'   Bool: To plot or not to plot?
+#' @examples
+#'   mzlog_rf(input_mzlog_obj, metadata, rfe_obj = rf_select_ouput) : run recommeneded random forest
+#'   mzlog_rf(input_mzlog_obj, metadata, seeds = c(1.23, 45.6, 789)) : run for only 3 runs
+#' @return list(model, test, train, imp_mz)
 #' @export
 mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, master_seeds = c(42,1701),
                           seeds = c(201705, 623.1912, 314159, 1.05457, 10191), ratio = 0.8, cores = 4, plot = T){
@@ -245,8 +258,9 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
 #'   DataFrame: metadata object
 #' @param polarity \cr
 #'   Character: "pos" | "neg"
-#' @returns List of important mz
-#'
+#' @examples
+#'   mzlog_rf_magic(input_mzlog_obj, metadata, "pos") : run random forest for postive
+#' @return List of important mz
 #' @export
 mzlog_rf_magic <- function(input_mzlog_obj, metadata, polarity){
   tryCatch({

@@ -25,11 +25,11 @@
 #'   Float     : MagicNumber2 in "MN1 * data + MN2"
 #'
 #' Dependencies : ggplot2, ggpubr, dplyr
-#' @return Returns an MZ-OBJ
 #' @examples
 #'   mz_mass_defect(input_mz_obj) : Run mass defect
 #'   mz_mass_defect(input_mz_obj, magicNumber1 = 0.003, magicNumber2 = 0.03)
 #'     : Run mass defect with different parameters.
+#' @return Returns an MZ-OBJ
 #' @export
 
 mz_mass_defect <- function(input_mz_obj, plot = TRUE, magicNumber1 = 0.00112, magicNumber2 = 0.01953) {

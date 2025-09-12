@@ -22,12 +22,15 @@
 #'
 #' @param rf_obj \cr
 #'   List : from mzlog_rf: list(model, test, train):  Expects "phenotype"
+#' @param mtry_range \cr
+#'   List(int): 
 #' @param mtry_seed \cr
 #'   List: which seed to use.
 #' @param cores \cr
 #'   Int: can I haz multithreading
-#'
-#'
+#' @examples
+#'   rf_validate(rf_obj) : validate random foreste model
+#'   rf_validate(rf_obj) : validate random foreste model with custom params
 #' @export
 rf_validate <- function(rf_obj, mtry_range = c(1:200), trees = 500, mtry_seed = 1984, cores = 2){
   pred_train <- rf.predict(rf_obj$model, rf_obj$train)
@@ -85,10 +88,10 @@ rf_validate <- function(rf_obj, mtry_range = c(1:200), trees = 500, mtry_seed = 
 #'   List : from mzlog_rf: list(model, test, train): Expects "phenotype"
 #' @param mtry_seed \cr
 #'   List: which seed to use.
-#' @param cores \cr
-#'   Int: can I haz multithreading
-#'
-#'
+#' @param plot \cr
+#'   Bool: to plot or not to plot
+#' @examples
+#'   rf_permuted(rf_obj, "pos") : run permuted test
 #' @export
 rf_permuted <- function(rf_obj, pol, seed = 2540.632, plot = T){
   permuted <- rbind(rf_obj$train, rf_obj$test)

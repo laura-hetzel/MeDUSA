@@ -22,9 +22,9 @@
 #'   Integer: Can I has multithreading? (Requires parallel)
 #'
 #' Dependencies : dplyr
-#' @return Returns a dataframe of samples by metrics
 #' @examples
 #'   mz_quality_metrics(input_mz_obj) : Perform quality metrics
+#' @return Returns a dataframe of samples by metrics
 #' @export
 mz_quality_metrics <- function(input_mz_obj, cores = 2){
   no_mz <- dplyr::select(input_mz_obj, -mz)
@@ -63,9 +63,9 @@ mz_quality_metrics <- function(input_mz_obj, cores = 2){
 #'
 #' @param mz_metrics \cr
 #'   DataFrame : from "MeDUSA::mz_quality_metrics"
-#' @returns plots of all quality metrics
 #' @examples
 #'   mzmetrics_quality_plot_all(mz_metrics) : Plot all metrics
+#' @return plots of all quality metrics
 #' @export
 mzmetrics_quality_plot_all <- function(mz_metrics){
   for (f in colnames(mz_metrics[-1])){
@@ -88,11 +88,11 @@ mzmetrics_quality_plot_all <- function(mz_metrics){
 #' @param plot_dim \cr
 #'   c(Int,Int) : Dimensions of plot
 #' Dependencies : ggplot2, ggpubr, dplyr, parallel
-#' @returns plots of a provided quality metrics
 #' @examples
 #'   mzmetrics_quality_plot(mz_metrics, 'peaks_1k') : Plot all metrics
 #'   mzmetrics_quality_plot(mz_metrics, 'n_peaks', title = "Custom_npeaks", plot_dim = c(10,10)) 
 #'     : Plot n_peaks with a custom title and dimensions
+#' @return plots of a provided quality metrics
 #' @export
 mzmetrics_quality_plot <- function(mz_metrics, focus, title = F, plot_dim = c(8,8)){
   if(title == F ){
@@ -133,9 +133,11 @@ mzmetrics_quality_plot <- function(mz_metrics, focus, title = F, plot_dim = c(8,
 #'   DataFrame : Input MZ-Obj
 #' @param meta \cr
 #'   DataFrame : metadata object
-#' Dependencies : dplyr
+#'   Dependencies : dplyr
 #' @examples
 #'   mz_quality_meta_check(input_mz_obj, meta) : run meta checks
+#' @return
+#'   null (only errors if metadata mismatches sample data)
 #' @export
 mz_quality_meta_check <- function(input_mz_obj, meta){
   meta <- local.meta_polarity_fixer(input_mz_obj, meta)
@@ -185,9 +187,9 @@ mz_quality_meta_check <- function(input_mz_obj, meta){
 #'   Integer: Can I has multithreading? (Need parallel)
 #'
 #' Dependencies : dplyr
-#' @return Returns a dataframe of samples by metrics
 #' @examples
 #'   mz_quality_magic(input_mz_obj, meta) : run all the things
+#' @return Returns a dataframe of samples by metrics
 #' @export
 mz_quality_magic <- function(input_mz_obj, meta, cores = 2){
   mz_quality_meta_check(input_mz_obj, meta)

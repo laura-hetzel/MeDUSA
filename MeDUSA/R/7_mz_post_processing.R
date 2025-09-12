@@ -18,8 +18,10 @@
 #'   Float     : LowBoundry for "Noise"
 #' @param high_noise \cr
 #'   Float     : HighBoundry for "Noise"
-#'
-#' @returns MZ-OBJ
+#' @examples
+#'   mz_post_imputation(input_mz_obj) : run imputation with standard noise levels
+#'   mz_post_imputation(input_mz_obj, low_noise = 100, high_noise = 10000 ) : run imputation with custom noise levels
+#' @return MZ-OBJ
 #' @export
 mz_post_imputation <- function(input_mz_obj, low_noise=10, high_noise=NULL){
   if(!hasArg(high_noise)){
@@ -69,7 +71,9 @@ mz_post_imputation <- function(input_mz_obj, low_noise=10, high_noise=NULL){
 #'   Boolean   : to plot or not to plot
 #' @param meta \cr
 #'   DataFrame : metadata object
-#' @returns Returns an MZ-OBJ
+#' @examples
+#'   mz_post_normalization(input_mz_obj, metadata) : run normalization
+#' @return Returns an MZ-OBJ
 #' @export
 mz_post_normalization <- function(input_mz_obj, metadata, plot = TRUE ){
   metadata <- local.meta_polarity_fixer(input_mz_obj, metadata)
@@ -115,8 +119,9 @@ mz_post_normalization <- function(input_mz_obj, metadata, plot = TRUE ){
 #'   DataFrame : Input MZ-OBJ
 #' @param plot \cr
 #'   Boolean   : to plot or not to plot
-#'
-#' @returns mzLong-OBJ
+#' @examples
+#'   mz_post_pivot_longer(input_mz_obj) : run pivot
+#' @return mzLong-OBJ
 #' @export
 mz_post_pivot_longer <- function(input_mz_obj, plot = TRUE) {
   row.names(input_mz_obj) <- input_mz_obj$mz
@@ -139,8 +144,9 @@ mz_post_pivot_longer <- function(input_mz_obj, plot = TRUE) {
 #'
 #' @param input_mz_obj \cr
 #'   DataFrame : Input MZ-Obj
-#'
-#' @returns mzLog-OBJ
+#' @examples
+#'   mz_post_log(input_mz_obj) : log2 mz_obj
+#' @return mzLog-OBJ
 #' @export
 mz_post_log <- function(input_mz_obj) {
   ind <- grep("mz", colnames(input_mz_obj))
@@ -167,8 +173,10 @@ mz_post_log <- function(input_mz_obj) {
 #'   DataFrame : metadata object
 #' @param plot \cr
 #'   Boolean   : to plot or not to plot
-#'
-#' @returns c(mzLong_obj, mzLog_obj)
+#' @examples
+#'   mz_post_magic(input_mz_obj, metadata) : run all post processing with standard parameters
+#'   mz_post_magic(input_mz_obj, metadata, noise = c(100,10000)) : run all post processing with custom noise
+#' @return c(mzLong_obj, mzLog_obj)
 #' @export
 mz_post_magic <- function(input_mz_obj, metadata, noise = c(10,5000), plot = TRUE){
   tryCatch({

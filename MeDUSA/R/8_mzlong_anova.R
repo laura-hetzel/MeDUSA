@@ -18,8 +18,9 @@
 #'   Float : Maximum p for a "imporant M/Z"
 #' @param cores
 #'   Integer: Can I has multithreading? (Need parallel)
-#' @returns
-#'
+#' @return list of important mzs and such
+#' @examples
+#'   mzlong_analysis_anova(input_mzlog_obj, metadata, phenotypes = c("red", "blue")) : anova run (probably)
 #' @export
 mzlong_analysis_anova <- function(input_mzlong_obj, metadata, phenotypes, p_cutoff = 0.1, cores = 2){
   metadata <- local.meta_polarity_fixer(input_mzlong_obj, metadata)

@@ -15,7 +15,11 @@
 #'   DataFrame: Output of Fold change
 #' @param title \cr
 #'   String: Title of the plot
-#'
+#' @examples: ( Note basically from mzlog_analysis_volcano_magic() )
+#'   welch <- mzlog_analysis_welch(phenotype_a, phenotype_b, cores)
+#'   fold  <- mzlog_analysis_fold(phenotype_a, phenotype_b)
+#'   plot_volcano(welch, fold)
+#' @returns: NULL (only plots)
 #' @export
 plot_volcano <- function(welch, fold_change, title = "Volcano_Plot"){
   if ( sum(round(welch$mz,6) != round(fold_change$mz,6)) > 0){

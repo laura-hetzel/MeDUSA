@@ -28,17 +28,14 @@
 #'   String : method to apply to compare samples before threshold
 #' @param threshold \cr
 #'   Int       : "Delete samples < compare_samples * threshold"
-#'
-#' @return Returns an MZ-OBJ
 #' @examples
-#'
 #' To remove values from "samples" that are lower than "blanks" * "threshold"
 #'
 #' sample_mz_obj   <- MeDUSA::mztools_filter(input_mzObj,metadata,"blanks","type",F)
 #' subtract_mz_obj <- MeDUSA::mztools_filter(input_mzObj,metadata,"blanks","type",T)
 #'
 #' mz_subtraction(sample_mz_obj, subtract_mz_obj, threshold = 5 )
-#
+#' @return Returns an MZ-OBJ
 #' @export
 mz_subtraction <- function(sample_mz_obj, subtract_mz_obj , method = mean, threshold = 3) {
   df_l <- local.ensure_mz(sample_mz_obj, subtract_mz_obj, "MeDUSA::mz_subtraction")

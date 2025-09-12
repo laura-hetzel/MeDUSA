@@ -14,13 +14,15 @@
 #' @param mzs \cr
 #'   List : List of MZs to Identify
 #' @param adduct \cr
-#'   c( String ): Name of a common adduct
-#'   c( Integer ): Atomic mass of an adduct
+#'   c( String ): Name of a common adduct;  Use get_default_data('adducts') for a list.
+#'   c( Integer ): Atomic mass of an adduct.
 #' @param hmdb_file \cr
 #'   String: Location of hmdb.xml, or hmdb.Rdata download file:
 #'           DockerLocation: /home/rstudio/local/hmdb_simple.xml
 #' @param tolerance \cr
-#'   Tolerance for binning
+#'   Float: Tolerance for mzs
+#' @examples identify_hdmdb(mzs, adducts = c("M+H", "3M+Na"))
+#' @returns List of identified hmdb rows
 #' @export
 identify_hmdb <- function( mzs, adducts = c("M+H"), hmdb_file = "/home/rstudio/local/hmdb_xml.Rdata", tolerance = 5e-6) {
   adducts <- identify.adducts(adducts, "identify_hmdb")
@@ -58,12 +60,15 @@ identify_hmdb <- function( mzs, adducts = c("M+H"), hmdb_file = "/home/rstudio/l
 #' @param mzs \cr
 #'   List : List of MZs to Identify
 #' @param adduct \cr
-#'   String: Name of a common adduct
-#'   Integer: Atomic mass of an adduct
+#'   c( String ): Name of a common adduct;  Use get_default_data('adducts') for a list.
+#'   c( Integer ): Atomic mass of an adduct.
 #' @param lipids \cr
 #'   String: Location of lipids.csv, or hmdb.Rdata download file:
 #'           DockerLocation: /home/rstudio/local/lipids_simple.csv
-#'
+#' @param tolerance \cr
+#'   Float: Tolerance for mzs
+#' @examples identify_lipids(mzs, adducts = c("M+H", "3M+Na"))
+#' @returns List of identified lipids from csv
 #' @export
 identify_lipids <- function( mzs, adducts = c("M+H"), lipids_file = "/home/rstudio/lipids_simple.csv", tolerance = 5e-6) {
   identify_from_csv(mzs, adducts, lipids_file, mz_colname = "EXACT_MASS", tolerance)
@@ -85,12 +90,16 @@ identify_lipids <- function( mzs, adducts = c("M+H"), lipids_file = "/home/rstud
 #' @param mzs \cr
 #'   List : List of MZs to Identify
 #' @param adduct \cr
-#'   String: Name of a common adduct
-#'   Integer: Atomic mass of an adduct
-#' @param lipids \cr
-#'   String: Location of lipids.csv, or hmdb.Rdata download file:
-#'           DockerLocation: /home/rstudio/local/lipids_simple.csv
-#'
+#'   c( String ): Name of a common adduct;  Use get_default_data('adducts') for a list.
+#'   c( Integer ): Atomic mass of an adduct.
+#' @param csv_file \cr
+#'   String: File location of a csv file to match against.
+#' @param mz_colname \cr
+#'   String: Name of the mz column in the csv 
+#' @param tolerance \cr
+#'   Float: Tolerance for mzs
+#' @examples identify_lipids(mzs, adducts = c("M+H", "3M+Na"))
+#' @returns List of identified mzs from csv
 #' @export
 identify_from_csv <- function( mzs, adducts = c("M+H") , csv_file, mz_colname, tolerance = 5e-6) {
   adducts <- identify.adducts(adducts, "identify_lipids")

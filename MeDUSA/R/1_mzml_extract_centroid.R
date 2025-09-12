@@ -52,7 +52,7 @@
 #'   mzml_extract_magic() : export all data in the current directory with default values
 #'   mzml_extract_magic( getwd('data_dir'), polarity = 0, params = list("target_list" = c(100.111, 200.222, 300.333)))
 #'      : export negative data, filtering on the targest provided, from the directory "data_dir".
-#' @returns MzObj & Database file in the output directory
+#' @return MzObj & Database file in the output directory
 #' @export
 mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), params = NULL ){
   start <- Sys.time()
@@ -139,7 +139,6 @@ mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), params = NULL
 #'   Boolean: Should this return mz_obj. True takes requires more memory, but is user friendly
 #' @param params
 #'   list of params, see mzml_extract_magic()
-#' @returns MzT object
 #' @examples
 #'   mzml_extract_file("data_sample_001.mzml") : export data from "data_sample_001.mzml" with default parameters
 #'   mzml_extract_file( "data_sample_001.mzml" , polarity = 0, params = list("target_list" = c(100.111, 200.222, 300.333)))
@@ -148,6 +147,7 @@ mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), params = NULL
 #    mzT <- pbapply::pblapply(files, function(x) mzml_extract_file(x, polarity=0, cl = NULL, magic=F))
 #'      : list mzml files in directory "data". Loop over mzml_extract, only negative values, single threaded, and without any additional filtering.
 #'          This is good for troubleshooting, it will return a list of mzT objects with limited no additional processing.
+#' @return MzT object
 #' @export
 mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL, return_mzobj = F , params = NULL) {
   pol_eng <- extract.pol_english(polarity)
@@ -249,13 +249,13 @@ mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL, return
 #'   Numeric   : Lowest allowed intensity
 #' @param log_name \cr
 #'   String    : Identifier for log and plot outputs
-#' @returns MzT object
 #' @examples
 #'   mzT_filtering(mzT) : Perform standard filtering
 #'   mzT_filtering(mzT, prebin_method = 'mean', missingness_threshold = 3, intensity_threshold = 5000, log_name = "custom_filteing")
 #'      : Filter using all custom values
 #'   mzT_filtering(mzT, prebin_method = null, missingness_threashold = 1, intensity_threshold=0, log_name = "did_nothing")
 #'      : Values required to skip all filtering
+#' @return MzT object
 #' @export
 # Note missingness_threshold is very low
 mzT_filtering <- function(mzT, prebin_method = 'max', missingness_threshold = 1, intensity_threshold = 1000, log_name = "" ){
@@ -294,11 +294,11 @@ mzT_filtering <- function(mzT, prebin_method = 'max', missingness_threshold = 1,
 #'   [R method] : i.e. (mean, max, median)
 #' @param ignore_zeros \cr
 #'   Boolean: Should we set 0s to NA (to avoid effecting the math)
-#' @returns MzObj of one sample column
 #' @examples
 #'   mzT_squash_time(mzT) : Perform default time squashing
 #'   mzT_squash_time(mzT, timeSquash_method = 'median', ignore_zeros = F)
 #'      : Filter using custom values
+#' @return MzObj of one sample column
 #' @export
 mzT_squash_time <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl = NULL){
   # This should be handled by filter low intesity
@@ -323,11 +323,11 @@ mzT_squash_time <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl 
 #'   Tolerance for binning
 #' @param log_name \cr
 #'   String    : Identifier for log and plot outputs
-#' @returns MzObj of combined mz rows
 #' @examples
 #'   mzT_binning(mzT) : Perform default binning
 #'   mzT_binning(mzT, method = 'mean', log_name = "custom_values", tolerance = 1e-8)
 #'      : Binning using custom values
+#' @return MzObj of combined mz rows
 #' @export
 mzT_binning <- function(mzT, method = 'max', log_name = "", tolernace = 5e-6){
   db_name <- paste0("Binning_", log_name)

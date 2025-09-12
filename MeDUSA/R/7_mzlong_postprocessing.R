@@ -15,10 +15,9 @@
 #'   DataFrame : Input MZLONG-Obj
 #' @param plot \cr
 #'   Boolean   : to plot or not to plot
-#' @returns mzLong_obj
-#'
-#' @returns MzLong_obj
-#'
+#' @examples
+#'   mzlong_post_log(input_mz_obj, metadata) : run log2 on a mzlong (pivoted mz_obj)
+#' @return MzLong_obj
 #' @export
 mzlong_post_log <- function(input_mzlong, plot = TRUE){
   input_mzlong$log <- log2(input_mzlong$intensity)
