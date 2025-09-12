@@ -45,7 +45,6 @@ jobs:
   docker_create_manifest:
     needs: [docker_build_amd, docker_build_arm]
     runs-on: ubuntu-latest
-    
     steps:
     - name: Log in to Docker Hub
       uses: docker/login-action@v3
@@ -56,7 +55,9 @@ jobs:
       run: |
         docker manifest create thefollyllama/medusa:${DOCKER_TAG}  --amend thefollyllama/medusa:${DOCKER_TAG}-arm64  --amend thefollyllama/medusa:${DOCKER_TAG}-amd64
         docker manifest push thefollyllama/medusa:${DOCKER_TAG}
-      if: github.event_name != 'pull_request'
+      if: github.ref == 'refs/heads/main'
+
+
 
   # Only for visibility; kept downstream to take advantage of docker cache. Unit tests run during each docker build.
   # Note, at this time many unit tests fail....getting to it.
@@ -66,4 +67,4 @@ jobs:
     needs: docker_create_manifest
     steps:
     - name: run_unit_tests
-      run: run -it thefollyllama/medusa:${DOCKER_TAG} R -e 'devtools::test()'
+      run: docker run -it thefollyllama/medusa:${DOCKER_TAG} R -e 'devtools::test()'
