@@ -66,4 +66,4 @@ jobs:
     needs: docker_create_manifest
     steps:
     - name: run_unit_tests
-        run: run -it thefollyllama/medusa:${DOCKER_TAG} R -e 'devtools::test()'
+      run: run -it thefollyllama/medusa:${DOCKER_TAG} R -e 'devtools::test()'
