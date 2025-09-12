@@ -13,16 +13,18 @@
 #' @param input_mzlog_obj \cr
 #'   DataFrame : Log2 of Input MZ-Obj
 #' @param metadata \cr
-#'   DataFrame: MZ_metadata
+#'   DataFrame : MZ_metadata
 #' @param qual_col \cr
-#'   List?     : c("bad1", "bad2")
+#'   String    : relevant column to group by
 #' @param plot_title \cr
-#'   String : Title of the plot.
+#'   String    : Title of the plot.
 #' @param sample_blacklist \cr
-#'   List     : c("bad1", "bad2")
-#' @returns
+#'   List      : c("bad1", "bad2")
+#' @examples
+#'   mzlog_analysis_pca(input_mzlog_obj, metadata) : run pca analysis with standard parameters
+#'   mzlog_analysis_pca(input_mzlog_obj, metadata, qual_col = "type", plot_title = "Science!", sample_blacklist = c (100.123, 200.345)) : run pca analysis with custom parameters
+#' @return
 #' null (only plots)
-#'
 #' @export
 mzlog_analysis_pca <- function(input_mzlog_obj, metadata, qual_col = "phenotype",  plot_title = "PCA", sample_blacklist = c() ) {
   metadata <- local.meta_polarity_fixer(input_mzlog_obj,metadata)
@@ -77,25 +79,22 @@ mzlog_analysis_pca <- function(input_mzlog_obj, metadata, qual_col = "phenotype"
 #' @param adjust_method \cr
 #'   String: How to p.adjust?
 #'   Boolean: False = no adjustment ; True = "fdr"
-#'
-#' Dependencies : pbapply, dplyr
-#' @examples
-#' To t.test values from "phenoA" over "phenoB"
-#'
-#' phenoA_mz_obj  <- MeDUSA::mztools_filter(input_mzObj,metadata,"phenoA")
-#' phenoB_mz_obj  <- MeDUSA::mztools_filter(input_mzObj,metadata,"phenoB")
-#'
 #' @param cores
 #'   Integer: Can I has multithreading? (Need parallel)
 #'
-#' @returns DataFrame with columns:
+#' Dependencies : pbapply, dplyr
+#' @examples
+#'   To t.test values from "phenoA" over "phenoB"
+#'     phenoA_mz_obj  <- MeDUSA::mztools_filter(input_mzObj,metadata,"phenoA")
+#'     phenoB_mz_obj  <- MeDUSA::mztools_filter(input_mzObj,metadata,"phenoB")
+#'     mzlog_analysis_welch(phenotype_a, phenotype_b)
+#' @return DataFrame with columns:
 #'  - mz      : Float: MZ
 #'  - p       : Float: p-value
 #'  - p_05    : Boolean: is P < 0.05
 #'  - p_10    : Boolean: is P < 0.10
 #'  - p_15    : Boolean: is P < 0.15
 #'  - adjusted: p.adjust($p, adjust_method) *optional, but default
-#'
 #' @export
 mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', cores = 2){
   df_l <- local.ensure_mz(phenoA_mz_obj,phenoB_mz_obj, "MeDUSA::mzlog_analysis_welch")
@@ -152,15 +151,15 @@ mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', c
 #'   Method: How to combine Phenotype intensities
 #'
 #' @examples
-#' To fold values from "phenoA" over "phenoB"
-#'
-#' phenoA_mz_obj  <- MeDUSA::mztools_filter(input_mzObj,metadata,"phenoA")
-#' phenoB_mz_obj  <- MeDUSA::mztools_filter(input_mzObj,metadata,"phenoB")
-#'
-#' @returns DataFrame with columns:
+#'   To fold values from "phenoA" over "phenoB"
+#'     phenoA_mz_obj  <- MeDUSA::mztools_filter(input_mzObj,metadata,"phenoA")
+#'     phenoB_mz_obj  <- MeDUSA::mztools_filter(input_mzObj,metadata,"phenoB")
+#'     mzlog_analysis_volcano_magic(phenotype_a, phenotype_b) : run volcano with custom values
+#'     mzlog_analysis_volcano_magic(phenotype_a, phenotype_b, fold_math = "median") : run volcano with median
+#'     mzlog_analysis_volcano_magic(phenotype_a, phenotype_b, fold_math = "function(x) x*2") run volcano with custom apply function (untested)
+#' @return DataFrame with columns:
 #'  - mz   : Float
 #'  - fold : Float
-#'
 #' @export
 mzlog_analysis_fold <- function(phenoA_mz_obj, phenoB_mz_obj, fold_math = "mean"){
   df_l <- local.ensure_mz(phenoA_mz_obj,phenoB_mz_obj, "MeDUSA::mzlog_analysis_fold")
@@ -185,13 +184,11 @@ mzlog_analysis_fold <- function(phenoA_mz_obj, phenoB_mz_obj, fold_math = "mean"
 #'   DataFrame: Filtered metadata for phenotypeB
 #' @param cores
 #'   Integer: Can I has multithreading? (Need parallel)
-#'
 #' @examples
-#' phenotype_a <- mztools_filter(mzLog, metadata, "PhenoA")
-#' phenotype_b <- mztools_filter(mzLog, metadata, "PhenoB")
-#'
-#' @returns null (only plots)
-#'
+#'   phenotype_a <- mztools_filter(mzLog, metadata, "PhenoA")
+#'   phenotype_b <- mztools_filter(mzLog, metadata, "PhenoB")
+#'   mzlog_analysis_volcano_magic(phenotype_a, phenotype_b)
+#' @return null (only plots)
 #' @export
 mzlog_analysis_volcano_magic <- function(phenotype_a, phenotype_b, cores = 2 ){
   welch <- mzlog_analysis_welch(phenotype_a, phenotype_b, cores)
@@ -214,7 +211,7 @@ mzlog_analysis_volcano_magic <- function(phenotype_a, phenotype_b, cores = 2 ){
 #' @param metadata \cr
 #'   DataFrame : Metadata-Obj of Samples
 #' @param annotation \cr
-#'   String: Colname of metadata to annotate on.
+#'   String: Colname of metadata to annotate on; requires metadata
 #' @param title
 #'   String: Plot title
 #' @param save_file
@@ -225,8 +222,12 @@ mzlog_analysis_volcano_magic <- function(phenotype_a, phenotype_b, cores = 2 ){
 #'   c( Int, Int): Define size of lables for c(mz, samples). Set to 0 to remove a label.
 #' @param cluster
 #'   c("row"=Boolean,"col"=Boolean): Cluster data? Defaults to False
-#'
-#' @returns null (only plots)
+#' @examples
+#'   mzlog_analysis_heatmap(input_mzlog_obj) : run standard heatmap (no annotation)
+#'   mzlog_analysis_heatmap(input_mzlog_obj, metadata) : run heatmap with phenotype annotation
+#'   mzlog_analysis_heatmap(input_mzlog_obj, metadata, annotation = "type") : run heatmap with custom annotation
+#'   mzlog_analysis_heatmap(input_mzlog_obj, plot_label_size = c(0,0)) : run heatmap without axis labels
+#' @return null (only plots)
 #' @export
 mzlog_analysis_heatmap <- function(input_mzlog_obj, metadata = NULL, annotation = "phenotype",
                           title = "HeatMap of intensities", save_file = TRUE, cluster = NULL, 
@@ -241,6 +242,8 @@ mzlog_analysis_heatmap <- function(input_mzlog_obj, metadata = NULL, annotation 
       stop("ERROR:MeDUSA::mzlog_analysis_heatmap: annotation sample_name does not match mz_obj data")
     }
     annotation_int = data.frame(row.names = metadata$sample_name, metadata[annotation])
+  } else if (!is.null(annotation) || !is.null(metadata)){
+    warning("WARN:MeDUSA::mzlog_analysis_heatmap: annotation OR metadata provided; however both are required to annotate")
   } else {
     annotation_int <- NULL
   }
