@@ -45,7 +45,13 @@ jobs:
   docker_create_manifest:
     needs: [docker_build_amd, docker_build_arm]
     runs-on: ubuntu-latest
+    
     steps:
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USER }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
     - name: create_manifest
       run: |
         docker manifest create thefollyllama/medusa:${DOCKER_TAG}  --amend thefollyllama/medusa:${DOCKER_TAG}-arm64  --amend thefollyllama/medusa:${DOCKER_TAG}-amd64
@@ -59,5 +65,5 @@ jobs:
     runs-on: ubuntu-latest
     needs: docker_create_manifest
     steps:
-    - name: create_manifest
+    - name: run_unit_tests
         run: run -it thefollyllama/medusa:${DOCKER_TAG} R -e 'devtools::test()'
