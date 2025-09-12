@@ -55,8 +55,7 @@ jobs:
       run: |
         docker manifest create thefollyllama/medusa:${DOCKER_TAG}  --amend thefollyllama/medusa:${DOCKER_TAG}-arm64  --amend thefollyllama/medusa:${DOCKER_TAG}-amd64
         docker manifest push thefollyllama/medusa:${DOCKER_TAG}
-      if: github.ref == 'refs/heads/main'
-
+      if: github.event_name != 'pull_request'
 
 
   # Only for visibility; kept downstream to take advantage of docker cache. Unit tests run during each docker build.
@@ -67,4 +66,4 @@ jobs:
     needs: docker_create_manifest
     steps:
     - name: run_unit_tests
-      run: docker run -it thefollyllama/medusa:${DOCKER_TAG} R -e 'devtools::test()'
+      run: docker run -t thefollyllama/medusa:${DOCKER_TAG} R -e 'devtools::test()'
