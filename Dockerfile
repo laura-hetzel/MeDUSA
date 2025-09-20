@@ -34,7 +34,7 @@ RUN  R -e 'devtools::install(dependencies="never")'
 #RUN R -e 'devtools::document()' &&  R -e 'devtools::check()'
 
 ### TO BUILD
-#TAG=v3
+#TAG=v6
 #docker build . -f Dockerfile -t thefollyllama/medusa:${TAG}-arm64  --platform linux/arm64/v8
 #docker build . -f Dockerfile -t thefollyllama/medusa:${TAG}-amd64bn    --platform linux/amd64
 

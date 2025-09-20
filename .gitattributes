@@ -1,0 +1,9 @@
+examples/mzml/data/sumr_qc_015.mzML filter=lfs diff=lfs merge=lfs -text
+examples/mzml/data/sumr_hek_161.mzML filter=lfs diff=lfs merge=lfs -text
+examples/mzml/data/sumr_qc_004.mzML filter=lfs diff=lfs merge=lfs -text
+examples/mzml/data/sumr_blank_052.mzML filter=lfs diff=lfs merge=lfs -text
+examples/mzml/data/sumr_hek_079.mzML filter=lfs diff=lfs merge=lfs -text
+examples/mzml/data/sumr_hep_031.mzML filter=lfs diff=lfs merge=lfs -text
+examples/mzml/data/sumr_hep_032.mzML filter=lfs diff=lfs merge=lfs -text
+examples/mzml/data/sumr_blank_001.mzML filter=lfs diff=lfs merge=lfs -text
+examples/mzml/data/sumr_blank_048.mzML filter=lfs diff=lfs merge=lfs -text
