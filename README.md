@@ -11,6 +11,9 @@ Included is a dockerfile that compiles all R requirements, some common compound 
 `docker run -e PASSWORD=medusa -p 8787:8787 --name medusa -v .:/home/rstudio/local thefollyllama/medusa`
 in a browser navigate to "localhost:8787" usr:rstudio pwd:medusa
 
+Note the docker option "-v" this mounts the current directory to the container filesystem. So, it is best to run the above command within your data directory. This will limit the resources required to start the container, while ensuring your data is available.
+
+#### Debugging
 To debug or develop within the container:
 `docker exec -it medusa /bin/bash`
 
@@ -19,8 +22,12 @@ From here you can run things such as
 `RUN  R -e 'devtools::test()'`    : Use testthat to run unit tests
 `RUN  R -e 'devtools::install(dependencies="never")'` : Build the Medusa package
 
-### Via Docker
-It is suggested to run via dockerhub, as building the image can take over an hour. However, local build instructions can be found in the Dockerfile
+### Via Github
+It is suggested to run via dockerhub, as building the image can take over an hour. Additional instructions can be found in the Dockerfile
+
+`git clone https://github.com/laura-hetzel/MeDUSA.git`
+`docker build . -f Dockerfile medusa:tmp` ( Don't forget to navigate to the MeDUSA directory )
+`docker run -e PASSWORD=medusa -p 8787:8787 --name medusa -v .:/home/rstudio/local medusa:tmp`
 
 ## Data Structures
 MeDUSA's modularity is achived via common data objects that are interchangeable.
