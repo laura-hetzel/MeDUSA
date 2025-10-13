@@ -209,7 +209,7 @@ mzlog_analysis_volcano_magic <- function(phenotype_a, phenotype_b, cores = 2 ){
 #' @param input_mz_obj \cr
 #'   DataFrame : Input MZ-Obj
 #' @param metadata \cr
-#'   DataFrame : Metadata-Obj of Samples
+#'   DataFrame : Metadata-Obj of Samples ( Note: metadata and samples must match. E.g. no blanks)
 #' @param annotation \cr
 #'   String: Colname of metadata to annotate on; requires metadata
 #' @param title
@@ -225,6 +225,7 @@ mzlog_analysis_volcano_magic <- function(phenotype_a, phenotype_b, cores = 2 ){
 #' @examples
 #'   mzlog_analysis_heatmap(input_mzlog_obj) : run standard heatmap (no annotation)
 #'   mzlog_analysis_heatmap(input_mzlog_obj, metadata) : run heatmap with phenotype annotation
+#'   mzlog_analysis_heatmap(input_mzlog_obj, filter(metadata, type != "IS_Blank")) : run heatmap with phenotype annotation filtering blanks 
 #'   mzlog_analysis_heatmap(input_mzlog_obj, metadata, annotation = "type") : run heatmap with custom annotation
 #'   mzlog_analysis_heatmap(input_mzlog_obj, plot_label_size = c(0,0)) : run heatmap without axis labels
 #' @return null (only plots)
@@ -237,6 +238,8 @@ mzlog_analysis_heatmap <- function(input_mzlog_obj, metadata = NULL, annotation 
   row.names(plot_obj) <- input_mzlog_obj$mz
 
   if (!is.null(annotation) && !is.null(metadata)){
+    pol <- local.mz_polarity_guesser(input_mzlog_obj, pos_return = 'pos', neg_return = 'neg')
+    metadata$sample_name <- paste0(pol, "_" ,metadata$sample_name )
     if (sum( sort(metadata$sample_name) !=
              sort(colnames(plot_obj)))) {
       stop("ERROR:MeDUSA::mzlog_analysis_heatmap: annotation sample_name does not match mz_obj data")

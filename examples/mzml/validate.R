@@ -51,15 +51,17 @@ fold_p <- mzlog_analysis_fold(mztools_filter(pp_out$mzLog,meta,"HepG2"),
                               mztools_filter(pp_out$mzLog,meta,"HEK293T"))
 
 plot_volcano(welch_p, fold_p)
-mzlog_analysis_heatmap(pp_out$mzLog[1:100,], plot_label_size = c(5,2), plot_labels = c(T,T))
 
+#simpler heatmap for clarity
+#mzlog_analysis_heatmap(pp_out$mzLog[1:100,], annotation = NULL, plot_label_size = c(5,2), plot_labels = c(T,T))
+mzlog_analysis_heatmap(pp_out$mzLog, metadata = filter(meta, type != "IS_Blank"), plot_label_size = c(5,2), plot_labels = c(T,T))
 
 ##RandomForest:Magic
 rf_data <- mztools_filter(pp_out$mzLog, meta, c("HepG2","HEK293T"))
 #rf_mag <- mzlog_rf_magic(rf_data, meta, "pos")
 
 ##RandomForest: without magic
-rf_cor <- mzlog_rf_correlation(rf_data)
+rf_cor <- mzlog_rf_correlation(rf_data, correlation_cutoff = 0.6)
 rf_sel <- mzlog_rf_select(rf_cor, meta)
 rf_obj <- mzlog_rf(rf_data, meta, rfe_obj = rf_sel)
 rf_validate <- rf_validate(rf_obj)
