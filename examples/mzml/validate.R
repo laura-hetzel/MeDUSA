@@ -26,6 +26,8 @@ mzL <- mzml_extract_magic("data")
 ## MzT extraction without Magic (Good for debugging)
 #files <- list.files(path=getwd("data"), pattern="*.mzML")
 #mzT <- pbapply::pblapply(files, function(x) mzml_extract_file(x, polarity=0, cl = NULL, magic=F))
+#mz <- pbapply::pblapply(mzT$pos, function(x) mzT_filtering( x, log_name = paste0(colnames(x),"pos"))
+
 #save(mzL, file = 'mzL.Rdata')
 #load("mzL.Rdata")
      

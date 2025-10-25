@@ -99,8 +99,8 @@ mzlog_analysis_pca <- function(input_mzlog_obj, metadata, qual_col = "phenotype"
 mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', cores = 2){
   df_l <- local.ensure_mz(phenoA_mz_obj,phenoB_mz_obj, "MeDUSA::mzlog_analysis_welch")
 
-  cl <- local.export_thread_env(cores, environment())
   tryCatch({
+    cl <- local.export_thread_env(cores, environment())
     out <- data.frame(p    = rep(Inf, nrow(df_l$mz)),
                       p_05 = rep(FALSE, nrow(df_l$mz)),
                       p_10 = rep(FALSE, nrow(df_l$mz)),

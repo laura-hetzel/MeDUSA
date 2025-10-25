@@ -165,8 +165,8 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
                   "rf_trees" = rf_trees, "pol" = pol, "ratio" = ratio,
                   "mtry"= mtry, "tunegrid" = tunegrid, "control" = control)
 
-  cl <- local.export_thread_env(cores, environment())
   tryCatch({
+    cl <- local.export_thread_env(cores, environment())
     out <- pbapply::pblapply(seeds, cl=cl, rf.run_train, rf_vars = rf_vars)
     out <- do.call(rbind,out)
   }, finally={

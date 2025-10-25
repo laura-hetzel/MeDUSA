@@ -134,7 +134,9 @@ mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), params = NULL
 #' @param polarity \cr
 #'   [0|1]: 0=Negative, 1=Positive, NULL=both
 #' @param cl \cr
-#'   parallel::threadCluster (optional)
+#'   parallel::threadCluster (optional).
+#'      Note, this is untested after the introduction of duckDB, and the threads will likely compete in the DB. 
+#'      It is suggested to choose threading, OR DuckDB (params = c( "dbconn"=NULL)). 
 #' @param return_mzobj
 #'   Boolean: Should this return mz_obj. True takes requires more memory, but is user friendly
 #' @param params
@@ -322,7 +324,7 @@ mzT_squash_time <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl 
 #' @param tolerance \cr
 #'   Tolerance for binning
 #' @param log_name \cr
-#'   String    : Identifier for log and plot outputs
+#'   String    : Identifier for db, log and plot outputs
 #' @examples
 #'   mzT_binning(mzT) : Perform default binning
 #'   mzT_binning(mzT, method = 'mean', log_name = "custom_values", tolerance = 1e-8)

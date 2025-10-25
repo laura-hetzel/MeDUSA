@@ -37,8 +37,8 @@ mz_quality_metrics <- function(input_mz_obj, cores = 2){
                             peaks_10k = numeric(length(no_mz)),
                             peaks_100k = numeric(length(no_mz)))
 
-  cl <- local.export_thread_env(cores, environment())
   tryCatch({
+    cl <- local.export_thread_env(cores, environment())
     tmp <- pbapply::pbapply(no_mz, 2,cl=cl,function(pop_sum){
       test <- input_mz_obj$mz[pop_sum>0]
       mz_metrics[colnames(pop_sum),] <-  c(median_mz = median(test),

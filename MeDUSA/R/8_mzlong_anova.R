@@ -27,12 +27,12 @@ mzlong_analysis_anova <- function(input_mzlong_obj, metadata, phenotypes, p_cuto
   mzlong <- dplyr::left_join(input_mzlong_obj, metadata[c("sample_name", "phenotype")], by = "sample_name")
   mzlong<-mzlong[mzlong$phenotype %in% phenotypes,]
   uniq_mz <- unique(mzlong$mz)
-  cl <- local.export_thread_env(cores, environment())
   tryCatch({
+    cl <- local.export_thread_env(cores, environment())
     #TODO: should mz be considered a factor?
     #anova <- aov(log ~ mz + phenotype , data = mzlong)
-    anova <- pbapply::pblapply(uniq_mz, anova.by_mz, mzlong=mzlong)
-    summary <- pbapply::pblapply(seq_along(anova), anova.summary, anova=anova, mzs = uniq_mz)
+    anova <- pbapply::pblapply(uniq_mz, anova.by_mz, mzlong=mzlong, cl = cl)
+    summary <- pbapply::pblapply(seq_along(anova), anova.summary, anova=anova, mzs = uniq_mz, cl = cl)
     summary <- do.call(rbind, summary)
     tukey <- pbapply::pblapply(seq_along(anova), anova.get_p, anova = anova, mzs = uniq_mz)
     tukey <- do.call(rbind,tukey)
