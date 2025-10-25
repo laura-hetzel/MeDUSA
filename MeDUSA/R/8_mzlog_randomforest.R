@@ -19,10 +19,15 @@
 #'   mzlog_rf_correlation(input_mzlog_obj, correlation_cutoff = 0.8) : run correlation with custom cutoff percentage
 #' @return correlation_data: a Transposed mzlog_obj of non-correlated_data
 #' @export
-mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
-  print("INFO: cor() can be time and resource heavy on large data sets")
+mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75, fastCor = T){
   data <- data.frame(t(dplyr::select(input_mzlog_obj,-mz)))
-  high_cor_data <- caret::findCorrelation(cor(data), cutoff = correlation_cutoff)
+  if (fastCor) {
+    cor <- HiClimR::fastCor(rf_data)
+  } else {
+    print("INFO: cor() can be time and resource heavy on large data sets; consider using fastCor")
+    cor <- cor(data)
+  }
+  high_cor_data <- caret::findCorrelation(cor , cutoff = correlation_cutoff)
   if ( ncol(data) - length(high_cor_data) < 2 ) {
     stop("ERROR:MeDUSA::mzlog_rf_correlation: No, or only 1 non-correlated MZs found; try increasing 'correlation_cutoff'")
   }

@@ -21,8 +21,9 @@ RUN R -e 'remotes::install_version("dplyr",        version = "1.1.4")' \
  &&  R -e 'remotes::install_version("ggpubr",       version = "0.6.0")'  \
  &&  R -e 'remotes::install_version("pROC",         version = "1.18.5")' \
  &&  R -e 'remotes::install_version("duckdb",       version = "1.2.1")'  \
- &&  R -e 'remotes::install_version("readxl",   version = "1.4.5")'  \
- &&  R -e 'remotes::install_version("testthat", version = "3.2.3")'
+ &&  R -e 'remotes::install_version("readxl",       version = "1.4.5")'  \
+ &&  R -e 'remotes::install_version("testthat",     version = "3.2.3")' \
+ &&  R -e 'remotes::install_version("HiClimR",      version = "2.2.1")'
 
 FROM bioc_base
 COPY MeDUSA MeDUSA
