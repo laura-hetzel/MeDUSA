@@ -11,7 +11,7 @@ meta$sample_name <- meta$filename
 meta <- meta[meta$sample_name %in% 
        c("sumr_blank_001", "sumr_blank_048", "sumr_blank_052", 
           "sumr_qc_004", "sumr_qc_015", "sumr_hek_079", "sumr_hek_161",
-          "sumr_hep_031", "sumr_hep_032"),]
+          "sumr_hek_176", "sumr_hep_006", "sumr_hep_031", "sumr_hep_032"),]
 meta$filtered_out <- meta$filtered_out == TRUE
 
 meta <- dplyr::select(meta,-filename)
@@ -49,7 +49,7 @@ tech_quality <- mz_quality_magic(mz_obj, meta)
 mz_obj <- mz_subtraction(mztools_filter(mz_obj, meta,"IS_Blank","type",T,T),
                            mztools_filter(mz_obj, meta,"IS_Blank","type",F,T))
 mz_obj <- mz_mass_defect(mz_obj, plot = TRUE)
-mz_obj <- mz_filter_magic(mz_obj, blacklist= F)
+mz_obj <- mz_filter_magic(mz_obj, min_intensity = 4000, missingness_threshold = 2)
 pp_out <- mz_post_magic(mz_obj, metadata = meta, plot = TRUE)
 
 mzlog_analysis_pca(mztools_filter(pp_out$mzLog,meta,"cell","type"), meta)
@@ -75,11 +75,13 @@ rf_data <- mztools_filter(pp_out$mzLog, meta, c("HepG2","HEK293T"))
 #rf_mag <- mzlog_rf_magic(rf_data, meta, "pos")
 
 ##RandomForest: without magic
-rf_cor <- mzlog_rf_correlation(rf_data, correlation_cutoff = 0.6)
+gc()
+#High correlation cuttoff due to small sample set
+rf_cor <- mzlog_rf_correlation(rf_data, correlation_cutoff = .9999)
 rf_sel <- mzlog_rf_select(rf_cor, meta)
 rf_obj <- mzlog_rf(rf_data, meta, rfe_obj = rf_sel)
 rf_validate <- rf_validate(rf_obj)
-rf_permuted <- rf_permuted(rf_obj, "pos")
+rf_permuted <- rf_permuted(rf_obj, "neg")
 
 anova <- mzlong_analysis_anova(pp_out$mzLong, meta, phenotypes=c("HepG2","HEK293T"))
 
