@@ -39,6 +39,7 @@ mzlong_analysis_anova <- function(input_mzlong_obj, metadata, phenotypes, p_cuto
   }, finally={
     local.kill_threads(cl)
   })
+  #TODO: summary[order(summary)] repeditive. Refactor to only use order()
   summary <- summary[order(-summary$`Pr(>F)`, decreasing = T),]
   imp_mz <- sort(summary$mz[summary$`Pr(>F)` < p_cutoff])
   #best <- AICcmodavg::aictab(a,modnames = uniq_mz)

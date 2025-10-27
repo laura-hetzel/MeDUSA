@@ -27,7 +27,7 @@ mz_obj <- mzL$neg
 #save(mzL, file = 'mzL.Rdata')
 #load("mzL.Rdata")
 
-## MzT extraction without Magic (Good for debugging).=
+## MzT extraction without Magic (Good for debugging).
 files <- list.files(path=paste0(getwd(),"/data"), pattern="*.mzML")
 files <- paste0("data/",files)
 mzT_raw <- pbapply::pblapply(files, function(x) mzml_extract_file(x, polarity=0, cl = NULL, magic=F))
@@ -49,7 +49,7 @@ tech_quality <- mz_quality_magic(mz_obj, meta)
 mz_obj <- mz_subtraction(mztools_filter(mz_obj, meta,"IS_Blank","type",T,T),
                            mztools_filter(mz_obj, meta,"IS_Blank","type",F,T))
 mz_obj <- mz_mass_defect(mz_obj, plot = TRUE)
-mz_obj <- mz_filter_magic(mz_obj, min_intensity = 4000, missingness_threshold = 2)
+mz_obj <- mz_filter_magic(mz_obj, min_intensity = 5000, missingness_threshold = 2)
 pp_out <- mz_post_magic(mz_obj, metadata = meta, plot = TRUE)
 
 mzlog_analysis_pca(mztools_filter(pp_out$mzLog,meta,"cell","type"), meta)
@@ -77,13 +77,15 @@ rf_data <- mztools_filter(pp_out$mzLog, meta, c("HepG2","HEK293T"))
 ##RandomForest: without magic
 gc()
 #High correlation cuttoff due to small sample set
-rf_cor <- mzlog_rf_correlation(rf_data, correlation_cutoff = .9999)
+rf_cor <- mzlog_rf_correlation(rf_data, correlation_cutoff = .99)
 rf_sel <- mzlog_rf_select(rf_cor, meta)
+#RF cannot do much with highly correlated data; needs more samples
 rf_obj <- mzlog_rf(rf_data, meta, rfe_obj = rf_sel)
 rf_validate <- rf_validate(rf_obj)
 rf_permuted <- rf_permuted(rf_obj, "neg")
 
-anova <- mzlong_analysis_anova(pp_out$mzLong, meta, phenotypes=c("HepG2","HEK293T"))
+gc()
+anova <- mzlong_analysis_anova(pp_out$mzLong, meta, phenotypes=c("HepG2","HEK293T"), cores=1)
 
 hmdb_rf <- identify_hmdb(rf_mag$mz, c("M-H","M+Na"))
 hmdb_anova <- identify_hmdb(anova$imp_mz)
