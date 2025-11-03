@@ -29,6 +29,13 @@ It is suggested to run via dockerhub, as building the image can take over an hou
 `docker build . -f Dockerfile medusa:tmp` ( Don't forget to navigate to the MeDUSA directory )
 `docker run -e PASSWORD=medusa -p 8787:8787 --name medusa -v .:/home/rstudio/local medusa:tmp`
 
+### Multithreading and memory issues
+MeDUSA supports multi-threading in many of it's methods. This is presented in the parameter "cores." This is parameterized so you may optimize for your resources.  In general more cores will increase speed, but with higher memory requirments. MeDUSA handles cluster management. 
+
+The extract functions have some remenants of multi-threading. This is presented in the parmeter "cl" which is a parallel cluster object. During development we experienced memory pressure especially in the final binning functions. This made multi-threading impractical in most situations. DuckDB helped with memory pressure, but requires refactoring to manage threaded dbconnections before we can reliably multi-thread again.
+
+`showConnections()` and `closeAllConnections()` are you friend if you run into orphaned processes.
+
 ## Data Structures
 MeDUSA's modularity is achived via common data objects that are interchangeable.
 

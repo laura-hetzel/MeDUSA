@@ -20,11 +20,12 @@
 #' @return correlation_data: a Transposed mzlog_obj of non-correlated_data
 #' @export
 mzlog_rf_correlation <- function(input_mzlog_obj, correlation_cutoff = 0.75){
-  print("INFO: cor() can be time and resource heavy on large data sets")
   data <- data.frame(t(dplyr::select(input_mzlog_obj,-mz)))
-  high_cor_data <- caret::findCorrelation(cor(data), cutoff = correlation_cutoff)
+  print("INFO: cor() can be time and resource heavy on large data sets; 20k mzs can take 18gb memory")
+  cor <- cor(data)
+  high_cor_data <- caret::findCorrelation(cor , cutoff = correlation_cutoff)
   if ( ncol(data) - length(high_cor_data) < 2 ) {
-    stop("ERROR:MeDUSA::mzlog_rf_correlation: No, or only 1 non-correlated MZs found; try increasing 'correlation_cutoff'")
+    stop("ERROR:MeDUSA::mzlog_rf_correlation: Would return less than 2 non-correlated samples; try increasing 'correlation_cutoff'")
   }
   print(paste("INFO:mzlog_prep: ", length(high_cor_data)," of ", ncol(data) ," MZs are highly correlated ", sep=""))
   data <- data.frame(data[,-high_cor_data])
@@ -165,8 +166,8 @@ mzlog_rf <- function(mzlog_obj,  metadata, rfe_obj = NULL, rf_trees = NULL, mast
                   "rf_trees" = rf_trees, "pol" = pol, "ratio" = ratio,
                   "mtry"= mtry, "tunegrid" = tunegrid, "control" = control)
 
-  cl <- local.export_thread_env(cores, environment())
   tryCatch({
+    cl <- local.export_thread_env(cores, environment())
     out <- pbapply::pblapply(seeds, cl=cl, rf.run_train, rf_vars = rf_vars)
     out <- do.call(rbind,out)
   }, finally={

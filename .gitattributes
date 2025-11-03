@@ -7,3 +7,4 @@ examples/mzml/data/sumr_hep_031.mzML filter=lfs diff=lfs merge=lfs -text
 examples/mzml/data/sumr_hep_032.mzML filter=lfs diff=lfs merge=lfs -text
 examples/mzml/data/sumr_blank_001.mzML filter=lfs diff=lfs merge=lfs -text
 examples/mzml/data/sumr_blank_048.mzML filter=lfs diff=lfs merge=lfs -text
+*.mzML filter=lfs diff=lfs merge=lfs -text

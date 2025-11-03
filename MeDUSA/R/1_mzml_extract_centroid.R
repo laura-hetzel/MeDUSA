@@ -67,8 +67,11 @@ mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), params = NULL
     df <- pblapply( polarity, cl=cl, function(pol){
       pol_eng <- extract.pol_english(pol)
       params <- extract.fill_defaults(params, pol_eng)
+      if (is.null(params$dbconn)) {
+        stop("MeDUSA::mzml_extract_magic(): dbconn is currently required, do not set to NULL")
+      }
       print(paste0("INFO: mzml_extract_magic : Extraction of [",pol_eng,"], beginning"))
-      pbapply::pblapply(files, function(file) mzml_extract_file(file, polarity=pol, cl = NULL, magic=T, params=params))
+      pbapply::pblapply(files, function(file) mzml_extract_file(file, polarity=pol, cl = NULL, magic=T, params=params, return_mzobj = F))
       print(paste0("INFO: mzml_extract_magic : Extraction of [",pol_eng,"], complete"))
       tables <- DBI::dbGetQuery(params$dbconn, "SELECT table_name FROM duckdb_tables;")
       if (! paste0("PREFINAL_",pol_eng) %in% tables[,]) {
@@ -134,7 +137,9 @@ mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), params = NULL
 #' @param polarity \cr
 #'   [0|1]: 0=Negative, 1=Positive, NULL=both
 #' @param cl \cr
-#'   parallel::threadCluster (optional)
+#'   parallel::threadCluster (optional).
+#'      Note, this is untested after the introduction of duckDB, and the threads will likely compete in the DB. 
+#'      It is suggested to choose threading, OR DuckDB (params = c( "dbconn"=NULL)). 
 #' @param return_mzobj
 #'   Boolean: Should this return mz_obj. True takes requires more memory, but is user friendly
 #' @param params
@@ -149,7 +154,7 @@ mzml_extract_magic <- function(files = getwd(), polarity = c(0,1), params = NULL
 #'          This is good for troubleshooting, it will return a list of mzT objects with limited no additional processing.
 #' @return MzT object
 #' @export
-mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL, return_mzobj = F , params = NULL) {
+mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL, return_mzobj = T , params = NULL) {
   pol_eng <- extract.pol_english(polarity)
   params <- extract.fill_defaults(params,pol_eng)
   name <- strsplit(basename(file),"\\.")[[1]][1]
@@ -199,8 +204,7 @@ mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL, return
                             intensity_threshold = params$intensity_threshold,
                             log_name = name)
       print(sprintf("INFO:MeDUSA::mzml_extract_file: TimeSquashing %s",name))
-      out <- mzT_squash_time(out, timeSquash_method = params$timeSquash_method)
-      colnames(out) <- c('mz',name)
+      out <- mzT_squash_time(out, timeSquash_method = params$timeSquash_method, output_name = name)
     }
     if (class(params$dbconn) == 'duckdb_connection'){
       duckdb::dbWriteTable(params$dbconn ,name , out,append = TRUE)
@@ -212,6 +216,9 @@ mzml_extract_file <- function(file, polarity = "",  magic = T, cl = NULL, return
     }
   } else {
     print(paste0("INFO:MeDUSA::mzml_extract_file: [", name, "] found in db, skipping"))
+    if (return_mzobj) {
+      out <- DBI::dbGetQuery(params$dbconn, paste0("select * from ", name))
+    }
   }
 }
 
@@ -294,13 +301,17 @@ mzT_filtering <- function(mzT, prebin_method = 'max', missingness_threshold = 1,
 #'   [R method] : i.e. (mean, max, median)
 #' @param ignore_zeros \cr
 #'   Boolean: Should we set 0s to NA (to avoid effecting the math)
+#' @param cl \cr
+#'   parallel::threadCluster (optional).
+#' @param output_name \cr
+#'   String: Output name of the intensity column.
 #' @examples
 #'   mzT_squash_time(mzT) : Perform default time squashing
 #'   mzT_squash_time(mzT, timeSquash_method = 'median', ignore_zeros = F)
 #'      : Filter using custom values
 #' @return MzObj of one sample column
 #' @export
-mzT_squash_time <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl = NULL){
+mzT_squash_time <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl = NULL, output_name = "intensity"){
   # This should be handled by filter low intesity
   if( ignore_zeros ){
     mzT[mzT == 0] <- NA
@@ -308,7 +319,7 @@ mzT_squash_time <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl 
   squash <- pbapply::pbapply(dplyr::select(mzT, -mz),1, timeSquash_method, na.rm=T, cl=cl)
   squash[is.na(squash)] <- 0
   out <- data.table::as.data.table(cbind(mzT$mz, squash))
-  names(out) <- c("mz","intensity")
+  names(out) <- c("mz", output_name)
   out
 }
 
@@ -322,7 +333,7 @@ mzT_squash_time <- function(mzT, timeSquash_method = mean, ignore_zeros = T, cl 
 #' @param tolerance \cr
 #'   Tolerance for binning
 #' @param log_name \cr
-#'   String    : Identifier for log and plot outputs
+#'   String    : Identifier for db, log and plot outputs
 #' @examples
 #'   mzT_binning(mzT) : Perform default binning
 #'   mzT_binning(mzT, method = 'mean', log_name = "custom_values", tolerance = 1e-8)
