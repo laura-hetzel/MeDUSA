@@ -1,7 +1,7 @@
 name: Docker Image CI
 
 env:
-  DOCKER_TAG: v6.1
+  DOCKER_TAG: v6.2
 
 on:
   push:
@@ -55,6 +55,8 @@ jobs:
       run: |
         docker manifest create thefollyllama/medusa:${DOCKER_TAG}  --amend thefollyllama/medusa:${DOCKER_TAG}-arm64  --amend thefollyllama/medusa:${DOCKER_TAG}-amd64
         docker manifest push thefollyllama/medusa:${DOCKER_TAG}
+        docker tag  thefollyllama/medusa:${DOCKER_TAG}  thefollyllama/medusa:latest
+        docker push thefollyllama/medusa:latest
       if: github.event_name != 'pull_request'
 
 
