@@ -19,7 +19,7 @@
 #'   welch <- mzlog_analysis_welch(phenotype_a, phenotype_b, cores)
 #'   fold  <- mzlog_analysis_fold(phenotype_a, phenotype_b)
 #'   plot_volcano(welch, fold)
-#' @returns: NULL (only plots)
+#' @returns: dataframe with mz, p, fold and diff
 #' @export
 plot_volcano <- function(welch, fold_change, title = "Volcano_Plot"){
   if ( sum(round(welch$mz,6) != round(fold_change$mz,6)) > 0){
@@ -33,7 +33,7 @@ plot_volcano <- function(welch, fold_change, title = "Volcano_Plot"){
   df$diff[df$fold > 0.6 & df$p > -log10(0.05)] <- "UP"
   df$diff[df$fold < -0.6 & df$p > -log10(0.05)] <- "DOWN"
 
-ggpubr::ggscatter( data = df,
+  ggpubr::ggscatter( data = df,
                     x = "fold",y="p",
                     title = title,
                     shape = "diff",
@@ -42,4 +42,5 @@ ggpubr::ggscatter( data = df,
                     geom_hline(yintercept = -log10(0.05), col = "green")
 
   local.save_plot(title)
+  df
 }
