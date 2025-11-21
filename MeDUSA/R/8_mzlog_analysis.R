@@ -81,7 +81,6 @@ mzlog_analysis_pca <- function(input_mzlog_obj, metadata, qual_col = "phenotype"
 #'   Boolean: False = no adjustment ; True = "fdr"
 #' @param cores
 #'   Integer: Can I has multithreading? (Need parallel)
-#'
 #' Dependencies : pbapply, dplyr
 #' @examples
 #'   To t.test values from "phenoA" over "phenoB"
@@ -98,12 +97,11 @@ mzlog_analysis_pca <- function(input_mzlog_obj, metadata, qual_col = "phenotype"
 #' @export
 mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', cores = 2){
   df_l <- local.ensure_mz(phenoA_mz_obj,phenoB_mz_obj, "MeDUSA::mzlog_analysis_welch")
-
   tryCatch({
     cl <- local.export_thread_env(cores, environment())
     out <- data.frame(p    = rep(Inf, nrow(df_l$mz)),
                       p_05 = rep(FALSE, nrow(df_l$mz)),
-                      p_10 = rep(FALSE, nrow(df_l$mz)),
+                      p_10 = rep(FALSE, nrow(df_l$mz)), 
                       p_15 = rep(FALSE, nrow(df_l$mz)))
 
     out$p <- pbapply::pbapply(df_l$mz, 1 , cl = cl, function(i){
@@ -119,7 +117,6 @@ mzlog_analysis_welch <- function(phenoA_mz_obj, phenoB_mz_obj, adjust = 'fdr', c
   finally={
     local.kill_threads(cl)
   })
-
   if(adjust != F){
     if (adjust){
       adjust = 'fdr'
@@ -177,24 +174,32 @@ mzlog_analysis_fold <- function(phenoA_mz_obj, phenoB_mz_obj, fold_math = "mean"
 #' t-test on the y-axis. The function mz_analysis_volcano_magic uses the m/z
 #' data set and performs fold change and t-test on the data to populate the
 #' plot.
-#''
+#' Also runs PCA along the way.
+#'
 #' @param phenotype_a \cr
 #'   DataFrame: Filtered metadata for phenotypeA
 #' @param phenotype_b \cr
 #'   DataFrame: Filtered metadata for phenotypeB
 #' @param cores
 #'   Integer: Can I has multithreading? (Need parallel)
+#' @param input_mzlog_obj \cr
+#'   DataFrame : Log2 of Input MZ-Obj
+#' @param metadata
+#'   DataFrame : Metadata-Obj of Samples
 #' @examples
 #'   phenotype_a <- mztools_filter(mzLog, metadata, "PhenoA")
 #'   phenotype_b <- mztools_filter(mzLog, metadata, "PhenoB")
-#'   mzlog_analysis_volcano_magic(phenotype_a, phenotype_b)
-#' @return null (only plots)
+#'   mzlog_analysis_volcano_magic(phenotype_a, phenotype_b, mzLog, metadata)
+#' @return list of mzlog_analysis_welch, mzlog_analysis_fold and plot_volcano  return objects
 #' @export
-mzlog_analysis_volcano_magic <- function(phenotype_a, phenotype_b, cores = 2 ){
+mzlog_analysis_volcano_magic <- function(phenotype_a, phenotype_b, input_mzlog_obj, metadata, cores = 2 ){
   welch <- mzlog_analysis_welch(phenotype_a, phenotype_b, cores)
+  mzlog_analysis_pca(input_mzlog_obj[welch$p_05,], metadata, plot_title = "PCA_Welch")
   fold  <- mzlog_analysis_fold(phenotype_a, phenotype_b)
   title <- paste("VolcanoPlot", local.mz_polarity_guesser(phenotype_a),sep="-")
-  plot_volcano(welch, fold, title)
+  volcano <- plot_volcano(welch, fold, title)
+  mzlog_analysis_pca(input_mzlog_obj[volcano$diff != "NONE",], metadata, plot_title = "PCA_Volcano")
+  list("welch" = welch, "fold" = fold, "volcano" = volcano)
 }
 
 # *** Heat Map  -----------------------------------------------------

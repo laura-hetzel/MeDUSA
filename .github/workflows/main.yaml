@@ -1,7 +1,7 @@
 name: Docker Image CI
 
 env:
-  DOCKER_TAG: v6.2
+  DOCKER_TAG: v6.3
 
 on:
   push:

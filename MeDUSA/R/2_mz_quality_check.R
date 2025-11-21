@@ -140,6 +140,8 @@ mzmetrics_quality_plot <- function(mz_metrics, focus, title = F, plot_dim = c(8,
 #'   null (only errors if metadata mismatches sample data)
 #' @export
 mz_quality_meta_check <- function(input_mz_obj, meta){
+  #TODO: Having fewer underscores breaks future regex, needs hardening
+  print("LOG: MeDUSA::mz_quality_meta_check: meta$sample_name currently expects the format '[project]_[sampletType]_[sampleNumber]'" )
   meta <- local.meta_polarity_fixer(input_mz_obj, meta)
   .subset_check <- function( listA, listB, msg ){
     missing <- listA[!(listA %in% listB)]
