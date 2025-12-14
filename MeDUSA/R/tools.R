@@ -50,21 +50,24 @@ mztools_filter <- function(input_mzobj, metadata, filter_value , filter_name = "
 #'
 #' @export
 get_default_data <- function(type){
+  #TODO split into pos/neg
   if( type == 'adducts'){
     data_list <- list(
       c( "M+H",   -1.0008   ),
       c( "M-H",   +1.0008   ),
-      c( "M+NH4", -14.0067  ),
+      c( "M+NH4", +18.033823),
       c( "2M+H",  -0.5004   ),
       c( "2M-H",  +0.5004   ),
-      c( "M+Na",  -22.990   ),
+      c( "M+Na",  +22.989218),
+      c( "M+K",   +38.963158),
+      c( "M+Cl",  +34.969402),
       c( "M+Cu",  -63.546   ),
       c( "2M+Na", -11.4950  ),
       c( "2M+Cu", -31.773   ),
       c( "3M+Na", -7.663333 ),
       c( "CN-",   -16.018   ),
-      c( "HCOO-", -46.0254  ),
-      c( "M+FormicAcid+H", -47.0262 ),
+      c( "M+FA-H", +44.998201),
+      c( "M+HCCOH+H", -47.0262 ),
       c( "M+DimethylFormamide+H", -74.0946 )
     )
   } else if (type == 'blacklist') {

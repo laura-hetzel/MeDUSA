@@ -22,10 +22,10 @@
 #' @param tolerance \cr
 #'   Float: Tolerance for mzs
 #' @examples identify_hdmdb(mzs, adducts = c("M+H", "3M+Na"))
-#' @returns List of identified hmdb rows
+#' @returns DataFrame of identified hmdb rows with original mzs and adducts
 #' @export
 identify_hmdb <- function( mzs, adducts = c("M+H"), hmdb_file = "/home/rstudio/local/hmdb_xml.Rdata", tolerance = 5e-6) {
-  adducts <- identify.adducts(adducts, "identify_hmdb")
+  adducts_mass <- identify.adducts(adducts, "identify_hmdb")
   #xmlToDataFrame takes ~15mim.
   if (grepl("Rdata$",hmdb_file)){
     load(hmdb_file)
@@ -35,12 +35,28 @@ identify_hmdb <- function( mzs, adducts = c("M+H"), hmdb_file = "/home/rstudio/l
     hmdb$monisotopic_molecular_weight <- as.numeric(hmdb$monisotopic_molecular_weight)
     hmdb <- hmdb[!is.na(hmdb$monisotopic_molecular_weight),]
   }
-  mz_expanded <- unlist(lapply(mzs ,function(x) x - adducts))
-  #TODO PBL apply
-  out <- lapply(mz_expanded, function(x)
-    hmdb[abs(hmdb$monisotopic_molecular_weight - x)/x < tolerance ,]
-  )
-  do.call(rbind,out)
+  #TODO update  identify_hmdb with inclusion of original mzs and adducts
+  mz_expanded <-as.data.frame(lapply(adducts_mass ,function(x) mzs - x))
+  colnames(mz_expanded)<-adducts
+  mz_expanded$mz <- mzs
+  mz_expanded <- as.data.frame(tidyr::pivot_longer(mz_expanded,!mz , names_to = "adduct", values_to = "mass"))
+  #TODO apply converts df to matrix, which then converts everything to character; this then truncates the values. This hack is sad
+  orig_digits <- getOption("digits")
+  options(digits=20)
+  out <- pbapply::pbapply(mz_expanded, 1, function(x) {
+    mass <- as.numeric(x['mass']) 
+    tmp <- hmdb[abs(hmdb$monisotopic_molecular_weight - mass)/mass < tolerance ,]
+    if( nrow(tmp) > 0 ){
+      tmp$original_mz <- as.numeric(x['mz'])
+      tmp$adduct <- x['adduct']
+    }
+    tmp
+  })
+  out <- do.call(rbind,out)
+  rownames(out) <- NULL
+  #TODO same as above, should not be necessary
+  options(digits=orig_digits)
+  out
 }
 
 
@@ -107,7 +123,7 @@ identify_from_csv <- function( mzs, adducts = c("M+H") , csv_file, mz_colname, t
   if (grepl("Rdata$",csv_file)){
     load(csv_file)
   } else {
-    csv_file <- readr::read_csv(csv_file)
+    csv_file <- read.csv(csv_file)
     csv_file[[mz_colname]] <- as.numeric(csv_file[[mz_colname]])
     csv_file <- csv_file[!is.na(csv_file[[mz_colname]]),]
   }

@@ -289,6 +289,14 @@ mzlog_rf_magic <- function(input_mzlog_obj, metadata, polarity){
     stop("ERROR:MeDUSA::mzlog_rf_magic: in mzlog_rf")
   })
   tryCatch({
+    mzlog_analysis_pca(input_mzlog_obj[input_mzlog_obj$mz %in% rf_obj$imp_mz$mz,], metadata, plot_title = "PCA_randomforest")
+    gc()
+    print("INFO:MeDUSA::mzlog_rf_magic: mzlog_analysis_pca success")
+  }, error = function(e) {
+    print(e)
+    warning("ERROR:MeDUSA::mzlog_rf_magic: in mzlog_analysis_pca")
+  })
+  tryCatch({
     rf_validate <- rf_validate(rf_obj, trees = rf_sel$bestSubset * 1.1)
     gc()
     print("INFO:MeDUSA::mzlog_rf_magic: RF validation success")
