@@ -123,7 +123,7 @@ identify_from_csv <- function( mzs, adducts = c("M+H") , csv_file, mz_colname, t
   if (grepl("Rdata$",csv_file)){
     load(csv_file)
   } else {
-    csv_file <- readr::read_csv(csv_file)
+    csv_file <- read.csv(csv_file)
     csv_file[[mz_colname]] <- as.numeric(csv_file[[mz_colname]])
     csv_file <- csv_file[!is.na(csv_file[[mz_colname]]),]
   }

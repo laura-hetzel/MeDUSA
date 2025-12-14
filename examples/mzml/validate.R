@@ -9,9 +9,9 @@ file_meta <- "meta.xlsx"
 meta <- data.frame(readxl::read_excel(file_meta, sheet = "meta", col_names = TRUE))
 meta$sample_name <- meta$filename
 meta <- meta[meta$sample_name %in% 
-       c("sumr_blank_001", "sumr_blank_048", "sumr_blank_052", 
-          "sumr_qc_004", "sumr_qc_015", "sumr_hek_079", "sumr_hek_161",
-          "sumr_hek_176", "sumr_hep_006", "sumr_hep_031", "sumr_hep_032"),]
+       c("sumr_blank_001", "sumr_blank_048", "sumr_blank_052", "sumr_qc_004", "sumr_qc_015", 
+          "sumr_hek_079", "sumr_hek_104", "sumr_hek_105", "sumr_hek_161", "sumr_hek_176", 
+          "sumr_hep_006", "sumr_hep_031", "sumr_hep_032", "sumr_hep_166", "sumr_hep_167"),]
 meta$filtered_out <- meta$filtered_out == TRUE
 
 meta <- dplyr::select(meta,-filename)
@@ -27,20 +27,22 @@ mz_obj <- mzL$neg
 #save(mzL, file = 'mzL.Rdata')
 #load("mzL.Rdata")
 
+
+###====
 ## MzT extraction without Magic (Good for debugging).
-files <- list.files(path=paste0(getwd(),"/data"), pattern="*.mzML")
-files <- paste0("data/",files)
-mzT_raw <- pbapply::pblapply(files, function(x) mzml_extract_file(x, polarity=0, cl = NULL, magic=F))
-mzT_filt <- pbapply::pblapply(mzT_raw, function(x) mzT_filtering( x, log_name = "manual_neg"))
-mzT <- pbapply::pblapply(mzT_filt, function(x) mzT_squash_time(x))
-names <- unlist(lapply(files, function(x) strsplit(basename(x),"\\.")[[1]][1]))
-for ( x in 1:length(names)) { colnames(mzT[[x]])[2] <- paste0("neg_", names[x])}
-#Note, for smaller datasets this is less memory intense than the duckdb join. But be warned, it does not scale well.
-mz_raw <- Reduce(
-  function(x, y, ...) merge(x, y, all = TRUE, by= "mz", ...),
-    mzT
-)
-mz_obj <- mzT_binning(mz_raw)
+#files <- list.files(path=paste0(getwd(),"/data"), pattern="*.mzML")
+#files <- paste0("data/",files)
+#mzT_raw <- pbapply::pblapply(files, function(x) mzml_extract_file(x, polarity=0, cl = NULL, magic=F))
+#mzT_filt <- pbapply::pblapply(mzT_raw, function(x) mzT_filtering( x, log_name = "manual_neg"))
+#mzT <- pbapply::pblapply(mzT_filt, function(x) mzT_squash_time(x))
+#names <- unlist(lapply(files, function(x) strsplit(basename(x),"\\.")[[1]][1]))
+#for ( x in 1:length(names)) { colnames(mzT[[x]])[2] <- paste0("neg_", names[x])}
+###Note, for smaller datasets this is less memory intense than the duckdb join. But be warned, it does not scale well.
+#mz_raw <- Reduce(
+#  function(x, y, ...) merge(x, y, all = TRUE, by= "mz", ...),
+#    mzT
+#)
+#mz_obj <- mzT_binning(mz_raw)
 
      
 # Quality, filtering & post processing
@@ -54,9 +56,9 @@ pp_out <- mz_post_magic(mz_obj, metadata = meta, plot = TRUE)
 
 mzlog_analysis_pca(mztools_filter(pp_out$mzLog,meta,"cell","type"), meta)
 
-
 mzlog_analysis_volcano_magic(mztools_filter(pp_out$mzLog,meta,"HepG2"),
-                             mztools_filter(pp_out$mzLog,meta,"HEK293T"))
+                             mztools_filter(pp_out$mzLog,meta,"HEK293T"),
+                             pp_out$mzLog, meta)
 
 welch <- mzlog_analysis_welch( mztools_filter(pp_out$mzLog,meta,"HepG2"),
                                  mztools_filter(pp_out$mzLog,meta,"HEK293T"))
@@ -79,18 +81,18 @@ gc()
 #High correlation cuttoff due to small sample set
 rf_cor <- mzlog_rf_correlation(rf_data, correlation_cutoff = .99)
 rf_sel <- mzlog_rf_select(rf_cor, meta)
-#RF cannot do much with highly correlated data; needs more samples
-rf_obj <- mzlog_rf(rf_data, meta, rfe_obj = rf_sel)
+#Only two trains for the subset of data
+rf_obj <- mzlog_rf(rf_data, meta, rfe_obj = rf_sel, cores = 2, seeds = c(11,999))
 rf_validate <- rf_validate(rf_obj)
 rf_permuted <- rf_permuted(rf_obj, "neg")
 
 gc()
 anova <- mzlong_analysis_anova(pp_out$mzLong, meta, phenotypes=c("HepG2","HEK293T"), cores=1)
 
-hmdb_rf <- identify_hmdb(rf_mag$mz, c("M-H","M+Na"))
-hmdb_anova <- identify_hmdb(anova$imp_mz)
-lipids_rf <- identify_lipids(rf_mag$mz)
-lipids_rf <- identify_lipids(anova$imp_mz)
+hmdb_rf <- identify_hmdb(rf_obj$imp_mz$mz, c("M-H","M+Na"))
+hmdb_anova <- identify_hmdb(anova$imp_mz, c("M-H","M+Na"))
+lipids_rf <- identify_lipids(rf_obj$imp_mz$mz, c("M-H","M+Na"))
+lipids_anova <- identify_lipids(anova$imp_mz, c("M-H","M+Na"))
 
 
 
