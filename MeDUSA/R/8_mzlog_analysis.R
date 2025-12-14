@@ -201,7 +201,7 @@ mzlog_analysis_volcano_magic <- function(phenotype_a, phenotype_b, input_mzlog_o
   mzlog_analysis_pca(input_mzlog_obj[volcano$diff != "NONE",], metadata, plot_title = "PCA_Volcano")
   list("welch" = welch, "fold" = fold, "volcano" = volcano)
 }
-
+  
 # *** Heat Map  -----------------------------------------------------
 #' MzLog Generate Heat Map
 #'
