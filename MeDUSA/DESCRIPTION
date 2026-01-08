@@ -1,10 +1,15 @@
 Package: MeDUSA
 Title: Metabolomics Direct Infusion Untarged Single-cell Analysis
-Version: 0.0.0.9000
+Version: 6.3
 Authors@R:
-    c(person(given = "Laura", family = "Hetzel", email = "l.a.hetzel@lacdr.leidenuniv.nl", role = c("aut"),
-           comment = c(ORCID = "TODO")),
-      person(given = "Eric", family = "Hetzel", email = "ericmhetzel@gmail.com", role = c("aut", "cre")))
+    c(person(given = "Laura", family = "Castaneda", email = "l.a.hetzel@lacdr.leidenuniv.nl", 
+             role = c("aut"), comment = c(ORCID = "TODO")),
+      person(given = "Eric", family = "Hetzel", email = "ericmhetzel@gmail.com", role = c("aut", "cre")),
+      person(given= "Klara", family = "Blaschitz", email = "klara.blaschitz@outlook.com", 
+             role = c("ctb"), comment = c(ORCID = "TODO")),
+      person(given = "Pascal", family = "Maas", email = "p.maas@lacdr.leidenuniv.nl", 
+             role = c("ctb"), comment = c(ORCID = "0000-0001-9379-6041"))
+      )
 Description:
     MeDUSA is a  modular, customizable, and user friendly toolset to ease the data processing of Direct Infusion Untarged Single-cell Analysis.
 License: https://opensource.org/license/artistic-2-0
