@@ -29,7 +29,7 @@ bibliography: paper.bib
 ---
 
 # Summary
-Over ten trillion cells are hard at work in the human body[@B:2013] and there can be significant heterogeneity amongt them affecting biological development, disease progression, and treatment response[@ZV:2018].
+Over ten trillion cells are hard at work in the human body[@B:2013] and there can be significant heterogeneity among them affecting biological development, disease progression, and treatment response[@ZV:2018].
 
 One technique to categorize this heterogeneity is single-cell analysis using mass spectrometry. However this technique introduces new challenges. One of which is the small sample volume, which limits the possibilities for separation and thus makes the data non-compatible with traditional analysis pipelines. We introduce the R package `MeDUSA` for Metabolomic Direct-infusion Untargeted Single-cell Analysis.
 
